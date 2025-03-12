@@ -1,7 +1,6 @@
-ENV PROJECT_PATH=/home/project
-
 # Package project into a WAR file using Maven
 FROM maven:3.6.3-openjdk-8 AS build
+ENV PROJECT_PATH=/home/project
 
 # Build WebVOWL
 RUN apt-get update && apt-get install bzip2 -y
