@@ -1,11 +1,11 @@
 module.exports = function (graph) {
   /** some constants **/
-  const PREDEFINED = 0,
+  var PREDEFINED = 0,
     FILE_UPLOAD = 1,
     JSON_URL = 2,
     IRI_URL = 3;
 
-  const PROGRESS_BAR_ERROR = 0,
+  var PROGRESS_BAR_ERROR = 0,
     PROGRESS_BAR_BUSY = 1,
     PROGRESS_BAR_PERCENT = 2,
     progressBarMode = 1;
@@ -15,7 +15,7 @@ module.exports = function (graph) {
   var showLoadingDetails = false;
   var visibilityStatus = true;
 
-  const DEFAULT_JSON_NAME = "foaf"; // This file is loaded by default
+  var DEFAULT_JSON_NAME = "foaf"; // This file is loaded by default
   var conversion_sessionId;
 
   const URL_SERVERTIMESTAMP = "o2v/serverTimeStamp"
