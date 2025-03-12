@@ -25,7 +25,6 @@ module.exports = (function (){
       
       const sortedKey = [link.domain().id(), link.range().id()].sort().join('|');
       layerCounts.set(sortedKey, (layerCounts.get(sortedKey) || 0) + 1);
-      link.layerKey = sortedKey;
 
       if(link.domain() === link.range()) {
         const loopKey = link.domain();
@@ -40,7 +39,8 @@ module.exports = (function (){
 
     for ( var i = 0, l = links.length; i < l; i++ ) {
       var link = links[i];
-      const layerCount = layerCounts.get(link.layerKey);
+      const sortedKey = [link.domain().id(), link.range().id()].sort().join('|');
+      const layerCount = layerCounts.get(sortedKey);
       link.layerSize = layerCount;
 
       if(link.domain() === link.range()) {
