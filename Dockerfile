@@ -12,8 +12,7 @@ RUN mvn -B package --file pom.xml -DskipTests
 # Build OWL2VOWL
 WORKDIR $PROJECT_PATH
 RUN git clone "https://github.com/VisualDataWeb/OWL2VOWL.git"
-WORKDIR /OWL2VOWL
-RUN mvn -B package --file pom.xml -P war-release -DskipTests
+RUN mvn -B package --file /OWL2VOWL/pom.xml -P war-release -DskipTests
 
 # Build the final image
 FROM tomcat:9-jre8-temurin
