@@ -18,8 +18,7 @@ module.exports = function (graph) {
   var DEFAULT_JSON_NAME = "foaf"; // This file is loaded by default
   var conversion_sessionId;
 
-  const URL_SERVERTIMESTAMP = "o2v/serverTimeStamp"
-  const URL_CONVERT = "o2v/convert"
+  const URL_PREFIX = "o2v/"
 
   /** variable defs **/
   var loadingModule = {},
@@ -271,7 +270,7 @@ module.exports = function (graph) {
   };
 
   function requestServerTimeStampForJSON_URL(callback, parameter) {
-    d3.xhr(URL_SERVERTIMESTAMP, "application/text", function (error, request) {
+    d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
       if (error) {
         // could not get server timestamp -> no connection to owl2vowl
         ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
@@ -287,7 +286,7 @@ module.exports = function (graph) {
   }
 
   loadingModule.requestServerTimeStampForDirectInput = function (callback, text) {
-    d3.xhr(URL_SERVERTIMESTAMP, "application/text", function (error, request) {
+    d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
       if (error) {
         // could not get server timestamp -> no connection to owl2vowl
         ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
@@ -414,7 +413,7 @@ module.exports = function (graph) {
     formData.append("ontology", file);
 
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", URL_CONVERT, true);
+    xhr.open("POST", URL_PREFIX + "convert", true);
     var ontologyContent = "";
     xhr.onload = function () {
       if (xhr.status === 200) {
@@ -441,7 +440,7 @@ module.exports = function (graph) {
   }
 
   function requestServerTimeStampForIRI_Converte(callback, parameterArray) {
-    d3.xhr(URL_SERVERTIMESTAMP, "application/text", function (error, request) {
+    d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
       loadingModule.setBusyMode();
       if (error) {
         // could not get server timestamp -> no connection to owl2vowl
@@ -462,7 +461,7 @@ module.exports = function (graph) {
   }
 
   function requestServerTimeStamp(callback, parameterArray) {
-    d3.xhr(URL_SERVERTIMESTAMP, "application/text", function (error, request) {
+    d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
       if (error) {
         // could not get server timestamp -> no connection to owl2vowl
         ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
