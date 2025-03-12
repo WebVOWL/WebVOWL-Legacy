@@ -11,9 +11,8 @@ RUN mvn -B package --file pom.xml -DskipTests
 
 # Build OWL2VOWL
 WORKDIR $PROJECT_PATH
-RUN git clone "https://github.com/VisualDataWeb/OWL2VOWL.git" && ls
-WORKDIR OWL2VOWL
-RUN ls
+RUN git clone "https://github.com/VisualDataWeb/OWL2VOWL.git"
+WORKDIR $PROJECT_PATH/OWL2VOWL
 RUN mvn -B package --file pom.xml -P war-release -DskipTests
 
 # Build the final image
@@ -25,7 +24,6 @@ COPY --from=build $PROJECT_PATH/webvowl/target/*.war $CATALINA_HOME/webapps/ROOT
 COPY --from=build $PROJECT_PATH/OWL2VOWL/target/*.war $CATALINA_HOME/webapps/o2v.war
 
 LABEL org.opencontainers.image.description="A faster WebVOWL"
-VOLUME "/data"
 EXPOSE 8080
 
 ENTRYPOINT ["catalina.sh", "run"]
