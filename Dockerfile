@@ -5,8 +5,8 @@ ENV PROJECT_PATH=/home/project
 # Build WebVOWL
 RUN apt-get update && apt-get install bzip2 -y
 WORKDIR $PROJECT_PATH/webvowl
-COPY *.* /webvowl/
-COPY src /webvowl/src
+COPY *.* ./
+COPY src /src
 RUN mvn -B package --file pom.xml -DskipTests
 
 # Build OWL2VOWL
