@@ -6,7 +6,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 
  <groupId>com.github.WebVOWL</groupId>
  <artifactId>WebVOWL.Legacy</artifactId>
- <version>1.1.8</version>
+ <version>1.2.8</version>
  <name>WebVOWL Legacy</name>
  <packaging>war</packaging>
 
