@@ -1,21 +1,15 @@
 # WebVOWL Legacy
-The WebVOWL legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) closely with the exception of some changes highligted below.
-
+The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) closely with the exception of some changes highligted below.
 
 ## Changes from the original WebVOWL
 
-### Performance
-> [!NOTE]
-> Performance improvements given in seconds are measured using our reference machine:  
-> Lenovo IdeaPad Gaming 3 15ARH05
-> - CPU: Ryzen 5 4600H  
-> - RAM: 32 GB  
-
-TODO: Add testing ontology
-
-- Loading an ontology is 60x faster
-- Changing `degrees of collapse` (from 5 and up) is significantly faster (below 5 still takes >10 seconds)
-- Rendering thousands of nodes is possible with 0.5-5 FPS
+### Significant performance improvements
+Improvement | Original Complexity | Improved Complexity
+:---: | :---: | :---:
+CountAndSetLayers | $O(n^2)$ | $O(n)$
+CountAndSetLoops | $O(n^2)$ | $O(n)$
+StoreLinksOnNodes | $O(n \cdot m)$ | $O(n)$
+getOtherEqualProperty | $O(n^2)$ $\Omega(n^2)$ | $O(n^2)$ $\Omega(n)$
 
 ## Run Using Docker
 Pull image: `docker pull ghcr.io/webvowl/webvowl:legacy`  
