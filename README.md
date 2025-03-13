@@ -14,8 +14,12 @@ CountAndSetLoops | $O(n^2)$ | $O(n)$
 StoreLinksOnNodes | $O(n \cdot m)$ | $O(n)$
 getOtherEqualProperty | $O(n^2)$ $\Omega(n^2)$ | $O(n^2)$ $\Omega(n)$
 
+where:  
+$~~~~~~~~$ $n=\text{edges}$,  
+$~~~~~~~~$ $m=\text{nodes}$ 
+
 ## Run Using Docker
-Pull image: `docker pull ghcr.io/webvowl/webvowl:legacy`  
+Pull image: `docker pull ghcr.io/webvowl/webvowl-legacy:v1.2.8`  
 
 Or use the [docker compose file](/docker-compose.yml) with command `docker-compose up -d`
 
@@ -34,33 +38,24 @@ Run the following command to run WebVOWL at port 8080.
 Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
 
 ## Development setup
+> [!NOTE]
+> The [OWL2VOWL converter](https://github.com/VisualDataWeb/OWL2VOWL) is not supported on the local development server
 
-### Simple
 1. Clone the project locally
 2. Download and install Node.js from http://nodejs.org/download/
 3. Open the terminal in the `WebVOWL` directory
-4. Run `npm install` to install the dependencies and build the project
-5. Run `npm run webserver` to start a local live-updating webserver with the current development version
+4. Run `npm install` to install dependencies
 
-Visit [http://localhost:3000](http://localhost:3000) to use WebVOWL.
-
-### Advanced ###
-1. Install Maven from https://maven.apache.org/download.cgi  
-Now you can run `mvn package` to build the project war file into the deploy directory (recommended over the grunt builds)
-
-3. Instead of the last step of the simple setup, install the npm package `grunt-cli` globally with `npm install grunt-cli -g`.  
-Now you can execute a few more advanced commands in the terminal:
-
+Now you can execute these commands in the terminal:
+* `npm run webserver` to start a local live-updating webserver with the current development version
 * `grunt` or `grunt release` builds the release files into the deploy directory
 * `grunt package` builds the development version
-* `grunt webserver` starts a local live-updating webserver with the current development version
 * `grunt test` starts the test runner
 * `grunt zip` builds the project and puts it into a zip file
 
+Visit [http://localhost:8000](http://localhost:8000) to use WebVOWL.
 
-Additional information
-----------------------
-
+## Additional information
 To export the VOWL visualization to an SVG image, all css styles have to be included into the SVG code.
 This means that if you change the CSS code in the `vowl.css` file, you also have to update the code that
 inlines the styles - otherwise the exported SVG will not look the same as the displayed graph.
