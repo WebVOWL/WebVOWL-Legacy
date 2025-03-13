@@ -8,12 +8,8 @@ name: Docker
 on:
   release:
     types: [published]
-  push:
+  pull_request:
     branches: [ "legacy" ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
-  # pull_request:
-  #   branches: [ "legacy" ]
 
 env:
   # Use docker.io for Docker Hub if empty
