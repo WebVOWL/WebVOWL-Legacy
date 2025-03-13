@@ -1,7 +1,7 @@
-# A new WebVOWL
-We are developing two flavours of WebVOWL: [WebVOWL Rust](https://github.com/WebVOWL/WebVOWL/tree/rust) and [WebVOWL Legacy](https://github.com/WebVOWL/WebVOWL/tree/legacy)
-
 # WebVOWL Legacy
+> [!NOTE]
+> We are developing two flavours of WebVOWL: [WebVOWL Rust](https://github.com/WebVOWL/WebVOWL/tree/rust) and [WebVOWL Legacy](https://github.com/WebVOWL/WebVOWL/tree/legacy)
+
 The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) closely with the exception of some changes highligted below.
 
 ## Changes from the original WebVOWL
