@@ -366,7 +366,7 @@ module.exports = function (graph) {
     var localThreadId = parameter[2];
     stopTimer = false;
     timedLoadingStatusLogger();
-    d3.xhr(relativePath, "application/json", function (error, request) {
+    d3.xhr(URL_PREFIX + relativePath, "application/json", function (error, request) {
       var loadingSuccessful = !error;
       // check if error occurred or responseText is empty
       if ((error !== null && error.status === 500) || (request && request.responseText.length === 0)) {
@@ -440,7 +440,7 @@ module.exports = function (graph) {
     var local_conversionId = parameter[2];
     stopTimer = false;
     timedLoadingStatusLogger();
-    d3.xhr(relativePath, "application/json", function (error, request) {
+    d3.xhr(URL_PREFIX + relativePath, "application/json", function (error, request) {
       var loadingSuccessful = !error;
       // check if error occurred or responseText is empty
       if ((error !== null && error.status === 500) || (request && request.responseText.length === 0)) {
@@ -556,7 +556,6 @@ module.exports = function (graph) {
     xhr.onload = function () {
       clearTimeout(loadingStatusTimer);
       stopTimer = true;
-      console.log(xhr);
       getLoadingStatusOnceCallBacked(callbackForConvert, [xhr, filename, local_threadId]);
     };
     timedLoadingStatusLogger();
