@@ -265,7 +265,7 @@ module.exports = function (graph) {
     } else {
       // involve the o2v conveter;
       ontologyMenu.append_message("Retrieving ontology from JSON URL " + filename);
-      requestServerTimeStampForJSON_URL(ontologyMenu.callbackLoad_JSON_FromURL, [URL_PREFIX + "read?json=" + filename, filename]);
+      requestServerTimeStampForJSON_URL(ontologyMenu.callbackLoad_JSON_FromURL, ["read?json=" + filename, filename]);
     }
   };
 
@@ -320,7 +320,7 @@ module.exports = function (graph) {
       // involve the o2v conveter;
       var encoded = encodeURIComponent(filename);
       ontologyMenu.append_bulletPoint("Retrieving ontology from IRI: " + filename);
-      requestServerTimeStampForIRI_Converte(ontologyMenu.callbackLoad_Ontology_FromIRI, [URL_PREFIX + "convert?iri=" + encoded, filename]);
+      requestServerTimeStampForIRI_Converte(ontologyMenu.callbackLoad_Ontology_FromIRI, ["convert?iri=" + encoded, filename]);
     }
   };
 
