@@ -11,9 +11,9 @@ The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWe
 > - HP ENVY Laptop 13-aq1xxx (Windows 11 Home)
 > - Intel(R) Core(TM) i5-10210U
 > - 8 GB RAM
-> -  The Firefox Profiler running Firefox v136.0.1 (64-bit)
+> -  The Firefox profiler running Firefox v136.0.1 (64-bit)
 >
-> The ontology profiled is [ENVO](https://github.com/EnvironmentOntology/envo) (7k nodes, 13k edges)
+> The ontology profiled is [ENVO](https://github.com/EnvironmentOntology/envo) (7k nodes, 12k edges)
 
 
 Improvement | Original Complexity | Improved Complexity | Load Time Improvement (original/new)
