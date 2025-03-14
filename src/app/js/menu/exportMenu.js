@@ -987,7 +987,7 @@ module.exports = function ( graph ){
       
       var startX, startY, endX, endY, normX, normY, lg;
       
-      if ( link.layerSize === 1 && !link.loops() ) {
+      if ( link.layers().length === 1 && !link.loops() ) {
         
         linkDomainIntersection = graph.math().calculateIntersection(link.range(), link.domain(), 1);
         linkRangeIntersection = graph.math().calculateIntersection(link.domain(), link.range(), 1);
@@ -1081,7 +1081,7 @@ module.exports = function ( graph ){
       // console.log(link.property().labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
       rx = markerCenter.x;
       ry = markerCenter.y;
-      if ( link.layerSize === 1 && !link.loops() ) {
+      if ( link.layers().length === 1 && !link.loops() ) {
         // markerOffset=-1*m
         ry = -1 * ry;
         texString += "\\node[" + arrowType + ", rotate=" + ahAngle + "] at (" + rx + "pt, " + ry + "pt)   (single_marker" + i + ") {};\n ";
@@ -1135,7 +1135,7 @@ module.exports = function ( graph ){
         //   console.log("INV>>\n "+link.property().inverse().labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
         rx = markerCenter_inv.x;
         ry = markerCenter_inv.y;
-        if ( link.layerSize === 1 && !link.loops() ) {
+        if ( link.layers().length === 1 && !link.loops() ) {
           // markerOffset=-1*m
           ry = -1 * ry;
           texString += "\\node[" + arrowType + ", rotate=" + ahAngle + "] at (" + rx + "pt, " + ry + "pt)   (INV_single_marker" + i + ") {};\n ";

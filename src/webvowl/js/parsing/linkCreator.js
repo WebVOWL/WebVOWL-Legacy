@@ -18,36 +18,11 @@ module.exports = (function (){
   linkCreator.createLinks = function ( properties ){
     var links = groupPropertiesToLinks(properties);
     
-    let layerCounts = new Map();
-    let loopMap = new Map();
     for ( var i = 0, l = links.length; i < l; i++ ) {
       var link = links[i];
       
-      const sortedKey = [link.domain().id(), link.range().id()].sort().join('|');
-      layerCounts.set(sortedKey, (layerCounts.get(sortedKey) || 0) + 1);
-
-      if(link.domain() === link.range()) {
-        const loopKey = link.domain();
-        const loops = loopMap.get(loopKey);
-        if(loops) {
-          loops.push(link);
-        } else {
-          loopMap.set(loopKey, new Array(link));
-        }
-      }
-    }
-
-    for ( var i = 0, l = links.length; i < l; i++ ) {
-      var link = links[i];
-      const sortedKey = [link.domain().id(), link.range().id()].sort().join('|');
-      const layerCount = layerCounts.get(sortedKey);
-      link.layerSize = layerCount;
-
-      if(link.domain() === link.range()) {
-        const loops = loopMap.get(link.domain());
-        link.loops(loops);
-        link.loopIndex(loops.findIndex((element) => element === link));
-      }
+      countAndSetLayers(link, links);
+      countAndSetLoops(link, links);
     }
     
     return links;
@@ -84,6 +59,59 @@ module.exports = (function (){
     }
     
     return links;
+  }
+  
+  function countAndSetLayers( link, allLinks ){
+    var layer,
+      layers,
+      i, l;
+    
+    if ( typeof link.layers() === "undefined" ) {
+      layers = [];
+      
+      // Search for other links that are another layer
+      for ( i = 0, l = allLinks.length; i < l; i++ ) {
+        var otherLink = allLinks[i];
+        if ( link.domain() === otherLink.domain() && link.range() === otherLink.range() ||
+          link.domain() === otherLink.range() && link.range() === otherLink.domain() ) {
+          layers.push(otherLink);
+        }
+      }
+      
+      // Set the results on each of the layers
+      for ( i = 0, l = layers.length; i < l; ++i ) {
+        layer = layers[i];
+        
+        layer.layerIndex(i);
+        layer.layers(layers);
+      }
+    }
+  }
+  
+  function countAndSetLoops( link, allLinks ){
+    var loop,
+      loops,
+      i, l;
+    
+    if ( typeof link.loops() === "undefined" ) {
+      loops = [];
+      
+      // Search for other links that are also loops of the same node
+      for ( i = 0, l = allLinks.length; i < l; i++ ) {
+        var otherLink = allLinks[i];
+        if ( link.domain() === otherLink.domain() && link.domain() === otherLink.range() ) {
+          loops.push(otherLink);
+        }
+      }
+      
+      // Set the results on each of the loops
+      for ( i = 0, l = loops.length; i < l; ++i ) {
+        loop = loops[i];
+        
+        loop.loopIndex(i);
+        loop.loops(loops);
+      }
+    }
   }
   
   function createLink( property ){
