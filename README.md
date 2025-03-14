@@ -5,13 +5,6 @@
 The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) closely with the exception of some changes highligted below.
 
 ## Changes from the original WebVOWL
-
-
-         CountAndSetLoops       & $O(n^2)$ & $O(n)$ & \\
-         StoreLinksOnNodes      & $O(n \cdot m)$ & $O(n)$ & \\
-         getOtherEqualProperty  & $O(n^2)$ $\Omega(n^2)$ & $O(n^2)$ $\Omega(n)\tnote{*}$ & \\
-         Combined fixes & & & $803s/6s=133.83$\\
-
 ### Significant performance improvements
 > [!NOTE]
 > Profiling was done using:
