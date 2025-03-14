@@ -25,14 +25,11 @@ Or use the [docker compose file](/docker-compose.yml) with command `docker-compo
 
 <details>
 <summary>Building the docker image</summary>
-Make sure you are inside the `WebVOWL` directory and you have Docker installed.  
+Make sure you are inside the `WebVOWL` directory and you have Docker installed.
+
 Run the following command to build the docker image:
 
 `docker build . -t webvowl:legacy_dev`
-
-Run the following command to run WebVOWL at port 8080.
-
-`docker-compose up -d`
 </details>
 
 Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
