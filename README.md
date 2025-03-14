@@ -13,7 +13,7 @@ The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWe
 > - 8 GB RAM
 > -  The Firefox Profiler running Firefox v136.0.1 (64-bit)
 >
-> The ontology profiled is [ENVO](https://github.com/EnvironmentOntology/envo)
+> The ontology profiled is [ENVO](https://github.com/EnvironmentOntology/envo) (7k nodes, 13k edges)
 
 
 Improvement | Original Complexity | Improved Complexity | Load Time Improvement (original/new)
