@@ -1644,6 +1644,7 @@ module.exports = function (graphContainerSelector) {
     var initializationData = _.clone(unfilteredData);
     links = linkCreator.createLinks(initializationData.properties);
     storeLinksOnNodes(initializationData.nodes, links);
+    //TODO save initialization data for later use when searching unrendered nodes. 
     options.filterModules().forEach(function (module) {
       initializationData = filterFunction(module, initializationData, true);
     });
