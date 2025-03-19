@@ -1746,39 +1746,40 @@ module.exports = function (graphContainerSelector) {
     }
     if (depth === 0) return [originNode]
 
-    let visited = [];
-    let nextArray = [originNode];
+    let visitedMap = new Map();
+    let visited = [originNode];
+    let nodeIndex = 0;
 
     for (let i = 0; i < depth; i++) { // For every depth
+      
+      let layerNodesAmount = visited.length; // keep the temporary value as the length of the array might change
+      if (layerNodesAmount - nodeIndex == 0) break; // if there are no more accessible nodes, then stop calculating further
 
-      let layerNodesAmount = nextArray.length;
-
-      for (let j = 0; j < layerNodesAmount; j++) { // For every Node
-
-        let currentNode = nextArray[j];
+      for (let j = nodeIndex; j < layerNodesAmount; j++) { // For every Node
+        
+        let currentNode = visited[j];
         let linkArr = currentNode.links();
 
         for (let k = 0; k < linkArr.length; k++) { // For every Edge
-
           let currentLink = linkArr[k];
           let domainNode = currentLink.domain();
           let rangeNode = currentLink.range();
-          
-          // If the edge is connected to our current node, add the other end of the edge only if it hasn't already been visited or appended to our frontier
-          if (domainNode === currentNode) {
-            if ( !visited.includes(rangeNode) && !nextArray.includes(rangeNode) ) 
-                 nextArray.push(rangeNode);
+
+          if (domainNode == currentNode && visitedMap.get(rangeNode) != true) {
+            visited.push(rangeNode);
+            visitedMap.set(rangeNode, true);
           }
-          else if (currentLink.range() === currentNode) {
-            if ( !visited.includes(domainNode) && !nextArray.includes(domainNode) )
-                 nextArray.push(domainNode);
+
+          else if (rangeNode == currentNode && visitedMap.get(domainNode) != true) {
+            visited.push(domainNode);
+            visitedMap.set(domainNode, true);
           }
-        
+
+
         }
-        
+
       }
-      nextArray = nextArray.filter( (x) => !visited.includes(x) )
-      visited.push(...nextArray);
+
     }
     return visited;
   }
