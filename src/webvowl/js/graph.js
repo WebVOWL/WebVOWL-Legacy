@@ -1760,7 +1760,7 @@ module.exports = function (graphContainerSelector) {
   /** --  Breadth First Search to a certain depth            -- **/
   /** --------------------------------------------------------- **/
   // TODO - introduce hashmap for further perfomance 
-  function breadthFirstDepthSearch(nodes, id, depth) {
+  function breadthFirstDepthSearch(nodes = processedUnfilteredData, id, depth = 1) {
     let originNode;
 
     try {
@@ -1769,41 +1769,44 @@ module.exports = function (graphContainerSelector) {
       console.error(error);
       return;
     }
-    if (depth === 0) return [originNode]
 
-    let visited = [];
-    let nextArray = [originNode];
+    let vMap = new Map(); vMap.set(originNode, true);
+    let visited = [originNode];
+    let frontier = [originNode];
 
     for (let i = 0; i < depth; i++) { // For every depth
 
-      let layerNodesAmount = nextArray.length;
+      let layerNodesAmount = frontier.length;
 
       for (let j = 0; j < layerNodesAmount; j++) { // For every Node
 
-        let currentNode = nextArray[j];
+        let currentNode = frontier[j];
         let linkArr = currentNode.links();
 
-        for (let k = 0; k < linkArr.length; k++) { // For every Edge
-
+        for (let k = 0; k < linkArr.length; k++) { // For every Edge½
           let currentLink = linkArr[k];
           let domainNode = currentLink.domain();
           let rangeNode = currentLink.range();
 
           // If the edge is connected to our current node, add the other end of the edge only if it hasn't already been visited or appended to our frontier
           if (domainNode === currentNode) {
-            if (!visited.includes(rangeNode) && !nextArray.includes(rangeNode))
-              nextArray.push(rangeNode);
+            if (vMap.get(rangeNode) != true) {
+              frontier.push(rangeNode);
+              vMap.set(rangeNode, true);
+            }
           }
-          else if (currentLink.range() === currentNode) {
-            if (!visited.includes(domainNode) && !nextArray.includes(domainNode))
-              nextArray.push(domainNode);
+          else if (rangeNode === currentNode) {
+            if (vMap.get(domainNode) != true) {
+              frontier.push(domainNode);
+              vMap.set(domainNode, true)
+            }
           }
 
         }
 
       }
-      nextArray = nextArray.filter((x) => !visited.includes(x))
-      visited.push(...nextArray);
+      frontier = frontier.filter((x) => !visited.includes(x))
+      visited.push(...frontier);
     }
     return visited;
   }
