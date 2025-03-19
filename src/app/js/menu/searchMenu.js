@@ -423,6 +423,7 @@ module.exports = function (graph) {
           searchEntryNode.style("color", "#979797");
           testEntry.title = newResults[i] + "\nElement is filtered out.";
           testEntry.onclick = function () {
+            graph.loadSearchData();
           };
           d3.select(testEntry).style("cursor", "default");
           filteredOutElements++;
