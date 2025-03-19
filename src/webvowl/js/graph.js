@@ -1735,7 +1735,7 @@ module.exports = function (graphContainerSelector) {
   /** --  Breadth First Search to a certain depth            -- **/
   /** --------------------------------------------------------- **/
   // TODO - introduce hashmap for further perfomance 
-  function breadthFirstDepthSearch(nodes = processedUnfilteredData, id, depth = 1) {
+  function breadthFirstDepthSearch(nodes = processedUnfilteredData.nodes, id, depth = 1) {
     let originNode;
 
     try {
