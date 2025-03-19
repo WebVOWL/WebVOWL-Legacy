@@ -1712,6 +1712,19 @@ module.exports = function (graphContainerSelector) {
     // }
   }
 
+  //Applies the data of the graph options object and parses it. The graph is not redrawn.
+  graph.loadSearchData = function () {
+    //graph.clearGraphData();
+    var preprocessedData = _.clone(unfilteredData);
+    links = linkCreator.createLinks(preprocessedData.properties);
+    storeLinksOnNodes(preprocessedData.nodes, links);
+    classNodes = preprocessedData.nodes;
+    labelNodes = links.map(function (link) {
+      return link.label();
+    });
+    setForceLayoutData(classNodes, labelNodes, links);
+  }
+
   function filterFunction(module, data, initializing) {
     if (initializing) {
       if (module.initialize) {
