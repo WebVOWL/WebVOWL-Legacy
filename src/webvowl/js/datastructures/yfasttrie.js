@@ -1,5 +1,5 @@
 /*
-An implementation of Willard's Y-Fast tries, ported to JavaScript
+An implementation of Willard's Y-Fast tries
 
 This structure is able to store w-bit integers with O(log w) time searches,
 additions, and removals.
@@ -11,21 +11,18 @@ Courtesy of https://opendatastructures.org/
 */
 
 /*
-import random
-from .treap import Treap
 from .xfasttrie import XFastTrie
-from ...tools.types.general import ConvertibleToInt
-
 */
 
 import { BaseSet } from "./base";
-
+import { Treap } from "./treap";
+import { w, encode } from "./util.js";
 
 
 /**
  * @description A Treap that implements the split/absorb functionality
  */
-class STreap/*(Treap)*/ {
+class STreap extends Treap {
 
     /**
      * @description Remove all values <= x and return a STreap containing these values
@@ -120,13 +117,8 @@ class Pair extends Array {
  * space Theta(n). Information Processing Letters, 17, 81-84. 1984.
  */
 class YFastTrie extends BaseSet {
-    /**
-     *
-     * @param {integer} w Word size in bits
-     */
-    constructor(w = 64) {
+    constructor() {
         super()
-        this.w = w
         this._initialize()
     }
 
@@ -140,36 +132,18 @@ class YFastTrie extends BaseSet {
         }
     }
 
-    [Symbol.iterator]() {
-        return this;
-    }
-
-    /**
-     * @description Encode any string to an integer
-     * @param {string} str
-     * @returns {integer} The string encoded to an integer
-     */
-    encode(str) {
-        let encoding = 0;
-        for (const char of str) {
-            // Get the Unicode code point value of the character starting at the given index
-            encoding += char.codePointAt(0);
-        }
-        return encoding
-    }
-
     _initialize() {
         this._xft = XFastTrie()
-        this._xft.add(Pair((1 << this.w) - 1, STreap()))
+        this._xft.add(Pair((1 << w) - 1, STreap()))
         this._n = 0
     }
 
     add(x)/* { ConvertibleToInt) -> bool)*/ {
-        ix = int(x)
+        ix = encode(x)
         t = this._xft.find(Pair(ix))[1]
         if (t.add(x)) {
             this._n += 1
-            if (random.randrange(this.w) == 0) {
+            if (Math.floor(Math.random() * w) === 0) {
                 t1 = t.split(x)
                 this._xft.add(Pair(ix, t1))
             }
@@ -184,7 +158,7 @@ class YFastTrie extends BaseSet {
      * @returns
      */
     find(x) /*{ ConvertibleToInt) -> ConvertibleToInt | None)*/ {
-        return this._xft.find(Pair(this.encode(x)))[1].find(x)
+        return this._xft.find(Pair(encode(x)))[1].find(x)
     }
 
     /**
@@ -193,13 +167,13 @@ class YFastTrie extends BaseSet {
      * @returns {boolean}
      */
     remove(x) /*{ ConvertibleToInt) -> bool)*/ {
-        ix = this.encode(x)
+        ix = encode(x)
         u = this._xft._find_node(ix)
         ret = u.x[1].remove(x)
         if (ret) {
             this._n -= 1
         }
-        if (u.x[0] == ix && ix != (1 << this.w) - 1) {
+        if (u.x[0] == ix && ix != (1 << w) - 1) {
             t2 = u.next.x[1]
             t2.absorb(u.x[1])
             this._xft.remove(u.x)

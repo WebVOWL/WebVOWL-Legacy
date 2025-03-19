@@ -4,10 +4,6 @@ Some base classes inherited by others
 Courtesy of https://opendatastructures.org/
 */
 
-/*
-from copy import copy
-*/
-
 import { ValueError, IndexError } from "./errors"
 
 /**
@@ -41,7 +37,11 @@ export class BaseSet extends BaseCollection {
         super();
     }
 
-    __in__(x) {
+    [Symbol.iterator]() {
+        return this;
+    }
+
+    includes(x) {
         return this.find(x) !== undefined;
     }
 
@@ -89,7 +89,7 @@ export class BaseList extends BaseCollection {
 
     next() {
         // This implementation is good enough for array-based lists
-        for (let i; i < this.length; i++) {
+        for (let i = 0; i < this.length; i++) {
             yield(this._get(i));
         }
     }
@@ -108,7 +108,7 @@ export class BaseList extends BaseCollection {
         if (a.length !== this.length) {
             return false;
         }
-        for (let i; i < a.length; i++) {
+        for (let i = 0; i < a.length; i++) {
             if (a.next() !== this.next()) {
                 return false;
             }
@@ -116,7 +116,7 @@ export class BaseList extends BaseCollection {
         return true;
     }
 
-    __contains__(item) {
+    includes(item) {
         try {
             this.index(item);
             return true;
@@ -219,13 +219,6 @@ export class BaseList extends BaseCollection {
         for (x of a) {
             this.append(x);
         }
-    }
-
-    /**
-     * @description Return a shallow copy of the list
-     */
-    copy() {
-        return copy(this);
     }
 
     /**

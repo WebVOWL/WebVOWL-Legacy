@@ -1,14 +1,32 @@
 
-
+/**
+ * Bit size
+ */
+export const w = 32
 
 /**
  * Convenience function to create an array
  * @param {integer} n Size of the array
- * @returns An array of size `n`
+ * @returns {Array} An array of size `n`
  */
 export function new_array(n) {
     return new Array(n)
 }
+
+/**
+ * @description Encode any string to an integer
+ * @param {string} str
+ * @returns {integer} The string encoded to an integer
+ */
+export function encode(str) {
+    let encoding = 0;
+    for (const char of str) {
+        // Get the Unicode code point value of the character starting at the given index
+        encoding += char.codePointAt(0);
+    }
+    return encoding
+}
+
 
 // A bunch of random values for use in tabulation hashing
 export const tab = [
