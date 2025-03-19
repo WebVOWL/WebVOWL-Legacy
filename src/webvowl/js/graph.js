@@ -1647,10 +1647,8 @@ module.exports = function (graphContainerSelector) {
     var initializationData = _.clone(unfilteredData);
     links = linkCreator.createLinks(initializationData.properties);
     storeLinksOnNodes(initializationData.nodes, links);
-
     // Keep initialization data for searching unrendered nodes
     processedUnfilteredData = _.clone(initializationData);
-
     options.filterModules().forEach(function (module) {
       initializationData = filterFunction(module, initializationData, true);
     });
@@ -1720,7 +1718,21 @@ module.exports = function (graphContainerSelector) {
 
   //Applies the data of the graph options object and parses it. The graph is not redrawn.
   graph.loadSearchData = function () {
-    classNodes = breadthFirstDepthSearch(processedUnfilteredData.nodes, 1, 3);
+
+    unfilteredNodes = processedUnfilteredData.nodes
+    unfilteredLinks = [];
+    unfilteredNodes.forEach(function (node) {
+      let nodeLinks = node.links();
+      nodeLinks.forEach(function (link) {
+        if (!unfilteredLinks.includes(link)) {
+          unfilteredLinks.push(link);
+        }
+      })
+    })
+    /* console.log("Test0");
+    console.log(unfilteredLinks);
+    console.log(unfilteredNodes); */
+    classNodes = breadthFirstDepthSearch(processedUnfilteredData.nodes, 5, 3);
     console.log("Test1");
     console.log(classNodes);
     links = [];
@@ -1732,15 +1744,20 @@ module.exports = function (graphContainerSelector) {
         }
       })
     })
-    console.log("Test2");
-    console.log(links);
+    /* console.log("Test2");
+    console.log(links); */
     labelNodes = links.map(function (link) {
       return link.label();
     });
-    console.log("Test3");
-    console.log(labelNodes);
+    /* console.log("Test3");
+    console.log(labelNodes); */
     setForceLayoutData(classNodes, labelNodes, links);
-    console.log("Test");
+    updateNodeMap();
+    force.start();
+    redrawContent();
+    graph.updatePulseIds(classNodes);
+    refreshGraphStyle();
+    updateHaloStyles();
   }
 
   function filterFunction(module, data, initializing) {
