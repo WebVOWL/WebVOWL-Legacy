@@ -1735,7 +1735,7 @@ module.exports = function (graphContainerSelector) {
   /** --  Breadth First Search to a certain depth            -- **/
   /** --------------------------------------------------------- **/
   // TODO - introduce hashmap for further perfomance 
-  function breadthFirstDepthSearch(nodes, id, depth) {
+  function breadthFirstDepthSearch(nodes = processedUnfilteredData, id, depth = 1) {
     let originNode;
 
     try {
@@ -1744,42 +1744,44 @@ module.exports = function (graphContainerSelector) {
       console.error(error);
       return;
     }
-    if (depth === 0) return [originNode]
 
-    let visitedMap = new Map();
+    let vMap = new Map(); vMap.set(originNode, true);
     let visited = [originNode];
-    let nodeIndex = 0;
+    let frontier = [originNode];
 
     for (let i = 0; i < depth; i++) { // For every depth
-      
-      let layerNodesAmount = visited.length; // keep the temporary value as the length of the array might change
-      if (layerNodesAmount - nodeIndex == 0) break; // if there are no more accessible nodes, then stop calculating further
 
-      for (let j = nodeIndex; j < layerNodesAmount; j++) { // For every Node
-        
-        let currentNode = visited[j];
+      let layerNodesAmount = frontier.length;
+
+      for (let j = 0; j < layerNodesAmount; j++) { // For every Node
+
+        let currentNode = frontier[j];
         let linkArr = currentNode.links();
 
-        for (let k = 0; k < linkArr.length; k++) { // For every Edge
+        for (let k = 0; k < linkArr.length; k++) { // For every Edge½
           let currentLink = linkArr[k];
           let domainNode = currentLink.domain();
           let rangeNode = currentLink.range();
-
-          if (domainNode == currentNode && visitedMap.get(rangeNode) != true) {
-            visited.push(rangeNode);
-            visitedMap.set(rangeNode, true);
+          
+          // If the edge is connected to our current node, add the other end of the edge only if it hasn't already been visited or appended to our frontier
+          if (domainNode === currentNode) {
+            if ( vMap.get(rangeNode) != true ) {
+                 frontier.push(rangeNode);
+                 vMap.set(rangeNode, true);
+            }
           }
-
-          else if (rangeNode == currentNode && visitedMap.get(domainNode) != true) {
-            visited.push(domainNode);
-            visitedMap.set(domainNode, true);
+          else if (rangeNode === currentNode) {
+            if ( vMap.get(domainNode) != true ) {
+                 frontier.push(domainNode);
+                 vMap.set(domainNode, true)
+            }
           }
-
-
+        
         }
-
+        
       }
-
+      frontier = frontier.filter( (x) => !visited.includes(x) )
+      visited.push(...frontier);
     }
     return visited;
   }
