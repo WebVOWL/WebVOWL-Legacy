@@ -43,6 +43,7 @@ module.exports = function (graphContainerSelector) {
     links,
     properties,
     unfilteredData,
+    filteredNodeMap = new Map(),
     // Graph behaviour
     force,
     dragBehaviour,
@@ -1639,10 +1640,16 @@ module.exports = function (graphContainerSelector) {
     var initializationData = _.clone(unfilteredData);
     links = linkCreator.createLinks(initializationData.properties);
     storeLinksOnNodes(initializationData.nodes, links);
-    //TODO save initialization data for later use when searching unrendered nodes.
+
+    // Create node map
+    initializationData.nodes.forEach((node) => {
+      filteredNodeMap.set(node.id(), node)
+    })
+
     options.filterModules().forEach(function (module) {
       initializationData = filterFunction(module, initializationData, true);
     });
+
     // generate dictionary here ;
     generateDictionary(unfilteredData);
 
