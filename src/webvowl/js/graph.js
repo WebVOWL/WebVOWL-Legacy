@@ -1647,9 +1647,9 @@ module.exports = function (graphContainerSelector) {
     var initializationData = _.clone(unfilteredData);
     links = linkCreator.createLinks(initializationData.properties);
     storeLinksOnNodes(initializationData.nodes, links);
-    
+
     // Keep initialization data for searching unrendered nodes
-    processedUnfilteredData = initializationData;
+    processedUnfilteredData = _.clone(initializationData);
 
     options.filterModules().forEach(function (module) {
       initializationData = filterFunction(module, initializationData, true);
@@ -1720,15 +1720,27 @@ module.exports = function (graphContainerSelector) {
 
   //Applies the data of the graph options object and parses it. The graph is not redrawn.
   graph.loadSearchData = function () {
-    //graph.clearGraphData();
-    var preprocessedData = _.clone(unfilteredData);
-    links = linkCreator.createLinks(preprocessedData.properties);
-    storeLinksOnNodes(preprocessedData.nodes, links);
-    classNodes = preprocessedData.nodes;
+    classNodes = breadthFirstDepthSearch(processedUnfilteredData.nodes, 1, 3);
+    console.log("Test1");
+    console.log(classNodes);
+    links = [];
+    classNodes.forEach(function (node) {
+      let nodeLinks = node.links();
+      nodeLinks.forEach(function (link) {
+        if (!links.includes(link)) {
+          links.push(link);
+        }
+      })
+    })
+    console.log("Test2");
+    console.log(links);
     labelNodes = links.map(function (link) {
       return link.label();
     });
+    console.log("Test3");
+    console.log(labelNodes);
     setForceLayoutData(classNodes, labelNodes, links);
+    console.log("Test");
   }
 
   function filterFunction(module, data, initializing) {
@@ -1776,33 +1788,33 @@ module.exports = function (graphContainerSelector) {
           let currentLink = linkArr[k];
           let domainNode = currentLink.domain();
           let rangeNode = currentLink.range();
-          
+
           // If the edge is connected to our current node, add the other end of the edge only if it hasn't already been visited or appended to our frontier
           if (domainNode === currentNode) {
-            if ( !visited.includes(rangeNode) && !nextArray.includes(rangeNode) ) 
-                 nextArray.push(rangeNode);
+            if (!visited.includes(rangeNode) && !nextArray.includes(rangeNode))
+              nextArray.push(rangeNode);
           }
           else if (currentLink.range() === currentNode) {
-            if ( !visited.includes(domainNode) && !nextArray.includes(domainNode) )
-                 nextArray.push(domainNode);
+            if (!visited.includes(domainNode) && !nextArray.includes(domainNode))
+              nextArray.push(domainNode);
           }
-        
+
         }
-        
+
       }
-      nextArray = nextArray.filter( (x) => !visited.includes(x) )
+      nextArray = nextArray.filter((x) => !visited.includes(x))
       visited.push(...nextArray);
     }
     return visited;
   }
 
-  function findNodeFromId (nodes, id) {
+  function findNodeFromId(nodes, id) {
     for (let i = 0; i < nodes.length; i++) {
       if (nodes[i].id() == id) {
         return nodes[i];
       }
     }
-    throw new Error ("node with this id does not exist");
+    throw new Error("node with this id does not exist");
   }
 
   /** --------------------------------------------------------- **/
@@ -1840,11 +1852,11 @@ module.exports = function (graphContainerSelector) {
     for (var i = 0, nodesLength = nodes.length; i < nodesLength; i++) {
       var node = nodes[i],
         connectedLinks = [];
-
+  
       // look for properties where this node is the domain or range
       for (var j = 0, linksLength = links.length; j < linksLength; j++) {
         var link = links[j];
-
+  
         if (link.domain() === node || link.range() === node) {
           connectedLinks.push(link);
         }
