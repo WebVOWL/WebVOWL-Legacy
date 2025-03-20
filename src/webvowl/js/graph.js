@@ -1732,10 +1732,14 @@ module.exports = function (graphContainerSelector) {
     /* console.log("Test0");
     console.log(unfilteredLinks);
     console.log(unfilteredNodes); */
+    links = linkCreator.createLinks(processedUnfilteredData.properties);
+    storeLinksOnNodes(processedUnfilteredData.nodes, links);
     classNodes = breadthFirstDepthSearch(processedUnfilteredData.nodes, 5, 3);
-    console.log("Test1");
-    console.log(classNodes);
+    /* console.log("BFS nodes");
+    console.log(classNodes); */
     links = [];
+    linksInSearch = [];
+    // sets links to all links on nodes in search
     classNodes.forEach(function (node) {
       let nodeLinks = node.links();
       nodeLinks.forEach(function (link) {
@@ -1744,18 +1748,34 @@ module.exports = function (graphContainerSelector) {
         }
       })
     })
+    // adds links that are within search limits to linksInSearch
+    links.forEach(function (link) {
+      let domainFlag = 0;
+      let rangeFlag = 0;
+      classNodes.forEach(function (node) {
+        if (link.domain() === node) {
+          domainFlag = 1;
+        }
+        if (link.range() === node) {
+          rangeFlag = 1;
+        }
+      })
+      if (domainFlag == 1 && rangeFlag == 1) {
+        linksInSearch.push(link);
+      }
+
+    })
     /* console.log("Test2");
     console.log(links); */
-    labelNodes = links.map(function (link) {
+    labelNodes = linksInSearch.map(function (link) {
       return link.label();
     });
     /* console.log("Test3");
     console.log(labelNodes); */
-    setForceLayoutData(classNodes, labelNodes, links);
+    setForceLayoutData(classNodes, labelNodes, linksInSearch);
     updateNodeMap();
     force.start();
     redrawContent();
-    graph.updatePulseIds(classNodes);
     refreshGraphStyle();
     updateHaloStyles();
   }
