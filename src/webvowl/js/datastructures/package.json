@@ -1,0 +1,10 @@
+{
+    "name": "webvowl_datastructures",
+    "version": "0.0.1",
+    "license": "MIT",
+    "private": true,
+    "type": "module",
+    "dependencies": {
+        "object-hash": "^3.0.0"
+    }
+}

@@ -7,30 +7,26 @@ Courtesy of https://opendatastructures.org/
 import { ValueError, IndexError } from "./errors"
 
 /**
- * @description Base class for everything
+ * Base class for everything
  */
 export class BaseCollection {
     constructor() {
         super();
     }
-    __len__(this) {
-        return this._size();
-    }
-
     toString() {
         return "[" + new Array(this).toString() + "]";
     }
     /**
-     * @description This implementation works for almost every class in ODS
+     * This implementation works for almost every class in ODS
      * @returns {integer}
      */
     _size(this) {
-        return this._n; // TODO: Implement as https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/length
+        return this.length;
     }
 }
 
 /**
- * @description Base class for Set implementations
+ * Base class for Set implementations
  */
 export class BaseSet extends BaseCollection {
     constructor() {
@@ -46,8 +42,8 @@ export class BaseSet extends BaseCollection {
     }
 
     /**
-     * @description Strict equality check.
-     * Runtime is O(n * m) on the size of `this` and `a`
+     * Strict equality check.
+     * @description Runtime is O(n * m) on the size of `this` and `a`
      * @param {Iterable} a
      * @returns {boolean}
      */
@@ -69,7 +65,7 @@ export class BaseSet extends BaseCollection {
     }
 
     /**
-     * @description Add all elements of `a` to `this`
+     * Add all elements of `a` to `this`
      * @param {Iterable} a
      */
     add_all(a) {
@@ -80,7 +76,7 @@ export class BaseSet extends BaseCollection {
 }
 
 /**
- * @description Base class for List implementations
+ * Base class for List implementations
  */
 export class BaseList extends BaseCollection {
     constructor() {
@@ -99,8 +95,8 @@ export class BaseList extends BaseCollection {
     }
 
     /**
-     * @description Strict equality check.
-     * Runtime is O(n) on the size of `a`
+     * Strict equality check.
+     * @description Runtime is O(n) on the size of `a`
      * @param {Iterable} a
      * @returns {boolean}
      */
@@ -143,7 +139,7 @@ export class BaseList extends BaseCollection {
     }
 
     /**
-     * @description Remove all elements from the list
+     * Remove all elements from the list
      */
     clear() {
         // This can be overridden with more efficient implementations
@@ -153,7 +149,7 @@ export class BaseList extends BaseCollection {
     }
 
     /**
-     * @description Insert object before index
+     * Insert object before index
      * @param {integer} index
      * @param {*} object
      */
@@ -162,7 +158,7 @@ export class BaseList extends BaseCollection {
     }
 
     /**
-     * @description Return first index of value
+     * Return first index of value
      * @param {*} object
      * @returns {integer}
      * @throws {ValueError} If object is not in the list
@@ -179,7 +175,7 @@ export class BaseList extends BaseCollection {
     }
 
     /**
-     * @description Remove first occurrence of value
+     * Remove first occurrence of value
      * @param {*} object
      * @throws {ValueError} If the value is not present
      */
@@ -188,7 +184,7 @@ export class BaseList extends BaseCollection {
     }
 
     /**
-     * @description Remove and return item at index (default last)
+     * Remove and return item at index (default last)
      * @param {integer} index
      * @returns {*} The item at `index`
      * @throws {IndexError} If list is empty or index is out of range
@@ -204,7 +200,7 @@ export class BaseList extends BaseCollection {
     }
 
     /**
-     * @description Append object to the end of the list
+     * Append object to the end of the list
      * @param {*} object
      */
     append(object) {
@@ -212,7 +208,7 @@ export class BaseList extends BaseCollection {
     }
 
     /**
-     * @description Extend list by appending elements from the iterable
+     * Extend list by appending elements from the iterable
      * @param {Iterable} a
      */
     extend(a) {
@@ -222,7 +218,7 @@ export class BaseList extends BaseCollection {
     }
 
     /**
-     * @description Return number of occurrences of value
+     * Return number of occurrences of value
      * @param {*} value
      * @returns {int}
      */

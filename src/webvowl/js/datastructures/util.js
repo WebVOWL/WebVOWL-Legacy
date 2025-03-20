@@ -15,12 +15,15 @@ export function new_array(n) {
 
 /**
  * @description Encode any string to an integer
- * @param {string} str
+ * @param {string|integer} value If the input is an integer, this is a no-op
  * @returns {integer} The string encoded to an integer
  */
-export function encode(str) {
+export function encode(value) {
+    if (value instanceof Number) {
+        return value
+    }
     let encoding = 0;
-    for (const char of str) {
+    for (const char of value) {
         // Get the Unicode code point value of the character starting at the given index
         encoding += char.codePointAt(0);
     }

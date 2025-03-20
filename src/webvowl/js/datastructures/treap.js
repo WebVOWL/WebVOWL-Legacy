@@ -18,8 +18,12 @@ Courtesy of https://opendatastructures.org/
 import { BinarySearchTreeNode, BinarySearchTree } from "./binarysearchtree";
 
 export class TreapNode extends BinarySearchTreeNode {
-    constructor(x) {
-        super(x)
+    /**
+     * @param {*} x Key. An object supporting comparison operators <>
+     * @param {*} v Value
+     */
+    constructor(x, v = undefined) {
+        super(x, v)
         this.p = Math.random();
     }
     toString() {
@@ -30,20 +34,22 @@ export class TreapNode extends BinarySearchTreeNode {
 
 export class Treap extends BinarySearchTree {
     /**
-     * @description Create a treap with elements from `iterable`
-     * @param {iterable} iterable
+     * Create a treap with key/value pairs from `x` and `v`
+     * @param {iterable|Map} x Keys. Must be objects supporting comparison operators <>. If `x` is an iterable, `v` must an equal length iterable
+     * @param {iterable} v Values
      */
-    constructor(iterable = []) {
-        super(iterable);
+    constructor(x = [], v = []) {
+        super(x, v);
     }
 
     /**
-     * @description Create a new node with `x` as value
-     * @param {*} x
+     * Create a new node with key `x` and value `v`
+     * @param {*} x Key. An object supporting comparison operators <>
+     * @param {*} v Value
      * @returns {TreapNode}
      */
-    _new_node(x) {
-        return new TreapNode(x);
+    _new_node(x, v) {
+        return new TreapNode(x, v);
     }
 
     /**
@@ -87,12 +93,13 @@ export class Treap extends BinarySearchTree {
     }
 
     /**
-     * @description Add an item to the treap
-     * @param {*} x
+     * Add an item to the treap
+     * @param {*} x Key. An object supporting comparison operators <>
+     * @param {*} v Value
      * @returns {boolean} Whether the item was added succesfully
      */
-    add(x) {
-        let u = this._new_node(x);
+    add(x, v) {
+        let u = this._new_node(x, v);
         if (this._add_node(u)) {
             this._bubble_up(u);
             return true;
@@ -101,8 +108,8 @@ export class Treap extends BinarySearchTree {
     }
 
     /**
-     * @description Remove an item from the treap
-     * @param {*} x
+     * Remove an item from the treap
+     * @param {*} x Key. An object supporting comparison operators <>
      * @returns {boolean} Whether the item was removed succesfully
      */
     remove(x) {

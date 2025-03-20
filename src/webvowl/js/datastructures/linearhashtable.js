@@ -39,12 +39,12 @@ export class LinearHashTable extends BaseSet {
     }
     _resize() {
         this.d = 1;
-        while ((1 << this.d) < 3 * this._n) {
+        while ((1 << this.d) < 3 * this.length) {
             this.d += 1;
         }
         let told = this.t;
         this.t = new_array((1 << this.d));
-        this.q = this._n;
+        this.q = this.length;
         for (x of told) {
             if (x !== undefined && x !== this.dl) {
                 let i = this._hash(x);
@@ -59,14 +59,14 @@ export class LinearHashTable extends BaseSet {
         this.d = 1;
         this.t = new_array((1 << this.d));
         this.q = 0;
-        this._n = 0;
+        this.length = 0;
     }
     hash_code(x) {
         return hash(x);
     }
 
     /**
-     * @description Add an object to the hash table
+     * Add an object to the hash table
      * @param {*} x
      * @returns {boolean} If the object was successfully added
      */
@@ -84,13 +84,13 @@ export class LinearHashTable extends BaseSet {
         if (this.t[i] === undefined) {
             this.q += 1;
         }
-        this._n += 1;
+        this.length += 1;
         this.t[i] = x;
         return true;
     }
 
     /**
-     * @description Lookup a value in the hash table
+     * Lookup a value in the hash table
      * @param {*} x The key to perform lookup with
      * @returns The value if found, else undefined
      */
@@ -105,7 +105,7 @@ export class LinearHashTable extends BaseSet {
     }
 
     /**
-     * @description Remove a key/value pair from the hash table
+     * Remove a key/value pair from the hash table
      * @param {*} x The key to perform lookup with
      * @returns {any|undefined} The value if found, else undefined
      */
@@ -115,8 +115,8 @@ export class LinearHashTable extends BaseSet {
             let y = this.t[i];
             if (y !== this.dl && x === y) {
                 this.t[i] = this.dl;
-                this._n -= 1;
-                if (8 * this._n < this.t.length) {
+                this.length -= 1;
+                if (8 * this.length < this.t.length) {
                     this._resize();
                 }
                 return y;
@@ -127,7 +127,7 @@ export class LinearHashTable extends BaseSet {
     }
 
     /**
-     * @description Remove all elements from the hash table
+     * Remove all elements from the hash table
      */
     clear() {
         this.initialize();

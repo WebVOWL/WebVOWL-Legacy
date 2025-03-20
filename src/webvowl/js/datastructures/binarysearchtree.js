@@ -5,11 +5,18 @@ Courtesy of https://opendatastructures.org/
 */
 
 import { BinaryTree, BinaryTreeNode } from "./binarytree"
+import { ValueError } from "./errors";
+import { LinearHashTable } from "./linearhashtable";
 
 export class BinarySearchTreeNode extends BinaryTreeNode {
-    constructor(x) {
+    /**
+     * @param {*} x Key. An object supporting comparison operators <>
+     * @param {*} v Value
+     */
+    constructor(x, v = undefined) {
         super();
         this.x = x;
+        this.a = new Array(v);
     }
 }
 
@@ -18,26 +25,28 @@ export class BinarySearchTreeNode extends BinaryTreeNode {
  */
 export class BinarySearchTree extends BinaryTree {
     /**
-     * @description A binary search tree
-     * @param {iterable} iterable Add elements from this to the tree
+     * A binary search tree
+     * @param {iterable|Map} x Keys. Must be objects supporting comparison operators <>. If `x` is an iterable, `v` must an equal length iterable
+     * @param {iterable} v Values
      * @param {*} nil What the nil node is represented as (by default undefined)
      */
-    constructor(iterable = [], nil = undefined) {
+    constructor(x = [], v = [], nil = undefined) {
         super();
         this._initialize(nil);
-        this.add_all(iterable);
+        this.add_all(x, v);
     }
+
     /**
-     * Create a new node with `x` as value
-     * @param {*} x
+     * Create a new node with key `x` and value `v`
+     * @param {*} x Key. An object supporting comparison operators <>
+     * @param {*} v Value of node
      * @returns {BinarySearchTreeNode}
      */
-    _new_node(x) {
-        let u = new BinarySearchTreeNode(x);
+    _new_node(x, v) {
+        let u = new BinarySearchTreeNode(x, v);
         u.left = u.right = u.parent = this._nil;
         return u;
     }
-
     next() {
         let u = this._first_node();
         while (u !== this._nil) {
@@ -45,14 +54,15 @@ export class BinarySearchTree extends BinaryTree {
             u = this._next_node(u);
         }
     }
-
     _initialize(nil) {
-        this._n = 0;
+        this.length = 0;
         this._nil = nil;
     }
 
     /**
-     * @param {BinarySearchTreeNode|any} x
+     * Find parent node of key `x`
+     * @param {*} x Key. An object supporting comparison operators <>
+     * @returns {BinarySearchTreeNode|any}
      */
     _find_last(x) {
         let w = this._r;
@@ -75,7 +85,7 @@ export class BinarySearchTree extends BinaryTree {
     /**
      * @param {BinarySearchTreeNode} p Parent
      * @param {BinarySearchTreeNode} u Child
-     * @returns {boolean}
+     * @returns {boolean} Whether the child was succesfully added
      */
     _add_child(p, u) {
         if (p === this._nil) {
@@ -89,11 +99,12 @@ export class BinarySearchTree extends BinaryTree {
                 p.right = u;
             }
             else {
-                return false;  // u.x is already in the tree
+                p.a.push(v) // u.x === p.x. Add value to the existing p node
+                return false;  // u.x is already in the tree (as node p)
             }
             u.parent = p;
         }
-        this._n += 1;
+        this.length += 1;
         return true;
     }
 
@@ -168,7 +179,7 @@ export class BinarySearchTree extends BinaryTree {
 
     /**
      * @param {BinarySearchTreeNode} u
-     * @returns {boolean}
+     * @returns {boolean} Whether the node was succesfully added
      */
     _add_node(u) {
         let p = this._find_last(u.x);
@@ -179,7 +190,7 @@ export class BinarySearchTree extends BinaryTree {
      * @param {BinarySearchTreeNode} u
      */
     _splice(u) {
-        let s, p
+        let s, p;
 
         if (u.left !== this._nil) {
             s = u.left;
@@ -203,66 +214,89 @@ export class BinarySearchTree extends BinaryTree {
         if (s !== this._nil) {
             s.parent = p;
         }
-        this._n -= 1;
+        this.length -= 1;
     }
 
     /**
-     * @description Find node in the tree using `x` as key
-     * @param {*} x Object supporting comparison operators <>
-     * @returns {BinarySearchTreeNode|undefined}
+     * Find node mapped to key `x`
+     * @param {*} x Key. An object supporting comparison operators <>
+     * @returns {BinarySearchTreeNode|undefined} The node if found, else undefined
+     * @throws {ReferenceError} If the tree is empty
      */
     _find_node(x) {
         if (!Object.hasOwn(this, "_r")) {
             throw new ReferenceError("lookup in empty tree");
         }
         let w = this._r;
-        let z = this._nil;
         while (w !== this._nil) {
             if (x < w.x) {
-                z = w;
                 w = w.left;
             }
             else if (x > w.x) {
                 w = w.right;
             }
             else {
-                return w.x;
+                return w;
             }
         }
         return undefined;
     }
 
     /**
-     * @description Find value in the tree using `x` as key
-     * @param {*} x Object supporting comparison operators <>
-     * @returns {any|undefined} The object, if found, else undefined.
+     * Find the value mapped to key `x`
+     * @param {*} x Key. An object supporting comparison operators <>
+     * @returns {Array|undefined} An array containing the values mapped to `x`, if found, else undefined.
      */
     find(x) {
         let u = this._find_node(x);
-        return u !== undefined ? u.x : undefined;
+        return u !== undefined ? u.a : undefined;
     }
 
     /**
-     * @description Remove all elements from the tree
+     * Remove all elements from the tree
      */
     clear() {
         this._r = this._nil;
-        this._n = 0;
+        this.length = 0;
     }
 
     /**
-     * @description Add an item to the tree
-     * @param {*} x Object supporting comparison operators <>
+     * Add an item to the tree
+     * @param {*} x Key. An object supporting comparison operators <>
      * @returns {boolean} Whether the item was added succesfully
      */
-    add(x) {
+    add(x, v) {
         let p = this._find_last(x);
-        return this._add_child(p, this._new_node(x));
+        return this._add_child(p, this._new_node(x, v));
     }
 
     /**
-     * @description Remove an item from the tree
-     * @param {*} x Object supporting comparison operators <>
+     * Add key/value pairs to the tree
+     * @param {iterable|Map} x Keys. Must be objects supporting comparison operators <>. If `x` is an iterable, `v` must an equal length iterable
+     * @param {iterable} v Values
+     * @throws {ValueError} If the length of the iterables is not equal
+     */
+    add_all(x, v) {
+        // `x` is a Map
+        if (arguments.length === 1) {
+            for (item of x.entries()) {
+                this.add(item[0], item[1]);
+            }
+        }
+        // `x`, `v` are iterables
+        else {
+            if (x.length !== v.length) {
+                throw new ValueError(`length of iterables is not equal. x has length ${x.length}, v has length ${v.length}`)
+            }
+            for (let i = 0; i < x.length; i++) {
+                this.add(x[i], v[i])
+            }
+        }
+    }
+
+    /**
+     * Remove an item from the tree
+     * @param {*} x Key. An object supporting comparison operators <>
      * @returns {boolean} Whether the item was removed succesfully
      */
     remove(x) {
