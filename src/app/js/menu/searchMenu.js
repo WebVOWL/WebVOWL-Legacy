@@ -1,3 +1,4 @@
+const { slice } = require("lodash");
 const { YFastTrie } = require("../../../webvowl/js/datastructures/yfasttrie");
 
 /**
@@ -26,9 +27,7 @@ module.exports = function (graph) {
   var m_search = d3.select("#m_search"); // << dropdown container;
 
 
-  function testTrie() {
-    let trie = new YFastTrie()
-  }
+
 
 
 
@@ -121,7 +120,7 @@ module.exports = function (graph) {
     // clear dictionary;
     dictionary = [];
     searchLineEdit = d3.select("#search-input-text");
-    searchLineEdit.on("input", userInput);
+    searchLineEdit.on("input", testTrie)//userInput);
     searchLineEdit.on("keydown", userNavigation);
     searchLineEdit.on("click", toggleSearchEntryView);
     searchLineEdit.on("mouseover", hoverSearchEntryView);
@@ -135,6 +134,52 @@ module.exports = function (graph) {
     });
 
   };
+
+  function testTrie() {
+    let trie = new YFastTrie();
+    // let testDict = slice(graph.getUpdateDictionary(), 0, 10);
+    // let nodeMap = graph.getUnfilteredNodeMap();
+
+    let testData = ["Rem", "Ram", "Fubuki", "Unicorn"]
+    let assertArr = new Array()
+
+    // Test no duplicate values
+    console.log("Added values to trie")
+    for (let i = 0; i < testData.length; i++) {
+      // let item = testDict[i];
+      // trie.add(item.labelForCurrentLanguage(), nodeMap.get(item.id()));
+
+      let label = testData[i]
+      assertArr.push(label)
+      trie.add(label, i)
+    }
+
+    // Testing membership
+    console.log("Performing membership tests")
+    console.log(trie.find("R"))
+    console.log(trie.find("Re"))
+    console.log(trie.find("Rem"))
+    console.log(trie.find("r"))
+    console.log(trie.find("Fub"))
+    console.log(trie.find(""))
+
+
+
+    // Testing trie functions
+    console.log("Testing trie functions")
+    console.log(trie)
+
+
+    // Test iteration
+    console.log("Iterating over items of trie")
+    for (const item of trie) {
+      console.log(item)
+    }
+
+
+  }
+
+
 
   function hoverSearchEntryView() {
     updateSelectionStatusFlags();
