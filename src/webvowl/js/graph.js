@@ -43,7 +43,7 @@ module.exports = function (graphContainerSelector) {
     links,
     properties,
     unfilteredData,
-    filteredNodeMap = new Map(),
+    unfilteredNodeMap = new Map(),
     // Graph behaviour
     force,
     dragBehaviour,
@@ -151,6 +151,10 @@ module.exports = function (graphContainerSelector) {
   // Returns the visible Label Nodes
   graph.graphLabelElements = function () {
     return labelNodes;
+  };
+  // Returns all nodes created
+  graph.getUnfilteredNodeMap = function () {
+    return unfilteredNodeMap;
   };
 
   graph.graphLinkElements = function () {
@@ -1643,7 +1647,7 @@ module.exports = function (graphContainerSelector) {
 
     // Create node map
     initializationData.nodes.forEach((node) => {
-      filteredNodeMap.set(node.id(), node)
+      unfilteredNodeMap.set(node.id(), node)
     })
 
     options.filterModules().forEach(function (module) {
