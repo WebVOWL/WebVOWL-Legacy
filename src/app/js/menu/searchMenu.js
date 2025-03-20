@@ -1,3 +1,5 @@
+const { YFastTrie } = require("../../../webvowl/js/datastructures/yfasttrie");
+
 /**
  * Contains the search "engine"
  *
@@ -22,6 +24,12 @@ module.exports = function (graph) {
   var c_locate = d3.select("#locateSearchResult");
   var c_search = d3.select("#c_search");
   var m_search = d3.select("#m_search"); // << dropdown container;
+
+
+  function testTrie() {
+    let trie = new YFastTrie()
+  }
+
 
 
   String.prototype.beginsWith = function (string) {
