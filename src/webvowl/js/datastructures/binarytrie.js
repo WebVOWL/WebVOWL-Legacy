@@ -7,11 +7,11 @@ w bit integer.
 Courtesy of https://opendatastructures.org/
 */
 
-import { BaseSet } from "./base"
-import { new_array, w, encode } from "./util"
+const { BaseSet } = require("./base");
+const { new_array, w, encode } = require("./util");
 
 
-export class BinaryTrieNode {
+class BinaryTrieNode {
     constructor() {
         this.child = new_array(2);
         this.jump = undefined;
@@ -47,7 +47,7 @@ export class BinaryTrieNode {
     }
 }
 
-export class BinaryTrie extends BaseSet {
+class BinaryTrie extends BaseSet {
     constructor() {
         super();
         this._initialize();
@@ -58,7 +58,7 @@ export class BinaryTrie extends BaseSet {
     _new_node() {
         return BinaryTrieNode();
     }
-    next() {
+    *next() {
         let u = this.dummy.next;
         while (u !== this.dummy) {
             yield u.x;
@@ -263,4 +263,9 @@ export class BinaryTrie extends BaseSet {
         this.length -= 1;
         return true;
     }
+}
+
+module.exports = {
+    BinaryTrieNode,
+    BinaryTrie
 }

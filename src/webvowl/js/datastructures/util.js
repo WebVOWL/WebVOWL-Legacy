@@ -1,15 +1,14 @@
-
 /**
  * Bit size
  */
-export const w = 32
+const w = 32
 
 /**
  * Convenience function to create an array
  * @param {integer} n Size of the array
  * @returns {Array} An array of size `n`
  */
-export function new_array(n) {
+function new_array(n) {
     return new Array(n)
 }
 
@@ -18,7 +17,7 @@ export function new_array(n) {
  * @param {string|integer} value If the input is an integer, this is a no-op
  * @returns {integer} The string encoded to an integer
  */
-export function encode(value) {
+function encode(value) {
     if (value instanceof Number) {
         return value
     }
@@ -30,9 +29,10 @@ export function encode(value) {
     return encoding
 }
 
-
-// A bunch of random values for use in tabulation hashing
-export const tab = [
+/**
+ * A bunch of random values for use in tabulation hashing
+ */
+const tab = [
     [
         0x0069AEFF,
         0x6AC0719E,
@@ -1066,3 +1066,10 @@ export const tab = [
         0xB32D6061,
     ],
 ]
+
+module.exports = {
+    w,
+    new_array,
+    encode,
+    tab
+}

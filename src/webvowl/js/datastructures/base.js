@@ -4,23 +4,22 @@ Some base classes inherited by others
 Courtesy of https://opendatastructures.org/
 */
 
-import { ValueError, IndexError } from "./errors"
+const { ValueError, IndexError } = require("./errors");
 
 /**
  * Base class for everything
  */
-export class BaseCollection {
-    constructor() {
-        super();
-    }
+class BaseCollection {
+    constructor() { }
     toString() {
         return "[" + new Array(this).toString() + "]";
     }
+
     /**
      * This implementation works for almost every class in ODS
      * @returns {integer}
      */
-    _size(this) {
+    _size() {
         return this.length;
     }
 }
@@ -28,15 +27,13 @@ export class BaseCollection {
 /**
  * Base class for Set implementations
  */
-export class BaseSet extends BaseCollection {
+class BaseSet extends BaseCollection {
     constructor() {
         super();
     }
-
     [Symbol.iterator]() {
         return this;
     }
-
     includes(x) {
         return this.find(x) !== undefined;
     }
@@ -78,15 +75,14 @@ export class BaseSet extends BaseCollection {
 /**
  * Base class for List implementations
  */
-export class BaseList extends BaseCollection {
+class BaseList extends BaseCollection {
     constructor() {
         super();
     }
-
-    next() {
+    *next() {
         // This implementation is good enough for array-based lists
         for (let i = 0; i < this.length; i++) {
-            yield(this._get(i));
+            yield (this._get(i));
         }
     }
 
@@ -111,7 +107,6 @@ export class BaseList extends BaseCollection {
         }
         return true;
     }
-
     includes(item) {
         try {
             this.index(item);
@@ -124,7 +119,6 @@ export class BaseList extends BaseCollection {
             }
         }
     }
-
     _add_first(x) {
         return this._add(0, x);
     }
@@ -231,4 +225,10 @@ export class BaseList extends BaseCollection {
         }
         return count;
     }
+}
+
+module.exports = {
+    BaseCollection,
+    BaseSet,
+    BaseList
 }

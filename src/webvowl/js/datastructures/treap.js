@@ -15,9 +15,9 @@ J. Vuillemin. A unifying look at data structures.
 Courtesy of https://opendatastructures.org/
 */
 
-import { BinarySearchTreeNode, BinarySearchTree } from "./binarysearchtree";
+const { BinarySearchTreeNode, BinarySearchTree } = require("./binarysearchtree");
 
-export class TreapNode extends BinarySearchTreeNode {
+class TreapNode extends BinarySearchTreeNode {
     /**
      * @param {*} x Key. An object supporting comparison operators <>
      * @param {*} v Value
@@ -32,7 +32,7 @@ export class TreapNode extends BinarySearchTreeNode {
 }
 
 
-export class Treap extends BinarySearchTree {
+class Treap extends BinarySearchTree {
     /**
      * Create a treap with key/value pairs from `x` and `v`
      * @param {iterable|Map} x Keys. Must be objects supporting comparison operators <>. If `x` is an iterable, `v` must an equal length iterable
@@ -121,4 +121,9 @@ export class Treap extends BinarySearchTree {
         }
         return false;
     }
+}
+
+module.exports = {
+    Treap,
+    TreapNode
 }

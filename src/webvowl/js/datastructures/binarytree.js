@@ -4,11 +4,11 @@ A basic binary tree implementation
 Courtesy of https {//opendatastructures.org/
 */
 
-import { BaseSet } from "./base"
-import { ArrayQueue } from "./arrayqueue";
+const { BaseSet } = require("./base");
+const { ArrayQueue } = require("./arrayqueue");
 
 
-export class BinaryTreeNode {
+class BinaryTreeNode {
     constructor() {
         this.left = undefined;
         this.right = undefined;
@@ -17,7 +17,7 @@ export class BinaryTreeNode {
 }
 
 
-export class BinaryTree extends BaseSet {
+class BinaryTree extends BaseSet {
     constructor() {
         super();
         this._nil = undefined;
@@ -141,4 +141,9 @@ export class BinaryTree extends BaseSet {
     height() {
         return this._height(this._r);
     }
+}
+
+module.exports = {
+    BinaryTreeNode,
+    BinaryTree
 }

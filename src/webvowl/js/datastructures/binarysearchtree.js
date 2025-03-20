@@ -4,11 +4,10 @@ An implementation of a binary search tree
 Courtesy of https://opendatastructures.org/
 */
 
-import { BinaryTree, BinaryTreeNode } from "./binarytree"
-import { ValueError } from "./errors";
-import { LinearHashTable } from "./linearhashtable";
+const { BinaryTree, BinaryTreeNode } = require("./binarytree");
+const { ValueError } = require("./errors");
 
-export class BinarySearchTreeNode extends BinaryTreeNode {
+class BinarySearchTreeNode extends BinaryTreeNode {
     /**
      * @param {*} x Key. An object supporting comparison operators <>
      * @param {*} v Value
@@ -18,12 +17,20 @@ export class BinarySearchTreeNode extends BinaryTreeNode {
         this.x = x;
         this.a = new Array(v);
     }
+
+    /**
+     * Return value of array if it only contains 1 element, otherwise return the array
+     * @returns {any|Array}
+     */
+    unpackValue() {
+        return this.a.length === 1 ? this.a[0] : this.a
+    }
 }
 
 /**
  * Base class for all our binary search trees
  */
-export class BinarySearchTree extends BinaryTree {
+class BinarySearchTree extends BinaryTree {
     /**
      * A binary search tree
      * @param {iterable|Map} x Keys. Must be objects supporting comparison operators <>. If `x` is an iterable, `v` must an equal length iterable
@@ -47,10 +54,10 @@ export class BinarySearchTree extends BinaryTree {
         u.left = u.right = u.parent = this._nil;
         return u;
     }
-    next() {
+    *next() {
         let u = this._first_node();
         while (u !== this._nil) {
-            yield u.x;
+            yield [u.x, u.unpackValue()];
             u = this._next_node(u);
         }
     }
@@ -245,11 +252,14 @@ export class BinarySearchTree extends BinaryTree {
     /**
      * Find the value mapped to key `x`
      * @param {*} x Key. An object supporting comparison operators <>
-     * @returns {Array|undefined} An array containing the values mapped to `x`, if found, else undefined.
+     * @returns {Array|undefined}
+     * Return value mapped to `x`.
+     * If multiple values map to `x`, return an array of those values.
+     * If `x` does not exist, return undefined.
      */
     find(x) {
         let u = this._find_node(x);
-        return u !== undefined ? u.a : undefined;
+        return u !== undefined ? u.unpackValue() : undefined;
     }
 
     /**
@@ -263,6 +273,7 @@ export class BinarySearchTree extends BinaryTree {
     /**
      * Add an item to the tree
      * @param {*} x Key. An object supporting comparison operators <>
+     * @param {*} v Value
      * @returns {boolean} Whether the item was added succesfully
      */
     add(x, v) {
@@ -307,4 +318,9 @@ export class BinarySearchTree extends BinaryTree {
         }
         return false;
     }
+}
+
+module.exports = {
+    BinarySearchTreeNode,
+    BinarySearchTree
 }

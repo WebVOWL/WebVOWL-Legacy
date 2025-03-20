@@ -4,11 +4,11 @@ An array-based implementation of a queue that uses modular arithmetic
 Courtesy of https://opendatastructures.org/
 */
 
-import { new_array } from "./util"
-import { BaseSet } from "./base"
-import { IndexError } from "./errors"
+const { new_array } = require("./util");
+const { BaseSet } = require("./base");
+const { IndexError } = require("./errors");
 
-export class ArrayQueue extends BaseSet {
+class ArrayQueue extends BaseSet {
     /**
      * An array-based queue that uses modular arithmetic
      * @param {iterable} iterable
@@ -64,4 +64,8 @@ export class ArrayQueue extends BaseSet {
         }
         return x;
     }
+}
+
+module.exports = {
+    ArrayQueue
 }

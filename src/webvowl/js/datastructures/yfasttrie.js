@@ -10,10 +10,10 @@ D. E. Willard. Log-logarithmic worst-case range queries are possible in
 Courtesy of https://opendatastructures.org/
 */
 
-import { BaseSet } from "./base";
-import { Treap } from "./treap";
-import { w, encode } from "./util.js";
-import { XFastTrie } from "./xfasttrie.js";
+const { BaseSet } = require("./base");
+const { Treap } = require("./treap");
+const { w, encode } = require("./util.js");
+const { XFastTrie } = require("./xfasttrie.js");
 
 /**
  * A Treap that implements the split/absorb functionality
@@ -92,15 +92,21 @@ class Pair extends Array {
         this.push([x, y]);
         Object.seal(this);
     }
-    t() {
+    get t() {
         return this[1];
     }
-    x() {
+    get x() {
         return this[0];
     }
+
+    // TODO: Implement
+    /*
+    def __int__(self):
+        return int(self[0])
+*/
 }
 
-export class YFastTrie extends BaseSet {
+class YFastTrie extends BaseSet {
     /**
      * @description
      * A trie is a specialized search tree particularly effective
@@ -118,7 +124,7 @@ export class YFastTrie extends BaseSet {
         this._initialize();
     }
 
-    next() {
+    *next() {
         // this._xft is a bunch of pairs
         for (p of this._xft) {
             // the one'th element of each pair is an STreap
@@ -189,4 +195,8 @@ export class YFastTrie extends BaseSet {
     clear() {
         this._initialize();
     }
+}
+
+module.exports = {
+    YFastTrie
 }

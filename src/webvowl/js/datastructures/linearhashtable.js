@@ -4,21 +4,22 @@ A Set implementation that uses hashing with linaer probing
 Courtesy of https://opendatastructures.org/
 */
 
-let hash = require('object-hash');
-import { BaseSet } from "./base"
-import { tab, new_array, w } from "./util";
+const hash = require('object-hash');
+const { BaseSet } = require("./base");
+const { tab, new_array, w } = require("./util");
 
-export class LinearHashTable extends BaseSet {
+class LinearHashTable extends BaseSet {
     /**
      * Create a new hash table with elements from `iterable`
      * @param {Iterable} iterable
      */
     constructor(iterable = []) {
+        super();
         this._initialize();
         this.initialize();
         this.add_all(iterable);
     }
-    next() {
+    *next() {
         for (x of this.t) {
             if (x !== undefined && x !== this.dl) {
                 yield x;
@@ -29,7 +30,7 @@ export class LinearHashTable extends BaseSet {
         this.dl = new Object();
     }
     _hash(x) {
-        h = this.hash_code(x);
+        let h = this.hash_code(x);
         return (
             tab[0][h & 0xFF]
             ^ tab[1][(h >> 8) & 0xFF]
@@ -133,4 +134,8 @@ export class LinearHashTable extends BaseSet {
         this.initialize();
     }
 
+}
+
+module.exports = {
+    LinearHashTable
 }

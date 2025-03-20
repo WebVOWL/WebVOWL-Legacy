@@ -10,10 +10,10 @@ D. E. Willard. Log-logarithmic worst-case range queries are possible in
 Courtesy of https://opendatastructures.org/
 */
 
-let hash = require('object-hash');
-import { BinaryTrie, BinaryTrieNode } from "./binarytrie"
-import { LinearHashTable } from "./linearhashtable"
-import { new_array, w, encode } from "./util"
+const hash = require('object-hash');
+const { BinaryTrie, BinaryTrieNode } = require("./binarytrie");
+const { LinearHashTable } = require("./linearhashtable");
+const { new_array, w, encode } = require("./util");
 
 
 class XFastTrieLinearHashTable extends LinearHashTable {
@@ -66,14 +66,14 @@ class XFastTrieLinearHashTable extends LinearHashTable {
     }
 }
 
-export class XFastTrieNode extends BinaryTrieNode {
+class XFastTrieNode extends BinaryTrieNode {
     constructor() {
         super();
         this.prefix = 0;
     }
 }
 
-export class XFastTrie extends BinaryTrie {
+class XFastTrie extends BinaryTrie {
     constructor() {
         super();
         this._nil = this._new_node();
@@ -210,4 +210,9 @@ export class XFastTrie extends BinaryTrie {
         this.length -= 1;
         return true;
     }
+}
+
+
+module.exports = {
+    XFastTrie
 }
