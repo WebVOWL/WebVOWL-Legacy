@@ -89,7 +89,7 @@ class STreap extends Treap {
 class Pair extends Array {
     constructor(x, y) {
         super();
-        this.push([x, y]);
+        this.push(x, y);
         Object.seal(this);
     }
     get t() {
@@ -98,12 +98,13 @@ class Pair extends Array {
     get x() {
         return this[0];
     }
-
-    // TODO: Implement
-    /*
-    def __int__(self):
-        return int(self[0])
-*/
+    /**
+     * Specify a custom encoding value
+     * @returns
+     */
+    __enc__() {
+        return this.x;
+    }
 }
 
 class YFastTrie extends BaseSet {
