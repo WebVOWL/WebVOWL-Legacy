@@ -1,7 +1,22 @@
+const hash = require('object-hash');
+
 /**
  * Bit size
  */
 const w = 32
+
+
+/**
+ * Create a hash code of the object
+ * @param {*} x
+ * @returns {Number}
+ */
+function hashcode(x) {
+    let h = hash(x, { encoding: "hex" });
+    let n = Number.parseInt(h, 16);
+    return n;
+}
+
 
 /**
  * Convenience function to create an array
@@ -13,13 +28,18 @@ function new_array(n) {
 }
 
 /**
- * @description Encode any string to an integer
- * @param {string|integer} value If the input is an integer, this is a no-op
+ * @description Encode any string or number to an integer
+ * @param {string|Number} value If the input is a number, it is converted to an integer
  * @returns {integer} The string encoded to an integer
  */
 function encode(value) {
-    if (value instanceof Number) {
-        return value
+    // Allow objects to compute their encoding value
+    if (value.__enc__ !== undefined) {
+        value = value.__enc__();
+    }
+    // Check if Number
+    if (Number.isFinite(value)) {
+        return Math.floor(value)
     }
     let encoding = 0;
     for (const char of value) {
@@ -1069,6 +1089,7 @@ const tab = [
 
 module.exports = {
     w,
+    hashcode,
     new_array,
     encode,
     tab

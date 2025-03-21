@@ -4,9 +4,8 @@ A Set implementation that uses hashing with linaer probing
 Courtesy of https://opendatastructures.org/
 */
 
-const hash = require('object-hash');
 const { BaseSet } = require("./base");
-const { tab, new_array, w } = require("./util");
+const { tab, new_array, w, hashcode } = require("./util");
 
 class LinearHashTable extends BaseSet {
     /**
@@ -63,7 +62,7 @@ class LinearHashTable extends BaseSet {
         this.length = 0;
     }
     hash_code(x) {
-        return hash(x);
+        return hashcode(x);
     }
 
     /**
