@@ -151,7 +151,8 @@ module.exports = function (graph) {
 
       let label = testData[i]
       assertArr.push(label)
-      trie.add(label, i)
+      trie.add(i, label)
+      console.log(label)
     }
 
     // Testing membership
@@ -175,11 +176,7 @@ module.exports = function (graph) {
     for (const item of trie) {
       console.log(item)
     }
-
-
   }
-
-
 
   function hoverSearchEntryView() {
     updateSelectionStatusFlags();
