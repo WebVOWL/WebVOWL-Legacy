@@ -418,7 +418,7 @@ module.exports = function (graph) {
       }
 
       var searchEntryNode = d3.select(testEntry);
-      if (eLen === 1 || allSame === true) {
+      if (true) { // Previosly: eLen === 1 || allSame === true
         if (nodeMap[entries[0]] === undefined) {
           searchEntryNode.style("color", "#979797");
           testEntry.title = newResults[i] + "\nElement is filtered out.";

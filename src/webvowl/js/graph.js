@@ -1734,7 +1734,7 @@ module.exports = function (graphContainerSelector) {
     console.log(unfilteredNodes); */
     links = linkCreator.createLinks(processedUnfilteredData.properties);
     storeLinksOnNodes(processedUnfilteredData.nodes, links);
-    classNodes = breadthFirstDepthSearch(processedUnfilteredData.nodes, baseId, 3);
+    classNodes = breadthFirstDepthSearch(baseId);
     /* console.log("BFS nodes");
     console.log(classNodes); */
     links = [];
@@ -1778,6 +1778,7 @@ module.exports = function (graphContainerSelector) {
     redrawContent();
     refreshGraphStyle();
     updateHaloStyles();
+    graph.resetSearchHighlight();
     graph.highLightNodes(baseId);
   }
 
@@ -1797,7 +1798,7 @@ module.exports = function (graphContainerSelector) {
   /** --------------------------------------------------------- **/
   /** --  Breadth First Search to a certain depth            -- **/
   /** --------------------------------------------------------- **/
-  function breadthFirstDepthSearch(nodes = processedUnfilteredData.nodes, ids, depth = 1) {
+  function breadthFirstDepthSearch(ids, depth = 1, nodes = processedUnfilteredData.nodes) {
     let originNodes = [];
     let vMap = new Map();
 
