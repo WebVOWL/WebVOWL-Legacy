@@ -1778,6 +1778,7 @@ module.exports = function (graphContainerSelector) {
     redrawContent();
     refreshGraphStyle();
     updateHaloStyles();
+    graph.highLightNodes(baseId);
   }
 
   function filterFunction(module, data, initializing) {
