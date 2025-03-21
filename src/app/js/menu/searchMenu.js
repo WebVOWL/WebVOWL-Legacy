@@ -368,7 +368,7 @@ module.exports = function (graph) {
       numEntries = maxEntries;
 
     var filteredOutElements = 0;
-    for (i = 0; i < numEntries; i++) {
+    for (let i = 0; i < numEntries; i++) {
       //add results to the dropdown menu
       var testEntry = document.createElement('li');
       testEntry.setAttribute('elementID', newResultsIds[i]);
@@ -423,7 +423,7 @@ module.exports = function (graph) {
           searchEntryNode.style("color", "#979797");
           testEntry.title = newResults[i] + "\nElement is filtered out.";
           testEntry.onclick = function () {
-            let id = testEntry.getAttribute('elementID');
+            let id = newResultsIds[i];
             let nodeId = mergedIdList[id];
             try {
               graph.loadSearchData(nodeId);
