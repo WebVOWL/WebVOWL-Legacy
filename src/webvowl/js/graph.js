@@ -1717,7 +1717,7 @@ module.exports = function (graphContainerSelector) {
   }
 
   //Applies the data of the graph options object and parses it. The graph is not redrawn.
-  graph.loadSearchData = function () {
+  graph.loadSearchData = function (baseId) {
 
     unfilteredNodes = processedUnfilteredData.nodes
     unfilteredLinks = [];
@@ -1734,7 +1734,7 @@ module.exports = function (graphContainerSelector) {
     console.log(unfilteredNodes); */
     links = linkCreator.createLinks(processedUnfilteredData.properties);
     storeLinksOnNodes(processedUnfilteredData.nodes, links);
-    classNodes = breadthFirstDepthSearch(processedUnfilteredData.nodes, 5, 3);
+    classNodes = breadthFirstDepthSearch(processedUnfilteredData.nodes, baseId, 3);
     /* console.log("BFS nodes");
     console.log(classNodes); */
     links = [];

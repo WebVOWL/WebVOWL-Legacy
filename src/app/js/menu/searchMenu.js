@@ -423,7 +423,17 @@ module.exports = function (graph) {
           searchEntryNode.style("color", "#979797");
           testEntry.title = newResults[i] + "\nElement is filtered out.";
           testEntry.onclick = function () {
-            graph.loadSearchData();
+            let id = testEntry.getAttribute('elementID');
+            let nodeId = mergedIdList[id];
+            try {
+              graph.loadSearchData(nodeId);
+            } catch (error) {
+              console.error(error);
+              updateSearchDictionary();
+            }
+
+
+
           };
           d3.select(testEntry).style("cursor", "default");
           filteredOutElements++;
