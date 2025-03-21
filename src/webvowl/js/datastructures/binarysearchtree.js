@@ -228,12 +228,8 @@ class BinarySearchTree extends BinaryTree {
      * Find node mapped to key `x`
      * @param {*} x Key. An object supporting comparison operators <>
      * @returns {BinarySearchTreeNode|undefined} The node if found, else undefined
-     * @throws {ReferenceError} If the tree is empty
      */
     _find_node(x) {
-        if (!Object.hasOwn(this, "_r")) {
-            throw new ReferenceError("lookup in empty tree");
-        }
         let w = this._r;
         while (w !== this._nil) {
             if (x < w.x) {
