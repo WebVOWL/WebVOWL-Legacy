@@ -10,10 +10,9 @@ D. E. Willard. Log-logarithmic worst-case range queries are possible in
 Courtesy of https://opendatastructures.org/
 */
 
-const hash = require('object-hash');
 const { BinaryTrie, BinaryTrieNode } = require("./binarytrie");
 const { LinearHashTable } = require("./linearhashtable");
-const { new_array, w, encode } = require("./util");
+const { new_array, w, encode, hashcode } = require("./util");
 
 
 class XFastTrieLinearHashTable extends LinearHashTable {
@@ -26,7 +25,7 @@ class XFastTrieLinearHashTable extends LinearHashTable {
         super(iterable);
     }
     hash_code(x) {
-        return hash(x.prefix);
+        return hashcode(x.prefix);
     }
     /**
      * Lookup a value in the hash table
@@ -35,6 +34,7 @@ class XFastTrieLinearHashTable extends LinearHashTable {
      */
     find(x) {
         let i = this._hash(x);
+        console.log(`${i}`);
         while (this.t[i] !== undefined) {
             if (this.t[i] !== this.dl && x.prefix === this.t[i].prefix) {
                 return this.t[i];
@@ -103,9 +103,9 @@ class XFastTrie extends BinaryTrie {
         let u = this.r;
         let q = this._new_node();
         while (h - l > 1) {
-            i = (l + h) / 2;
+            let i = Math.floor((l + h) / 2);
             q.prefix = ix >> w - i;
-            v = this.t[i].find(q);
+            let v = this.t[i].find(q);
             if (v === undefined) {
                 h = i;
             }
@@ -118,7 +118,7 @@ class XFastTrie extends BinaryTrie {
             return u;
         }
         let c = ix >> (w - l - 1) & 1;
-        pred = [u.jump.prev, u.jump][c];
+        let pred = [u.jump.prev, u.jump][c];
         if (pred.next === undefined) {
             return undefined;
         }
