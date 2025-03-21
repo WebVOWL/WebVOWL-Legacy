@@ -1647,10 +1647,8 @@ module.exports = function (graphContainerSelector) {
     var initializationData = _.clone(unfilteredData);
     links = linkCreator.createLinks(initializationData.properties);
     storeLinksOnNodes(initializationData.nodes, links);
-    
     // Keep initialization data for searching unrendered nodes
-    processedUnfilteredData = initializationData;
-
+    processedUnfilteredData = _.clone(initializationData);
     options.filterModules().forEach(function (module) {
       initializationData = filterFunction(module, initializationData, true);
     });
@@ -1718,6 +1716,70 @@ module.exports = function (graphContainerSelector) {
     // }
   }
 
+  //Applies the data of the graph options object and parses it. The graph is not redrawn.
+  graph.loadSearchData = function () {
+
+    unfilteredNodes = processedUnfilteredData.nodes
+    unfilteredLinks = [];
+    unfilteredNodes.forEach(function (node) {
+      let nodeLinks = node.links();
+      nodeLinks.forEach(function (link) {
+        if (!unfilteredLinks.includes(link)) {
+          unfilteredLinks.push(link);
+        }
+      })
+    })
+    /* console.log("Test0");
+    console.log(unfilteredLinks);
+    console.log(unfilteredNodes); */
+    links = linkCreator.createLinks(processedUnfilteredData.properties);
+    storeLinksOnNodes(processedUnfilteredData.nodes, links);
+    classNodes = breadthFirstDepthSearch(processedUnfilteredData.nodes, 5, 3);
+    /* console.log("BFS nodes");
+    console.log(classNodes); */
+    links = [];
+    linksInSearch = [];
+    // sets links to all links on nodes in search
+    classNodes.forEach(function (node) {
+      let nodeLinks = node.links();
+      nodeLinks.forEach(function (link) {
+        if (!links.includes(link)) {
+          links.push(link);
+        }
+      })
+    })
+    // adds links that are within search limits to linksInSearch
+    links.forEach(function (link) {
+      let domainFlag = 0;
+      let rangeFlag = 0;
+      classNodes.forEach(function (node) {
+        if (link.domain() === node) {
+          domainFlag = 1;
+        }
+        if (link.range() === node) {
+          rangeFlag = 1;
+        }
+      })
+      if (domainFlag == 1 && rangeFlag == 1) {
+        linksInSearch.push(link);
+      }
+
+    })
+    /* console.log("Test2");
+    console.log(links); */
+    labelNodes = linksInSearch.map(function (link) {
+      return link.label();
+    });
+    /* console.log("Test3");
+    console.log(labelNodes); */
+    setForceLayoutData(classNodes, labelNodes, linksInSearch);
+    updateNodeMap();
+    force.start();
+    redrawContent();
+    refreshGraphStyle();
+    updateHaloStyles();
+  }
+
   function filterFunction(module, data, initializing) {
     if (initializing) {
       if (module.initialize) {
@@ -1762,37 +1824,37 @@ module.exports = function (graphContainerSelector) {
           let currentLink = linkArr[k];
           let domainNode = currentLink.domain();
           let rangeNode = currentLink.range();
-          
+
           // If the edge is connected to our current node, add the other end of the edge only if it hasn't already been visited or appended to our frontier
           if (domainNode === currentNode) {
-            if ( vMap.get(rangeNode) != true ) {
-                 frontier.push(rangeNode);
-                 vMap.set(rangeNode, true);
+            if (vMap.get(rangeNode) != true) {
+              frontier.push(rangeNode);
+              vMap.set(rangeNode, true);
             }
           }
           else if (rangeNode === currentNode) {
-            if ( vMap.get(domainNode) != true ) {
-                 frontier.push(domainNode);
-                 vMap.set(domainNode, true)
+            if (vMap.get(domainNode) != true) {
+              frontier.push(domainNode);
+              vMap.set(domainNode, true)
             }
           }
-        
+
         }
-        
+
       }
-      frontier = frontier.filter( (x) => !visited.includes(x) )
+      frontier = frontier.filter((x) => !visited.includes(x))
       visited.push(...frontier);
     }
     return visited;
   }
 
-  function findNodeFromId (nodes, id) {
+  function findNodeFromId(nodes, id) {
     for (let i = 0; i < nodes.length; i++) {
       if (nodes[i].id() == id) {
         return nodes[i];
       }
     }
-    throw new Error ("node with this id does not exist");
+    throw new Error("node with this id does not exist");
   }
 
   /** --------------------------------------------------------- **/
@@ -1830,11 +1892,11 @@ module.exports = function (graphContainerSelector) {
     for (var i = 0, nodesLength = nodes.length; i < nodesLength; i++) {
       var node = nodes[i],
         connectedLinks = [];
-
+  
       // look for properties where this node is the domain or range
       for (var j = 0, linksLength = links.length; j < linksLength; j++) {
         var link = links[j];
-
+  
         if (link.domain() === node || link.range() === node) {
           connectedLinks.push(link);
         }
