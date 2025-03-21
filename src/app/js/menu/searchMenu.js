@@ -431,9 +431,6 @@ module.exports = function (graph) {
               console.error(error);
               updateSearchDictionary();
             }
-
-
-
           };
           d3.select(testEntry).style("cursor", "default");
           filteredOutElements++;
