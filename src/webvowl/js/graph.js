@@ -1796,20 +1796,23 @@ module.exports = function (graphContainerSelector) {
   /** --------------------------------------------------------- **/
   /** --  Breadth First Search to a certain depth            -- **/
   /** --------------------------------------------------------- **/
-  // TODO - introduce hashmap for further perfomance 
-  function breadthFirstDepthSearch(nodes = processedUnfilteredData.nodes, id, depth = 1) {
-    let originNode;
+  function breadthFirstDepthSearch(nodes = processedUnfilteredData.nodes, ids, depth = 1) {
+    let originNodes = [];
+    let vMap = new Map();
 
-    try {
-      originNode = findNodeFromId(nodes, id);
-    } catch (error) {
-      console.error(error);
-      return;
+    // Multiple ID's
+    for (let i = 0; i < ids.length; i++) {
+      try {
+        originNodes.push(findNodeFromId(nodes, ids[i]));
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+      vMap.set(originNodes[i], true);
     }
 
-    let vMap = new Map(); vMap.set(originNode, true);
-    let visited = [originNode];
-    let frontier = [originNode];
+    let visited = [...originNodes];
+    let frontier = [...originNodes];
 
     for (let i = 0; i < depth; i++) { // For every depth
 
