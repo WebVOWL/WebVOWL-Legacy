@@ -43,7 +43,6 @@ module.exports = function (graphContainerSelector) {
     links,
     properties,
     unfilteredData,
-    unfilteredNodeMap = new Map(),
     // Graph behaviour
     force,
     dragBehaviour,
@@ -1435,43 +1434,30 @@ module.exports = function (graphContainerSelector) {
   };
 
   function generateDictionary(data) {
-    var i;
     var originalDictionary = [];
     var nodes = data.nodes;
-    for (i = 0; i < nodes.length; i++) {
+    for (let i = 0; i < nodes.length; i++) {
       // check if node has a label
       if (nodes[i].labelForCurrentLanguage() !== undefined)
         originalDictionary.push(nodes[i]);
     }
     var props = data.properties;
-    for (i = 0; i < props.length; i++) {
+    for (let i = 0; i < props.length; i++) {
       if (props[i].labelForCurrentLanguage() !== undefined)
         originalDictionary.push(props[i]);
     }
     parser.setDictionary(originalDictionary);
 
     var literFilter = graph.options().literalFilter();
-    var idsToRemove = literFilter.removedNodes();
+    var idsToRemove = literFilter.removedNodes(); // A set
     var originalDict = parser.getDictionary();
     var newDict = [];
 
     // go through the dictionary and remove the ids;
-    for (i = 0; i < originalDict.length; i++) {
-      var dictElement = originalDict[i];
-      var dictElementId;
-      if (dictElement.property)
-        dictElementId = dictElement.property().id();
-      else
-        dictElementId = dictElement.id();
-      // compare against the removed ids;
-      var addToDictionary = true;
-      for (var j = 0; j < idsToRemove.length; j++) {
-        var currentId = idsToRemove[j];
-        if (currentId === dictElementId) {
-          addToDictionary = false;
-        }
-      }
-      if (addToDictionary === true) {
+    for (let i = 0; i < originalDict.length; i++) {
+      let dictElement = originalDict[i];
+      let dictElementId = dictElement.property ? dictElement.property().id() : dictElement.id();
+      if (!idsToRemove.has(dictElementId)) {
         newDict.push(dictElement);
       }
     }
@@ -1644,11 +1630,6 @@ module.exports = function (graphContainerSelector) {
     var initializationData = _.clone(unfilteredData);
     links = linkCreator.createLinks(initializationData.properties);
     storeLinksOnNodes(initializationData.nodes, links);
-
-    // Create node map
-    initializationData.nodes.forEach((node) => {
-      unfilteredNodeMap.set(node.id(), node)
-    })
 
     options.filterModules().forEach(function (module) {
       initializationData = filterFunction(module, initializationData, true);
