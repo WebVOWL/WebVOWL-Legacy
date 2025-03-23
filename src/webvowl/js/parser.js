@@ -20,6 +20,10 @@ module.exports = function (graph) {
     dictionary = [],
     propertyMap;
 
+  parser.getClassMap = function () {
+    return classMap;
+  }
+
   parser.getDictionary = function () {
     return dictionary;
   };
