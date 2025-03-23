@@ -1788,11 +1788,13 @@ module.exports = function (graphContainerSelector) {
   function breadthFirstDepthSearch(ids, depth = 1, nodes = processedUnfilteredData.nodes) {
     let originNodes = [];
     let vMap = new Map();
+    let nodeMap = parser.getClassMap();
 
     // Multiple ID's
     for (let i = 0; i < ids.length; i++) {
+      console.log(nodeMap[ids[i]])
       try {
-        originNodes.push(findNodeFromId(nodes, ids[i]));
+        originNodes.push(nodeMap[ids[i]]);//findNodeFromId(nodes, ids[i]));
       } catch (error) {
         console.error(error);
         return;
