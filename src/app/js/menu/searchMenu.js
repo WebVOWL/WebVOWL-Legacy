@@ -67,7 +67,7 @@ module.exports = function (graph) {
   };
 
   function hoverSearchEntryView() {
-    handleAutoCompletion;
+    handleAutoCompletion();
     searchMenu.showSearchEntries();
   }
 
@@ -240,7 +240,7 @@ module.exports = function (graph) {
       const nodeIDs = searchMatches[i][1]
       let nodeMap = graph.getNodeMapForSearch();
 
-      // TODO: Figure out how to show nodes in nodeIDS
+      // TODO: Figure out how to show nodes in nodeIDs
       // Showing all of them (as is done below) causes nodeString to be repeated nodeIDs.length times
       // (as all nodeIDs nodes are pointing to nodeString by definition)
       for (const nodeID of nodeIDs) {
@@ -256,7 +256,14 @@ module.exports = function (graph) {
         if (nodeMap[nodeID] === undefined) {
           searchEntryNode.style("color", "#979797");
           testEntry.onclick = function () {
-            // TODO: Add function call for subgraph building here!
+            try {
+              graph.loadSearchData(nodeID);
+              searchMenu.requestDictionaryUpdate();
+            } catch (error) {
+              console.error(error);
+
+            }
+
             // TODO: Maybe connect with handleClick function
           };
           d3.select(testEntry).style("cursor", "default");
