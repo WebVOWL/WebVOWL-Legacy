@@ -273,13 +273,6 @@ module.exports = function (graph) {
 
         if (attributes) {
           // Look for an attribute with the same id and merge them
-          // for (var i = 0; i < attributes.length; i++) {
-          //   var attribute = attributes[i];
-          //   if (element.id === attribute.id) {
-          //     matchingAttribute = attribute;
-          //     break;
-          //   }
-          // }
           matchingAttribute = attributeMap.get(element.id);
 
           addAdditionalAttributes(element, matchingAttribute);
