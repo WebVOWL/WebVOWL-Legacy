@@ -34,6 +34,7 @@ module.exports = function (graph) {
 
     for (let i = 0; i < dict.length; i++) {
       let item = dict[i];
+      console.log(`${item.labelForCurrentLanguage().toLowerCase()} | ${item.id()}`);
       trie.add(item.labelForCurrentLanguage().toLowerCase(), item.id());
 
       // add all equivalents to the search space;
