@@ -180,19 +180,21 @@ module.exports = function (graph) {
     var combinations = [];
     var prototypeMap = createLowerCasePrototypeMap(nodePrototypeMap);
 
+    let classMap = new Map();
+    if(attributes) {
+      for (var i = 0; i < attributes.length; i++) {
+        classMap.set(attributes[i].id, attributes[i]);
+      }
+    }
+
     if (baseObjects) {
       baseObjects.forEach(function (element) {
         var matchingAttribute;
 
         if (attributes) {
           // Look for an attribute with the same id and merge them
-          for (var i = 0; i < attributes.length; i++) {
-            var attribute = attributes[i];
-            if (element.id === attribute.id) {
-              matchingAttribute = attribute;
-              break;
-            }
-          }
+          matchingAttribute = classMap.get(element.id);
+
           addAdditionalAttributes(element, matchingAttribute);
         }
 
@@ -257,19 +259,29 @@ module.exports = function (graph) {
     var combinations = [];
     var prototypeMap = createLowerCasePrototypeMap(propertyPrototypeMap);
 
+    let attributeMap = new Map();
+    if(attributes) {
+      for (var i = 0; i < attributes.length; i++) {
+        attributeMap.set(attributes[i].id, attributes[i]);
+      }
+    }
+
+
     if (baseObjects) {
       baseObjects.forEach(function (element) {
         var matchingAttribute;
 
         if (attributes) {
           // Look for an attribute with the same id and merge them
-          for (var i = 0; i < attributes.length; i++) {
-            var attribute = attributes[i];
-            if (element.id === attribute.id) {
-              matchingAttribute = attribute;
-              break;
-            }
-          }
+          // for (var i = 0; i < attributes.length; i++) {
+          //   var attribute = attributes[i];
+          //   if (element.id === attribute.id) {
+          //     matchingAttribute = attribute;
+          //     break;
+          //   }
+          // }
+          matchingAttribute = attributeMap.get(element.id);
+
           addAdditionalAttributes(element, matchingAttribute);
         }
 
