@@ -1,3 +1,4 @@
+var Deque = require("collections/deque");
 var _ = require("lodash/core");
 var math = require("./util/math")();
 var linkCreator = require("./parsing/linkCreator")();
@@ -44,6 +45,7 @@ module.exports = function (graphContainerSelector) {
         properties,
         unfilteredData,
         processedUnfilteredData,
+        processedUnfilteredDataMap = { nodes: new Map(), properties: new Map() },
         // Graph behaviour
         force,
         dragBehaviour,
@@ -1208,7 +1210,7 @@ module.exports = function (graphContainerSelector) {
     graph.load = function () {
         force.stop();
         loadGraphData();
-        refreshGraphData();
+        refreshGraphData(_.clone(unfilteredData));
         for (var i = 0; i < labelNodes.length; i++) {
             var label = labelNodes[i];
             if (label.property().x && label.property().y) {
@@ -1290,10 +1292,17 @@ module.exports = function (graphContainerSelector) {
         }
     }
 
-    // Updates the graphs displayed data and style.
-    graph.update = function (init) {
+    /**
+     * Updates the graphs displayed data and style.
+     * @note `data` will be mutated by this function, thus it should be cloned beforehand.
+     * @param {boolean} init Is first time load?
+     * @param {object} data An object containing nodes and properties.
+     *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
+     * @returns
+     */
+    graph.update = function (init, data = _.clone(unfilteredData)) {
         var validOntology = graph.options().loadingModule().successfullyLoadedOntology();
-        if (validOntology === false && (init && init === true)) {
+        if (validOntology === false && init === true) {
             graph.options().loadingModule().collapseDetails();
             return;
         }
@@ -1302,8 +1311,7 @@ module.exports = function (graphContainerSelector) {
         }
 
         keepDetailsCollapsedOnLoading = false;
-        refreshGraphData();
-        // update node map
+        refreshGraphData(data);
         updateNodeMap();
 
         force.start();
@@ -1324,7 +1332,7 @@ module.exports = function (graphContainerSelector) {
         // window size
         var w = 0.5 * graph.options().width();
         var h = 0.5 * graph.options().height();
-        // computing initial translation for the graph due tue the dynamic default zoom level
+        // computing initial translation for the graph due to the dynamic default zoom level
         var tx = w - defaultZoom * w;
         var ty = h - defaultZoom * h;
         zoom.translate([tx, ty])
@@ -1627,6 +1635,15 @@ module.exports = function (graphContainerSelector) {
         storeLinksOnNodes(initializationData.nodes, links);
         // Keep initialization data for searching unrendered nodes
         processedUnfilteredData = _.clone(initializationData);
+
+        // Create a map of all nodes and properties for fast lookup
+        processedUnfilteredData.nodes.forEach((node) => {
+            processedUnfilteredDataMap.nodes.set(node.id(), node);
+        });
+        processedUnfilteredData.properties.forEach((property) => {
+            processedUnfilteredDataMap.properties.set(property.id(), property);
+        });
+
         options.filterModules().forEach(function (module) {
             initializationData = filterFunction(module, initializationData, true);
         });
@@ -1666,13 +1683,16 @@ module.exports = function (graphContainerSelector) {
         setForceLayoutData(classNodes, labelNodes, links);
     }
 
-    //Applies the data of the graph options object and parses it. The graph is not redrawn.
-    function refreshGraphData() {
-        var shouldExecuteEmptyFilter = options.literalFilter().enabled();
+    /**
+     * Applies the data of the graph options object and parses it. The graph is not redrawn.
+     * @note `preprocessedData` will be mutated by this function, thus it should be cloned beforehand.
+     * @param {object} preprocessedData An object containing nodes and properties.
+     *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
+     */
+    function refreshGraphData(preprocessedData) {
+        let shouldExecuteEmptyFilter = options.literalFilter().enabled();
         graph.executeEmptyLiteralFilter();
         options.literalFilter().enabled(shouldExecuteEmptyFilter);
-
-        var preprocessedData = _.clone(unfilteredData);
 
         // Filter the data
         links = linkCreator.createLinks(preprocessedData.properties);
@@ -1695,26 +1715,31 @@ module.exports = function (graphContainerSelector) {
         // }
     }
 
-    //Applies the data of the graph options object and parses it. The graph is not redrawn.
-    graph.loadSearchData = function (baseId) {
-        unfilteredNodes = processedUnfilteredData.nodes
-        unfilteredLinks = [];
-        unfilteredNodes.forEach(function (node) {
-            let nodeLinks = node.links();
-            nodeLinks.forEach(function (link) {
-                if (!unfilteredLinks.includes(link)) {
-                    unfilteredLinks.push(link);
-                }
-            })
-        })
-        /* console.log("Test0");
-        console.log(unfilteredLinks);
-        console.log(unfilteredNodes); */
-        links = linkCreator.createLinks(processedUnfilteredData.properties);
-        storeLinksOnNodes(processedUnfilteredData.nodes, links);
-        classNodes = breadthFirstDepthSearch([baseId]);
-        /* console.log("BFS nodes");
-        console.log(classNodes); */
+    /**
+     * Create a subgraph with `rootNodeID` as root.
+     * @param {string} rootNodeID
+     */
+    graph.loadSearchData = function (rootNodeID) {
+        storeLinksOnNodes(processedUnfilteredData.nodes, linkCreator.createLinks(processedUnfilteredData.properties));
+        let nodes = [processedUnfilteredDataMap.nodes.get(rootNodeID)];
+        if (nodes[0] === undefined) {
+            let prop = processedUnfilteredDataMap.properties.get(rootNodeID);
+            if (prop !== undefined) {
+                nodes = [prop.domain(), prop.range()];
+            } else {
+                console.log(`Failed to find a node or property with id ${rootNodeID}`);
+            }
+        }
+
+        let classNodes = breadthFirstSearchDepth(nodes, 2);
+
+
+        for (const property of processedUnfilteredData.properties) {
+            if
+        }
+
+
+
         links = [];
         linksInSearch = [];
         // sets links to all links on nodes in search
@@ -1741,23 +1766,23 @@ module.exports = function (graphContainerSelector) {
             if (domainFlag == 1 && rangeFlag == 1) {
                 linksInSearch.push(link);
             }
-
         })
-        /* console.log("Test2");
-        console.log(links); */
         labelNodes = linksInSearch.map(function (link) {
             return link.label();
         });
-        /* console.log("Test3");
-        console.log(labelNodes); */
-        setForceLayoutData(classNodes, labelNodes, linksInSearch);
-        updateNodeMap();
-        force.start();
-        redrawContent();
-        refreshGraphStyle();
-        updateHaloStyles();
+
+
+        graph.update(false, { nodes: classNodes, properties: processedUnfilteredData.properties });
+
+
+        // setForceLayoutData(classNodes, labelNodes, linksInSearch);
+        // updateNodeMap();
+        // force.start();
+        // redrawContent();
+        // refreshGraphStyle();
+        // updateHaloStyles();
         graph.resetSearchHighlight();
-        graph.highLightNodes(baseId);
+        graph.highLightNodes(rootNodeID);
     }
 
     function filterFunction(module, data, initializing) {
@@ -1775,88 +1800,57 @@ module.exports = function (graphContainerSelector) {
 
     /**
      * Breadth First Search to a certain depth
-     * @param {Array} ids
-     * @param {integer} depth
-     * @param {*} nodes
-     * @returns {Array} Nodes visited
+     * @param {Array} rootNodes Begin search from these nodes
+     * @param {integer} depth How many connections, starting from `rootNodes`, should be explored.
+     * @returns {Map<string, object>} Nodes visited. A map of nodeIDs to nodes.
      */
-    function breadthFirstDepthSearch(ids, depth = 1, nodes = processedUnfilteredData.nodes) {
-        let originNodes = [];
-        let vMap = new Map();
+    function breadthFirstSearchDepth(rootNodes, depth) {
+        let visited = new Map();
+        let frontier = new Deque(rootNodes);
 
-        // Multiple ID's
-        for (let i = 0; i < ids.length; i++) {
-            // console.log(unfilteredDataMap.get(ids[i]));
-            try {
-                originNodes.push(findNodeFromId(nodes, ids[i]));
-                // originNodes.push(unfilteredDataMap.get(ids[i]));
-            } catch (error) {
-                console.error(error);
-                return;
-            }
-            vMap.set(originNodes[i], true);
-        }
+        // For every depth
+        for (let i = 0; i < depth; i++) {
+            // Keep static reference to the length
+            let length = frontier.length;
 
-        let visited = [...originNodes];
-        let frontier = [...originNodes];
-
-        for (let i = 0; i < depth; i++) { // For every depth
-
-            let layerNodesAmount = frontier.length;
-
-            for (let j = 0; j < layerNodesAmount; j++) { // For every Node
-
-                let currentNode = frontier[j];
+            // For every node
+            for (let j = 0; j < length; j++) {
+                let currentNode = frontier.shift();
                 let linkArr = currentNode.links();
 
-                for (let k = 0; k < linkArr.length; k++) { // For every Edge½
+                // For every edge
+                for (let k = 0; k < linkArr.length; k++) {
                     let currentLink = linkArr[k];
                     let domainNode = currentLink.domain();
                     let rangeNode = currentLink.range();
 
                     // If the edge is connected to our current node, add the other end of the edge only if it hasn't already been visited or appended to our frontier
                     if (domainNode === currentNode) {
-                        if (vMap.get(rangeNode) != true) {
+                        if (!visited.get(rangeNode.id())) {
                             frontier.push(rangeNode);
-                            vMap.set(rangeNode, true);
                         }
                     }
                     else if (rangeNode === currentNode) {
-                        if (vMap.get(domainNode) != true) {
+                        if (!visited.get(domainNode.id())) {
                             frontier.push(domainNode);
-                            vMap.set(domainNode, true)
                         }
                     }
-
                 }
-
+                visited.set(currentNode.id(), currentNode);
             }
-            frontier = frontier.filter((x) => !visited.includes(x))
-            visited.push(...frontier);
         }
         return visited;
-    }
-
-    function findNodeFromId(nodes, id) {
-        for (let i = 0; i < nodes.length; i++) {
-            if (nodes[i].id() == id) {
-                return nodes[i];
-            }
-        }
-        throw new Error("node with this id does not exist");
     }
 
     /** --------------------------------------------------------- **/
     /** -- force-layout related functions                      -- **/
     /** --------------------------------------------------------- **/
     function storeLinksOnNodes(nodes, links) {
-        for (var i = 0, nodesLength = nodes.length; i < nodesLength; i++) {
-            var node = nodes[i],
-                connectedLinks = [];
-            node.links(connectedLinks);
+        for (let i = 0; i < nodes.length; i++) {
+            nodes[i].links([]);
         }
         // look for properties where this node is the domain or range
-        for (var i = 0, linksLength = links.length; i < linksLength; i++) {
+        for (let i = 0; i < links.length; i++) {
             var link = links[i];
             var domainobj = link.domain();
             var existingDomainLinks = domainobj.links();
@@ -1877,22 +1871,6 @@ module.exports = function (graphContainerSelector) {
             link.range().links(existingRangeLinks);
         }
     }
-    /*function storeLinksOnNodes(nodes, links) {
-      for (var i = 0, nodesLength = nodes.length; i < nodesLength; i++) {
-        var node = nodes[i],
-          connectedLinks = [];
-
-        // look for properties where this node is the domain or range
-        for (var j = 0, linksLength = links.length; j < linksLength; j++) {
-          var link = links[j];
-
-          if (link.domain() === node || link.range() === node) {
-            connectedLinks.push(link);
-          }
-        }
-        node.links(connectedLinks);
-      }
-    }*/
 
     function setForceLayoutData(classNodes, labelNodes, links) {
         var d3Links = [];
