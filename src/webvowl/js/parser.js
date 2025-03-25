@@ -204,13 +204,6 @@ module.exports = function (graph) {
                 if (Prototype) {
                     // addAdditionalAttributes(element, Prototype); // TODO might be unnecessary
                     let object = callable(element, Prototype);
-                    // adding object position
-                    if (element.pos) {
-                        property.x = element.pos[0];
-                        property.y = element.pos[1];
-                        property.px = element.pos[0];
-                        property.py = element.pos[1];
-                    }
                     //class element pin
                     if (element.pinned === true) {
                         object.pinned(true);
@@ -244,6 +237,12 @@ module.exports = function (graph) {
             // .type(element.type) Ignore, because we predefined it
             .union(element.union)
             .iri(element.iri);
+        if (element.pos) {
+            node.x = element.pos[0];
+            node.y = element.pos[1];
+            node.px = node.x;
+            node.py = node.y;
+        }
 
         // Create node objects for all individuals
         if (element.individuals) {
@@ -277,6 +276,12 @@ module.exports = function (graph) {
             .superproperties(element.superproperty)
             // .type(element.type) Ignore, because we predefined it
             .iri(element.iri);
+        if (element.pos) {
+            property.x = element.pos[0];
+            property.y = element.pos[1];
+            property.px = element.pos[0];
+            property.py = element.pos[1];
+        }
         return property;
     }
 
