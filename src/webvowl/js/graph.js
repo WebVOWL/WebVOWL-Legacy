@@ -1785,7 +1785,7 @@ module.exports = function (graphContainerSelector) {
   /** --------------------------------------------------------- **/
   /** --  Breadth First Search to a certain depth            -- **/
   /** --------------------------------------------------------- **/
-  function breadthFirstDepthSearch(ids, depth = 1, nodes = processedUnfilteredData.nodes) {
+  function breadthFirstDepthSearch(ids, depth = 3, nodes = processedUnfilteredData.nodes) {
     let originNodes = [];
     let vMap = new Map();
     let nodeMap = parser.getClassMap();
