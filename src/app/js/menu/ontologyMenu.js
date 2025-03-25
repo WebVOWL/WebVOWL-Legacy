@@ -193,6 +193,8 @@ module.exports = function (graph) {
   function setupConverterButtons() {
     var iriConverterButton = d3.select("#iri-converter-button");
     var iriConverterInput = d3.select("#iri-converter-input");
+    var odiniLoaderButton = d3.select("#odini-loader-button");
+    var odiniLoaderInput = d3.select("#odini-loader-input");
 
     iriConverterInput.on("input", function () {
       keepOntologySelectionOpenShortly();
@@ -202,19 +204,21 @@ module.exports = function (graph) {
     }).on("click", function () {
       keepOntologySelectionOpenShortly();
     });
+    odiniLoaderInput.on("input", function () {
+      keepOntologySelectionOpenShortly();
+
+      var inputIsEmpty = odiniLoaderInput.property("value") === "";
+      odiniLoaderButton.attr("disabled", inputIsEmpty || undefined);
+    }).on("click", function () {
+      keepOntologySelectionOpenShortly();
+    });
 
     d3.select("#iri-converter-form").on("submit", function () {
       var inputName = iriConverterInput.property("value");
 
       // remove first spaces
       var clearedName = inputName.replace(/%20/g, " ");
-      while (clearedName.beginsWith(" ")) {
-        clearedName = clearedName.substr(1, clearedName.length);
-      }
-      // remove ending spaces
-      while (clearedName.endsWith(" ")) {
-        clearedName = clearedName.substr(0, clearedName.length - 1);
-      }
+      clearedName = clearedName.trim();
       // check if iri is actually an url for a json file (ends with .json)
       // create lowercase filenames;
       inputName = clearedName;
@@ -228,6 +232,21 @@ module.exports = function (graph) {
         iriConverterInput.property("value", "");
         iriConverterInput.on("input")();
       }
+      d3.event.preventDefault();
+      return false;
+    });
+
+    d3.select("#odini-loader-form").on("submit", function () {
+      var inputName = odiniLoaderInput.property("value");
+
+      // remove first spaces
+      var clearedName = inputName.replace(/%20/g, " ");
+      clearedName = clearedName.trim();
+
+      inputName = clearedName;
+      location.hash = "url=https://vowl-ontology-service-596980641683.europe-west4.run.app/ontology/vowl?identifier=https%3A%2F%2Fodini.net%2Fconcept%2F" + inputName + "&degrees=3";
+      iriConverterInput.property("value", "");
+      iriConverterInput.on("input")();
       d3.event.preventDefault();
       return false;
     });
