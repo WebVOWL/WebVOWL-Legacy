@@ -44,6 +44,7 @@ module.exports = function (graphContainerSelector) {
         links,
         properties,
         unfilteredData,
+        currentData,
         processedUnfilteredData,
         processedUnfilteredDataMap = { nodes: new Map(), properties: new Map() },
         // Graph behaviour
@@ -181,16 +182,12 @@ module.exports = function (graphContainerSelector) {
                 graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
             });
     };
-
-
     graph.setZoom = function (value) {
         zoom.scale(value);
     };
-
     graph.setTranslation = function (translation) {
         zoom.translate([translation[0], translation[1]]);
     };
-
     graph.options = function () {
         return options;
     };
@@ -198,7 +195,6 @@ module.exports = function (graphContainerSelector) {
     graph.getUpdateDictionary = function () {
         return parser.getDictionary();
     };
-
     graph.language = function (newLanguage) {
         if (!arguments.length) return language;
 
@@ -220,7 +216,6 @@ module.exports = function (graphContainerSelector) {
 
     // Initializes the graph.
     function initializeGraph() {
-
         options.graphContainerSelector(graphContainerSelector);
         var moved = false;
         force = d3.layout.force()
@@ -1210,7 +1205,7 @@ module.exports = function (graphContainerSelector) {
     graph.load = function () {
         force.stop();
         loadGraphData();
-        refreshGraphData(_.clone(unfilteredData));
+        labelNodes = computeLabelNodes(linkCreator.createLinks(_.clone(unfilteredData.properties)));
         for (var i = 0; i < labelNodes.length; i++) {
             var label = labelNodes[i];
             if (label.property().x && label.property().y) {
@@ -1221,7 +1216,7 @@ module.exports = function (graphContainerSelector) {
                 label.py = label.y;
             }
         }
-        graph.update();
+        graph.update(false, _.clone(unfilteredData));
     };
 
     graph.fastUpdate = function () {
@@ -1300,7 +1295,7 @@ module.exports = function (graphContainerSelector) {
      *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
      * @returns
      */
-    graph.update = function (init, data = _.clone(unfilteredData)) {
+    graph.update = function (init, data = _.clone(currentData)) {
         var validOntology = graph.options().loadingModule().successfullyLoadedOntology();
         if (validOntology === false && init === true) {
             graph.options().loadingModule().collapseDetails();
@@ -1327,18 +1322,19 @@ module.exports = function (graphContainerSelector) {
         graph.updateStyle();
         return graph;
     };
+
     // resetting the graph
     graph.reset = function () {
+        currentData = unfilteredData;
         // window size
-        var w = 0.5 * graph.options().width();
-        var h = 0.5 * graph.options().height();
+        let w = 0.5 * graph.options().width();
+        let h = 0.5 * graph.options().height();
         // computing initial translation for the graph due to the dynamic default zoom level
-        var tx = w - defaultZoom * w;
-        var ty = h - defaultZoom * h;
+        let tx = w - defaultZoom * w;
+        let ty = h - defaultZoom * h;
         zoom.translate([tx, ty])
             .scale(defaultZoom);
     };
-
 
     graph.zoomOut = function () {
 
@@ -1517,6 +1513,7 @@ module.exports = function (graphContainerSelector) {
             nodes: parser.nodes(),
             properties: parser.properties()
         };
+        currentData = unfilteredData;
         // fixing class and property id counter for the editor
         eN = unfilteredData.nodes.length + 1;
         eP = unfilteredData.properties.length + 1;
@@ -1675,12 +1672,16 @@ module.exports = function (graphContainerSelector) {
 
     function quick_refreshGraphData() {
         links = linkCreator.createLinks(properties);
-        labelNodes = links.map(function (link) {
-            return link.label();
-        });
+        labelNodes = computeLabelNodes(links);
 
         storeLinksOnNodes(classNodes, links);
         setForceLayoutData(classNodes, labelNodes, links);
+    }
+
+    function computeLabelNodes(links) {
+        return links.map(function (link) {
+            return link.label();
+        });
     }
 
     /**
@@ -1704,9 +1705,7 @@ module.exports = function (graphContainerSelector) {
         classNodes = preprocessedData.nodes;
         properties = preprocessedData.properties;
         links = linkCreator.createLinks(properties);
-        labelNodes = links.map(function (link) {
-            return link.label();
-        });
+        labelNodes = computeLabelNodes(links);
         storeLinksOnNodes(classNodes, links);
         setForceLayoutData(classNodes, labelNodes, links);
         // for (var i = 0; i < classNodes.length; i++) {
@@ -1730,57 +1729,15 @@ module.exports = function (graphContainerSelector) {
                 console.log(`Failed to find a node or property with id ${rootNodeID}`);
             }
         }
-
-        let classNodes = breadthFirstSearchDepth(nodes, 2);
-
-
+        let selectedNodes = breadthFirstSearchDepth(nodes, 2);
+        let selectedProperties = [];
         for (const property of processedUnfilteredData.properties) {
-            if
-        }
-
-
-
-        links = [];
-        linksInSearch = [];
-        // sets links to all links on nodes in search
-        classNodes.forEach(function (node) {
-            let nodeLinks = node.links();
-            nodeLinks.forEach(function (link) {
-                if (!links.includes(link)) {
-                    links.push(link);
-                }
-            })
-        })
-        // adds links that are within search limits to linksInSearch
-        links.forEach(function (link) {
-            let domainFlag = 0;
-            let rangeFlag = 0;
-            classNodes.forEach(function (node) {
-                if (link.domain() === node) {
-                    domainFlag = 1;
-                }
-                if (link.range() === node) {
-                    rangeFlag = 1;
-                }
-            })
-            if (domainFlag == 1 && rangeFlag == 1) {
-                linksInSearch.push(link);
+            if (selectedNodes.get(property.domain().id()) && selectedNodes.get(property.range().id())) {
+                selectedProperties.push(property);
             }
-        })
-        labelNodes = linksInSearch.map(function (link) {
-            return link.label();
-        });
-
-
-        graph.update(false, { nodes: classNodes, properties: processedUnfilteredData.properties });
-
-
-        // setForceLayoutData(classNodes, labelNodes, linksInSearch);
-        // updateNodeMap();
-        // force.start();
-        // redrawContent();
-        // refreshGraphStyle();
-        // updateHaloStyles();
+        }
+        currentData = { nodes: Array.from(selectedNodes.values()), properties: selectedProperties };
+        graph.update(false);
         graph.resetSearchHighlight();
         graph.highLightNodes(rootNodeID);
     }
@@ -1801,7 +1758,7 @@ module.exports = function (graphContainerSelector) {
     /**
      * Breadth First Search to a certain depth
      * @param {Array} rootNodes Begin search from these nodes
-     * @param {integer} depth How many connections, starting from `rootNodes`, should be explored.
+     * @param {integer} depth How many edges, starting from `rootNodes`, should be explored.
      * @returns {Map<string, object>} Nodes visited. A map of nodeIDs to nodes.
      */
     function breadthFirstSearchDepth(rootNodes, depth) {
