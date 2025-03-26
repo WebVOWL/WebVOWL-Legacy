@@ -2303,7 +2303,6 @@ module.exports = function (graphContainerSelector) {
             d3.select("#locateSearchResult").classed("highlighted", false);
             d3.select("#locateSearchResult").node().title = "Nothing to locate";
         }
-
     };
 
     graph.highLightNodes = function (nodeIdArray) {
