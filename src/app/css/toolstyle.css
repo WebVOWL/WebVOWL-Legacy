@@ -2421,6 +2421,15 @@ a#locateSearchResult {
     padding: 5px;
 }
 
+#add-concept-button {
+    background-color: #34495E; /* Green */
+    padding: 10px 27px;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
 .converter-form-Editor {
     /*display: inline-block;*/
 }

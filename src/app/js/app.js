@@ -331,6 +331,11 @@ module.exports = function (){
           d3.event.preventDefault();
           d3.event.stopPropagation();
         });
+
+      // Post information on selected concept to parent window
+      d3.select("#add-concept-button").on("click", function (){
+        window.postMessage(d3.select("#classSelectionInformation").text());
+      });
       
       d3.select("#direct-text-input").on("click", function (){
         directInputMod.setDirectInputMode();
