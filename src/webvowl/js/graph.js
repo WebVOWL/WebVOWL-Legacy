@@ -104,6 +104,9 @@ module.exports = function (graphContainerSelector) {
   var domainDragger = require("./domainDragger")(graph);
   var shadowClone = require("./shadowClone")(graph);
 
+  //entire graph
+  var processedUnfilteredData;
+
   graph.math = function () {
     return math;
   };
@@ -150,6 +153,10 @@ module.exports = function (graphContainerSelector) {
   // Returns the visible Label Nodes
   graph.graphLabelElements = function () {
     return labelNodes;
+  };
+  // Returns all nodes created
+  graph.getUnfilteredNodeMap = function () {
+    return unfilteredNodeMap;
   };
 
   graph.graphLinkElements = function () {
@@ -1016,11 +1023,6 @@ module.exports = function (graphContainerSelector) {
     return axioms;
   };
 
-
-  graph.getUnfilteredData = function () {
-    return unfilteredData;
-  };
-
   graph.getClassDataForTtlExport = function () {
     var allNodes = unfilteredData.nodes;
     var nodeData = [];
@@ -1435,43 +1437,30 @@ module.exports = function (graphContainerSelector) {
   };
 
   function generateDictionary(data) {
-    var i;
     var originalDictionary = [];
     var nodes = data.nodes;
-    for (i = 0; i < nodes.length; i++) {
+    for (let i = 0; i < nodes.length; i++) {
       // check if node has a label
       if (nodes[i].labelForCurrentLanguage() !== undefined)
         originalDictionary.push(nodes[i]);
     }
     var props = data.properties;
-    for (i = 0; i < props.length; i++) {
+    for (let i = 0; i < props.length; i++) {
       if (props[i].labelForCurrentLanguage() !== undefined)
         originalDictionary.push(props[i]);
     }
     parser.setDictionary(originalDictionary);
 
     var literFilter = graph.options().literalFilter();
-    var idsToRemove = literFilter.removedNodes();
+    var idsToRemove = literFilter.removedNodes(); // A set
     var originalDict = parser.getDictionary();
     var newDict = [];
 
     // go through the dictionary and remove the ids;
-    for (i = 0; i < originalDict.length; i++) {
-      var dictElement = originalDict[i];
-      var dictElementId;
-      if (dictElement.property)
-        dictElementId = dictElement.property().id();
-      else
-        dictElementId = dictElement.id();
-      // compare against the removed ids;
-      var addToDictionary = true;
-      for (var j = 0; j < idsToRemove.length; j++) {
-        var currentId = idsToRemove[j];
-        if (currentId === dictElementId) {
-          addToDictionary = false;
-        }
-      }
-      if (addToDictionary === true) {
+    for (let i = 0; i < originalDict.length; i++) {
+      let dictElement = originalDict[i];
+      let dictElementId = dictElement.property ? dictElement.property().id() : dictElement.id();
+      if (!idsToRemove.has(dictElementId)) {
         newDict.push(dictElement);
       }
     }
@@ -1644,10 +1633,12 @@ module.exports = function (graphContainerSelector) {
     var initializationData = _.clone(unfilteredData);
     links = linkCreator.createLinks(initializationData.properties);
     storeLinksOnNodes(initializationData.nodes, links);
-    //TODO save initialization data for later use when searching unrendered nodes. 
+    // Keep initialization data for searching unrendered nodes
+    processedUnfilteredData = _.clone(initializationData);
     options.filterModules().forEach(function (module) {
       initializationData = filterFunction(module, initializationData, true);
     });
+
     // generate dictionary here ;
     generateDictionary(unfilteredData);
 
@@ -1713,16 +1704,69 @@ module.exports = function (graphContainerSelector) {
   }
 
   //Applies the data of the graph options object and parses it. The graph is not redrawn.
-  graph.loadSearchData = function () {
-    //graph.clearGraphData();
-    var preprocessedData = _.clone(unfilteredData);
-    links = linkCreator.createLinks(preprocessedData.properties);
-    storeLinksOnNodes(preprocessedData.nodes, links);
-    classNodes = preprocessedData.nodes;
-    labelNodes = links.map(function (link) {
+  graph.loadSearchData = function (baseId) {
+
+    unfilteredNodes = processedUnfilteredData.nodes
+    unfilteredLinks = [];
+    unfilteredNodes.forEach(function (node) {
+      let nodeLinks = node.links();
+      nodeLinks.forEach(function (link) {
+        if (!unfilteredLinks.includes(link)) {
+          unfilteredLinks.push(link);
+        }
+      })
+    })
+    /* console.log("Test0");
+    console.log(unfilteredLinks);
+    console.log(unfilteredNodes); */
+    links = linkCreator.createLinks(processedUnfilteredData.properties);
+    storeLinksOnNodes(processedUnfilteredData.nodes, links);
+    classNodes = breadthFirstDepthSearch(baseId);
+    /* console.log("BFS nodes");
+    console.log(classNodes); */
+    links = [];
+    linksInSearch = [];
+    // sets links to all links on nodes in search
+    classNodes.forEach(function (node) {
+      let nodeLinks = node.links();
+      nodeLinks.forEach(function (link) {
+        if (!links.includes(link)) {
+          links.push(link);
+        }
+      })
+    })
+    // adds links that are within search limits to linksInSearch
+    links.forEach(function (link) {
+      let domainFlag = 0;
+      let rangeFlag = 0;
+      classNodes.forEach(function (node) {
+        if (link.domain() === node) {
+          domainFlag = 1;
+        }
+        if (link.range() === node) {
+          rangeFlag = 1;
+        }
+      })
+      if (domainFlag == 1 && rangeFlag == 1) {
+        linksInSearch.push(link);
+      }
+
+    })
+    /* console.log("Test2");
+    console.log(links); */
+    labelNodes = linksInSearch.map(function (link) {
       return link.label();
     });
-    setForceLayoutData(classNodes, labelNodes, links);
+    /* console.log("Test3");
+    console.log(labelNodes); */
+    setForceLayoutData(classNodes, labelNodes, linksInSearch);
+    updateNodeMap();
+    force.start();
+    redrawContent();
+    refreshGraphStyle();
+    updateHaloStyles();
+    graph.resetSearchHighlight();
+    graph.highLightNodes(baseId);
   }
 
   function filterFunction(module, data, initializing) {
@@ -1738,6 +1782,74 @@ module.exports = function (graphContainerSelector) {
     };
   }
 
+  /** --------------------------------------------------------- **/
+  /** --  Breadth First Search to a certain depth            -- **/
+  /** --------------------------------------------------------- **/
+  function breadthFirstDepthSearch(ids, depth = 3, nodes = processedUnfilteredData.nodes) {
+    let originNodes = [];
+    let vMap = new Map();
+    let nodeMap = parser.getClassMap();
+
+    // Multiple ID's
+    for (let i = 0; i < ids.length; i++) {
+      console.log(nodeMap[ids[i]])
+      try {
+        originNodes.push(nodeMap[ids[i]]);//findNodeFromId(nodes, ids[i]));
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+      vMap.set(originNodes[i], true);
+    }
+
+    let visited = [...originNodes];
+    let frontier = [...originNodes];
+
+    for (let i = 0; i < depth; i++) { // For every depth
+
+      let layerNodesAmount = frontier.length;
+
+      for (let j = 0; j < layerNodesAmount; j++) { // For every Node
+
+        let currentNode = frontier[j];
+        let linkArr = currentNode.links();
+
+        for (let k = 0; k < linkArr.length; k++) { // For every Edge½
+          let currentLink = linkArr[k];
+          let domainNode = currentLink.domain();
+          let rangeNode = currentLink.range();
+
+          // If the edge is connected to our current node, add the other end of the edge only if it hasn't already been visited or appended to our frontier
+          if (domainNode === currentNode) {
+            if (vMap.get(rangeNode) != true) {
+              frontier.push(rangeNode);
+              vMap.set(rangeNode, true);
+            }
+          }
+          else if (rangeNode === currentNode) {
+            if (vMap.get(domainNode) != true) {
+              frontier.push(domainNode);
+              vMap.set(domainNode, true)
+            }
+          }
+
+        }
+
+      }
+      frontier = frontier.filter((x) => !visited.includes(x))
+      visited.push(...frontier);
+    }
+    return visited;
+  }
+
+  function findNodeFromId(nodes, id) {
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].id() == id) {
+        return nodes[i];
+      }
+    }
+    throw new Error("node with this id does not exist");
+  }
 
   /** --------------------------------------------------------- **/
   /** -- force-layout related functions                      -- **/
