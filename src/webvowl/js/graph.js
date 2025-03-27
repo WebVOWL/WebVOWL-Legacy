@@ -1215,7 +1215,7 @@ module.exports = function (graphContainerSelector) {
                 label.py = label.y;
             }
         }
-        graph.update(false, _.clone(unfilteredData));
+        graph.update(false, unfilteredData);
     };
 
     graph.fastUpdate = function () {
@@ -1294,7 +1294,7 @@ module.exports = function (graphContainerSelector) {
      *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
      * @returns
      */
-    graph.update = function (init, data = _.clone(currentData)) {
+    graph.update = function (init, data = currentData) {
         var validOntology = graph.options().loadingModule().successfullyLoadedOntology();
         if (validOntology === false && init === true) {
             graph.options().loadingModule().collapseDetails();
@@ -1630,9 +1630,8 @@ module.exports = function (graphContainerSelector) {
         }
         // update more meta OBJECT
         // Initialize filters with data to replicate consecutive filtering
-        var initializationData = _.clone(unfilteredData);
-        links = linkCreator.createLinks(initializationData.properties);
-        storeLinksOnNodes(initializationData.nodes, links);
+        links = linkCreator.createLinks(unfilteredData.properties);
+        storeLinksOnNodes(unfilteredData.nodes, links);
 
         // Create a map of all nodes and properties for fast lookup
         unfilteredData.nodes.forEach((node) => {
@@ -1643,7 +1642,7 @@ module.exports = function (graphContainerSelector) {
         });
 
         options.filterModules().forEach(function (module) {
-            initializationData = filterFunction(module, initializationData, true);
+            unfilteredData = filterFunction(module, unfilteredData, true);
         });
 
         // generate dictionary here ;
