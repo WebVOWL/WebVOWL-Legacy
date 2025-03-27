@@ -45,8 +45,7 @@ module.exports = function (graphContainerSelector) {
         properties,
         unfilteredData,
         currentData,
-        processedUnfilteredData,
-        processedUnfilteredDataMap = { nodes: new Map(), properties: new Map() },
+        unfilteredDataMap = { nodes: new Map(), properties: new Map() },
         // Graph behaviour
         force,
         dragBehaviour,
@@ -1205,7 +1204,7 @@ module.exports = function (graphContainerSelector) {
     graph.load = function () {
         force.stop();
         loadGraphData();
-        labelNodes = computeLabelNodes(linkCreator.createLinks(_.clone(unfilteredData.properties)));
+        labelNodes = computeLabelNodes(linkCreator.createLinks(unfilteredData.properties));
         for (var i = 0; i < labelNodes.length; i++) {
             var label = labelNodes[i];
             if (label.property().x && label.property().y) {
@@ -1513,7 +1512,7 @@ module.exports = function (graphContainerSelector) {
             nodes: parser.nodes(),
             properties: parser.properties()
         };
-        currentData = unfilteredData;
+
         // fixing class and property id counter for the editor
         eN = unfilteredData.nodes.length + 1;
         eP = unfilteredData.properties.length + 1;
@@ -1547,6 +1546,10 @@ module.exports = function (graphContainerSelector) {
                 }
             }
         }
+
+        links = linkCreator.createLinks(unfilteredData.properties);
+        storeLinksOnNodes(unfilteredData.nodes, links);
+        currentData = unfilteredData;
 
         initialLoad = true;
         graph.options().warningModule().closeFilterHint();
@@ -1630,15 +1633,14 @@ module.exports = function (graphContainerSelector) {
         var initializationData = _.clone(unfilteredData);
         links = linkCreator.createLinks(initializationData.properties);
         storeLinksOnNodes(initializationData.nodes, links);
-        // Keep initialization data for searching unrendered nodes
-        processedUnfilteredData = _.clone(initializationData);
 
         // Create a map of all nodes and properties for fast lookup
-        processedUnfilteredData.nodes.forEach((node) => {
-            processedUnfilteredDataMap.nodes.set(node.id(), node);
+        unfilteredData.nodes.forEach((node) => {
+            unfilteredDataMap.nodes.set(node.id(), node);
         });
-        processedUnfilteredData.properties.forEach((property) => {
             processedUnfilteredDataMap.properties.set(property.id(), property);
+        unfilteredData.properties.forEach((property) => {
+            unfilteredDataMap.properties.set(property.id(), property);
         });
 
         options.filterModules().forEach(function (module) {
@@ -1696,8 +1698,6 @@ module.exports = function (graphContainerSelector) {
         options.literalFilter().enabled(shouldExecuteEmptyFilter);
 
         // Filter the data
-        links = linkCreator.createLinks(preprocessedData.properties);
-        storeLinksOnNodes(preprocessedData.nodes, links);
         options.filterModules().forEach(function (module) {
             preprocessedData = filterFunction(module, preprocessedData);
         });
@@ -1706,7 +1706,6 @@ module.exports = function (graphContainerSelector) {
         properties = preprocessedData.properties;
         links = linkCreator.createLinks(properties);
         labelNodes = computeLabelNodes(links);
-        storeLinksOnNodes(classNodes, links);
         setForceLayoutData(classNodes, labelNodes, links);
         // for (var i = 0; i < classNodes.length; i++) {
         //     if (classNodes[i].setRectangularRepresentation)
@@ -1719,25 +1718,24 @@ module.exports = function (graphContainerSelector) {
      * @param {string} rootNodeID
      */
     graph.loadSearchData = function (rootNodeID) {
-        storeLinksOnNodes(processedUnfilteredData.nodes, linkCreator.createLinks(processedUnfilteredData.properties));
-        let nodes = [processedUnfilteredDataMap.nodes.get(rootNodeID)];
+        let nodes = [unfilteredDataMap.nodes.get(rootNodeID)];
         if (nodes[0] === undefined) {
-            let prop = processedUnfilteredDataMap.properties.get(rootNodeID);
+            let prop = unfilteredDataMap.properties.get(rootNodeID);
             if (prop !== undefined) {
                 nodes = [prop.domain(), prop.range()];
             } else {
                 console.log(`Failed to find a node or property with id ${rootNodeID}`);
             }
         }
-        let selectedNodes = breadthFirstSearchDepth(nodes, 2);
+        let selectedNodes = breadthFirstSearchDepth(nodes, 4);
         let selectedProperties = [];
-        for (const property of processedUnfilteredData.properties) {
+        for (const property of unfilteredData.properties) {
             if (selectedNodes.get(property.domain().id()) && selectedNodes.get(property.range().id())) {
                 selectedProperties.push(property);
             }
         }
         currentData = { nodes: Array.from(selectedNodes.values()), properties: selectedProperties };
-        graph.update(false);
+        graph.update(false, currentData);
         graph.resetSearchHighlight();
         graph.highLightNodes(rootNodeID);
     }
