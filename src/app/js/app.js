@@ -334,7 +334,14 @@ module.exports = function (){
 
       // Post information on selected concept to parent window
       d3.select("#add-concept-button").on("click", function (){
-        window.postMessage(d3.select("#classSelectionInformation").text());
+        let content = d3.select("#classSelectionInformation").html();
+
+        // Remove button from content
+        let lines = content.split('\n');
+        lines.splice(0,2);
+        content = lines.join('\n');
+        
+        window.parent.postMessage(content, '*'); // TODO update targetOrigin
       });
       
       d3.select("#direct-text-input").on("click", function (){
