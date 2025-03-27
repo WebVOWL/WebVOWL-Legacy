@@ -1638,7 +1638,6 @@ module.exports = function (graphContainerSelector) {
         unfilteredData.nodes.forEach((node) => {
             unfilteredDataMap.nodes.set(node.id(), node);
         });
-            processedUnfilteredDataMap.properties.set(property.id(), property);
         unfilteredData.properties.forEach((property) => {
             unfilteredDataMap.properties.set(property.id(), property);
         });
