@@ -1,6 +1,6 @@
-let css = require("css"),
+const css = require("css"),
 	fs = require("fs"),
-	filePath = "../../src/webvowl/css/vowl.css";
+	filePath = "../main/webvowl/css/vowl.css";
 
 fs.readFile(filePath, { encoding: "utf8" }, function (err, data) {
 	if (err) {
@@ -32,7 +32,6 @@ function convertCssToD3Rules(cssText) {
 		obj = css.parse(cssText),
 		rules = obj.stylesheet.rules;
 
-
 	rules.forEach(function (rule) {
 		if (rule.type === "rule") {
 			let builder = d3RuleBuilder(),
@@ -47,11 +46,9 @@ function convertCssToD3Rules(cssText) {
 					builder.addRule(declaration.property, declaration.value);
 				}
 			}
-
 			d3Rules = d3Rules.concat(builder.build(), "\n");
 		}
 	});
-
 	return d3Rules;
 }
 
@@ -68,7 +65,6 @@ function d3RuleBuilder() {
 		} else {
 			selector = selectors;
 		}
-
 		return builder;
 	};
 
@@ -88,9 +84,7 @@ function d3RuleBuilder() {
 			result = result.concat("{name:\"", rule.name, "\", value:\"", rule.value, "\"}");
 		}
 		result = result.concat("]);");
-
 		return result;
 	};
-
 	return builder;
 }
