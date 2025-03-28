@@ -52,10 +52,7 @@ Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
 
 Now you can execute these commands in the terminal:
 * `npm run webserver` to start a local live-updating webserver with the current development version
-* `grunt` or `grunt release` builds the release files into the deploy directory
-* `grunt package` builds the development version
-* `grunt test` starts the test runner
-* `grunt zip` builds the project and puts it into a zip file
+* `npm run release` builds the release files into the deploy directory
 
 Visit [http://localhost:8000](http://localhost:8000) to use WebVOWL.
 
