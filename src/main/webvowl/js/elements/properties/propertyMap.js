@@ -16,7 +16,7 @@ properties.push(require("./implementations/SetOperatorProperty"));
 
 let map = new Map(properties.map((Prototype) => {
   let proto = new Prototype();
-  return [proto.type(), proto];
+  return [proto.type(), Prototype];
 }));
 
 module.exports = function () {

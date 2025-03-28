@@ -22,16 +22,12 @@ module.exports = function () {
 
     statistics.filter = function (classesAndDatatypes, properties) {
         resetStoredData();
-
         storeTotalCounts(classesAndDatatypes, properties);
         storeClassAndDatatypeCount(classesAndDatatypes);
         storePropertyCount(properties);
-
         storeOccurencesOfTypes(classesAndDatatypes, occurencesOfClassAndDatatypeTypes);
         storeOccurencesOfTypes(properties, occurencesOfPropertyTypes);
-
         storeTotalIndividualCount(classesAndDatatypes);
-
         filteredNodes = classesAndDatatypes;
         filteredProperties = properties;
     };
@@ -92,7 +88,7 @@ module.exports = function () {
         // count things and nothings just a single time
         // classCount += hasThing ? 1 : 0;
         // classCount += hasNothing ? 1 : 0;
-        datatypeCount = datatypeSet.size();
+        datatypeCount = datatypeSet.size;
     }
 
     function storePropertyCount(properties) {

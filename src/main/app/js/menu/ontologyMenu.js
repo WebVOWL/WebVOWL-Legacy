@@ -1,12 +1,8 @@
-let unescape = require("lodash/unescape");
-
 module.exports = function (graph) {
     const URL_PREFIX = "o2v/"
-
     let ontologyMenu = {},
         loadingInfo = d3.select("#loading-info"),
         loadingProgress = d3.select("#loading-progress"),
-
         ontologyMenuTimeout,
         fileToLoad,
         stopTimer = false,
@@ -16,7 +12,7 @@ module.exports = function (graph) {
         cachedConversions = {},
         loadingModule,
         loadOntologyFromText;
-    let currentLoadedOntologyName = "";
+    currentLoadedOntologyName = "";
 
     String.prototype.beginsWith = function (string) {
         return (this.indexOf(string) === 0);
@@ -31,7 +27,6 @@ module.exports = function (graph) {
             cachedConversions[currentLoadedOntologyName] = undefined;
         }
     };
-
 
     ontologyMenu.reloadCachedOntology = function () {
         ontologyMenu.clearCachedVersion();
@@ -60,7 +55,6 @@ module.exports = function (graph) {
             }
         } else {
             graph.showReloadButtonAfterLayoutOptimization(false);
-
         }
         return cachedConversions[ontoName];
     };
@@ -104,7 +98,6 @@ module.exports = function (graph) {
         setupUriListener();
         loadingModule.setOntologyMenu(ontologyMenu);
     };
-
 
     function setupUriListener() {
         // reload ontology when hash parameter gets changed manually
@@ -307,34 +300,25 @@ module.exports = function (graph) {
         setLoadingStatusInfo(message);
     };
 
-    function getLoadingStatusOnceCallBacked(callback, parameter) {
-        d3.xhr(URL_PREFIX + "loadingStatus?sessionId=" + conversion_sessionId, "application/text", function (error, request) {
-            if (error) {
-                console.log("ontologyMenu getLoadingStatusOnceCallBacked throws error");
-                console.log("---------Error -----------");
-                console.log(error);
-                console.log("---------Request -----------");
-                console.log(request);
-            }
-            setLoadingStatusInfo(request.responseText);
+    async function getLoadingStatusOnceCallBacked(callback, parameter) {
+        const response = await fetch(URL_PREFIX + "loadingStatus?sessionId=" + conversion_sessionId, { headers: { "Content-Type": "application/text" } });
+        if (!response.ok) {
+            console.log(`ontologyMenu getLoadingStatusOnceCallBacked throws error. Response: ${response.status}`);
+        } else {
+            setLoadingStatusInfo(await response.text());
             callback(parameter);
-        });
+        }
     }
 
-    function getLoadingStatusTimeLooped() {
-        d3.xhr(URL_PREFIX + "loadingStatus?sessionId=" + conversion_sessionId, "application/text", function (error, request) {
-            if (error) {
-                console.log("ontologyMenu getLoadingStatusTimeLooped throws error");
-                console.log("---------Error -----------");
-                console.log(error);
-                console.log("---------Request -----------");
-                console.log(request);
-            }
-            if (stopTimer === false) {
-                setLoadingStatusInfo(request.responseText);
-                timedLoadingStatusLogger();
-            }
-        });
+    async function getLoadingStatusTimeLooped() {
+        const response = await fetch(URL_PREFIX + "loadingStatus?sessionId=" + conversion_sessionId, { headers: { "Content-Type": "application/text" } });
+        if (!response.ok) {
+            console.log(`ontologyMenu getLoadingStatusTimeLooped throws error. Response: ${response.status}`);
+        }
+        if (stopTimer === false) {
+            setLoadingStatusInfo(await response.text());
+            timedLoadingStatusLogger();
+        }
     }
 
     function timedLoadingStatusLogger() {
@@ -346,44 +330,45 @@ module.exports = function (graph) {
         }
     }
 
-    function callbackUpdateLoadingMessage(msg) {
-        d3.xhr(URL_PREFIX + "loadingStatus", "application/text", function (error, request) {
-            if (request !== undefined) {
-                setLoadingStatusInfo(request.responseText + "<br>" + msg);
+    async function callbackUpdateLoadingMessage(msg) {
+        const response = await fetch(URL_PREFIX + "loadingStatus", { headers: { "Content-Type": "application/text" } });
+        if (!response.ok) {
+            console.log(`Error retrieving loading status. Response: ${response.status}`);
+        } else {
+            const text = await response.text();
+            if (text !== undefined) {
+                setLoadingStatusInfo(text + "<br>" + msg);
             } else {
                 append_message(msg);
             }
-        });
+        }
     }
 
     ontologyMenu.setConversionID = function (id) {
         conversion_sessionId = id;
     };
 
-    ontologyMenu.callbackLoad_Ontology_FromIRI = function (parameter) {
+    ontologyMenu.callbackLoad_Ontology_FromIRI = async function (parameter) {
         let relativePath = parameter[0];
         let ontoName = parameter[1];
         let localThreadId = parameter[2];
         stopTimer = false;
         timedLoadingStatusLogger();
-        d3.xhr(URL_PREFIX + relativePath, "application/json", function (error, request) {
-            let loadingSuccessful = !error;
-            // check if error occurred or responseText is empty
-            if ((error !== null && error.status === 500) || (request && request.responseText.length === 0)) {
-                clearTimeout(loadingStatusTimer);
-                stopTimer = true;
-                getLoadingStatusOnceCallBacked(callbackFromIRI_URL_ERROR, [error, request, localThreadId]);
-            }
-            let jsonText;
-            if (loadingSuccessful) {
-                clearTimeout(loadingStatusTimer);
-                stopTimer = true;
-                jsonText = request.responseText;
-                getLoadingStatusOnceCallBacked(callbackFromIRI_Success, [jsonText, ontoName, localThreadId]);
-            }
-        });
-    };
 
+        const response = await fetch(URL_PREFIX + relativePath, { headers: { "Content-Type": "application/text" } });
+        const text = await response.text();
+        if (!response.ok) {
+            clearTimeout(loadingStatusTimer);
+            stopTimer = true;
+            console.log(response);
+            console.log(text);
+            getLoadingStatusOnceCallBacked(callbackFromIRI_URL_ERROR, [response.status, text, localThreadId]);
+        } else {
+            clearTimeout(loadingStatusTimer);
+            stopTimer = true;
+            getLoadingStatusOnceCallBacked(callbackFromIRI_Success, [text, ontoName, localThreadId]);
+        }
+    };
 
     ontologyMenu.callbackLoad_Ontology_From_DirectInput = function (text, parameter) {
         let input = text;
@@ -434,30 +419,27 @@ module.exports = function (graph) {
         return conversion_sessionId;
     };
 
-    ontologyMenu.callbackLoad_JSON_FromURL = function (parameter) {
+    ontologyMenu.callbackLoad_JSON_FromURL = async function (parameter) {
         let relativePath = parameter[0];
         let ontoName = parameter[1];
         let local_conversionId = parameter[2];
         stopTimer = false;
         timedLoadingStatusLogger();
-        d3.xhr(URL_PREFIX + relativePath, "application/json", function (error, request) {
-            let loadingSuccessful = !error;
-            // check if error occurred or responseText is empty
-            if ((error !== null && error.status === 500) || (request && request.responseText.length === 0)) {
-                clearTimeout(loadingStatusTimer);
-                stopTimer = true;
-                loadingSuccessful = false;
-                console.log(request);
-                console.log(request.responseText.length);
-                getLoadingStatusOnceCallBacked(callbackFromJSON_URL_ERROR, [error, request, local_conversionId]);
-            }
-            if (loadingSuccessful) {
-                clearTimeout(loadingStatusTimer);
-                stopTimer = true;
-                let jsonText = request.responseText;
-                getLoadingStatusOnceCallBacked(callbackFromJSON_Success, [jsonText, ontoName, local_conversionId]);
-            }
-        });
+
+        const response = await fetch(URL_PREFIX + relativePath, { headers: { "Content-Type": "application/json" } });
+        const jsonText = await response.json();
+        if (!response.ok || jsonText.length === 0) {
+            clearTimeout(loadingStatusTimer);
+            stopTimer = true;
+            loadingSuccessful = false;
+            console.log(response);
+            console.log(jsonText);
+            getLoadingStatusOnceCallBacked(callbackFromJSON_URL_ERROR, [response.status, jsonText, local_conversionId]);
+        } else {
+            clearTimeout(loadingStatusTimer);
+            stopTimer = true;
+            getLoadingStatusOnceCallBacked(callbackFromJSON_Success, [jsonText, ontoName, local_conversionId]);
+        }
     };
 
     function callbackFromJSON_Success(parameter) {
@@ -470,8 +452,8 @@ module.exports = function (graph) {
     }
 
     function callbackFromJSON_URL_ERROR(parameter) {
-        let error = parameter[0];
-        let request = parameter[1];
+        const status = parameter[0];
+        const jsonText = parameter[1];
         let local_conversionId = parameter[2];
         if (local_conversionId !== conversion_sessionId) {
             console.log("This thread has been canceled!!");
@@ -482,20 +464,19 @@ module.exports = function (graph) {
             " Ontology could not be loaded.<br>Is it a valid OWL ontology? Please check with <a target=\"_blank\"" +
             "href=\"http://visualdataweb.de/validator/\">OWL Validator</a>");
 
-        if (error !== null && error.status === 500) {
-            append_message("<span style='color:red'>Could not find ontology  at the URL</span>");
+        if (status === 500) {
+            append_message("<span style='color:red'>Could not find ontology at the URL</span>");
         }
-        if (request && request.responseText.length === 0) {
+        if (jsonText.length === 0) {
             append_message("<span style='color:red'>Received empty graph</span>");
         }
         graph.handleOnLoadingError();
         ontologyMenu.conversionFinished();
     }
-
 
     function callbackFromIRI_URL_ERROR(parameter) {
-        let error = parameter[0];
-        let request = parameter[1];
+        const status = parameter[0];
+        const data = parameter[1];
         let local_conversionId = parameter[2];
         if (local_conversionId !== conversion_sessionId) {
             console.log("This thread has been canceled!!");
@@ -506,38 +487,37 @@ module.exports = function (graph) {
             " Ontology could not be loaded.<br>Is it a valid OWL ontology? Please check with <a target=\"_blank\"" +
             "href=\"http://visualdataweb.de/validator/\">OWL Validator</a>");
 
-        if (error !== null && error.status === 500) {
+        if (status === 500) {
             append_message("<span style='color:red'>Could not find ontology  at the URL</span>");
         }
-        if (request && request.responseText.length === 0) {
+        if (data.length === 0) {
             append_message("<span style='color:red'>Received empty graph</span>");
         }
         graph.handleOnLoadingError();
         ontologyMenu.conversionFinished();
     }
 
-    function callbackFromDirectInput_ERROR(parameter) {
+    // function callbackFromDirectInput_ERROR(parameter) {
+    //     let error = parameter[0];
+    //     let request = parameter[1];
+    //     let local_conversionId = parameter[2];
+    //     if (local_conversionId !== conversion_sessionId) {
+    //         console.log("The loading process for direct input has been canceled!");
+    //         return;
+    //     }
+    //     // callbackUpdateLoadingMessage("<br> <span style='color:red'> Failed to convert the file.</span> "+
+    //     //     "Ontology could not be loaded.<br>Is it a valid OWL ontology? Please check with <a target=\"_blank\"" +
+    //     //     "href=\"http://visualdataweb.de/validator/\">OWL Validator</a>");
+    //     if (error !== null && error.status === 500) {
+    //         append_message("<span style='color:red'>Could not convert direct input</span>");
+    //     }
+    //     if (request && request.responseText.length === 0) {
+    //         append_message("<span style='color:red'>Received empty graph</span>");
+    //     }
 
-        let error = parameter[0];
-        let request = parameter[1];
-        let local_conversionId = parameter[2];
-        if (local_conversionId !== conversion_sessionId) {
-            console.log("The loading process for direct input has been canceled!");
-            return;
-        }
-        // callbackUpdateLoadingMessage("<br> <span style='color:red'> Failed to convert the file.</span> "+
-        //     "Ontology could not be loaded.<br>Is it a valid OWL ontology? Please check with <a target=\"_blank\"" +
-        //     "href=\"http://visualdataweb.de/validator/\">OWL Validator</a>");
-        if (error !== null && error.status === 500) {
-            append_message("<span style='color:red'>Could not convert direct input</span>");
-        }
-        if (request && request.responseText.length === 0) {
-            append_message("<span style='color:red'>Received empty graph</span>");
-        }
-
-        graph.handleOnLoadingError();
-        ontologyMenu.conversionFinished();
-    }
+    //     graph.handleOnLoadingError();
+    //     ontologyMenu.conversionFinished();
+    // }
 
     ontologyMenu.callbackLoadFromOntology = function (selectedFile, filename, local_threadId) {
         callbackLoadFromOntology(selectedFile, filename, local_threadId);
@@ -590,20 +570,15 @@ module.exports = function (graph) {
         }
     }
 
-    ontologyMenu.conversionFinished = function (id) {
+    ontologyMenu.conversionFinished = async function (id) {
         let local_id = conversion_sessionId;
         if (id) {
             local_id = id;
         }
-        d3.xhr(URL_PREFIX + "conversionDone?sessionId=" + local_id, "application/text", function (error, request) {
-            if (error) {
-                console.log("ontologyMenu conversionFinished throws error");
-                console.log("---------Error -----------");
-                console.log(error);
-                console.log("---------Request -----------");
-                console.log(request);
-            }
-        });
+        const response = await fetch(URL_PREFIX + "conversionDone?sessionId=" + local_id, { headers: { "Content-Type": "application/text" } });
+        if (!response.ok) {
+            console.log(`ontologyMenu conversionFinished throws error. Response: ${response.status}`);
+        }
     };
 
     function keepOntologySelectionOpenShortly() {
@@ -619,7 +594,6 @@ module.exports = function (graph) {
 
         function disableKeepingOpen() {
             ontologySelection.style("display", undefined);
-
             clearTimeout(ontologyMenuTimeout);
             d3.select(window).on("click", undefined).on("keydown", undefined);
             ontologySelection.on("mouseover", undefined);

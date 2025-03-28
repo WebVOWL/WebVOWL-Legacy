@@ -11,7 +11,6 @@ module.exports = function (graph) {
     inputContainer.style("padding", "5px");
     inputContainer.style("background", "#fff");
 
-
     // connect upload and close button;
     directInputModule.handleDirectUpload = function (event) {
         let text = textArea.node().value;

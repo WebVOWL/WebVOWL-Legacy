@@ -164,7 +164,6 @@ module.exports = function () {
 
     }
 
-
     app.initialize = function () {
         addFileDropEvents(GRAPH_SELECTOR);
 
@@ -345,26 +344,33 @@ module.exports = function () {
         }
     };
 
-    function loadOntologyFromText(jsonText, filename, alternativeFilename) {
+    function loadOntologyFromText(content, filename, alternativeFilename) {
         d3.select("#reloadCachedOntology").classed("hidden", true);
         pauseMenu.reset();
         graph.options().navigationMenu().hideAllMenus();
 
-        if ((jsonText === undefined && filename === undefined) || (jsonText.length === 0)) {
+        if ((content === undefined && filename === undefined) || (content.length === 0)) {
             loadingModule.notValidJsonFile();
             return;
         }
         graph.editorMode(); // updates the checkbox
         let data;
-        if (jsonText) {
+        if (content) {
             // validate JSON FILE
             let validJSON;
-            try {
-                data = JSON.parse(jsonText);
+            // assume content was parsed before
+            if (content instanceof Object) {
+                data = content;
                 validJSON = true;
-            } catch (e) {
-                validJSON = false;
+            } else {
+                try {
+                    data = JSON.parse(content);
+                    validJSON = true;
+                } catch (e) {
+                    validJSON = false;
+                }
             }
+
             if (validJSON === false) {
                 // the server output is not a valid json file
                 loadingModule.notValidJsonFile();
@@ -401,8 +407,8 @@ module.exports = function () {
             loadingModule.emptyGraphContentError();
         } else {
             loadingModule.validJsonFile();
-            ontologyMenu.setCachedOntology(filename, jsonText);
-            exportMenu.setJsonText(jsonText);
+            ontologyMenu.setCachedOntology(filename, content);
+            exportMenu.setJsonText(content);
             options.data(data);
             graph.options().loadingModule().setPercentMode();
             if (loadEmptyOntologyForEditing === true) {

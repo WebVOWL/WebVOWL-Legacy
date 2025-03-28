@@ -251,7 +251,7 @@ module.exports = function (graph) {
     // 2] File Upload
     // 3] Load From URL / IRI
 
-    loadingModule.from_JSON_URL = function (fileName) {
+    loadingModule.from_JSON_URL = async function (fileName) {
         let filename = decodeURIComponent(fileName.slice("url=".length));
         ontologyIdentifierFromURL = filename;
 
@@ -265,44 +265,40 @@ module.exports = function (graph) {
         } else {
             // involve the o2v conveter;
             ontologyMenu.append_message("Retrieving ontology from JSON URL " + filename);
-            requestServerTimeStampForJSON_URL(ontologyMenu.callbackLoad_JSON_FromURL, ["read?json=" + filename, filename]);
+            await requestServerTimeStampForJSON_URL(ontologyMenu.callbackLoad_JSON_FromURL, ["read?json=" + filename, filename]);
         }
     };
 
-    function requestServerTimeStampForJSON_URL(callback, parameter) {
-        d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
-            if (error) {
-                // could not get server timestamp -> no connection to owl2vowl
-                ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
-                fallbackForJSON_URL(callback, parameter);
-            } else {
-                conversion_sessionId = request.responseText;
-                ontologyMenu.setConversionID(conversion_sessionId);
-                parameter.push(conversion_sessionId);
-                callback(parameter);
-            }
-        });
-
+    async function requestServerTimeStampForJSON_URL(callback, parameter) {
+        const response = await fetch(URL_PREFIX + "serverTimeStamp", { headers: { "Content-Type": "application/text" } });
+        if (!response.ok) {
+            // could not get server timestamp -> no connection to owl2vowl
+            ontologyMenu.append_bulletPoint(`Could not establish connection to OWL2VOWL service. Response: ${response.status}`);
+            fallbackForJSON_URL(callback, parameter);
+        } else {
+            conversion_sessionId = parseInt(await response.text());
+            ontologyMenu.setConversionID(conversion_sessionId);
+            parameter.push(conversion_sessionId);
+            callback(parameter);
+        }
     }
 
-    loadingModule.requestServerTimeStampForDirectInput = function (callback, text) {
-        d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
-            if (error) {
-                // could not get server timestamp -> no connection to owl2vowl
-                ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
-                loadingModule.setErrorMode();
-                ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
-                loadingModule.showErrorDetailsMessage();
-                d3.select("#progressBarValue").style("width", "0%");
-                d3.select("#progressBarValue").classed("busyProgressBar", false);
-                d3.select("#progressBarValue").text("0%");
-
-            } else {
-                conversion_sessionId = request.responseText;
-                ontologyMenu.setConversionID(conversion_sessionId);
-                callback(text, ["conversionID" + conversion_sessionId, conversion_sessionId]);
-            }
-        });
+    loadingModule.requestServerTimeStampForDirectInput = async function (callback, text) {
+        const response = await fetch(URL_PREFIX + "serverTimeStamp", { headers: { "Content-Type": "application/text" } });
+        if (!response.ok) {
+            // could not get server timestamp -> no connection to owl2vowl
+            ontologyMenu.append_bulletPoint(`Could not establish connection to OWL2VOWL service. Response: ${response.status}`);
+            loadingModule.setErrorMode();
+            ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
+            loadingModule.showErrorDetailsMessage();
+            d3.select("#progressBarValue").style("width", "0%");
+            d3.select("#progressBarValue").classed("busyProgressBar", false);
+            d3.select("#progressBarValue").text("0%");
+        } else {
+            conversion_sessionId = parseInt(await response.text());
+            ontologyMenu.setConversionID(conversion_sessionId);
+            callback(text, ["conversionID" + conversion_sessionId, conversion_sessionId]);
+        }
     };
 
     loadingModule.from_IRI_URL = function (fileName) {
@@ -350,7 +346,6 @@ module.exports = function (graph) {
         }
     };
 
-
     loadingModule.from_FileUpload = function (fileName) {
         loadingModule.setBusyMode();
         let filename = decodeURIComponent(fileName.slice("file=".length));
@@ -361,7 +356,6 @@ module.exports = function (graph) {
             ontologyContent = ontologyMenu.cachedOntology(filename);
             loadingWasSuccessFul = true; // cached Ontology should be true;
             parseOntologyContent(ontologyContent);
-
         } else {
             // d3.select("#currentLoadingStep").node().innerHTML="Loading ontology from file "+ filename;
             ontologyMenu.append_bulletPoint("Retrieving ontology from file: " + filename);
@@ -377,7 +371,6 @@ module.exports = function (graph) {
             } else {
                 filename = selectedFile.name;
             }
-
 
             // two options here
             //1] Direct Json Upload
@@ -439,40 +432,38 @@ module.exports = function (graph) {
         xhr.send(formData);
     }
 
-    function requestServerTimeStampForIRI_Converte(callback, parameterArray) {
-        d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
-            loadingModule.setBusyMode();
-            if (error) {
-                // could not get server timestamp -> no connection to owl2vowl
-                ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
-                loadingModule.setErrorMode();
-                ontologyMenu.append_bulletPoint("Failed to load ontology");
-                ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
-                loadingModule.showErrorDetailsMessage();
-            } else {
-                conversion_sessionId = request.responseText;
-                ontologyMenu.setConversionID(conversion_sessionId);
-                // update paramater for new communication paradigm
-                parameterArray[0] = parameterArray[0] + "&sessionId=" + conversion_sessionId;
-                parameterArray.push(conversion_sessionId);
-                callback(parameterArray);
-            }
-        });
+    async function requestServerTimeStampForIRI_Converte(callback, parameterArray) {
+        const response = await fetch(URL_PREFIX + "serverTimeStamp", { headers: { "Content-Type": "application/text" } });
+        loadingModule.setBusyMode();
+        if (!response.ok) {
+            // could not get server timestamp -> no connection to owl2vowl
+            ontologyMenu.append_bulletPoint(`Could not establish connection to OWL2VOWL service. Response: ${response.status}`);
+            loadingModule.setErrorMode();
+            ontologyMenu.append_bulletPoint("Failed to load ontology");
+            ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
+            loadingModule.showErrorDetailsMessage();
+        } else {
+            conversion_sessionId = parseInt(await response.text());
+            ontologyMenu.setConversionID(conversion_sessionId);
+            // update paramater for new communication paradigm
+            parameterArray[0] = parameterArray[0] + "&sessionId=" + conversion_sessionId;
+            parameterArray.push(conversion_sessionId);
+            callback(parameterArray);
+        }
     }
 
-    function requestServerTimeStamp(callback, parameterArray) {
-        d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
-            if (error) {
-                // could not get server timestamp -> no connection to owl2vowl
-                ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
-                fallbackConversion(parameterArray); // tries o2v version0.3.4 communication
-            } else {
-                conversion_sessionId = request.responseText;
-                ontologyMenu.setConversionID(conversion_sessionId);
-                console.log("Request Session ID:" + conversion_sessionId);
-                callback(parameterArray[0], parameterArray[1], conversion_sessionId);
-            }
-        });
+    async function requestServerTimeStamp(callback, parameterArray) {
+        const response = await fetch(URL_PREFIX + "serverTimeStamp", { headers: { "Content-Type": "application/text" } });
+        if (!response.ok) {
+            // could not get server timestamp -> no connection to owl2vowl
+            ontologyMenu.append_bulletPoint(`Could not establish connection to OWL2VOWL service. Response: ${response.status}`);
+            fallbackConversion(parameterArray); // tries o2v version0.3.4 communication
+        } else {
+            conversion_sessionId = parseInt(await response.text());
+            ontologyMenu.setConversionID(conversion_sessionId);
+            console.log("Request Session ID:" + conversion_sessionId);
+            callback(parameterArray[0], parameterArray[1], conversion_sessionId);
+        }
     }
 
     loadingModule.directInput = function (text) {
@@ -520,22 +511,19 @@ module.exports = function (graph) {
             loadingWasSuccessFul = true; // cached Ontology should be true;
             loadingModule.showLoadingIndicator();
             parseOntologyContent(ontologyContent);
-
         } else {
             // read the file name
-
             let fileToRead = "./data/" + ontology + ".json";
             if (f2r) {
-                fileToRead = f2r;
-            } // overwrite the newOntology Index
+                fileToRead = f2r; // overwrite the newOntology Index
+            }
             // read file
-            d3.xhr(fileToRead, "application/json", function (error, request) {
-                let loadingSuccessful = !error;
-                if (loadingSuccessful) {
-                    ontologyContent = request.responseText;
+            const fetchfile = async () => {
+                const response = await fetch(fileToRead, { headers: { "Content-Type": "application/json" } });
+                if (response.ok) {
+                    ontologyContent = await response.json();
                     parseOntologyContent(ontologyContent);
                 } else {
-
                     if (loadingNewOntologyForEditor) {
                         ontologyContent = '{\n' +
                             '  "_comment": "Empty ontology for WebVOWL Editor",\n' +
@@ -568,9 +556,9 @@ module.exports = function (graph) {
                         parseOntologyContent(ontologyContent);
                     } else {
                         // some error occurred
-                        ontologyMenu.append_bulletPoint("Failed to load: " + ontology);
-                        if (error.status === 0) { // assumption this is CORS error when running locally (error status == 0)
-                            ontologyMenu.append_message_toLastBulletPoint(" <span style='color: red'>ERROR STATUS:</span> " + error.status);
+                        ontologyMenu.append_bulletPoint(`Failed to load '${ontology}'. Response: ${response.status}`);
+                        if (true) { // assumption this is CORS error when running locally (error status == 0)
+                            ontologyMenu.append_message_toLastBulletPoint(" <span style='color: red'>ERROR STATUS:</span> " + response.status);
                             if (window.location.toString().startsWith("file:/")) {
                                 ontologyMenu.append_message_toLastBulletPoint("<br><p>WebVOWL runs in a local instance.</p>");
                                 ontologyMenu.append_message_toLastBulletPoint("<p>CORS prevents to automatically load files on host system.</p>");
@@ -579,23 +567,19 @@ module.exports = function (graph) {
                                 ontologyMenu.append_message_toLastBulletPoint("<p>Ontologies can be created using the editor mode (i.e. activate editing mode in <b>Modes</b> menu and create a new ontology using the <b>Ontology</b> menu.</p>");
                             }
                         } else {
-                            ontologyMenu.append_message_toLastBulletPoint(" <span style='color: red'>ERROR STATUS:</span> " + error.status);
+                            ontologyMenu.append_message_toLastBulletPoint(" <span style='color: red'>ERROR STATUS:</span> " + response.status);
                         }
-
-
-
                         graph.handleOnLoadingError();
                         loadingModule.setErrorMode();
                     }
                 }
-            });
+            };
+            fetchfile();
         }
     }
 
-
     /** -- PARSE JSON CONTENT -- **/
     function parseOntologyContent(content) {
-
         ontologyMenu.append_bulletPoint("Reading ontology graph ... ");
         let _loader = ontologyMenu.getLoadingFunction();
         _loader(content, ontologyIdentifierFromURL, "noAlternativeNameYet");
@@ -607,7 +591,6 @@ module.exports = function (graph) {
         ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red;'>Error: Received empty graph</span>");
         loadingWasSuccessFul = false;
         graph.handleOnLoadingError();
-
     };
 
     loadingModule.validJsonFile = function () {
@@ -615,9 +598,7 @@ module.exports = function (graph) {
         loadingWasSuccessFul = true;
     };
 
-
     /** --- HELPER FUNCTIONS **/
-
     function identifyParameter(url) {
         let numParameters = (url.match(/#/g) || []).length;
         // create parameters array
@@ -720,9 +701,5 @@ module.exports = function (graph) {
         }
         return method;
     }
-
     return loadingModule;
-}
-    ;
-
-
+};

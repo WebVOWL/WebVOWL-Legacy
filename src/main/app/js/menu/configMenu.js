@@ -128,9 +128,10 @@ module.exports = function (graph) {
     };
 
     configMenu.updateSettings = function () {
-        let silent = true;
+        const silent = true;
+        const event = undefined;
         checkboxes.forEach(function (checkbox) {
-            checkbox.on("click")(silent);
+            checkbox.on("click")(event, silent);
         });
     };
     return configMenu;

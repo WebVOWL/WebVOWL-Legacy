@@ -692,16 +692,13 @@ module.exports = function (graph) {
             element.redrawElement();
             element.redrawLabelText();
             // handle visual selection
-
         } else {
             removeAttribute(element, "external");
             // background color for external element;
             element.backgroundColor(undefined);
             element.redrawElement();
             element.redrawLabelText();
-
         }
-
         if (element.focused()) {
             graph.options().focuserModule().handle(event, element, true); // unfocus
             graph.options().focuserModule().handle(event, element, true); // focus

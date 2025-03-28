@@ -46,7 +46,6 @@ module.exports = (function () {
             return false;
         };
 
-
         this.existingPropertyIRI = function (url) {
             // this goes via IRIS
             for (let i = 0; i < assignedProperties.length; i++) {

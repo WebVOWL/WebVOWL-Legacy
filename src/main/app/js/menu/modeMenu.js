@@ -5,15 +5,13 @@
  * @returns {{}}
  */
 module.exports = function (graph) {
-
     let SAME_COLOR_MODE = { text: "Multicolor", type: "same" };
     let GRADIENT_COLOR_MODE = { text: "Multicolor", type: "gradient" };
-
     let modeMenu = {},
         checkboxes = [],
         colorModeSwitch;
-
     let dynamicLabelWidthCheckBox;
+
     // getter and setter for the state of color modes
     modeMenu.colorModeState = function (s) {
         if (!arguments.length) return colorModeSwitch.datum().active;
@@ -21,14 +19,15 @@ module.exports = function (graph) {
         return modeMenu;
     };
 
-
     modeMenu.setDynamicLabelWidth = function (val) {
         dynamicLabelWidthCheckBox.property("checked", val);
     };
+
     // getter for checkboxes
     modeMenu.getCheckBoxContainer = function () {
         return checkboxes;
     };
+
     // getter for the color switch [needed? ]
     modeMenu.colorModeSwitch = function () {
         return colorModeSwitch;
@@ -185,6 +184,7 @@ module.exports = function (graph) {
      * Resets the modes to their default.
      */
     modeMenu.reset = function () {
+        const event = undefined;
         checkboxes.forEach(function (checkbox) {
             let defaultState = checkbox.datum().defaultState,
                 isChecked = checkbox.property("checked");
@@ -192,13 +192,11 @@ module.exports = function (graph) {
             if (isChecked !== defaultState) {
                 checkbox.property("checked", defaultState);
                 // Call onclick event handlers programmatically
-                checkbox.on("click")(checkbox.datum());
+                checkbox.on("click")(event, checkbox.datum());
             }
-
             // Reset the module that is connected with the checkbox
             checkbox.datum().module.reset();
         });
-
         // set the switch to active and simulate disabling
         colorModeSwitch.datum().active = true;
         colorModeSwitch.on("click")();
@@ -230,27 +228,31 @@ module.exports = function (graph) {
         // need the !state because we simulate later a click
         modeMenu.colorModeState(!state);
     };
+
     modeMenu.setColorSwitchStateUsingURL = function (state) {
         // need the !state because we simulate later a click
+        const silent = true;
+        const event = undefined;
         modeMenu.colorModeState(!state);
-        colorModeSwitch.on("click")(true);
+        colorModeSwitch.on("click")(event, silent);
     };
 
-
     modeMenu.updateSettingsUsingURL = function () {
-        let silent = true;
+        const silent = true;
+        const event = undefined;
         checkboxes.forEach(function (checkbox) {
-            checkbox.on("click")(checkbox.datum(), silent);
+            checkbox.on("click")(event, checkbox.datum(), silent);
         });
     };
 
     modeMenu.updateSettings = function () {
-        let silent = true;
+        const silent = true;
+        const event = undefined;
         checkboxes.forEach(function (checkbox) {
-            checkbox.on("click")(checkbox.datum(), silent);
+            checkbox.on("click")(event, checkbox.datum(), silent);
         });
         // this simulates onclick and inverts its state
-        colorModeSwitch.on("click")(silent);
+        colorModeSwitch.on("click")(event, silent);
     };
     return modeMenu;
 };

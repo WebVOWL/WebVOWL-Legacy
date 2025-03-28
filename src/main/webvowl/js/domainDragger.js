@@ -241,10 +241,8 @@ module.exports = function (graph) {
     let rootLayer = Domain_dragger.rootNodeLayer.selectAll("*");
     rootLayer.on("mouseover", Domain_dragger.onMouseOver)
       .on("mouseout", Domain_dragger.onMouseOut)
-      .on("click", function () {
-      })
-      .on("dblclick", function () {
-      })
+      .on("click", () => { })
+      .on("dblclick", () => { })
       .on("mousedown", Domain_dragger.mouseDown)
       .on("mouseup", Domain_dragger.mouseUp);
   };

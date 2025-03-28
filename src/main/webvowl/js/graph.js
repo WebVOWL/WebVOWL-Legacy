@@ -44,12 +44,14 @@ module.exports = function (graphContainerSelector) {
         processedUnfilteredData,
         processedUnfilteredDataMap = { nodes: new Map(), properties: new Map() };
     // Graph behaviour
-    const forceLink = d3.forceLink();
+    const forceLink = d3.forceLink().strength(options.linkStrength());//.distance(calculateLinkPartDistance);
+    const manyBody = d3.forceManyBody().strength(options.charge());
     const simulation = d3.forceSimulation()
         .force("link", forceLink)
-        .force("charge", d3.forceManyBody())
-        .force("x", d3.forceX())
-        .force("y", d3.forceY())
+        .force("charge", manyBody)
+        .force("center", d3.forceCenter())
+        // .force("x", d3.forceX())
+        // .force("y", d3.forceY())
         .stop();
     let dragBehaviour,
         zoomFactor = 1.0,
@@ -174,15 +176,15 @@ module.exports = function (graphContainerSelector) {
                     return transform(pos_intp(t), cx, cy);
                 };
             })
-            .each("end", function () {
+            .each(function () {
                 graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
                 zoom.translateTo(graphContainer, graphTranslation[0], graphTranslation[1]);
-                zoom.scale(zoomFactor);
+                zoom.scaleTo(graphContainer, zoomFactor);
                 graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
             });
     };
     graph.setZoom = function (value) {
-        zoom.scale(value);
+        zoom.scaleTo(graphContainer, value);
     };
     graph.setTranslation = function (translation) {
         zoom.translateTo(graphContainer, translation[0], translation[1]);
@@ -404,7 +406,6 @@ module.exports = function (graphContainerSelector) {
         draggerObjectsArray.push(rangeDragger);
         draggerObjectsArray.push(domainDragger);
         draggerObjectsArray.push(shadowClone);
-        simulation.stop();
     }
 
     graph.lazyRefresh = function () {
@@ -565,15 +566,11 @@ module.exports = function (graphContainerSelector) {
 
                 return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
             });
-
-
             updateHaloRadius();
             return;
         }
 
         // TODO: this is Editor redraw function // we need to make this faster!!
-
-
         nodeElements.attr("transform", function (node) {
             return "translate(" + node.x + "," + node.y + ")";
         });
@@ -607,18 +604,15 @@ module.exports = function (graphContainerSelector) {
                     // shadowClone.setPosition(link.property().range().x,link.property().range().y);
                     // shadowClone.setPositionDomain(link.property().domain().x,link.property().domain().y);
                 }
-
             }
             return "translate(" + label.x + "," + label.y + ")";
         });
         // Set link paths and calculate additional information
         linkPathElements.attr("d", function (l) {
             if (l.isLoop()) {
-
                 let ptrAr = math.getLoopPoints(l);
                 l.label().linkRangeIntersection = ptrAr[1];
                 l.label().linkDomainIntersection = ptrAr[0];
-
                 if (l.property().focused() === true || hoveredPropertyElement !== undefined) {
                     rangeDragger.updateElement();
                     domainDragger.updateElement();
@@ -641,11 +635,9 @@ module.exports = function (graphContainerSelector) {
 
         // Set cardinality positions
         cardinalityElements.attr("transform", function (property) {
-
             let label = property.link().label(),
                 pos = math.calculateIntersection(label, property.range(), CARDINALITY_HDISTANCE),
                 normalV = math.calculateNormalVector(label, property.range(), CARDINALITY_VDISTANCE);
-
             return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
         });
 
@@ -659,13 +651,11 @@ module.exports = function (graphContainerSelector) {
         if (hoveredPropertyElement) {
             setDeleteHoverElementPositionProperty(hoveredPropertyElement);
         }
-
         updateHaloRadius();
     }
 
     graph.updatePropertyDraggerElements = function (property) {
         if (property.type() !== "owl:DatatypeProperty") {
-
             shadowClone.setParentProperty(property);
             rangeDragger.setParentProperty(property);
             rangeDragger.hideDragger(false);
@@ -673,7 +663,6 @@ module.exports = function (graphContainerSelector) {
             domainDragger.setParentProperty(property);
             domainDragger.hideDragger(false);
             domainDragger.addMouseEvents();
-
         }
         else {
             rangeDragger.hideDragger(true);
@@ -779,9 +768,11 @@ module.exports = function (graphContainerSelector) {
     function zoomed(event) {
         if (forceNotZooming === true) {
             zoom.transform().translate(graphTranslation);
-            zoom.scale(zoomFactor);
+            zoom.transform().scale(zoomFactor);
             return;
         }
+
+        const transform = event.transform;
         let zoomEventByMWheel = false;
         if (event.sourceEvent) {
             if (event.sourceEvent.deltaY) {
@@ -792,16 +783,16 @@ module.exports = function (graphContainerSelector) {
             if (transformAnimation === true) {
                 return;
             }
-            zoomFactor = event.scale;
-            graphTranslation = event.translate;
+            zoomFactor = transform.k; // scale
+            graphTranslation = [transform.x, transform.y]; //translate
             graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
             updateHaloRadius();
             graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
             return;
         }
         /** animate the transition **/
-        zoomFactor = event.scale;
-        graphTranslation = event.translate;
+        zoomFactor = transform.k; // scale
+        graphTranslation = [transform.x, transform.y]; //translate
         graphContainer.transition()
             .tween("attr.translate", function () {
                 return function (t) {
@@ -814,7 +805,7 @@ module.exports = function (graphContainerSelector) {
                     graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
                 };
             })
-            .each("end", function () {
+            .each(function () {
                 transformAnimation = false;
             })
             .attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")")
@@ -1032,12 +1023,10 @@ module.exports = function (graphContainerSelector) {
         });
         generateEditElements();
 
-
         // Add an extra container for all markers
         markerContainer = linkContainer.append("defs");
 
         // Draw nodes
-
         if (classNodes === undefined) classNodes = [];
 
         nodeElements = nodeContainer.selectAll(".node")
@@ -1051,7 +1040,6 @@ module.exports = function (graphContainerSelector) {
         nodeElements.each(function (node) {
             node.draw(d3.select(this));
         });
-
 
         if (labelNodes === undefined) labelNodes = [];
 
@@ -1319,10 +1307,10 @@ module.exports = function (graphContainerSelector) {
                     return transform(pos_intp(t), cx, cy);
                 };
             })
-            .each("end", function () {
+            .each(function () {
                 graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
                 zoom.translateTo(graphContainer, graphTranslation[0], graphTranslation[1]);
-                zoom.scale(zoomFactor);
+                zoom.scaleTo(graphContainer, zoomFactor);
                 updateHaloRadius();
                 options.zoomSlider().updateZoomSliderValue(zoomFactor);
             });
@@ -1351,10 +1339,10 @@ module.exports = function (graphContainerSelector) {
                     return transform(pos_intp(t), cx, cy);
                 };
             })
-            .each("end", function () {
+            .each(function () {
                 graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
                 zoom.translateTo(graphContainer, graphTranslation[0], graphTranslation[1]);
-                zoom.scale(zoomFactor);
+                zoom.scaleTo(graphContainer, zoomFactor);
                 updateHaloRadius();
                 options.zoomSlider().updateZoomSliderValue(zoomFactor);
             });
@@ -1475,6 +1463,9 @@ module.exports = function (graphContainerSelector) {
         eN = unfilteredData.nodes.length + 1;
         eP = unfilteredData.properties.length + 1;
 
+
+        // TODO: ==== Are these two loops doimg anything? id seems to always be a string of a number ===
+
         // using the ids of elements if to ensure that loaded elements will not get the same id;
         for (let p = 0; p < unfilteredData.properties.length; p++) {
             let currentId = unfilteredData.properties[p].id();
@@ -1503,6 +1494,9 @@ module.exports = function (graphContainerSelector) {
                 }
             }
         }
+
+        // ==================================================================================
+
         initialLoad = true;
         graph.options().warningModule().closeFilterHint();
 
@@ -1791,6 +1785,9 @@ module.exports = function (graphContainerSelector) {
         setPositionOfOldLabelsOnNewLabels(simulation.nodes(), labelNodes);
         simulation.nodes(d3Nodes);
         forceLink.links(d3Links);
+        if (d3Nodes.length > 10000) {
+            manyBody.theta(0.8);
+        }
     }
 
     // The label nodes are positioned randomly, because they are created from scratch if the data changes and lose
@@ -1812,7 +1809,7 @@ module.exports = function (graphContainerSelector) {
 
     // Applies all options that don't change the graph data.
     function refreshGraphStyle() {
-        // zoom = zoom.scaleExtent([options.minMagnification(), options.maxMagnification()]);
+        zoom = zoom.scaleExtent([options.minMagnification(), options.maxMagnification()]);
         // if (graphContainer) {
         //     zoom.event(graphContainer);
         // }
@@ -1829,9 +1826,9 @@ module.exports = function (graphContainerSelector) {
         //     .gravity(options.gravity())
         //     .linkStrength(options.linkStrength()); // Flexibility of links
 
-        // force.nodes().forEach(function (n) {
-        //     n.frozen(paused);
-        // });
+        simulation.nodes().forEach(function (n) {
+            n.frozen(paused);
+        });
     }
 
     function calculateLinkPartDistance(linkPart) {
@@ -2130,8 +2127,8 @@ module.exports = function (graphContainerSelector) {
         graphTranslation = [(cx - p[0] * zoomFactor), (cy - p[1] * zoomFactor)];
         updateHaloRadius();
         // update the values in case the user wants to break the animation
-        zoom.translateTo(graphTranslation, graphTranslation[0], graphTranslation[1]);
-        zoom.scale(zoomFactor);
+        zoom.translateTo(graphContainer, graphTranslation[0], graphTranslation[1]);
+        zoom.scaleTo(graphContainer, zoomFactor);
         graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
         return "translate(" + graphTranslation[0] + "," + graphTranslation[1] + ")scale(" + zoomFactor + ")";
     }
@@ -2166,10 +2163,10 @@ module.exports = function (graphContainerSelector) {
                     return transform(pos_intp(t), cx, cy);
                 };
             })
-            .each("end", function () {
+            .each(function () {
                 graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translateTo(graphTranslation, graphTranslation[0], graphTranslation[1]);
-                zoom.scale(zoomFactor);
+                zoom.translateTo(graphContainer, graphTranslation[0], graphTranslation[1]);
+                zoom.scaleTo(graphContainer, zoomFactor);
                 updateHaloRadius();
             });
     }
@@ -2524,13 +2521,13 @@ module.exports = function (graphContainerSelector) {
                     return transform(pos_intp(t), cx, cy);
                 };
             })
-            .each("end", function () {
+            .each(function () {
                 if (dynamic) {
                     return;
                 }
                 graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translateTo(graphTranslation, graphTranslation[0], graphTranslation[1]);
-                zoom.scale(zoomFactor);
+                zoom.translateTo(graphContainer, graphTranslation[0], graphTranslation[1]);
+                zoom.scaleTo(graphContainer, zoomFactor);
                 graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
             });
     };
@@ -3456,7 +3453,7 @@ module.exports = function (graphContainerSelector) {
                 event.preventDefault();
                 event.stopPropagation();
                 zoom.translateTo(graphContainer, graphTranslation[0], graphTranslation[1]);
-                zoom.scale(zoomFactor);
+                zoom.scaleTo(graphContainer, zoomFactor);
                 graph.modified_dblTouchFunction(event);
             }
             else {

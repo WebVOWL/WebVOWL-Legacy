@@ -31,18 +31,18 @@ webvowl.modules.statistics = require("./modules/statistics");
 webvowl.modules.subclassFilter = require("./modules/subclassFilter");
 
 webvowl.nodes = {};
-nodeMap.entries().forEach(function (entry) {
-    mapEntryToIdentifier(webvowl.nodes, entry);
+nodeMap.forEach((value, key, map) => {
+    mapEntryToIdentifier(webvowl.nodes, key, value);
 });
 
 webvowl.properties = {};
-propertyMap.entries().forEach(function (entry) {
-    mapEntryToIdentifier(webvowl.properties, entry);
+propertyMap.forEach(function (value, key, map) {
+    mapEntryToIdentifier(webvowl.properties, key, value);
 });
 
-function mapEntryToIdentifier(map, entry) {
-    let identifier = entry[0].replace(":", "").toLowerCase(); // Key
-    map[identifier] = entry[1]; // Value
+function mapEntryToIdentifier(map, key, value) {
+    let identifier = key.replace(":", "").toLowerCase();
+    map[identifier] = value
 }
 
 module.exports = webvowl;

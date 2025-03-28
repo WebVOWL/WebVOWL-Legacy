@@ -48,10 +48,10 @@ module.exports = function () {
     let iriMap = mapExternalsToBaseUri(elements);
     let entries = iriMap.entries();
 
-    let colorScale = d3.scale.linear()
+    let colorScale = d3.scaleLinear()
       .domain([0, entries.length - 1])
       .range(_.find(COLOR_MODES, { type: colorModeType }).range)
-      .curve(d3.interpolateHsl);
+      .interpolate(d3.interpolateHsl);
 
     for (let i = 0; i < entries.length; i++) {
       let groupedElements = entries[i].value;

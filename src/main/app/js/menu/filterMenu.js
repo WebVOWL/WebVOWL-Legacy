@@ -269,7 +269,8 @@ module.exports = function (graph) {
 
     // update the gui without invoking graph update (calling silent onclick function)
     filterMenu.updateSettings = function () {
-        let silent = true;
+        const silent = true;
+        const event = undefined;
         let sliderValue = degreeSlider.property("value");
         if (sliderValue > 0) {
             filterMenu.highlightForDegreeSlider(true);
@@ -278,12 +279,10 @@ module.exports = function (graph) {
         }
         checkboxData.forEach(function (checkboxData) {
             let checkbox = checkboxData.checkbox;
-            checkbox.on("click")(silent);
+            checkbox.on("click")(event, silent);
         });
-
         degreeSlider.on("input")();
         degreeSlider.on("change")();
-
     };
 
     return filterMenu;

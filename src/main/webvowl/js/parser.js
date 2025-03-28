@@ -145,12 +145,11 @@ module.exports = function (graph) {
         let classes = combineClassesOrProperties(ontologyData.class, ontologyData.classAttribute, NodePrototypeMap, combineClasses),
             datatypes = combineClassesOrProperties(ontologyData.datatype, ontologyData.datatypeAttribute, NodePrototypeMap, combineClasses),
             combinedClassesAndDatatypes = classes.concat(datatypes),
-            unparsedProperties = ontologyData.property || [],
-            combinedProperties;
+            unparsedProperties = ontologyData.property || [];
 
         // Inject properties for unions, intersections, ...
         addSetOperatorProperties(combinedClassesAndDatatypes, unparsedProperties);
-        combinedProperties = combineClassesOrProperties(unparsedProperties, ontologyData.propertyAttribute, PropertyPrototypeMap, combineProperties);
+        let combinedProperties = combineClassesOrProperties(unparsedProperties, ontologyData.propertyAttribute, PropertyPrototypeMap, combineProperties);
         classMap = mapElements(combinedClassesAndDatatypes);
         propertyMap = mapElements(combinedProperties);
         mergeRangesOfEquivalentProperties(combinedProperties, combinedClassesAndDatatypes);
@@ -211,8 +210,7 @@ module.exports = function (graph) {
                         graph.options().pickAndPinModule().addPinnedElement(object);
                     }
                     if (element.attributes) {
-                        let deduplicatedAttributes = new Set(element.attributes.concat(object.attributes()));
-                        object.attributes(deduplicatedAttributes.values());
+                        object.attributes(element.attributes.concat(object.attributes()));
                     }
                     combinations.push(object);
                 } else {
@@ -287,9 +285,11 @@ module.exports = function (graph) {
     }
 
     function createLowerCasePrototypeMap(prototypeMap) {
-        return new Map(prototypeMap.values(), function (value) {
-            return value.toLowerCase();
-        });
+        let map = new Map();
+        prototypeMap.forEach((value, key, protoMap) => {
+            map.set(key.toLowerCase(), value);
+        })
+        return map;
     }
 
     function mergeRangesOfEquivalentProperties(properties, nodes) {

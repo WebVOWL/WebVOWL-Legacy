@@ -59,7 +59,7 @@ function findMergeNode(propertyWithEquivalents, nodeMap) {
     typeSet.remove(DATA_PROPERTY_DEFAULT_RANGE_TYPE);
 
     // exactly one type to chose from -> take the node of this type as range
-    if (typeSet.size() === 1) {
+    if (typeSet.size === 1) {
         let type = typeSet.values()[0];
         let ranges = typeMap.get(type);
 

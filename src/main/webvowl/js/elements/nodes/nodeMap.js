@@ -16,7 +16,7 @@ nodes.push(require("./implementations/RdfsResource"));
 
 let map = new Map(nodes.map((Prototype) => {
   let proto = new Prototype();
-  return [proto.type(), proto];
+  return [proto.type(), Prototype];
 }));
 
 module.exports = function () {

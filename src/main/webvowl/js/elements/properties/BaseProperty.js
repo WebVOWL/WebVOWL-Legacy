@@ -788,7 +788,6 @@ module.exports = (function () {
                 }
             })
                 .on("keydown", function (event) {
-
                     if (event.code === 13) {
                         this.blur();
                         that.frozen(false); // << releases the not after selection

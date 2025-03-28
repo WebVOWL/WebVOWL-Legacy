@@ -12,7 +12,7 @@ module.exports = function (graph) {
             if (hoverFlag === false) {
                 let searchMenu = graph.options().searchMenu();
                 searchMenu.hideSearchEntries();
-                specialCbx.on("click")(true);
+                specialCbx.on("click")(undefined, true);
                 if (graph.editorMode() === false) {
                     d3.select("#useAccuracyHelper").style("color", "#979797");
                     d3.select("#useAccuracyHelper").style("pointer-events", "none");
@@ -123,13 +123,12 @@ module.exports = function (graph) {
 
     debugMenu.updateSettings = function () {
         d3.selectAll(".debugOption").classed("hidden", graph.options().getHideDebugFeatures());
-
-        let silent = true;
+        const silent = true;
+        const event = undefined;
         checkboxes.forEach(function (checkbox) {
-            checkbox.on("click")(silent);
+            checkbox.on("click")(event, silent);
         });
         if (graph.editorMode() === false) {
-
             d3.select("#useAccuracyHelper").style("color", "#979797");
             d3.select("#useAccuracyHelper").style("pointer-events", "none");
 
@@ -137,12 +136,9 @@ module.exports = function (graph) {
             d3.select("#showDraggerObject").style("color", "#979797");
             d3.select("#showDraggerObject").style("pointer-events", "none");
         } else {
-
             d3.select("#useAccuracyHelper").style("color", "#2980b9");
             d3.select("#useAccuracyHelper").style("pointer-events", "auto");
         }
-
     };
-
     return debugMenu;
 };
