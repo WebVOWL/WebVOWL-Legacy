@@ -1324,7 +1324,12 @@ module.exports = function (graphContainerSelector) {
 
     // resetting the graph
     graph.reset = function () {
-        currentData = unfilteredData;
+        if(unfilteredData) {
+            options.filterModules().forEach(function (module) {
+                currentData = filterFunction(module, unfilteredData, true);
+            });
+        }
+        // currentData = unfilteredData;
         // window size
         let w = 0.5 * graph.options().width();
         let h = 0.5 * graph.options().height();
@@ -1642,7 +1647,7 @@ module.exports = function (graphContainerSelector) {
         });
 
         options.filterModules().forEach(function (module) {
-            unfilteredData = filterFunction(module, unfilteredData, true);
+            currentData = filterFunction(module, unfilteredData, true);
         });
 
         // generate dictionary here ;
@@ -1725,7 +1730,7 @@ module.exports = function (graphContainerSelector) {
                 console.log(`Failed to find a node or property with id ${rootNodeID}`);
             }
         }
-        let selectedNodes = breadthFirstSearchDepth(nodes, 4);
+        let selectedNodes = breadthFirstSearchDepth(nodes, 2);
         let selectedProperties = [];
         for (const property of unfilteredData.properties) {
             if (selectedNodes.get(property.domain().id()) && selectedNodes.get(property.range().id())) {
