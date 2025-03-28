@@ -61,5 +61,5 @@ To export the VOWL visualization to an SVG image, all css styles have to be incl
 This means that if you change the CSS code in the `vowl.css` file, you also have to update the code that
 inlines the styles - otherwise the exported SVG will not look the same as the displayed graph.
 
-The tool which creates the code that inlines the styles can be found in the util directory. Please
-follow the instructions in its [README](util/VowlCssToD3RuleConverter/README.md) file.
+The tool which creates the code that inlines the styles can be found in the `VowlCssToD3RuleConverter` directory. Please
+follow the instructions in its [README](src/VowlCssToD3RuleConverter/README.md) file.
