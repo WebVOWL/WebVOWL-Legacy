@@ -195,7 +195,7 @@ module.exports = function ( graph ){
       }
     });
     
-    setSliderValue(degreeSlider, 0);
+    // setSliderValue(degreeSlider, 0);
     degreeSlider.on("change")();
   };
   
