@@ -1,76 +1,21 @@
 "use strict";
-var paths = require("./config.js").path_func;
+const paths = require("./config.js").path_func;
+const getWebpackConfig = require("./webpack.config.js");
+
+
 module.exports = function (grunt) {
 	require("load-grunt-tasks")(grunt);
-	var webpack = require("webpack");
-	var webpackConfig = require("./webpack.config.js");
+	const devConfig = getWebpackConfig({ mode: "development", type: "devserver" });
+	const prodConfig = getWebpackConfig({ mode: "production" });
 
-	// Project configuration.
 	grunt.initConfig({
 		pkg: grunt.file.readJSON("package.json"),
-		bump: {
-			options: {
-				files: ["package.json"],
-				updateConfigs: ["pkg"],
-				commit: true,
-				commitMessage: "Bump version to %VERSION%",
-				commitFiles: ["package.json"],
-				createTag: false,
-				prereleaseName: "RC",
-				push: false
-			}
-		},
+		keepalive: true,
 		clean: {
 			deploy: paths.deployPath,
-			zip: "webvowl-*.zip",
-			testOntology: paths.deployPath + "data/benchmark.json"
-		},
-		compress: {
-			deploy: {
-				options: {
-					archive: function () {
-						var branchInfo = grunt.config("gitinfo.local.branch.current");
-						return "webvowl-" + branchInfo.name + "-" + branchInfo.shortSHA + ".zip";
-					},
-					level: 9,
-					pretty: true
-				},
-				files: [
-					{ expand: true, cwd: paths.deployPath, src: ["**"], dest: "webvowl/" }
-				]
-			}
-		},
-		connect: {
-			devserver: {
-				options: {
-					protocol: "http",
-					hostname: "localhost",
-					port: 8000,
-					base: paths.deployPath,
-					directory: paths.deployPath,
-					livereload: true,
-					open: "http://localhost:8000/",
-					middleware: function (connect, options, middlewares) {
-						return middlewares.concat([
-							require("serve-favicon")(`${paths.deployPath}/favicon.ico`),
-							require("serve-static")(options.base[0])
-						]);
-					}
-				}
-			}
-		},
-		copy: {
-			dependencies: {
-				files: [
-					{ expand: true, cwd: `${paths.nodeModulePath}/d3/`, src: ["d3.min.js"], dest: paths.deployPath + "/js/" }
-				]
-			},
-			static: {
-				files: [
-					{ expand: true, cwd: paths.srcPath, src: ["favicon.ico"], dest: paths.deployPath },
-					{ expand: true, src: ["license.txt"], dest: paths.deployPath }
-				]
-			}
+			webappDeploy: paths.webappDeployPath,
+			testOntology: paths.deployPath + "/data/benchmark.json",
+			redundantFolders: "pkg"
 		},
 		htmlbuild: {
 			options: {
@@ -85,26 +30,10 @@ module.exports = function (grunt) {
 				src: `${paths.srcPath}/index.html`,
 				dest: paths.deployPath
 			},
-			release: {
+			prod: {
 				// required for removing the benchmark ontology from the selection menu
 				src: `${paths.srcPath}/index.html`,
 				dest: paths.deployPath
-			}
-		},
-		jshint: {
-			options: {
-				jshintrc: true
-			},
-			source: [`${paths.srcPath}/**/*.js`],
-			tests: [`${paths.testPath}/*/**/*.js`]
-		},
-		karma: {
-			options: {
-				configFile: `${paths.testPath}/karma.conf.js`
-			},
-			dev: {},
-			continuous: {
-				singleRun: true
 			}
 		},
 		replace: {
@@ -118,58 +47,32 @@ module.exports = function (grunt) {
 			},
 			dist: {
 				files: [
-					{ expand: true, cwd: `${paths.deployPath}/js/`, src: "webvowl*.js", dest: `${paths.deployPath}/js/` }
+					{ expand: true, cwd: `${paths.deployPath}/js/`, src: "webvowl*.js", dest: "." }
 				]
 			}
 		},
 		webpack: {
-			options: webpackConfig,
-			build: {
-				mode: "production",
-				plugins: webpackConfig.plugins.concat(
-					// minimize the deployed code
-					// new webpack.optimize.UglifyJsPlugin(),
-					new webpack.optimize.DedupePlugin()
-				)
-			},
-			"build-dev": {
-				mode: "development",
-				devtool: "sourcemap",
-				debug: true
-			}
+			prod: prodConfig,
+			dev: devConfig
 		},
-		watch: {
-			configs: {
-				files: ["Gruntfile.js"],
-				options: {
-					reload: true
-				}
-			},
-			js: {
-				files: [`${paths.frontendPath}/**/*`, `${paths.backendPath}/**/*`],
-				tasks: ["webpack:build-dev", "post-js"],
-				options: {
-					livereload: true,
-					spawn: false
-				}
-			},
-			html: {
-				files: [`${paths.srcPath}/**/*.html`],
-				tasks: ["htmlbuild:dev"],
-				options: {
-					livereload: true,
-					spawn: false
-				}
-			}
-		}
+		watch: {}
 	});
-	grunt.registerTask("default", ["release"]);
-	grunt.registerTask("pre-js", ["clean:deploy", "clean:zip", "copy"]);
-	grunt.registerTask("post-js", ["replace"]);
-	grunt.registerTask("package", ["pre-js", "webpack:build-dev", "post-js", "htmlbuild:dev"]);
-	grunt.registerTask("release", ["pre-js", "webpack:build", "post-js", "htmlbuild:release", "clean:testOntology"]);
-	grunt.registerTask("zip", ["gitinfo", "release", "compress"]);
-	grunt.registerTask("webserver", ["package", "connect:devserver", "watch"]);
-	grunt.registerTask("test", ["karma:dev"]);
-	grunt.registerTask("test-ci", ["karma:continuous"]);
+	grunt.registerTask("default", ["prod"]);
+	grunt.registerTask("pre-js", ["clean:deploy"]);
+	grunt.registerTask("post-js", ["replace", "clean:redundantFolders"]);
+	grunt.registerTask("development", ["pre-js", "webpack:dev", "post-js", "htmlbuild:dev"]);
+	grunt.registerTask("production", ["pre-js", "webpack:prod", "post-js", "htmlbuild:prod", "clean:testOntology"]);
+	grunt.registerTask("devserver", ["development", "server", "watch"]);
+	grunt.registerTask('server', function () {
+		const Webpack = require('webpack');
+		const WebpackDevServer = require('webpack-dev-server');
+		const compiler = Webpack(devConfig);
+		const devServerOptions = { ...devConfig.devServer };
+		const server = new WebpackDevServer(devServerOptions, compiler);
+		const runServer = async () => {
+			console.log('Starting server...');
+			await server.start();
+		};
+		runServer();
+	});
 };
