@@ -1325,11 +1325,11 @@ module.exports = function (graphContainerSelector) {
     // resetting the graph
     graph.reset = function () {
         if(unfilteredData) {
+            currentData = unfilteredData;
             options.filterModules().forEach(function (module) {
-                currentData = filterFunction(module, unfilteredData, true);
+                currentData = filterFunction(module, currentData, true);
             });
         }
-        // currentData = unfilteredData;
         // window size
         let w = 0.5 * graph.options().width();
         let h = 0.5 * graph.options().height();
@@ -1646,8 +1646,9 @@ module.exports = function (graphContainerSelector) {
             unfilteredDataMap.properties.set(property.id(), property);
         });
 
+        currentData = unfilteredData;
         options.filterModules().forEach(function (module) {
-            currentData = filterFunction(module, unfilteredData, true);
+            currentData = filterFunction(module, currentData, true);
         });
 
         // generate dictionary here ;
