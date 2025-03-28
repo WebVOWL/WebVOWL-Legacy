@@ -1702,6 +1702,8 @@ module.exports = function (graphContainerSelector) {
         options.literalFilter().enabled(shouldExecuteEmptyFilter);
 
         // Filter the data
+        links = linkCreator.createLinks(preprocessedData.properties);
+        storeLinksOnNodes(preprocessedData.nodes, links);
         options.filterModules().forEach(function (module) {
             preprocessedData = filterFunction(module, preprocessedData);
         });
@@ -1710,6 +1712,7 @@ module.exports = function (graphContainerSelector) {
         properties = preprocessedData.properties;
         links = linkCreator.createLinks(properties);
         labelNodes = computeLabelNodes(links);
+        storeLinksOnNodes(classNodes, links);
         setForceLayoutData(classNodes, labelNodes, links);
         // for (var i = 0; i < classNodes.length; i++) {
         //     if (classNodes[i].setRectangularRepresentation)
