@@ -1,7 +1,0 @@
-webpack.config.js
-deploy/**
-Gruntfile.js
-node_modules/**
-src/webvowl/js/entry.js
-src/app/js/entry.js
-src/app/js/browserWarning.js

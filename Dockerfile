@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install bzip2 -y
 WORKDIR $PROJECT_PATH/webvowl
 COPY *.* ./
 COPY src src
-RUN mvn -B package --file pom.xml -DskipTests
+RUN mvn -B package --file pom.xml -P production -DskipTests
 
 # Build OWL2VOWL
 WORKDIR $PROJECT_PATH
