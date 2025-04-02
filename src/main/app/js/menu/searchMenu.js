@@ -180,7 +180,8 @@ module.exports = function (graph) {
 
     function clearSearchEntries() {
         let htmlCollection = m_search.node().children;
-        for (let i = 0; i < htmlCollection.length; i++) {
+        let numEntries = htmlCollection.length;
+        for (let i = 0; i < numEntries; i++) {
             htmlCollection[0].remove();
         }
     }
