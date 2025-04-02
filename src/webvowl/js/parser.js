@@ -59,7 +59,7 @@ module.exports = function (graph) {
 
             if (settingsData.global.paused) {
                 var paused = settingsData.global.paused;
-                graph.options().pausedMenu().setPauseValue(paused);
+                graph.options().pauseMenu().setPauseValue(paused);
             }
         }
         /** Gravity Settings  **********************************************************/
@@ -175,6 +175,60 @@ module.exports = function (graph) {
         return properties;
     };
 
+    /**
+     * Parse `jsonText` and ensure the graph data is valid
+     * @param {string} jsonText
+     * @param {string} filename
+     * @param {string} alternativeFilename
+     * @returns {boolean} Whether the jsonText is valid graph data
+     */
+    parser.parseOntologyFromText = function (jsonText, filename, alternativeFilename) {
+        let isValidData = false;
+        const options = graph.options();
+        const loadingModule = options.loadingModule();
+
+        if ((jsonText === undefined && filename === undefined) || (jsonText.length === 0)) {
+            loadingModule.notValidJsonFile();
+            return [undefined, isValidData];
+        }
+
+        let data;
+        try {
+            data = JSON.parse(jsonText);
+        } catch (e) {
+            // the server output is not a valid json file
+            loadingModule.notValidJsonFile();
+            return [undefined, isValidData];
+        }
+
+        if (!filename) {
+            // First look if an ontology title exists, otherwise take the alternative filename
+            var ontologyNames = data.header ? data.header.title : undefined;
+            var ontologyName = languageTools.textInLanguage(ontologyNames);
+
+            if (ontologyName) {
+                filename = ontologyName;
+            } else {
+                filename = alternativeFilename;
+            }
+        }
+
+        // check if we have graph data
+        isValidData = data.class !== undefined && data.class.length > 0;
+
+        if (isValidData) {
+            const ontologyMenu = options.ontologyMenu();
+            const exportMenu = options.exportMenu();
+            options.data(data);
+            loadingModule.validJsonFile();
+            if (ontologyMenu.shouldCacheOntology(jsonText)) {
+                ontologyMenu.setCachedOntology(filename, jsonText);
+                exportMenu.setJsonText(jsonText);
+            }
+            exportMenu.setFilename(filename);
+        }
+        return [data, isValidData];
+    }
 
     /**
      * Combines the passed objects with its attributes and prototypes. This also applies
