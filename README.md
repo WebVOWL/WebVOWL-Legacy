@@ -52,17 +52,14 @@ Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
 
 Now you can execute these commands in the terminal:
 * `npm run webserver` to start a local live-updating webserver with the current development version
-* `grunt` or `grunt release` builds the release files into the deploy directory
-* `grunt package` builds the development version
-* `grunt test` starts the test runner
-* `grunt zip` builds the project and puts it into a zip file
+* `npm run release` builds the release files into the deploy directory
 
-Visit [http://localhost:8000](http://localhost:8000) to use WebVOWL.
+Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
 
 ## Additional information
 To export the VOWL visualization to an SVG image, all css styles have to be included into the SVG code.
 This means that if you change the CSS code in the `vowl.css` file, you also have to update the code that
 inlines the styles - otherwise the exported SVG will not look the same as the displayed graph.
 
-The tool which creates the code that inlines the styles can be found in the util directory. Please
-follow the instructions in its [README](util/VowlCssToD3RuleConverter/README.md) file.
+The tool which creates the code that inlines the styles can be found in the `VowlCssToD3RuleConverter` directory. Please
+follow the instructions in its [README](src/VowlCssToD3RuleConverter/README.md) file.
