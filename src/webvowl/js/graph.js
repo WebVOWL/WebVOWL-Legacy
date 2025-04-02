@@ -1,5 +1,4 @@
 var Deque = require("collections/deque");
-var _ = require("lodash/core");
 var math = require("./util/math")();
 var linkCreator = require("./parsing/linkCreator")();
 var elementTools = require("./util/elementTools")();
@@ -110,6 +109,9 @@ module.exports = function (graphContainerSelector) {
     graph.math = function () {
         return math;
     };
+    graph.parser = function () {
+        return parser;
+    }
     /** --------------------------------------------------------- **/
     /** -- getter and setter definitions                       -- **/
     /** --------------------------------------------------------- **/
@@ -253,8 +255,6 @@ module.exports = function (graphContainerSelector) {
                     rangeDragger.updateElement();
                     rangeDragger.mouseButtonPressed = true;
                     //  shadowClone.setPosition(d.x, d.y);
-
-
                 } else if (d.type && d.type() === "Domain_dragger") {
                     graph.ignoreOtherHoverEvents(true);
                     clearTimeout(delayedHider);
@@ -298,7 +298,6 @@ module.exports = function (graphContainerSelector) {
                     shadowClone.setPositionDomain(d3.event.x, d3.event.y);
                     rangeDragger.updateElementViaDomainDragger(d3.event.x, d3.event.y);
                 }
-
                 else {
                     d.px = d3.event.x;
                     d.py = d3.event.y;
@@ -308,7 +307,6 @@ module.exports = function (graphContainerSelector) {
                     if (d.renderType && d.renderType() === "round") {
                         classDragger.setParentNode(d);
                     }
-
                 }
             })
             .on("dragend", function (d) {
@@ -390,7 +388,6 @@ module.exports = function (graphContainerSelector) {
                         shadowClone.hideParentProperty(false);
                     }
                 }
-
                 else {
                     d.locked(false);
                     var pnp = graph.options().pickAndPinModule();
@@ -430,7 +427,6 @@ module.exports = function (graphContainerSelector) {
     graph.showReloadButtonAfterLayoutOptimization = function (show) {
         showReloadButtonAfterLayoutOptimization = show;
     };
-
 
     function hiddenRecalculatePositions() {
         finishedLoadingSequence = false;
@@ -1324,7 +1320,7 @@ module.exports = function (graphContainerSelector) {
 
     // resetting the graph
     graph.reset = function () {
-        if(unfilteredData) {
+        if (unfilteredData) {
             options.filterModules().forEach(function (module) {
                 filterFunction(module, unfilteredData, true);
             });
