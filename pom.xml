@@ -109,13 +109,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
                 </execution>
 
                 <execution>
-                    <id>grunt release</id>
+                    <id>grunt production</id>
                     <goals>
                         <goal>grunt</goal>
                     </goals>
                     <phase>generate-resources</phase>
                     <configuration>
-                        <arguments>release</arguments>
+                        <arguments>production</arguments>
                     </configuration>
                 </execution>
             </executions>
