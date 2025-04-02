@@ -1,3 +1,4 @@
+// NOTE: PhantomJS is not supported anymore. The tests need to be updated with Puppeteer or something
 module.exports = function (config) {
 	config.set({
 		basePath: "../",
