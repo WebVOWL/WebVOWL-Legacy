@@ -18,7 +18,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 
 <profiles>
     <profile>
-        <id>dev-server</id>
+        <id>devserver</id>
         <build>
             <plugins>
                 <plugin>
@@ -105,17 +105,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
                     <phase>generate-resources</phase>
                     <configuration>
                         <arguments>install</arguments>
-                    </configuration>
-                </execution>
-
-                <execution>
-                    <id>grunt production</id>
-                    <goals>
-                        <goal>grunt</goal>
-                    </goals>
-                    <phase>generate-resources</phase>
-                    <configuration>
-                        <arguments>production</arguments>
                     </configuration>
                 </execution>
             </executions>

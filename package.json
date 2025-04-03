@@ -4,20 +4,21 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "release": "grunt production",
-    "webserver": "grunt devserver"
+    "release": "mvn -B package --file pom.xml -P production",
+    "webserver": "mvn -B package --file pom.xml -P devserver"
   },
   "dependencies": {
+    "cjs-to-es6": "^2.0.1",
+    "collections": "^5.1.13",
     "d3": "^3.5.6",
     "grunt-cli": "^1.5.0",
-    "lodash": "^4.17.21",
-    "collections": "^5.1.13"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "process": "^0.11.10",
+    "@wasm-tool/wasm-pack-plugin": "^1.7.0",
     "copy-webpack-plugin": "^12.0.2",
-    "css-minimizer-webpack-plugin": "^7.0.0",
     "css-loader": "^7.1.2",
+    "css-minimizer-webpack-plugin": "^7.0.0",
     "grunt": "^1.6.1",
     "grunt-contrib-clean": "^2.0.1",
     "grunt-contrib-copy": "^1.0.0",
@@ -27,11 +28,12 @@
     "grunt-webpack": "^7.0.0",
     "load-grunt-tasks": "^5.1.0",
     "mini-css-extract-plugin": "^2.9.2",
+    "process": "^0.11.10",
     "style-loader": "^4.0.0",
+    "uglify-js": "^3.19.3",
     "webpack": "~5.98.0",
-    "webpack-dev-server": "^5.2.0",
     "webpack-dev-middleware": "^7.4.2",
-    "webpack-merge": "^6.0.1",
-    "uglify-js": "^3.19.3"
+    "webpack-dev-server": "^5.2.0",
+    "webpack-merge": "^6.0.1"
   }
 }
