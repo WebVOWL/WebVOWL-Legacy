@@ -182,21 +182,12 @@ module.exports = function (graph) {
      * @param {string} alternativeFilename
      * @returns {boolean} Whether the jsonText is valid graph data
      */
-    parser.parseOntologyFromText = function (jsonText, filename, alternativeFilename) {
+    parser.parseOntologyFromText = function (data, filename, alternativeFilename) {
         let isValidData = false;
         const options = graph.options();
         const loadingModule = options.loadingModule();
 
-        if ((jsonText === undefined && filename === undefined) || (jsonText.length === 0)) {
-            loadingModule.notValidJsonFile();
-            return [undefined, isValidData];
-        }
-
-        let data;
-        try {
-            data = JSON.parse(jsonText);
-        } catch (e) {
-            // the server output is not a valid json file
+        if ((data === undefined && filename === undefined) || (data.length === 0)) {
             loadingModule.notValidJsonFile();
             return [undefined, isValidData];
         }
