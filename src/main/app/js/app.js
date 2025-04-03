@@ -23,13 +23,13 @@ export default function () {
         searchMenu = require("./menu/searchMenu")(graph),
         navigationMenu = require("./menu/navigationMenu")(graph),
         zoomSlider = require("./menu/zoomSlider")(graph),
-        sidebar = require("./sidebar.mjs")(graph),
-        leftSidebar = require("./leftSidebar.mjs").default(graph),
-        editSidebar = require("./editSidebar.mjs").default(graph),
+        sidebar = require("./sidebar")(graph),
+        leftSidebar = require("./leftSidebar").default(graph),
+        editSidebar = require("./editSidebar").default(graph),
         configMenu = require("./menu/configMenu")(graph),
-        loadingModule = require("./loadingModule.mjs")(graph),
-        warningModule = require("./warningModule.mjs")(graph),
-        directInputMod = require("./directInputModule.mjs").default(graph),
+        loadingModule = require("./loadingModule")(graph),
+        warningModule = require("./warningModule")(graph),
+        directInputMod = require("./directInputModule").default(graph),
 
 
         // Graph modules

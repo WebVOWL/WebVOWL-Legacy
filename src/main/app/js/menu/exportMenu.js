@@ -13,7 +13,7 @@ export default function (graph) {
         copyButton,
         exportableJsonText;
 
-    var exportTTLModule = require("./exportTTLModule.mjs")(graph);
+    var exportTTLModule = require("./exportTTLModule")(graph);
 
 
     String.prototype.replaceAll = function (search, replacement) {

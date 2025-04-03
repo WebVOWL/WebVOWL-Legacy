@@ -1,4 +1,4 @@
-import { Trie } from '../trie.mjs';
+import { Trie } from '../trie';
 
 function testTrie() {
     let trie = new Trie();

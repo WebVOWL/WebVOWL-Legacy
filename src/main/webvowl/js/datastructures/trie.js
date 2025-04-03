@@ -113,6 +113,6 @@ class Trie {
     }
 }
 
-export default {
+export {
     Trie
 };
