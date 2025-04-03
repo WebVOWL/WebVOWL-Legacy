@@ -1,9 +1,9 @@
 "use strict";
-import { path_func as paths } from "./config.js";
-import getWebpackConfig from "./webpack.config.js";
+const paths = require("./config.js").path_func;
+const getWebpackConfig = require("./webpack.config.js");
 
 
-export default function (grunt) {
+module.exports = function (grunt) {
 	require("load-grunt-tasks")(grunt);
 	const devConfig = getWebpackConfig({ mode: "development", type: "devserver" });
 	const prodConfig = getWebpackConfig({ mode: "production" });

@@ -1,13 +1,13 @@
 "use strict";
-import { path_func as paths } from "./config.js";
-import { resolve as _resolve } from 'path';
-import { ProvidePlugin } from "webpack";
-import { merge } from 'webpack-merge';
-import CopyWebpackPlugin from "copy-webpack-plugin";
-import MiniCssExtractPlugin, { loader } from "mini-css-extract-plugin";
-import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
-import TerserPlugin, { uglifyJsMinify } from "terser-webpack-plugin";
-import WasmPackPlugin from '@wasm-tool/wasm-pack-plugin';
+const paths = require("./config.js").path_func;
+const path = require('path');
+const webpack = require("webpack");
+const MergeWebPackPlugin = require('webpack-merge');
+const CopyWebpackPlugin = require("copy-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
+const WasmPackPlugin = require('@wasm-tool/wasm-pack-plugin');
 
 function getConfig(args) {
 	const isProdEnabled = args.mode === "production" ? true : false;
@@ -31,7 +31,7 @@ function getConfig(args) {
 			},
 		},
 		output: {
-			path: _resolve(__dirname, paths.deployPath),
+			path: path.resolve(__dirname, paths.deployPath),
 			publicPath: 'auto',
 			filename: "js/[name].js",
 			chunkFilename: "js/[chunkhash].js",
@@ -59,7 +59,7 @@ function getConfig(args) {
 			minimize: isProdEnabled,
 			minimizer: [
 				new TerserPlugin({
-					minify: uglifyJsMinify,
+					minify: TerserPlugin.uglifyJsMinify,
 					// `terserOptions` options will be passed to `uglify-js`
 					// https://github.com/mishoo/UglifyJS#minify-options
 					terserOptions: { sourceMap: isProdEnabled },
@@ -104,7 +104,7 @@ function getConfig(args) {
 				{
 					test: /\.css$/i,
 					use: [
-						loader,
+						MiniCssExtractPlugin.loader,
 						"css-loader",
 					],
 				},
@@ -117,7 +117,7 @@ function getConfig(args) {
 			],
 		},
 		plugins: [
-			new ProvidePlugin({
+			new webpack.ProvidePlugin({
 				d3: "d3"
 			}),
 			// new webpack.ProvidePlugin({
@@ -134,7 +134,7 @@ function getConfig(args) {
 			),
 			new MiniCssExtractPlugin({ filename: "css/[name].css" }),
 			new WasmPackPlugin({
-				crateDirectory: _resolve(__dirname, paths.rustPath),
+				crateDirectory: path.resolve(__dirname, paths.rustPath),
 				// For available set of arguments check:
 				// https://rustwasm.github.io/wasm-pack/book/commands/build.html
 				// https://github.com/wasm-tool/wasm-pack-plugin
@@ -164,7 +164,7 @@ function getServerConfig(args) {
 			// 	"Cross-Origin-Embedder-Policy": "require-corp"
 			// },
 			static: {
-				directory: _resolve(paths.deployPath)
+				directory: path.resolve(paths.deployPath)
 			},
 			client: {
 				overlay: {
@@ -185,10 +185,11 @@ function getServerConfig(args) {
 		},
 	};
 };
-export default (args) => {
+
+module.exports = (args) => {
 	switch (args.type) {
 		case "devserver":
-			return merge(getConfig(args), getServerConfig(args));
+			return MergeWebPackPlugin.merge(getConfig(args), getServerConfig(args));
 		default:
 			return getConfig(args);
 	}
