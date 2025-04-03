@@ -4,7 +4,7 @@
  * @param graph required for calling a refresh after a filter change
  * @returns {{}}
  */
-module.exports = function ( graph ){
+export default function ( graph ){
   
   var filterMenu = {},
     checkboxData = [],

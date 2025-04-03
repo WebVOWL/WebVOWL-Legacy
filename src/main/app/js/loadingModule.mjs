@@ -1,4 +1,6 @@
-module.exports = function (graph) {
+// const wasm = require("../../../../target/pkg/index.js");
+
+export default function (graph) {
     /** some constants **/
     var PREDEFINED = 0,
         FILE_UPLOAD = 1,
@@ -334,9 +336,9 @@ module.exports = function (graph) {
         //1] Direct Json Upload
         if (fileName.match(/\.json$/)) {
             ontologyMenu.setConversionID(-10000);
-            const parseResult = await readFile(file).then(parseOntologyContent, (reason) => { console.error(reason) });
+            // const parseResult = parseOntologyContent(await wasm.parse_json(file));
             ontologyIdentifierFromURL = fileName;
-            loadOntologyContent(parseResult);
+            // loadOntologyContent(parseResult);
         } else {
             //2] File Upload to OWL2VOWL Converter
             // 1) check if we can get a timeStamp;
@@ -373,9 +375,9 @@ module.exports = function (graph) {
             //1] Direct Json Upload
             if (filename.match(/\.json$/)) {
                 ontologyMenu.setConversionID(-10000);
-                const parseResult = await readFile(file).then(parseOntologyContent, (reason) => { console.error(reason) });
+                // const parseResult = parseOntologyContent(await wasm.parse_json(selectedFile));
                 ontologyIdentifierFromURL = filename;
-                loadOntologyContent(parseResult);
+                // loadOntologyContent(parseResult);
             } else {
                 //2] File Upload to OWL2VOWL Converter
                 // 1) check if we can get a timeStamp;
@@ -578,18 +580,18 @@ module.exports = function (graph) {
         }
     }
 
-    /**
-     * @param {string} file
-     * @returns {Promise<string>}
-     */
-    function readFile(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(reader.result)
-            reader.onerror = () => reject()
-            reader.readAsText(file)
-        })
-    }
+    // /**
+    //  * @param {string} file
+    //  * @returns {Promise<string>}
+    //  */
+    // function readFile(file) {
+    //     return new Promise((resolve, reject) => {
+    //         const reader = new FileReader()
+    //         reader.onload = () => resolve(reader.result)
+    //         reader.onerror = () => reject()
+    //         reader.readAsText(file)
+    //     })
+    // }
 
     /**
      * Parse JSON content

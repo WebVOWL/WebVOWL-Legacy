@@ -1,4 +1,4 @@
-module.exports = function ( graph ){
+export default function ( graph ){
   /** variable defs **/
   var warningModule = {};
   var superContainer = d3.select("#WarningErrorMessages");

@@ -1,4 +1,4 @@
-module.exports = function (graph) {
+export default function (graph) {
     const URL_PREFIX = "o2v/"
 
     var ontologyMenu = {},

@@ -4,7 +4,7 @@
  * @param graph the graph that belongs to these controls
  * @returns {{}}
  */
-module.exports = function ( graph ){
+export default function ( graph ){
   
   var SAME_COLOR_MODE = { text: "Multicolor", type: "same" };
   var GRADIENT_COLOR_MODE = { text: "Multicolor", type: "gradient" };

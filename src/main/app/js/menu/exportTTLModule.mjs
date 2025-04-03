@@ -2,7 +2,7 @@
  * Contains the logic for the export button.
  * @returns {{}}
  */
-module.exports = function ( graph ){
+export default function ( graph ){
   var exportTTLModule = {};
   var resultingTTLContent = "";
   var currentNodes;

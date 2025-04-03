@@ -1,4 +1,4 @@
-const { Trie } = require("../../../webvowl/js/datastructures/trie");
+import { Trie } from '../../../webvowl/js/datastructures/trie';
 
 /**
  * Contains the search "engine"
@@ -6,7 +6,7 @@ const { Trie } = require("../../../webvowl/js/datastructures/trie");
  * @param graph the associated webvowl graph
  * @returns {{}}
  */
-module.exports = function (graph) {
+export default function (graph) {
     var searchMenu = {},
         trie,
         searchLineEdit,

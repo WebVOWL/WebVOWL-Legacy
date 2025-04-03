@@ -1,4 +1,4 @@
-module.exports = function ( graph ){
+export default function ( graph ){
   var configMenu = {},
     checkboxes = [];
   

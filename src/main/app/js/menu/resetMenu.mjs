@@ -4,7 +4,7 @@
  * @param graph the associated webvowl graph
  * @returns {{}}
  */
-module.exports = function ( graph ){
+export default function ( graph ){
   
   var resetMenu = {},
     options = graph.graphOptions(),

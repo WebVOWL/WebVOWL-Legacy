@@ -1,8 +1,10 @@
+import init, { init_rust } from "../../../../pkg/index.js";
+
 String.prototype.replaceAll = function (search, replacement) {
     var target = this;
     return target.split(search).join(replacement);
 };
-module.exports = function () {
+export default function () {
     var newOntologyCounter = 1;
     var app = {},
         graph = webvowl.graph(),
@@ -21,13 +23,13 @@ module.exports = function () {
         searchMenu = require("./menu/searchMenu")(graph),
         navigationMenu = require("./menu/navigationMenu")(graph),
         zoomSlider = require("./menu/zoomSlider")(graph),
-        sidebar = require("./sidebar")(graph),
-        leftSidebar = require("./leftSidebar")(graph),
-        editSidebar = require("./editSidebar")(graph),
+        sidebar = require("./sidebar.mjs")(graph),
+        leftSidebar = require("./leftSidebar.mjs").default(graph),
+        editSidebar = require("./editSidebar.mjs").default(graph),
         configMenu = require("./menu/configMenu")(graph),
-        loadingModule = require("./loadingModule")(graph),
-        warningModule = require("./warningModule")(graph),
-        directInputMod = require("./directInputModule")(graph),
+        loadingModule = require("./loadingModule.mjs")(graph),
+        warningModule = require("./warningModule.mjs")(graph),
+        directInputMod = require("./directInputModule.mjs").default(graph),
 
 
         // Graph modules
@@ -174,9 +176,12 @@ module.exports = function () {
         };
     }
 
-    app.initialize = function () {
-        addFileDropEvents(GRAPH_SELECTOR);
+    app.initialize = async function () {
+        // console.log(wasm);
+        await init();
+        init_rust(); // Initialize Rust code
 
+        addFileDropEvents(GRAPH_SELECTOR);
         window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function (f) {
             return setTimeout(f, 1000 / 60);
         }; // simulate calling code 60
@@ -514,7 +519,5 @@ module.exports = function () {
         }
         return rv;
     }
-
     return app;
-}
-    ;
+};

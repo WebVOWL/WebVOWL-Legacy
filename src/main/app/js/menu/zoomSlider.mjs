@@ -1,5 +1,5 @@
 /** The zoom Slider **/
-module.exports = function ( graph ){
+export default function ( graph ){
   var zoomSlider = {};
   var minMag = graph.options().minMagnification(),
     maxMag = graph.options().maxMagnification(),

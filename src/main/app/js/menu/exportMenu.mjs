@@ -2,7 +2,7 @@
  * Contains the logic for the export button.
  * @returns {{}}
  */
-module.exports = function (graph) {
+export default function (graph) {
 
     var exportMenu = {},
         exportSvgButton,
@@ -13,7 +13,7 @@ module.exports = function (graph) {
         copyButton,
         exportableJsonText;
 
-    var exportTTLModule = require("./exportTTLModule")(graph);
+    var exportTTLModule = require("./exportTTLModule.mjs")(graph);
 
 
     String.prototype.replaceAll = function (search, replacement) {
