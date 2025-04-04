@@ -1,193 +1,115 @@
+import { languageTools } from "../util/languageTools";
+
 /**
  * The base element for all visual elements of webvowl.
  */
-export default function (){
-  
-  var Base = function ( graph ){
-    // Basic attributes
-    var equivalents = [],
-      id,
-      label,
-      type,
-      iri,
-      baseIri,
-      // Additional attributes
-      annotations,
-      attributes = [],
-      backgroundColor,
-      comment,
-      description,
-      equivalentBase,
-      visualAttributes = [],
-      // Style attributes
-      focused = false,
-      indications = [],
-      mouseEntered = false,
-      styleClass,
-      visible = true,
-      
-      backupLabel,
-      // Other
-      languageTools = require("../util/languageTools")();
-    
-    
-    this.backupLabel = function ( label ){
-      if ( !arguments.length ) return backupLabel;
-      backupLabel = label;
-    };
-    // Properties
-    this.attributes = function ( p ){
-      if ( !arguments.length ) return attributes;
-      attributes = p;
-      return this;
-    };
-    
-    this.annotations = function ( p ){
-      if ( !arguments.length ) return annotations;
-      annotations = p;
-      return this;
-    };
-    
-    this.redrawElement = function (){
-      // TODO: OVERLOADED BY INDIVIDUAL ELEMENTS
-    };
-    
-    this.backgroundColor = function ( p ){
-      if ( !arguments.length ) return backgroundColor;
-      backgroundColor = p;
-      return this;
-    };
-    
-    this.baseIri = function ( p ){
-      if ( !arguments.length ) return baseIri;
-      baseIri = p;
-      return this;
-    };
-    
-    this.comment = function ( p ){
-      if ( !arguments.length ) return comment;
-      comment = p;
-      return this;
-    };
-    
-    this.description = function ( p ){
-      if ( !arguments.length ) return description;
-      description = p;
-      return this;
-    };
-    
-    this.equivalents = function ( p ){
-      if ( !arguments.length ) return equivalents;
-      equivalents = p || [];
-      return this;
-    };
-    
-    this.equivalentBase = function ( p ){
-      if ( !arguments.length ) return equivalentBase;
-      equivalentBase = p;
-      return this;
-    };
-    
-    this.focused = function ( p ){
-      if ( !arguments.length ) return focused;
-      focused = p;
-      return this;
-    };
-    
-    this.id = function ( p ){
-      if ( !arguments.length ) return id;
-      id = p;
-      return this;
-    };
-    
-    this.indications = function ( p ){
-      if ( !arguments.length ) return indications;
-      indications = p;
-      return this;
-    };
-    
-    this.iri = function ( p ){
-      if ( !arguments.length ) return iri;
-      iri = p;
-      return this;
-    };
-    
-    this.label = function ( p ){
-      if ( !arguments.length ) return label;
-      label = p;
-      return this;
-    };
-    
-    this.mouseEntered = function ( p ){
-      if ( !arguments.length ) return mouseEntered;
-      mouseEntered = p;
-      return this;
-    };
-    
-    this.styleClass = function ( p ){
-      if ( !arguments.length ) return styleClass;
-      styleClass = p;
-      return this;
-    };
-    
-    this.type = function ( p ){
-      if ( !arguments.length ) return type;
-      type = p;
-      return this;
-    };
-    
-    this.visible = function ( p ){
-      if ( !arguments.length ) return visible;
-      visible = p;
-      return this;
-    };
-    
-    this.visualAttributes = function ( p ){
-      if ( !arguments.length ) return visualAttributes;
-      visualAttributes = p;
-      return this;
-    };
-    
-    
-    this.commentForCurrentLanguage = function (){
-      return languageTools.textInLanguage(this.comment(), graph.language());
-    };
-    
+export class BaseElement {
+    constructor(graph) {
+        this.graph = graph // TODO: This must be a global reference to save memory.
+
+        // Basic attributes
+        this.equivalents = []
+        this.id         // string
+        this.label      // string
+        this.type       // string
+        this.iri        // string
+        this.baseIri    // string
+
+        // Additional attributes
+        this.annotations        // Array
+        this.attributes = []    // Array
+        this.backgroundColor    // string | undefined | null
+        this.comment            // string | undefined
+        this.description        // string | undefined
+        this.equivalentBase     // Node | Property
+        this.visualAttributes = []
+
+        // Style attributes
+        this.focused = false
+        this.indications = []   // Array
+        this.mouseEntered = false
+        this.styleClass         // string | undefined
+        this.visible = true
+        this.backupLabel        // string | undefined
+
+        // Force layout attributes
+        this._locked = false
+        this._frozen = false
+        this._halo = false
+        this._pinned = false
+    }
+
+    _applyFixedLocationAttributes() {
+        node.fixed = node.locked || node.frozen || node.pinned;
+    }
+
     /**
-     * @returns {string} the css class of this node..
+     * OVERLOADED BY INDIVIDUAL ELEMENTS
      */
-    this.cssClassOfNode = function (){
-      return "node" + this.id();
+    redrawElement() { }
+
+    get locked() {
+        return this._locked;
+    }
+
+    set locked(p) {
+        this._locked = p;
+        this._applyFixedLocationAttributes();
     };
-    
-    this.descriptionForCurrentLanguage = function (){
-      return languageTools.textInLanguage(this.description(), graph.language());
+
+    get frozen() {
+        return this._frozen;
+    }
+
+    set frozen(p) {
+        this._frozen = p;
+        this._applyFixedLocationAttributes();
     };
-    
-    this.defaultLabel = function (){
-      return languageTools.textInLanguage(this.label(), "default");
+
+    get halo() {
+        return this._halo;
+    }
+
+    set halo(p) {
+        this._halo = p;
+        this._applyFixedLocationAttributes();
     };
-    
-    this.indicationString = function (){
-      return this.indications().join(", ");
+
+    get pinned() {
+        return this._pinned;
+    }
+
+    set pinned(p) {
+        this._pinned = p;
+        this._applyFixedLocationAttributes();
     };
-    
-    this.labelForCurrentLanguage = function (){
-      var preferredLanguage = graph && graph.language ? graph.language() : null;
-      return languageTools.textInLanguage(this.label(), preferredLanguage);
-    };
-  };
-  
-  Base.prototype.constructor = Base;
-  
-  Base.prototype.equals = function ( other ){
-    return other instanceof Base && this.id() === other.id();
-  };
-  
-  Base.prototype.toString = function (){
-    return this.labelForCurrentLanguage() + " (" + this.type() + ")";
-  };
-  
-  
-  return Base;
-}();
+
+    commentForCurrentLanguage() {
+        return languageTools.textInLanguage(this.comment, graph.language());
+    }
+
+    descriptionForCurrentLanguage() {
+        return languageTools.textInLanguage(this.description, graph.language());
+    }
+
+    defaultLabel() {
+        return languageTools.textInLanguage(this.label, "default");
+    }
+
+    indicationString() {
+        return this.indications.join(", ");
+    }
+
+    labelForCurrentLanguage() {
+        const preferredLanguage = graph && graph.language ? graph.language() : null;
+        return languageTools.textInLanguage(this.label, preferredLanguage);
+    }
+
+    equals(other) {
+        return other instanceof BaseElement && this.id === other.id;
+    }
+
+    toString() {
+        return this.labelForCurrentLanguage() + " (" + this.type + ")";
+    }
+}
