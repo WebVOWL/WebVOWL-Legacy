@@ -10,60 +10,60 @@ export default PlainLink;
  * @param range
  * @param property
  */
-function PlainLink( domain, range, property ){
+function PlainLink(domain, range, property) {
   var layers,
     layerIndex,
     loops,
     loopIndex,
     pathEl,
     label = new Label(property, this);
-  
+
   var backPart = require("./linkPart")(domain, label, this),
     frontPart = require("./linkPart")(label, range, this);
-  
-  
-  this.layers = function ( p ){
-    if ( !arguments.length ) return layers;
+
+
+  this.layers = function (p) {
+    if (!arguments.length) return layers;
     layers = p;
     return this;
   };
-  
-  this.layerIndex = function ( p ){
-    if ( !arguments.length ) return layerIndex;
+
+  this.layerIndex = function (p) {
+    if (!arguments.length) return layerIndex;
     layerIndex = p;
     return this;
   };
-  
-  this.loops = function ( p ){
-    if ( !arguments.length ) return loops;
+
+  this.loops = function (p) {
+    if (!arguments.length) return loops;
     loops = p;
     return this;
   };
-  
-  this.loopIndex = function ( p ){
-    if ( !arguments.length ) return loopIndex;
+
+  this.loopIndex = function (p) {
+    if (!arguments.length) return loopIndex;
     loopIndex = p;
     return this;
   };
-  
-  
-  this.domain = function (){
+
+
+  this.domain = function () {
     return domain;
   };
-  
-  this.label = function (){
+
+  this.label = function () {
     return label;
   };
-  
-  this.linkParts = function (){
+
+  this.linkParts = function () {
     return [frontPart, backPart];
   };
-  
-  this.range = function (){
+
+  this.range = function () {
     return range;
   };
-  this.pathObj = function ( pE ){
-    if ( !arguments.length ) {
+  this.pathObj = function (pE) {
+    if (!arguments.length) {
       return pathEl;
     }
     pathEl = pE;
@@ -71,34 +71,34 @@ function PlainLink( domain, range, property ){
 }
 
 
-PlainLink.prototype.draw = function ( linkGroup ){
-  var property = this.label().property();
-  var inverse = this.label().inverse();
-  
+PlainLink.prototype.draw = function (linkGroup) {
+  var property = this.label.property();
+  var inverse = this.label.inverse();
+
   property.linkGroup(linkGroup);
-  if ( inverse ) {
+  if (inverse) {
     inverse.linkGroup(linkGroup);
   }
-  
+
   var pathElement = linkGroup.append("path");
   pathElement.classed("link-path", true)
     .classed(this.domain().cssClassOfNode(), true)
     .classed(this.range().cssClassOfNode(), true)
     .classed(property.linkType(), true);
   this.pathObj(pathElement);
-  
+
 };
 
 
-PlainLink.prototype.inverse = function (){
-  return this.label().inverse();
+PlainLink.prototype.inverse = function () {
+  return this.label.inverse();
 };
 
-PlainLink.prototype.isLoop = function (){
+PlainLink.prototype.isLoop = function () {
   return this.domain().equals(this.range());
 };
 
-PlainLink.prototype.property = function (){
-  return this.label().property();
+PlainLink.prototype.property = function () {
+  return this.label.property();
 };
 

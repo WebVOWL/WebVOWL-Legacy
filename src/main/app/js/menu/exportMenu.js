@@ -329,7 +329,7 @@ export default function (graph) {
         if (data === undefined) {
             return false;
         }
-        return data.backgroundColor && !!data.backgroundColor();
+        return data.backgroundColor && !!data.backgroundColor;
     }
 
     /**
@@ -355,7 +355,7 @@ export default function (graph) {
                 }
 
                 if (element.datum && element.datum() !== undefined && element.datum().type) {
-                    if (element.datum().type() === "rdfs:subClassOf") {
+                    if (element.datum().type === "rdfs:subClassOf") {
                         element.style("fill", null);
                     }
                 }
@@ -427,27 +427,27 @@ export default function (graph) {
         for (i = 0; i < nLen; i++) {
             var classObj = {};
             var classAttr = {};
-            classObj.id = nodes[i].id();
-            classObj.type = nodes[i].type();
+            classObj.id = nodes[i].id;
+            classObj.type = nodes[i].type;
             classObjects.push(classObj);
 
             // define the attributes object
-            classAttr.id = nodes[i].id();
-            classAttr.iri = nodes[i].iri();
-            classAttr.baseIri = nodes[i].baseIri();
-            classAttr.label = nodes[i].label();
+            classAttr.id = nodes[i].id;
+            classAttr.iri = nodes[i].iri;
+            classAttr.baseIri = nodes[i].baseIri;
+            classAttr.label = nodes[i].label;
 
-            if (nodes[i].attributes().length > 0) {
-                classAttr.attributes = nodes[i].attributes();
+            if (nodes[i].attributes.length > 0) {
+                classAttr.attributes = nodes[i].attributes;
             }
-            if (nodes[i].comment()) {
-                classAttr.comment = nodes[i].comment();
+            if (nodes[i].comment) {
+                classAttr.comment = nodes[i].comment;
             }
-            if (nodes[i].annotations()) {
-                classAttr.annotations = nodes[i].annotations();
+            if (nodes[i].annotations) {
+                classAttr.annotations = nodes[i].annotations;
             }
-            if (nodes[i].description()) {
-                classAttr.description = nodes[i].description();
+            if (nodes[i].description) {
+                classAttr.description = nodes[i].description;
             }
 
 
@@ -456,17 +456,17 @@ export default function (graph) {
                 var nIndividuals = nodes[i].individuals();
                 for (j = 0; j < nIndividuals.length; j++) {
                     var indObj = {};
-                    indObj.iri = nIndividuals[j].iri();
-                    indObj.baseIri = nIndividuals[j].baseIri();
-                    indObj.labels = nIndividuals[j].label();
-                    if (nIndividuals[j].annotations()) {
-                        indObj.annotations = nIndividuals[j].annotations();
+                    indObj.iri = nIndividuals[j].iri;
+                    indObj.baseIri = nIndividuals[j].baseIri;
+                    indObj.labels = nIndividuals[j].label;
+                    if (nIndividuals[j].annotations) {
+                        indObj.annotations = nIndividuals[j].annotations;
                     }
-                    if (nIndividuals[j].description()) {
-                        indObj.description = nIndividuals[j].description();
+                    if (nIndividuals[j].description) {
+                        indObj.description = nIndividuals[j].description;
                     }
-                    if (nIndividuals[j].comment()) {
-                        indObj.comment = nIndividuals[j].comment();
+                    if (nIndividuals[j].comment) {
+                        indObj.comment = nIndividuals[j].comment;
                     }
                     classIndividualElements.push(indObj);
                 }
@@ -474,36 +474,36 @@ export default function (graph) {
             }
 
             var equalsForAttributes = undefined;
-            if (nodes[i].equivalents().length > 0) {
+            if (nodes[i].equivalents.length > 0) {
                 equalsForAttributes = [];
-                var equals = nodes[i].equivalents();
+                var equals = nodes[i].equivalents;
                 for (j = 0; j < equals.length; j++) {
                     var eqObj = {};
                     var eqAttr = {};
-                    eqObj.id = equals[j].id();
-                    equalsForAttributes.push(equals[j].id());
-                    eqObj.type = equals[j].type();
+                    eqObj.id = equals[j].id;
+                    equalsForAttributes.push(equals[j].id);
+                    eqObj.type = equals[j].type;
                     classObjects.push(eqObj);
 
-                    eqAttr.id = equals[j].id();
-                    eqAttr.iri = equals[j].iri();
-                    eqAttr.baseIri = equals[j].baseIri();
-                    eqAttr.label = equals[j].label();
+                    eqAttr.id = equals[j].id;
+                    eqAttr.iri = equals[j].iri;
+                    eqAttr.baseIri = equals[j].baseIri;
+                    eqAttr.label = equals[j].label;
 
-                    if (equals[j].attributes().length > 0) {
-                        eqAttr.attributes = equals[j].attributes();
+                    if (equals[j].attributes.length > 0) {
+                        eqAttr.attributes = equals[j].attributes;
                     }
-                    if (equals[j].comment()) {
-                        eqAttr.comment = equals[j].comment();
+                    if (equals[j].comment) {
+                        eqAttr.comment = equals[j].comment;
                     }
                     if (equals[j].individuals().length > 0) {
                         eqAttr.individuals = equals[j].individuals();
                     }
-                    if (equals[j].annotations()) {
-                        eqAttr.annotations = equals[j].annotations();
+                    if (equals[j].annotations) {
+                        eqAttr.annotations = equals[j].annotations;
                     }
-                    if (equals[j].description()) {
-                        eqAttr.description = equals[j].description();
+                    if (equals[j].description) {
+                        eqAttr.description = equals[j].description;
                     }
 
                     if (equals[j].individuals().length > 0) {
@@ -511,18 +511,18 @@ export default function (graph) {
                         var e_nIndividuals = equals[i].individuals();
                         for (k = 0; k < e_nIndividuals.length; k++) {
                             var e_indObj = {};
-                            e_indObj.iri = e_nIndividuals[k].iri();
-                            e_indObj.baseIri = e_nIndividuals[k].baseIri();
-                            e_indObj.labels = e_nIndividuals[k].label();
+                            e_indObj.iri = e_nIndividuals[k].iri;
+                            e_indObj.baseIri = e_nIndividuals[k].baseIri;
+                            e_indObj.labels = e_nIndividuals[k].label;
 
-                            if (e_nIndividuals[k].annotations()) {
-                                e_indObj.annotations = e_nIndividuals[k].annotations();
+                            if (e_nIndividuals[k].annotations) {
+                                e_indObj.annotations = e_nIndividuals[k].annotations;
                             }
-                            if (e_nIndividuals[k].description()) {
-                                e_indObj.description = e_nIndividuals[k].description();
+                            if (e_nIndividuals[k].description) {
+                                e_indObj.description = e_nIndividuals[k].description;
                             }
-                            if (e_nIndividuals[k].comment()) {
-                                e_indObj.comment = e_nIndividuals[k].comment();
+                            if (e_nIndividuals[k].comment) {
+                                e_indObj.comment = e_nIndividuals[k].comment;
                             }
                             e_classIndividualElements.push(e_indObj);
                         }
@@ -540,12 +540,12 @@ export default function (graph) {
             // classAttr.instances=nodes[i].instances();
 
             //
-            // .complement(element.complement)
-            // .disjointUnion(element.disjointUnion)
-            // .description(element.description)
-            // .equivalents(element.equivalent)
+            // .complement=element.complement
+            // .disjointUnion=element.disjointUnion
+            // .description=element.description
+            // .equivalents = element.equivalent
             // .intersection(element.intersection)
-            // .type(element.type) Ignore, because we predefined it
+            // .type=element.type Ignore, because we predefined it
             // .union(element.union)
             classAttributeObjects.push(classAttr);
         }
@@ -559,25 +559,25 @@ export default function (graph) {
         for (i = 0; i < pLen; i++) {
             var pObj = {};
             var pAttr = {};
-            pObj.id = properties[i].id();
-            pObj.type = properties[i].type();
+            pObj.id = properties[i].id;
+            pObj.type = properties[i].type;
             propertyObjects.push(pObj);
 
             // // define the attributes object
-            pAttr.id = properties[i].id();
-            pAttr.iri = properties[i].iri();
-            pAttr.baseIri = properties[i].baseIri();
-            pAttr.label = properties[i].label();
+            pAttr.id = properties[i].id;
+            pAttr.iri = properties[i].iri;
+            pAttr.baseIri = properties[i].baseIri;
+            pAttr.label = properties[i].label;
 
-            if (properties[i].attributes().length > 0) {
-                pAttr.attributes = properties[i].attributes();
+            if (properties[i].attributes.length > 0) {
+                pAttr.attributes = properties[i].attributes;
             }
-            if (properties[i].comment()) {
-                pAttr.comment = properties[i].comment();
+            if (properties[i].comment) {
+                pAttr.comment = properties[i].comment;
             }
 
-            if (properties[i].annotations()) {
-                pAttr.annotations = properties[i].annotations();
+            if (properties[i].annotations) {
+                pAttr.annotations = properties[i].annotations;
             }
             if (properties[i].maxCardinality()) {
                 pAttr.maxCardinality = properties[i].maxCardinality();
@@ -588,19 +588,19 @@ export default function (graph) {
             if (properties[i].cardinality()) {
                 pAttr.cardinality = properties[i].cardinality();
             }
-            if (properties[i].description()) {
-                pAttr.description = properties[i].description();
+            if (properties[i].description) {
+                pAttr.description = properties[i].description;
             }
 
-            pAttr.domain = properties[i].domain().id();
-            pAttr.range = properties[i].range().id();
+            pAttr.domain = properties[i].domain().id;
+            pAttr.range = properties[i].range().id;
             // sub properties;
             if (properties[i].subproperties()) {
                 var subProps = properties[i].subproperties();
                 var subPropsIdArray = [];
                 for (j = 0; j < subProps.length; j++) {
                     if (subProps[j].id)
-                        subPropsIdArray.push(subProps[j].id());
+                        subPropsIdArray.push(subProps[j].id);
                 }
                 pAttr.subproperty = subPropsIdArray;
             }
@@ -611,7 +611,7 @@ export default function (graph) {
                 var superPropsIdArray = [];
                 for (j = 0; j < superProps.length; j++) {
                     if (superProps[j].id)
-                        superPropsIdArray.push(superProps[j].id());
+                        superPropsIdArray.push(superProps[j].id);
                 }
                 pAttr.superproperty = superPropsIdArray;
             }
@@ -619,7 +619,7 @@ export default function (graph) {
             // check for inverse element
             if (properties[i].inverse()) {
                 if (properties[i].inverse().id)
-                    pAttr.inverse = properties[i].inverse().id();
+                    pAttr.inverse = properties[i].inverse().id;
             }
             propertyAttributeObjects.push(pAttr);
         }
@@ -659,13 +659,13 @@ export default function (graph) {
         /**  add new variables to jsonObj  **/
         // class attribute variables
         nodeElements.each(function (node) {
-            var nodeId = node.id();
+            var nodeId = node.id;
             for (i = 0; i < classAttribute.length; i++) {
                 var classObj = classAttribute[i];
                 if (classObj.id === nodeId) {
                     // store relative positions
                     classObj.pos = [parseFloat(node.x.toFixed(2)), parseFloat(node.y.toFixed(2))];
-                    if (node.pinned())
+                    if (node.pinned)
                         classObj.pinned = true;
                     break;
                 }
@@ -676,9 +676,9 @@ export default function (graph) {
             var correspondingProp = propElements[j].property();
             for (i = 0; i < propAttribute.length; i++) {
                 propertyObj = propAttribute[i];
-                if (propertyObj.id === correspondingProp.id()) {
+                if (propertyObj.id === correspondingProp.id) {
                     propertyObj.pos = [parseFloat(propElements[j].x.toFixed(2)), parseFloat(propElements[j].y.toFixed(2))];
-                    if (propElements[j].pinned())
+                    if (propElements[j].pinned)
                         propertyObj.pinned = true;
                     break;
                 }
@@ -1025,7 +1025,7 @@ export default function (graph) {
                     curvePoint = controlPoints[1];
                     pathEnd = controlPoints[2];
                 } else {
-                    curvePoint = link.label();
+                    curvePoint = link.label;
                     pathStart = graph.math().calculateIntersection(curvePoint, link.domain(), 1);
                     pathEnd = graph.math().calculateIntersection(curvePoint, link.range(), 1);
                 }
@@ -1046,7 +1046,7 @@ export default function (graph) {
             // add arrow head;
 
 
-            if (link.property().type() === "owl:someValuesFrom" || link.property().type() === "owl:allValuesFrom") {
+            if (link.property().type === "owl:someValuesFrom" || link.property().type === "owl:allValuesFrom") {
                 arrowType = "triangleBlue";
             }
 
@@ -1056,7 +1056,7 @@ export default function (graph) {
             var p2 = lg.node().getPointAtLength(pathLen);
             var markerCenter = lg.node().getPointAtLength(pathLen - 6);
 
-            if (link.property().type() === "setOperatorProperty") {
+            if (link.property().type === "setOperatorProperty") {
                 p1 = lg.node().getPointAtLength(4);
                 p2 = lg.node().getPointAtLength(0);
                 markerCenter = lg.node().getPointAtLength(8);
@@ -1075,7 +1075,7 @@ export default function (graph) {
 
             ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
             ahAngle -= 90;
-            if (link.property().type() === "setOperatorProperty") {
+            if (link.property().type === "setOperatorProperty") {
                 ahAngle -= 45;
             }
             // console.log(link.property().labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
@@ -1157,10 +1157,10 @@ export default function (graph) {
             // console.log("Writing : "+ identifier);
             if (identifier === undefined) identifier = "";
             var qType = "owlClass";
-            if (node.type() === "owl:Thing" || node.type() === "owl:Nothing")
+            if (node.type === "owl:Thing" || node.type === "owl:Nothing")
                 qType = "owlThing";
 
-            if (node.type() === "owl:equivalentClass") {
+            if (node.type === "owl:equivalentClass") {
                 qType = "owlEquivalentClass";
             }
             var textColorStr = "";
@@ -1189,24 +1189,24 @@ export default function (graph) {
                     }
                 }
             }
-            if (node.type() === "rdfs:Literal") {
+            if (node.type === "rdfs:Literal") {
                 qType = "Literal";
             }
-            if (node.type() === "rdfs:Datatype") {
+            if (node.type === "rdfs:Datatype") {
                 qType = "Datatype";
             }
-            if (node.attributes().indexOf("anonymous") !== -1) {
+            if (node.attributes.indexOf("anonymous") !== -1) {
                 qType = "anonymousClass";
             }
 
 
-            if (node.type() === "owl:unionOf" || node.type() === "owl:complementOf" || node.type() === "owl:disjointUnionOf" || node.type() === "owl:intersectionOf")
+            if (node.type === "owl:unionOf" || node.type === "owl:complementOf" || node.type === "owl:disjointUnionOf" || node.type === "owl:intersectionOf")
                 qType = "owlClass";
 
             var bgColorStr = "";
             var widthString = "";
 
-            if (node.type() === "rdfs:Literal" || node.type() === "rdfs:Datatype") {
+            if (node.type === "rdfs:Literal" || node.type === "rdfs:Datatype") {
                 var width = node.width();
                 widthString = ",minimum width=" + width + "pt";
             }
@@ -1214,14 +1214,14 @@ export default function (graph) {
                 widthString = ",minimum size=" + 2 * node.actualRadius() + "pt";
 
             }
-            if (node.backgroundColor()) {
-                var bgColor = node.backgroundColor();
+            if (node.backgroundColor) {
+                var bgColor = node.backgroundColor;
                 bgColor.toUpperCase();
                 bgColor = bgColor.slice(1, bgColor.length);
                 texString += "\\definecolor{Node" + i + "_COLOR}{HTML}{" + bgColor + "} \n ";
                 bgColorStr = ", fill=Node" + i + "_COLOR ";
             }
-            if (node.attributes().indexOf("deprecated") > -1) {
+            if (node.attributes.indexOf("deprecated") > -1) {
                 texString += "\\definecolor{Node" + i + "_COLOR}{HTML}{CCCCCC} \n ";
                 bgColorStr = ", fill=Node" + i + "_COLOR ";
             }
@@ -1229,10 +1229,10 @@ export default function (graph) {
             var leftPos = px - 7;
             var rightPos = px + 7;
             var txtOffset = py + 20;
-            if (node.type() !== "owl:unionOf" || node.type() !== "owl:disjointUnionOf") {
+            if (node.type !== "owl:unionOf" || node.type !== "owl:disjointUnionOf") {
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
             }
-            if (node.type() === "owl:unionOf") {
+            if (node.type === "owl:unionOf") {
                 // add symbol to it;
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {};\n";
                 texString += "\\node[unionOf   , text=black] at (" + leftPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
@@ -1242,7 +1242,7 @@ export default function (graph) {
                 texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
             }
             // OWL DISJOINT UNION OF
-            if (node.type() === "owl:disjointUnionOf") {
+            if (node.type === "owl:disjointUnionOf") {
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {};\n";
                 texString += "\\node[unionOf   , text=black] at (" + leftPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
                 texString += "\\node[unionOf   , text=black] at (" + rightPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
@@ -1251,7 +1251,7 @@ export default function (graph) {
                 texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
             }
             // OWL COMPLEMENT OF
-            if (node.type() === "owl:complementOf") {
+            if (node.type === "owl:complementOf") {
                 // add symbol to it;
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {};\n";
                 texString += "\\node[unionOf   , text=black] at (" + px + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
@@ -1259,7 +1259,7 @@ export default function (graph) {
                 texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
             }
             // OWL INTERSECTION OF
-            if (node.type() === "owl:intersectionOf") {
+            if (node.type === "owl:intersectionOf") {
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {};\n";
                 texString += "\\node[unionOf   , text=black] at (" + leftPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
                 texString += "\\node[unionOf   , text=black] at (" + rightPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
@@ -1314,32 +1314,32 @@ export default function (graph) {
                 else {
                 }
             }
-            if (correspondingProp.type() === "setOperatorProperty") {
+            if (correspondingProp.type === "setOperatorProperty") {
                 continue; // this property does not have a label
             }
             var qType = "owlObjectProperty";
-            if (correspondingProp.type() === "owl:DatatypeProperty") {
+            if (correspondingProp.type === "owl:DatatypeProperty") {
                 qType = "owlDatatypeProperty";
             }
-            if (correspondingProp.type() === "rdfs:subClassOf") {
+            if (correspondingProp.type === "rdfs:subClassOf") {
                 qType = "rdfsSubClassOf";
             }
-            if (correspondingProp.type() === "rdf:Property") {
+            if (correspondingProp.type === "rdf:Property") {
                 qType = "rdfProperty";
             }
 
 
             var bgColorStr = "";
-            if (correspondingProp.backgroundColor()) {
+            if (correspondingProp.backgroundColor) {
                 // console.log("Found backGround color");
-                var bgColor = correspondingProp.backgroundColor();
+                var bgColor = correspondingProp.backgroundColor;
                 //console.log(bgColor);
                 bgColor.toUpperCase();
                 bgColor = bgColor.slice(1, bgColor.length);
                 texString += "\\definecolor{property" + i + "_COLOR}{HTML}{" + bgColor + "} \n ";
                 bgColorStr = ", fill=property" + i + "_COLOR ";
             }
-            if (correspondingProp.attributes().indexOf("deprecated") > -1) {
+            if (correspondingProp.attributes.indexOf("deprecated") > -1) {
                 texString += "\\definecolor{property" + i + "_COLOR}{HTML}{CCCCCC} \n ";
                 bgColorStr = ", fill=property" + i + "_COLOR ";
             }
@@ -1350,7 +1350,7 @@ export default function (graph) {
 
 
             // OWL INTERSECTION OF
-            if (correspondingProp.type() === "owl:disjointWith") {
+            if (correspondingProp.type === "owl:disjointWith") {
                 var leftPos = p_px - 12;
                 var rightPos = p_px + 12;
                 var txtOffset = p_py - 20;
@@ -1405,16 +1405,16 @@ export default function (graph) {
                 var inv_qType = "owlObjectProperty";
                 var inv_bgColorStr = "";
 
-                if (inv_correspondingProp.backgroundColor()) {
+                if (inv_correspondingProp.backgroundColor) {
                     //  console.log("Found backGround color");
-                    var inv_bgColor = inv_correspondingProp.backgroundColor();
+                    var inv_bgColor = inv_correspondingProp.backgroundColor;
                     //   console.log(inv_bgColor);
                     inv_bgColor.toUpperCase();
                     inv_bgColor = inv_bgColor.slice(1, inv_bgColor.length);
                     texString += "\\definecolor{inv_property" + i + "_COLOR}{HTML}{" + inv_bgColor + "} \n ";
                     inv_bgColorStr = ", fill=inv_property" + i + "_COLOR ";
                 }
-                if (inv_correspondingProp.attributes().indexOf("deprecated") > -1) {
+                if (inv_correspondingProp.attributes.indexOf("deprecated") > -1) {
                     texString += "\\definecolor{inv_property" + i + "_COLOR}{HTML}{CCCCCC} \n ";
                     inv_bgColorStr = ", fill=inv_property" + i + "_COLOR ";
                 }

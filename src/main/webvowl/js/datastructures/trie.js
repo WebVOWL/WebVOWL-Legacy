@@ -22,7 +22,7 @@ class TrieNode {
     }
 }
 
-class Trie {
+export class Trie {
     /**
      * A basic Trie of word/data pairs.
      * It allows O(k) worst-case additions and O(dk) worst-case searches,
@@ -112,7 +112,3 @@ class Trie {
         return output.reverse();
     }
 }
-
-export {
-    Trie
-};

@@ -3,7 +3,7 @@ import PlainLink from './PlainLink';
 
 export default BoxArrowLink;
 
-function BoxArrowLink( domain, range, property ){
+function BoxArrowLink(domain, range, property) {
   PlainLink.apply(this, arguments);
 }
 
@@ -11,46 +11,46 @@ BoxArrowLink.prototype = Object.create(PlainLink.prototype);
 BoxArrowLink.prototype.constructor = BoxArrowLink;
 
 
-BoxArrowLink.prototype.draw = function ( linkGroup, markerContainer ){
-  var property = this.label().property();
-  var inverse = this.label().inverse();
-  
+BoxArrowLink.prototype.draw = function (linkGroup, markerContainer) {
+  var property = this.label.property();
+  var inverse = this.label.inverse();
+
   createPropertyMarker(markerContainer, property);
-  if ( inverse ) {
+  if (inverse) {
     createInverseMarker(markerContainer, inverse);
   }
-  
+
   PlainLink.prototype.draw.apply(this, arguments);
-  
+
   // attach the markers to the link
   linkGroup.attr("marker-start", "url(#" + property.markerId() + ")");
-  if ( inverse ) {
+  if (inverse) {
     linkGroup.attr("marker-end", "url(#" + inverse.markerId() + ")");
   }
 };
 
 
-function createPropertyMarker( markerContainer, inverse ){
+function createPropertyMarker(markerContainer, inverse) {
   var inverseMarker = appendBasicMarker(markerContainer, inverse);
   inverseMarker.attr("refX", -8);
   inverseMarker.append("path")
     .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
     .classed(inverse.markerType(), true);
-  
+
   inverse.markerElement(inverseMarker);
 }
 
-function createInverseMarker( markerContainer, property ){
+function createInverseMarker(markerContainer, property) {
   var marker = appendBasicMarker(markerContainer, property);
   marker.attr("refX", 8);
   marker.append("path")
     .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
     .classed(property.markerType(), true);
-  
+
   property.markerElement(marker);
 }
 
-function appendBasicMarker( markerContainer, property ){
+function appendBasicMarker(markerContainer, property) {
   return markerContainer.append("marker")
     .datum(property)
     .attr("id", property.markerId())

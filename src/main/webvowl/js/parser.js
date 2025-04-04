@@ -1,11 +1,11 @@
-import OwlDisjointWith from './elements/properties/implementations/OwlDisjointWith';
-import attributeParserFactory from './parsing/attributeParser';
-const attributeParser = attributeParserFactory();
-import equivalentPropertyMergerFactory from './parsing/equivalentPropertyMerger';
-const equivalentPropertyMerger = equivalentPropertyMergerFactory();
 import nodePrototypeMapFactory from './elements/nodes/nodeMap';
-const nodePrototypeMap = nodePrototypeMapFactory();
+import OwlDisjointWith from './elements/properties/implementations/OwlDisjointWith';
 import propertyPrototypeMapFactory from './elements/properties/propertyMap';
+import attributeParserFactory from './parsing/attributeParser';
+import equivalentPropertyMergerFactory from './parsing/equivalentPropertyMerger';
+const attributeParser = attributeParserFactory();
+const equivalentPropertyMerger = equivalentPropertyMergerFactory();
+const nodePrototypeMap = nodePrototypeMapFactory();
 const propertyPrototypeMap = propertyPrototypeMapFactory();
 
 /**
@@ -231,15 +231,15 @@ export default function (graph) {
      */
     function combineClassesOrProperties(baseObjects, attributes, prototypeMap, callable) {
         let combinations = [];
-        let classMap = new Map();
-
-        if (attributes) {
-            for (let i = 0; i < attributes.length; i++) {
-                classMap.set(attributes[i].id, attributes[i]);
-            }
-        }
 
         if (baseObjects) {
+            let classMap = new Map();
+            if (attributes) {
+                for (let i = 0; i < attributes.length; i++) {
+                    classMap.set(attributes[i].id, attributes[i]);
+                }
+            }
+
             baseObjects.forEach(function (element) {
                 let matchingAttribute;
                 if (attributes) {
@@ -255,12 +255,12 @@ export default function (graph) {
                     let object = callable(element, Prototype);
                     //class element pin
                     if (element.pinned === true) {
-                        object.pinned(true);
+                        object.pinned = true;
                         graph.options().pickAndPinModule().addPinnedElement(object);
                     }
                     if (element.attributes) {
-                        let deduplicatedAttributes = d3.set(element.attributes.concat(object.attributes()));
-                        object.attributes(deduplicatedAttributes.values());
+                        let deduplicatedAttributes = d3.set(element.attributes.concat(object.attributes));
+                        object.attributes = deduplicatedAttributes.values();
                     }
                     combinations.push(object);
                 } else {
@@ -273,19 +273,19 @@ export default function (graph) {
 
     function combineClasses(element, Prototype) {
         let node = new Prototype(graph);
-        node.annotations(element.annotations)
-            .baseIri(element.baseIri)
-            .comment(element.comment)
-            .complement(element.complement)
-            .disjointUnion(element.disjointUnion)
-            .description(element.description)
-            .equivalents(element.equivalent)
-            .id(element.id)
-            .intersection(element.intersection)
-            .label(element.label)
-            // .type(element.type) Ignore, because we predefined it
-            .union(element.union)
-            .iri(element.iri);
+        node.annotations(element.annotations);
+        node.baseIri = element.baseIri;
+        node.comment = element.comment;
+        node.complement = element.complement;
+        node.disjointUnion = element.disjointUnion;
+        node.description = element.description;
+        node.equivalents = element.equivalent;
+        node.id = element.id;
+        node.intersection(element.intersection);
+        node.label = element.label;
+        // node.type=element.type; Ignore, because we predefined it
+        node.union(element.union);
+        node.iri = element.iri;
         if (element.pos) {
             node.x = element.pos[0];
             node.y = element.pos[1];
@@ -297,9 +297,8 @@ export default function (graph) {
         if (element.individuals) {
             element.individuals.forEach(function (individual) {
                 let individualNode = new Prototype(graph);
-                individualNode.label(individual.labels)
-                    .iri(individual.iri);
-
+                individualNode.label = individual.labels;
+                individualNode.iri = individual.iri;
                 node.individuals().push(individualNode);
             });
         }
@@ -308,23 +307,23 @@ export default function (graph) {
 
     function combineProperties(element, Prototype) {
         let property = new Prototype(graph);
-        property.annotations(element.annotations)
-            .baseIri(element.baseIri)
-            .cardinality(element.cardinality)
-            .comment(element.comment)
-            .domain(element.domain)
-            .description(element.description)
-            .equivalents(element.equivalent)
-            .id(element.id)
-            .inverse(element.inverse)
-            .label(element.label)
-            .minCardinality(element.minCardinality)
-            .maxCardinality(element.maxCardinality)
-            .range(element.range)
-            .subproperties(element.subproperty)
-            .superproperties(element.superproperty)
-            // .type(element.type) Ignore, because we predefined it
-            .iri(element.iri);
+        property.annotations(element.annotations);
+        property.baseIri = element.baseIri;
+        property.cardinality(element.cardinality);
+        property.comment = element.comment;
+        property.domain(element.domain);
+        property.description = element.description;
+        property.equivalents = element.equivalent;
+        property.id = element.id;
+        property.inverse(element.inverse);
+        property.label = element.label;
+        property.minCardinality(element.minCardinality);
+        property.maxCardinality(element.maxCardinality);
+        property.range(element.range);
+        property.subproperties(element.subproperty);
+        property.superproperties(element.superproperty);
+        // property.type=element.type; Ignore, because we predefined it
+        property.iri = element.iri;
         if (element.pos) {
             property.x = element.pos[0];
             property.y = element.pos[1];
@@ -336,7 +335,7 @@ export default function (graph) {
 
     function createLowerCasePrototypeMap(prototypeMap) {
         return d3.map(prototypeMap.values(), function (Prototype) {
-            return new Prototype().type().toLowerCase();
+            return new Prototype().type.toLowerCase();
         });
     }
 
@@ -364,21 +363,19 @@ export default function (graph) {
         var maxIndividualCount = 0;
         rawNodes.forEach(function (node) {
             maxIndividualCount = Math.max(maxIndividualCount, node.individuals().length);
-            node.visible(true);
+            node.visible = true;
         });
 
         rawNodes.forEach(function (node) {
             // Merge and connect the equivalent nodes
             processEquivalentIds(node, classMap);
-
             attributeParser.parseClassAttributes(node);
-
             node.maxIndividualCount(maxIndividualCount);
         });
 
         // Collect all nodes that should be displayed
         rawNodes.forEach(function (node) {
-            if (node.visible()) {
+            if (node.visible) {
                 nodes.push(node);
             }
         });
@@ -399,17 +396,17 @@ export default function (graph) {
             range = property.range();
 
         // Check the domain.
-        if (!domain.disjointWith()) {
-            domain.disjointWith([]);
+        if (!domain.disjointWith) {
+            domain.disjointWith = [];
         }
 
         // Check the range.
-        if (!range.disjointWith()) {
-            range.disjointWith([]);
+        if (!range.disjointWith) {
+            range.disjointWith = [];
         }
 
-        domain.disjointWith().push(property.range());
-        range.disjointWith().push(property.domain());
+        domain.disjointWith.push(property.range());
+        range.disjointWith.push(property.domain());
     }
 
     /**
@@ -425,7 +422,7 @@ export default function (graph) {
         var properties = [];
         // Set default values
         rawProperties.forEach(function (property) {
-            property.visible(true);
+            property.visible = true;
         });
 
         // Connect properties
@@ -465,7 +462,7 @@ export default function (graph) {
                     domainObject = classMap[domain];
                     rangeObject = classMap[range];
                 } else {
-                    console.warn("Domain and range not found for property: " + property.id());
+                    console.warn("Domain and range not found for property: " + property.id);
                 }
 
                 // Set the references on this property
@@ -500,20 +497,20 @@ export default function (graph) {
             var propertyWasRerouted = false;
 
             if (property.domain() === undefined) {
-                console.warn("No Domain was found for id:" + property.id());
+                console.warn("No Domain was found for id:" + property.id);
                 return;
             }
 
             if (wasNodeMerged(property.domain())) {
-                property.domain(property.domain().equivalentBase());
+                property.domain(property.domain().equivalentBase);
                 propertyWasRerouted = true;
             }
             if (property.range() === undefined) {
-                console.warn("No range was found for id:" + property.id());
+                console.warn("No range was found for id:" + property.id);
                 return;
             }
             if (wasNodeMerged(property.range())) {
-                property.range(property.range().equivalentBase());
+                property.range(property.range().equivalentBase);
                 propertyWasRerouted = true;
             }
 
@@ -521,18 +518,18 @@ export default function (graph) {
                 // But there should not be two equal properties between the same domain and range.
                 var equalProperty = getOtherEqualProperty(rawProperties, property);
                 if (equalProperty) {
-                    property.visible(false);
+                    property.visible = false;
                     equalProperty.redundantProperties().push(property);
                 }
             }
 
             // Hide property if source or target node is hidden
-            if (!property.domain().visible() || !property.range().visible()) {
-                property.visible(false);
+            if (!property.domain().visible || !property.range().visible) {
+                property.visible = false;
             }
 
             // Collect all properties that should be displayed
-            if (property.visible()) {
+            if (property.visible) {
                 properties.push(property);
             }
         });
@@ -560,7 +557,7 @@ export default function (graph) {
     }
 
     function wasNodeMerged(node) {
-        return !node.visible() && node.equivalentBase();
+        return !node.visible && node.equivalentBase;
     }
 
     function getOtherEqualProperty(properties, referenceProperty) {
@@ -578,11 +575,11 @@ export default function (graph) {
             }
 
             // Check for an equal IRI, if non existent compare label and type
-            if (referenceProperty.iri() && property.iri()) {
-                if (referenceProperty.iri() === property.iri()) {
+            if (referenceProperty.iri && property.iri) {
+                if (referenceProperty.iri === property.iri) {
                     return property;
                 }
-            } else if (referenceProperty.type() === property.type() &&
+            } else if (referenceProperty.type === property.type &&
                 referenceProperty.defaultLabel() === property.defaultLabel()) {
                 return property;
             }
@@ -609,16 +606,15 @@ export default function (graph) {
                     domain: domainId,
                     range: rangeId
                 };
-
                 properties.push(property);
             });
         }
 
-        classes.forEach(function (clss) {
-            addProperties(clss.id(), clss.complement(), "COMPLEMENT");
-            addProperties(clss.id(), clss.intersection(), "INTERSECTION");
-            addProperties(clss.id(), clss.union(), "UNION");
-            addProperties(clss.id(), clss.disjointUnion(), "DISJOINTUNION");
+        classes.forEach(function (cls) {
+            addProperties(cls.id, cls.complement, "COMPLEMENT");
+            addProperties(cls.id, cls.intersection(), "INTERSECTION");
+            addProperties(cls.id, cls.union(), "UNION");
+            addProperties(cls.id, cls.disjointUnion, "DISJOINTUNION");
         });
     }
 
@@ -629,9 +625,8 @@ export default function (graph) {
      * @param elementMap a map where nodes/properties can be looked up
      */
     function processEquivalentIds(element, elementMap) {
-        var eqIds = element.equivalents();
-
-        if (!eqIds || element.equivalentBase()) {
+        var eqIds = element.equivalents;
+        if (!eqIds || element.equivalentBase) {
             return;
         }
 
@@ -642,13 +637,12 @@ export default function (graph) {
 
             if (eqObject) {
                 // Cross reference both objects
-                eqObject.equivalents(eqObject.equivalents());
-                eqObject.equivalents().push(element);
-                eqObject.equivalentBase(element);
+                eqObject.equivalents = eqObject.equivalents;
+                eqObject.equivalents.push(element);
+                eqObject.equivalentBase = element;
                 eqIds[i] = eqObject;
-
                 // Hide other equivalent nodes
-                eqObject.visible(false);
+                eqObject.visible = false;
             } else {
                 console.warn("No class/property was found for equivalent id: " + eqId);
             }
@@ -662,8 +656,8 @@ export default function (graph) {
      */
     function convertTypesToIris(elements, namespaces) {
         elements.forEach(function (element) {
-            if (typeof element.iri() === "string") {
-                element.iri(replaceNamespace(element.iri(), namespaces));
+            if (typeof element.iri === "string") {
+                element.iri = replaceNamespace(element.iri, namespaces);
             }
         });
     }
@@ -677,7 +671,7 @@ export default function (graph) {
         var map = {};
         for (var i = 0, length = array.length; i < length; i++) {
             var element = array[i];
-            map[element.id()] = element;
+            map[element.id] = element;
         }
         return map;
     }
@@ -738,7 +732,7 @@ export default function (graph) {
         } else if (typeof object === "string") {
             return object;
         } else if ("id" in object) {
-            return object.id();
+            return object.id;
         } else {
             console.warn("No Id was found for this object: " + object);
             return undefined;

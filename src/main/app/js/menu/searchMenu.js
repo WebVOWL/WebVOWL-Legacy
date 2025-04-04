@@ -34,13 +34,13 @@ export default function (graph) {
 
         for (let i = 0; i < dict.length; i++) {
             let item = dict[i];
-            trie.add(item.labelForCurrentLanguage().toLowerCase(), item.id());
+            trie.add(item.labelForCurrentLanguage().toLowerCase(), item.id);
 
             // add all equivalents to the search space;
-            if (item.equivalents && item.equivalents().length > 0) {
+            if (item.equivalents && item.equivalents.length > 0) {
                 let eqsLabels = item.equivalentsString().toLowerCase().split(", ");
                 for (let e = 0; e < eqsLabels.length; e++) {
-                    trie.add(eqsLabels[e], item.id());
+                    trie.add(eqsLabels[e], item.id);
                 }
             }
         }

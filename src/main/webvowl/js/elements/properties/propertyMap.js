@@ -14,10 +14,10 @@ properties.push(require("./implementations/RdfProperty"));
 properties.push(require("./implementations/RdfsSubClassOf"));
 properties.push(require("./implementations/SetOperatorProperty"));
 
-var map = d3.map(properties, function ( Prototype ){
-  return new Prototype().type();
+var map = d3.map(properties, function (Prototype) {
+  return new Prototype().type;
 });
 
-export default function (){
+export default function () {
   return map;
 };

@@ -34,21 +34,21 @@ export default function () {
       // checking for literals
       if (prop.range()) {
         node = prop.range();
-        if (node.type() === "rdfs:Literal") {
-          literalUsageMap[node.id()] = 1;
+        if (node.type === "rdfs:Literal") {
+          literalUsageMap[node.id] = 1;
         }
       }
       // checking for thing
       if (prop.range()) {
         node = prop.range();
-        if (node.type() === "owl:Thing") {
-          thingUsageMap[node.id()] = 1;
+        if (node.type === "owl:Thing") {
+          thingUsageMap[node.id] = 1;
         }
       }
       if (prop.domain()) {
         node = prop.domain();
-        if (node.type() === "owl:Thing") {
-          thingUsageMap[node.id()] = 1;
+        if (node.type === "owl:Thing") {
+          thingUsageMap[node.id] = 1;
         }
       }
 
@@ -57,8 +57,8 @@ export default function () {
     var newNodes = [];
     // todo: test and make it faster
     for (i = 0; i < nodes.length; i++) {
-      var nodeId = nodes[i].id();
-      if (nodes[i].type() === "rdfs:Literal") {
+      var nodeId = nodes[i].id;
+      if (nodes[i].type === "rdfs:Literal") {
         if (literalUsageMap[nodeId] === undefined) {
           nodesToRemove.add(nodeId);
         }
@@ -66,7 +66,7 @@ export default function () {
           newNodes.push(nodes[i]);
         }
         // check for node type == OWL:THING
-      } else if (nodes[i].type() === "owl:Thing") {
+      } else if (nodes[i].type === "owl:Thing") {
         if (thingUsageMap[nodeId] === undefined) {
           nodesToRemove.add(nodeId);
         }
