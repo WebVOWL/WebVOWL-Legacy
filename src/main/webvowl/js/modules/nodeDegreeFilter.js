@@ -1,6 +1,6 @@
 import elementToolsFactory from '../util/elementTools';
-const elementTools = elementToolsFactory();
 import filterToolsFactory from '../util/filterTools';
+const elementTools = elementToolsFactory();
 const filterTools = filterToolsFactory();
 
 export default function (menu) {
@@ -110,7 +110,7 @@ export default function (menu) {
   function findLinkCounts(nodes) {
     var nodeLinkCounts = [];
     for (var i = 0, l = nodes.length; i < l; i++) {
-      var linksWithoutDatatypes = filterOutDatatypes(nodes[i].links());
+      var linksWithoutDatatypes = filterOutDatatypes(nodes[i].links);
       nodeLinkCounts.push(linksWithoutDatatypes.length);
     }
     nodeLinkCounts.sort((a, b) => a - b);
@@ -136,7 +136,7 @@ export default function (menu) {
 
   function hasRequiredDegree(minDegree) {
     return function (node) {
-      return filterOutDatatypes(node.links()).length >= minDegree;
+      return filterOutDatatypes(node.links).length >= minDegree;
     };
   }
 

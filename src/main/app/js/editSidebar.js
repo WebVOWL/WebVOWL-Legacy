@@ -1008,13 +1008,13 @@ export default function (graph) {
         d3.select("#leftSideBarCollapseButton").style("top", lsb_offset + "px");
         d3.select("#containerForLeftSideBar").style("height", lsb_height + "px");
 
-        var div_width = d3.select("#generalDetailsEdit").node().getBoundingClientRect().width;
+        var div_width = d3.select("#generalDetailsEdit").node().getBoundingClientRect().labelWidth;
         div_width += 10;
 
-        var title_labelWidth = d3.select("#titleEditor-label").node().getBoundingClientRect().width + 20;
-        var iri_labelWidth = d3.select("#iriEditor-label").node().getBoundingClientRect().width + 20;
-        var version_labelWidth = d3.select("#versionEditor-label").node().getBoundingClientRect().width + 20;
-        var author_labelWidth = d3.select("#authorsEditor-label").node().getBoundingClientRect().width + 20;
+        var title_labelWidth = d3.select("#titleEditor-label").node().getBoundingClientRect().labelWidth + 20;
+        var iri_labelWidth = d3.select("#iriEditor-label").node().getBoundingClientRect().labelWidth + 20;
+        var version_labelWidth = d3.select("#versionEditor-label").node().getBoundingClientRect().labelWidth + 20;
+        var author_labelWidth = d3.select("#authorsEditor-label").node().getBoundingClientRect().labelWidth + 20;
         //find max width;
         var maxW = 0;
         maxW = Math.max(maxW, title_labelWidth);
@@ -1030,10 +1030,10 @@ export default function (graph) {
         d3.select("#authorsEditor").style("width", meta_inputWidth + "px");
 
 
-        var elementIri_width = d3.select("#element_iriEditor-label").node().getBoundingClientRect().width + 20;
-        var elementLabel_width = d3.select("#element_labelEditor-label").node().getBoundingClientRect().width + 20;
-        var elementType_width = d3.select("#typeEditor-label").node().getBoundingClientRect().width + 20;
-        var elementDType_width = d3.select("#typeEditor_datatype-label").node().getBoundingClientRect().width + 20;
+        var elementIri_width = d3.select("#element_iriEditor-label").node().getBoundingClientRect().labelWidth + 20;
+        var elementLabel_width = d3.select("#element_labelEditor-label").node().getBoundingClientRect().labelWidth + 20;
+        var elementType_width = d3.select("#typeEditor-label").node().getBoundingClientRect().labelWidth + 20;
+        var elementDType_width = d3.select("#typeEditor_datatype-label").node().getBoundingClientRect().labelWidth + 20;
 
         maxW = 0;
         maxW = Math.max(maxW, elementIri_width);
@@ -1048,11 +1048,11 @@ export default function (graph) {
         d3.select("#typeEditor_datatype").style("width", selectedElement_inputWidth + 4 + "px");
 
         // update prefix Element width;
-        var containerWidth = d3.select("#containerForPrefixURL").node().getBoundingClientRect().width;
+        var containerWidth = d3.select("#containerForPrefixURL").node().getBoundingClientRect().labelWidth;
         if (containerWidth !== 0) {
             var inputs = d3.selectAll(".prefixInput");
             if (inputs.node()) {
-                var prefixWidth = d3.selectAll(".prefixInput").node().getBoundingClientRect().width;
+                var prefixWidth = d3.selectAll(".prefixInput").node().getBoundingClientRect().labelWidth;
                 d3.selectAll(".prefixURL").style("width", containerWidth - prefixWidth - 45 + "px");
             }
         }

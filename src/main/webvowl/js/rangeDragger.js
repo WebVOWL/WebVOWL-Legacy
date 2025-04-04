@@ -206,8 +206,8 @@ export default function (graph) {
         var nY = dir_Y / len;
 
 
-        var ep_range_x = dex + nX * Range_dragger.parent.range().actualRadius();
-        var ep_range_y = dey + nY * Range_dragger.parent.range().actualRadius();
+        var ep_range_x = dex + nX * Range_dragger.parent.range().smallestRadius;
+        var ep_range_y = dey + nY * Range_dragger.parent.range().smallestRadius;
 
 
         var dx = range_x - ep_range_x;

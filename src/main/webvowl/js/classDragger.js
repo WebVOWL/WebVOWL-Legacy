@@ -33,9 +33,9 @@ export default function (graph) {
         Class_dragger.parent = parentNode;
 
         if (Class_dragger.mouseButtonPressed === false) {
-            if (Class_dragger.parent.actualRadius && Class_dragger.parent.actualRadius()) {
-                Class_dragger.x = Class_dragger.parent.x + 10 + Class_dragger.parent.actualRadius();
-                Class_dragger.y = Class_dragger.parent.y + 10 + Class_dragger.parent.actualRadius();
+            if (Class_dragger.parent.actualRadius && Class_dragger.parent.smallestRadius) {
+                Class_dragger.x = Class_dragger.parent.x + 10 + Class_dragger.parent.smallestRadius;
+                Class_dragger.y = Class_dragger.parent.y + 10 + Class_dragger.parent.smallestRadius;
             } else {
                 Class_dragger.x = Class_dragger.parent.x + 60;
                 Class_dragger.y = Class_dragger.parent.y + 60;
@@ -147,8 +147,8 @@ export default function (graph) {
             var nX = dirX / len;
             var nY = dirY / len;
 
-            var ppX = sX + nX * Class_dragger.parent.actualRadius();
-            var ppY = sY + nY * Class_dragger.parent.actualRadius();
+            var ppX = sX + nX * Class_dragger.parent.smallestRadius;
+            var ppY = sY + nY * Class_dragger.parent.smallestRadius;
 
             var ncx = nX * 15;
             var ncy = nY * 15;
@@ -208,7 +208,6 @@ export default function (graph) {
     Class_dragger.selectedViaTouch = function (val) {
         Class_dragger.nodeElement.classed("classDraggerNode", !val);
         Class_dragger.nodeElement.classed("classDraggerNodeHovered", val);
-
     };
 
     Class_dragger.onMouseOver = function () {
@@ -220,9 +219,7 @@ export default function (graph) {
         var selectedNode = Class_dragger.rootElement.node(),
             nodeContainer = selectedNode.parentNode;
         nodeContainer.appendChild(selectedNode);
-
         Class_dragger.mouseEntered = true;
-
     };
     Class_dragger.onMouseOut = function () {
         if (Class_dragger.mouseButtonPressed === true)
@@ -233,7 +230,6 @@ export default function (graph) {
     };
 
     Class_dragger.setPosition = function (x, y) {
-
         Class_dragger.x = x;
         Class_dragger.y = y;
         Class_dragger.updateElement();
@@ -242,7 +238,6 @@ export default function (graph) {
     Class_dragger.setAdditionalClassForClass_dragger = function (name, val) {
         // console.log("Class_dragger should sett the class here")
         // Class_dragger.nodeElement.classed(name,val);
-
     };
     return Class_dragger;
 };

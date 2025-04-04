@@ -97,10 +97,10 @@ export default function (graph) {
     var rect = ShadowClone.rootNodeLayer.append("rect")
       .classed(parentProperty.styleClass, true)
       .classed("property", true)
-      .attr("x", -parentProperty.width() / 2)
-      .attr("y", -parentProperty.height() / 2)
-      .attr("width", parentProperty.width())
-      .attr("height", parentProperty.height());
+      .attr("x", -parentProperty.labelWidth / 2)
+      .attr("y", -parentProperty.height / 2)
+      .attr("width", parentProperty.labelWidth)
+      .attr("height", parentProperty.height);
 
     if (parentProperty.visualAttributes) {
       rect.classed(parentProperty.visualAttributes, true);
@@ -227,11 +227,11 @@ export default function (graph) {
     // var len=Math.sqrt(dir_X*dir_X+dir_Y*dir_Y);
     // var nX=dir_X/len;
     // var nY=dir_Y/len;
-    // ShadowClone.s_x=rex-nX*ShadowClone.parent.range().actualRadius();
-    // ShadowClone.s_y=rey-nY*ShadowClone.parent.range().actualRadius();
+    // ShadowClone.s_x=rex-nX*ShadowClone.parent.range().smallestRadius;
+    // ShadowClone.s_y=rey-nY*ShadowClone.parent.range().smallestRadius;
     //
-    // ShadowClone.e_x=dex+nX*ShadowClone.parent.domain().actualRadius();
-    // ShadowClone.e_y=dey+nY*ShadowClone.parent.domain().actualRadius();
+    // ShadowClone.e_x=dex+nX*ShadowClone.parent.domain().smallestRadius;
+    // ShadowClone.e_y=dey+nY*ShadowClone.parent.domain().smallestRadius;
     // ShadowClone.updateElement();
 
   };
@@ -253,8 +253,8 @@ export default function (graph) {
 
       var nX = dir_X / len;
       var nY = dir_Y / len;
-      ShadowClone.s_x = rex - nX * ShadowClone.parent.range().actualRadius();
-      ShadowClone.s_y = rey - nY * ShadowClone.parent.range().actualRadius();
+      ShadowClone.s_x = rex - nX * ShadowClone.parent.range().smallestRadius;
+      ShadowClone.s_y = rey - nY * ShadowClone.parent.range().smallestRadius;
 
     }
 
@@ -282,8 +282,8 @@ export default function (graph) {
     var nY = dir_Y / len;
 
 
-    ShadowClone.e_x = dex + nX * ShadowClone.parent.domain().actualRadius();
-    ShadowClone.e_y = dey + nY * ShadowClone.parent.domain().actualRadius();
+    ShadowClone.e_x = dex + nX * ShadowClone.parent.domain().smallestRadius;
+    ShadowClone.e_y = dey + nY * ShadowClone.parent.domain().smallestRadius;
 
 
     ShadowClone.updateElement();

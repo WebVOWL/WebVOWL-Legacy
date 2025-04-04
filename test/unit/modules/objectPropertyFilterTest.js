@@ -11,16 +11,16 @@ describe("Filtering of object properties", function () {
 
 	beforeEach(function () {
 		jasmine.addMatchers({
-			                    toBeInstanceOf: function () {
-				                    return {
-					                    compare: function (actual, expected) {
-						                    return {
-							                    pass: actual instanceof expected
-						                    };
-					                    }
-				                    };
-			                    }
-		                    });
+			toBeInstanceOf: function () {
+				return {
+					compare: function (actual, expected) {
+						return {
+							pass: actual instanceof expected
+						};
+					}
+				};
+			}
+		});
 	});
 
 	beforeEach(function () {
@@ -48,8 +48,8 @@ describe("Filtering of object properties", function () {
 
 		objectProperty.domain(domain).range(range);
 		var objectPropertyLink = new Link(domain, range, objectProperty);
-		domain.links([objectPropertyLink]);
-		range.links([objectPropertyLink]);
+		domain.links = [objectPropertyLink];
+		range.links = [objectPropertyLink];
 
 		filter.filter([domain, range], [objectProperty]);
 
@@ -67,8 +67,8 @@ describe("Filtering of object properties", function () {
 		datatypeProperty.domain(domain).range(range);
 		var objectPropertyLink = new Link(domain, range, objectProperty);
 		var datatypePropertyLink = new Link(domain, range, datatypeProperty);
-		domain.links([objectPropertyLink, datatypePropertyLink]);
-		range.links([objectPropertyLink, datatypePropertyLink]);
+		domain.links = [objectPropertyLink, datatypePropertyLink];
+		range.links = [objectPropertyLink, datatypePropertyLink];
 
 		filter.filter([domain, range], [objectProperty, datatypeProperty]);
 

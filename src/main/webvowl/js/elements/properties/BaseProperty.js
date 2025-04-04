@@ -41,7 +41,7 @@ export default function () {
             markerElement,
             // Other
             ignoreLocalHoverEvents,
-            fobj,
+            foreignerObject,
             pinGroupElement,
             haloGroupElement,
             myWidth = 80,
@@ -256,7 +256,7 @@ export default function () {
             that.labelElement(attachLabel(that));
             // Draw an inverse label and reposition both labels if necessary
             if (that.inverse()) {
-                var yTransformation = (that.height() / 2) + 1 /* additional space */;
+                var yTransformation = (that.height / 2) + 1 /* additional space */;
                 that.inverse()
                     .labelElement(attachLabel(that.inverse()));
 
@@ -283,10 +283,10 @@ export default function () {
             var rect = labelContainer.append("rect")
                 .classed(that.styleClass, true)
                 .classed("property", true)
-                .attr("x", -that.width() / 2)
-                .attr("y", -that.height() / 2)
-                .attr("width", that.width())
-                .attr("height", that.height())
+                .attr("x", -that.labelWidth / 2)
+                .attr("y", -that.height / 2)
+                .attr("width", that.labelWidth)
+                .attr("height", that.height)
                 .on("mouseover", function () {
                     onMouseOver();
                 })
@@ -516,12 +516,12 @@ export default function () {
                 var invY = /translate\(\s*([^\s,)]+)[ ,]([^\s,)]+)/.exec(tr_inv)[2];
 
                 if (thatY < invY)
-                    pinGroupElement = drawTools.drawPin(that.labelElement(), -0.5 * that.width() + 10, -25, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
+                    pinGroupElement = drawTools.drawPin(that.labelElement(), -0.5 * that.width + 10, -25, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
                 else
-                    pinGroupElement = drawTools.drawPin(that.inverse().labelElement(), -0.5 * that.inverse().width() + 10, -25, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
+                    pinGroupElement = drawTools.drawPin(that.inverse().labelElement(), -0.5 * that.inverse().labelWidth + 10, -25, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
             }
             else {
-                pinGroupElement = drawTools.drawPin(that.labelElement(), -0.5 * that.width() + 10, -25, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
+                pinGroupElement = drawTools.drawPin(that.labelElement(), -0.5 * that.width + 10, -25, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
             }
         };
 
@@ -546,8 +546,8 @@ export default function () {
 
         this.animationProcess = function () {
             var animRuns = false;
-            if (that.getHalos()) {
-                var haloGr = that.getHalos();
+            if (that.haloGroupElement) {
+                var haloGr = that.haloGroupElement;
                 var haloEls = haloGr.selectAll(".searchResultA");
                 animRuns = haloGr.attr("animationRunning");
 
@@ -573,7 +573,7 @@ export default function () {
                 if (that.animationProcess() === false && labelContainer)
                     labelContainer.appendChild(labelNode);
             }
-            haloGroupElement = drawTools.drawRectHalo(that, that.width(), that.height(), offset);
+            haloGroupElement = drawTools.drawRectHalo(that, that.width, that.height, offset);
             if (haloGroupElement) {
                 var haloNode = haloGroupElement.node();
                 var haloContainer = haloNode.parentNode;
@@ -642,7 +642,7 @@ export default function () {
                 return;
             }
 
-            var h = that.height();
+            var h = that.height;
             if (dynamic === true) {
                 myWidth = Math.min(that.getMyWidth(), graph.options().maxLabelWidth());
                 shapeElement.transition().tween("attr", function () {
@@ -709,7 +709,7 @@ export default function () {
                 console.log("No Container found");
                 return;
             }
-            if (fobj !== undefined) {
+            if (foreignerObject !== undefined) {
                 that.labelElement().selectAll(".foreignelements").remove();
             }
             backupFullIri = undefined;
@@ -721,7 +721,7 @@ export default function () {
             that.frozen = true;
             graph.killDelayedTimer();
             graph.ignoreOtherHoverEvents(false);
-            fobj = that.labelElement().append("foreignObject")
+            foreignerObject = that.labelElement().append("foreignObject")
                 .attr("x", -0.5 * that.textWidth())
                 .attr("y", -13)
                 .attr("height", 25)
@@ -734,7 +734,7 @@ export default function () {
             //
             //
             //
-            var editText = fobj.append("xhtml:input")
+            var editText = foreignerObject.append("xhtml:input")
                 .attr("class", "nodeEditSpan")
                 .attr("id", that.id)
                 .attr("align", "center")

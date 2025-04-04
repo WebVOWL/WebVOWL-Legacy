@@ -156,7 +156,7 @@ export default function () {
     var sawIndividuals = {};
     var totalCount = 0;
     for (var i = 0, l = nodes.length; i < l; i++) {
-      var individuals = nodes[i].individuals();
+      var individuals = nodes[i].individuals;
 
       var tempCount = 0;
       for (var iA = 0; iA < individuals.length; iA++) {

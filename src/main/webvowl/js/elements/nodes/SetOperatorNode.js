@@ -17,7 +17,7 @@ export default function () {
       superHoverHighlightingFunction(enable);
 
       // Highlight links pointing to included nodes when hovering the set operator
-      that.links()
+      that.links
         .filter(function (link) {
           return link instanceof BoxArrowLink;
         })
@@ -30,9 +30,8 @@ export default function () {
     };
 
     this.draw = function (element) {
-      that.nodeElement(element);
-
-      drawTools.appendCircularClass(element, that.actualRadius(),
+      that.nodeElement = element;
+      drawTools.appendCircularClass(element, that.smallestRadius,
         that.collectCssClasses().join(" "),
         that.labelForCurrentLanguage(), that.backgroundColor);
     };
@@ -41,7 +40,7 @@ export default function () {
       superPostDrawActions();
       that.textBlock().remove();
 
-      var textElement = new AbsoluteTextElement(that.nodeElement(), that.backgroundColor);
+      var textElement = new AbsoluteTextElement(that.nodeElement, that.backgroundColor);
 
       var equivalentsString = that.equivalentsString();
       var offsetForFollowingEquivalents = equivalentsString ? -30 : -17;
@@ -56,12 +55,12 @@ export default function () {
 
         if (that.indicationString().length > 0) {
           textElement.addSubText(that.indicationString(), 17);
-          textElement.addInstanceCount(that.individuals().length, 30);
+          textElement.addInstanceCount(that.individuals.length, 30);
         } else {
-          textElement.addInstanceCount(that.individuals().length, 17);
+          textElement.addInstanceCount(that.individuals.length, 17);
         }
       } else {
-        textElement.addInstanceCount(that.individuals().length, 17);
+        textElement.addInstanceCount(that.individuals.length, 17);
       }
 
       that.textBlock(textElement);

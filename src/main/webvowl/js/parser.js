@@ -281,10 +281,10 @@ export default function (graph) {
         node.description = element.description;
         node.equivalents = element.equivalent;
         node.id = element.id;
-        node.intersection(element.intersection);
+        node.intersection = element.intersection;
         node.label = element.label;
         // node.type=element.type; Ignore, because we predefined it
-        node.union(element.union);
+        node.union = element.union;
         node.iri = element.iri;
         if (element.pos) {
             node.x = element.pos[0];
@@ -299,7 +299,7 @@ export default function (graph) {
                 let individualNode = new Prototype(graph);
                 individualNode.label = individual.labels;
                 individualNode.iri = individual.iri;
-                node.individuals().push(individualNode);
+                node.individuals.push(individualNode);
             });
         }
         return node;
@@ -360,9 +360,7 @@ export default function (graph) {
         var nodes = [];
 
         // Set the default values
-        var maxIndividualCount = 0;
         rawNodes.forEach(function (node) {
-            maxIndividualCount = Math.max(maxIndividualCount, node.individuals().length);
             node.visible = true;
         });
 
@@ -370,7 +368,6 @@ export default function (graph) {
             // Merge and connect the equivalent nodes
             processEquivalentIds(node, classMap);
             attributeParser.parseClassAttributes(node);
-            node.maxIndividualCount(maxIndividualCount);
         });
 
         // Collect all nodes that should be displayed
@@ -612,8 +609,8 @@ export default function (graph) {
 
         classes.forEach(function (cls) {
             addProperties(cls.id, cls.complement, "COMPLEMENT");
-            addProperties(cls.id, cls.intersection(), "INTERSECTION");
-            addProperties(cls.id, cls.union(), "UNION");
+            addProperties(cls.id, cls.intersection, "INTERSECTION");
+            addProperties(cls.id, cls.union, "UNION");
             addProperties(cls.id, cls.disjointUnion, "DISJOINTUNION");
         });
     }

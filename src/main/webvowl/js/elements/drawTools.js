@@ -1,9 +1,7 @@
 /**
  * Contains reusable function for drawing nodes.
  */
-class DrawTools {
-    constructor() { }
-
+export class DrawTools {
     /**
      * Append a circular class node with the passed attributes.
      * @param parent the parent element to which the circle will be appended
@@ -13,7 +11,7 @@ class DrawTools {
      * @param [backgroundColor]
      * @returns {*}
      */
-    appendCircularClass(parent, radius, cssClasses, tooltip, backgroundColor) {
+    static appendCircularClass(parent, radius, cssClasses, tooltip, backgroundColor) {
         var circle = parent.append("circle")
             .classed("class", true)
             .attr("r", radius);
@@ -24,7 +22,7 @@ class DrawTools {
         return circle;
     }
 
-    _addCssClasses(element, cssClasses) {
+    static _addCssClasses(element, cssClasses) {
         if (cssClasses instanceof Array) {
             cssClasses.forEach(function (cssClass) {
                 element.classed(cssClass, true);
@@ -32,13 +30,13 @@ class DrawTools {
         }
     }
 
-    _addToolTip(element, tooltip) {
+    static _addToolTip(element, tooltip) {
         if (tooltip) {
             element.append("title").text(tooltip);
         }
     }
 
-    _addBackgroundColor(element, backgroundColor) {
+    static _addBackgroundColor(element, backgroundColor) {
         if (backgroundColor) {
             element.style("fill", backgroundColor);
         }
@@ -54,7 +52,7 @@ class DrawTools {
      * @param [backgroundColor]
      * @returns {*}
      */
-    appendRectangularClass(parent, width, height, cssClasses, tooltip, backgroundColor) {
+    static appendRectangularClass(parent, width, height, cssClasses, tooltip, backgroundColor) {
         var rectangle = parent.append("rect")
             .classed("class", true)
             .attr("x", -width / 2)
@@ -68,7 +66,7 @@ class DrawTools {
         return rectangle;
     }
 
-    drawPin(container, dx, dy, onClick, accuraciesHelperFunction, useAccuracyHelper) {
+    static drawPin(container, dx, dy, onClick, accuraciesHelperFunction, useAccuracyHelper) {
         var pinGroupElement = container
             .append("g")
             .classed("hidden-in-export", true)
@@ -113,10 +111,10 @@ class DrawTools {
         return pinGroupElement;
     }
 
-    drawRectHalo(node, width, height, offset) {
+    static drawRectHalo(node, width, height, offset) {
         var container;
         if (node.nodeElement)
-            container = node.nodeElement();
+            container = node.nodeElement;
         else
             container = node.labelElement();
 
@@ -153,7 +151,7 @@ class DrawTools {
         return haloGroupElement;
     }
 
-    drawHalo(container, radius) {
+    static drawHalo(container, radius) {
         if (container === undefined) {
             return null;
             // there is no element to add the halo to;
@@ -186,8 +184,4 @@ class DrawTools {
         });
         return haloGroupElement;
     }
-}
-
-export default {
-    DrawTools
 }

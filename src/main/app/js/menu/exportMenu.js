@@ -451,9 +451,9 @@ export default function (graph) {
             }
 
 
-            if (nodes[i].individuals().length > 0) {
+            if (nodes[i].individuals.length > 0) {
                 var classIndividualElements = [];
-                var nIndividuals = nodes[i].individuals();
+                var nIndividuals = nodes[i].individuals;
                 for (j = 0; j < nIndividuals.length; j++) {
                     var indObj = {};
                     indObj.iri = nIndividuals[j].iri;
@@ -496,8 +496,8 @@ export default function (graph) {
                     if (equals[j].comment) {
                         eqAttr.comment = equals[j].comment;
                     }
-                    if (equals[j].individuals().length > 0) {
-                        eqAttr.individuals = equals[j].individuals();
+                    if (equals[j].individuals.length > 0) {
+                        eqAttr.individuals = equals[j].individuals;
                     }
                     if (equals[j].annotations) {
                         eqAttr.annotations = equals[j].annotations;
@@ -506,9 +506,9 @@ export default function (graph) {
                         eqAttr.description = equals[j].description;
                     }
 
-                    if (equals[j].individuals().length > 0) {
+                    if (equals[j].individuals.length > 0) {
                         var e_classIndividualElements = [];
-                        var e_nIndividuals = equals[i].individuals();
+                        var e_nIndividuals = equals[i].individuals;
                         for (k = 0; k < e_nIndividuals.length; k++) {
                             var e_indObj = {};
                             e_indObj.iri = e_nIndividuals[k].iri;
@@ -544,9 +544,9 @@ export default function (graph) {
             // .disjointUnion=element.disjointUnion
             // .description=element.description
             // .equivalents = element.equivalent
-            // .intersection(element.intersection)
+            // .intersection=element.intersection
             // .type=element.type Ignore, because we predefined it
-            // .union(element.union)
+            // .union=element.union
             classAttributeObjects.push(classAttr);
         }
 
@@ -1177,11 +1177,11 @@ export default function (graph) {
                 var tspans = node.textBlock()._textBlock().node().children;
                 if (tspans[0]) {
                     identifier = tspans[0].innerHTML;
-                    if (node.individuals() && node.individuals().length === parseInt(tspans[0].innerHTML)) {
+                    if (node.individuals && node.individuals.length === parseInt(tspans[0].innerHTML)) {
                         identifier = "{\\color{gray} " + tspans[0].innerHTML + " }";
                     }
                     for (var t = 1; t < tspans.length; t++) {
-                        if (node.individuals() && node.individuals().length === parseInt(tspans[t].innerHTML)) {
+                        if (node.individuals && node.individuals.length === parseInt(tspans[t].innerHTML)) {
                             identifier += "\\\\ {\\color{gray} " + tspans[t].innerHTML + " }";
                         } else {
                             identifier += "\\\\ {\\small " + tspans[t].innerHTML + " }";
@@ -1207,11 +1207,11 @@ export default function (graph) {
             var widthString = "";
 
             if (node.type === "rdfs:Literal" || node.type === "rdfs:Datatype") {
-                var width = node.width();
+                var width = node.labelWidth;
                 widthString = ",minimum width=" + width + "pt";
             }
             else {
-                widthString = ",minimum size=" + 2 * node.actualRadius() + "pt";
+                widthString = ",minimum size=" + 2 * node.smallestRadius + "pt";
 
             }
             if (node.backgroundColor) {

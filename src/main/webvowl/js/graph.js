@@ -851,8 +851,8 @@ export default function (graphContainerSelector) {
         graphContainer = d3.selectAll(options.graphContainerSelector())
             .append("svg")
             .classed("vowlGraph", true)
-            .attr("width", options.width())
-            .attr("height", options.height())
+            .attr("width", options.width)
+            .attr("height", options.height)
             .call(zoom)
             .append("g");
         // add touch and double click functions
@@ -1164,8 +1164,8 @@ export default function (graphContainerSelector) {
     graph.updateCanvasContainerSize = function () {
         if (graphContainer) {
             var svgElement = d3.selectAll(".vowlGraph");
-            svgElement.attr("width", options.width());
-            svgElement.attr("height", options.height());
+            svgElement.attr("width", options.labelWidth);
+            svgElement.attr("height", options.height);
             graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
         }
     };
@@ -1265,7 +1265,7 @@ export default function (graphContainerSelector) {
         for (var j = 0; j < force.nodes().length; j++) {
             node = force.nodes()[j];
             if (node.id) {
-                haloElement = node.getHalos();
+                haloElement = node.haloGroupElement;
                 if (haloElement) {
                     halo = haloElement.selectAll(".searchResultA");
                     halo.classed("searchResultA", false);
@@ -1274,7 +1274,7 @@ export default function (graphContainerSelector) {
             }
 
             if (node.property) {
-                haloElement = node.property().getHalos();
+                haloElement = node.property().haloGroupElement;
                 if (haloElement) {
                     halo = haloElement.selectAll(".searchResultA");
                     halo.classed("searchResultA", false);
@@ -1399,8 +1399,6 @@ export default function (graphContainerSelector) {
                 updateHaloRadius();
                 options.zoomSlider().updateZoomSliderValue(zoomFactor);
             });
-
-
     };
 
     /** --------------------------------------------------------- **/
@@ -1561,7 +1559,6 @@ export default function (graphContainerSelector) {
         updateRenderingDuringSimulation = true;
         var validOntology = graph.options().loadingModule().successfullyLoadedOntology();
         if (graphContainer && validOntology === true) {
-
             updateRenderingDuringSimulation = false;
             graph.options().ontologyMenu().append_bulletPoint("Generating visualization ... ");
             loadingModule.setPercentMode();
@@ -1578,7 +1575,6 @@ export default function (graphContainerSelector) {
                     force.on("tick", recalculatePositions);
                 }
             }
-
             force.start();
         } else {
             force.stop();
@@ -1776,7 +1772,7 @@ export default function (graphContainerSelector) {
             // For every node
             for (let j = 0; j < length; j++) {
                 let currentNode = frontier.shift();
-                let linkArr = currentNode.links();
+                let linkArr = currentNode.links;
 
                 // For every edge
                 for (let k = 0; k < linkArr.length; k++) {
@@ -1807,28 +1803,28 @@ export default function (graphContainerSelector) {
     /** --------------------------------------------------------- **/
     function storeLinksOnNodes(nodes, links) {
         for (let i = 0; i < nodes.length; i++) {
-            nodes[i].links([]);
+            nodes[i].links = [];
         }
         // look for properties where this node is the domain or range
         for (let i = 0; i < links.length; i++) {
             var link = links[i];
             var domainobj = link.domain();
-            var existingDomainLinks = domainobj.links();
+            var existingDomainLinks = domainobj.links;
             if (existingDomainLinks === undefined) {
                 existingDomainLinks = [link];
             } else {
                 existingDomainLinks.push(link);
             }
-            link.domain().links(existingDomainLinks);
+            link.domain().links = existingDomainLinks;
 
             var rangeobj = link.range();
-            var existingRangeLinks = rangeobj.links();
+            var existingRangeLinks = rangeobj.links;
             if (existingRangeLinks === undefined) {
                 existingRangeLinks = [link];
             } else {
                 existingRangeLinks.push(link);
             }
-            link.range().links(existingRangeLinks);
+            link.range().links = existingRangeLinks;
         }
     }
 
@@ -1876,7 +1872,7 @@ export default function (graphContainerSelector) {
             }
             return charge;
         })
-            .size([options.width(), options.height()])
+            .size([options.width, options.height])
             .linkDistance(calculateLinkPartDistance)
             .gravity(options.gravity())
             .linkStrength(options.linkStrength()); // Flexibility of links
@@ -1895,8 +1891,8 @@ export default function (graphContainerSelector) {
 
         // divide by 2 to receive the length for a single link part
         var linkPartDistance = getVisibleLinkDistance(link) / 2;
-        linkPartDistance += linkPart.domain().actualRadius();
-        linkPartDistance += linkPart.range().actualRadius();
+        linkPartDistance += linkPart.domain().smallestRadius;
+        linkPartDistance += linkPart.range().smallestRadius;
         return linkPartDistance;
     }
 
@@ -1945,17 +1941,17 @@ export default function (graphContainerSelector) {
                             else {
                                 node.property().removeHalo();
                                 if (node.property().inverse()) {
-                                    if (!node.property().inverse().getHalos())
+                                    if (!node.property().inverse().haloGroupElement)
                                         node.property().inverse().drawHalo();
                                     computeDistanceToCenter(node, true);
                                 }
                                 if (node.property().equivalents) {
                                     var eq = node.property().equivalents;
                                     for (var e = 0; e < eq.length; e++) {
-                                        if (!eq[e].getHalos())
+                                        if (!eq[e].haloGroupElement)
                                             eq[e].drawHalo();
                                     }
-                                    if (!node.property().getHalos())
+                                    if (!node.property().haloGroupElement)
                                         node.property().drawHalo();
                                     computeDistanceToCenter(node, false);
 
@@ -2008,28 +2004,28 @@ export default function (graphContainerSelector) {
 
         if (node.property && highlightOfInv === true) {
             if (node.property().inverse()) {
-                rectHalo = node.property().inverse().getHalos().select("rect");
+                rectHalo = node.property().inverse().haloGroupElement.select("rect");
 
             } else {
-                if (node.property().getHalos())
-                    rectHalo = node.property().getHalos().select("rect");
+                if (node.property().haloGroupElement)
+                    rectHalo = node.property().haloGroupElement.select("rect");
                 else {
                     node.property().drawHalo();
-                    rectHalo = node.property().getHalos().select("rect");
+                    rectHalo = node.property().haloGroupElement.select("rect");
                 }
             }
             rectHalo.classed("hidden", true);
             if (node.property().inverse()) {
-                if (node.property().inverse().getHalos()) {
-                    roundHalo = node.property().inverse().getHalos().select("circle");
+                if (node.property().inverse().haloGroupElement) {
+                    roundHalo = node.property().inverse().haloGroupElement.select("circle");
                 }
             } else {
-                roundHalo = node.property().getHalos().select("circle");
+                roundHalo = node.property().haloGroupElement.select("circle");
             }
             if (roundHalo.node() === null) {
-                radius = node.property().inverse().width() + 15;
+                radius = node.property().inverse().labelWidth + 15;
 
-                roundHalo = node.property().inverse().getHalos().append("circle")
+                roundHalo = node.property().inverse().haloGroupElement.append("circle")
                     .classed("searchResultB", true)
                     .classed("searchResultA", false)
                     .attr("r", radius + 15);
@@ -2041,23 +2037,23 @@ export default function (graphContainerSelector) {
         }
 
         if (node.id) {
-            if (!node.getHalos()) return; // something went wrong before
-            halo = node.getHalos().select("rect");
+            if (!node.haloGroupElement) return; // something went wrong before
+            halo = node.haloGroupElement.select("rect");
             if (halo.node() === null) {
                 // this is a round node
                 nodeIsRect = false;
-                roundHalo = node.getHalos().select("circle");
-                defaultRadius = node.actualRadius();
+                roundHalo = node.haloGroupElement.select("circle");
+                defaultRadius = node.smallestRadius;
                 roundHalo.attr("r", defaultRadius + offset);
                 halo = roundHalo;
             } else { // this is a rect node
                 nodeIsRect = true;
-                rectHalo = node.getHalos().select("rect");
+                rectHalo = node.haloGroupElement.select("rect");
                 rectHalo.classed("hidden", true);
-                roundHalo = node.getHalos().select("circle");
+                roundHalo = node.haloGroupElement.select("circle");
                 if (roundHalo.node() === null) {
-                    radius = node.width();
-                    roundHalo = node.getHalos().append("circle")
+                    radius = node.labelWidth;
+                    roundHalo = node.haloGroupElement.append("circle")
                         .classed("searchResultB", true)
                         .classed("searchResultA", false)
                         .attr("r", radius + offset);
@@ -2066,15 +2062,15 @@ export default function (graphContainerSelector) {
             }
         }
         if (node.property && !inverse) {
-            if (!node.property().getHalos()) return; // something went wrong before
-            rectHalo = node.property().getHalos().select("rect");
+            if (!node.property().haloGroupElement) return; // something went wrong before
+            rectHalo = node.property().haloGroupElement.select("rect");
             rectHalo.classed("hidden", true);
 
-            roundHalo = node.property().getHalos().select("circle");
+            roundHalo = node.property().haloGroupElement.select("circle");
             if (roundHalo.node() === null) {
-                radius = node.property().width();
+                radius = node.property().width;
 
-                roundHalo = node.property().getHalos().append("circle")
+                roundHalo = node.property().haloGroupElement.append("circle")
                     .classed("searchResultB", true)
                     .classed("searchResultA", false)
                     .attr("r", radius + 15);
@@ -2114,10 +2110,10 @@ export default function (graphContainerSelector) {
                 borderPoint_y = y;
             }
             // kill all pulses of nodes that are outside the viewport
-            container.getHalos().select("rect").classed("searchResultA", false);
-            container.getHalos().select("circle").classed("searchResultA", false);
-            container.getHalos().select("rect").classed("searchResultB", true);
-            container.getHalos().select("circle").classed("searchResultB", true);
+            container.haloGroupElement.select("rect").classed("searchResultA", false);
+            container.haloGroupElement.select("circle").classed("searchResultA", false);
+            container.haloGroupElement.select("rect").classed("searchResultB", true);
+            container.haloGroupElement.select("circle").classed("searchResultB", true);
             halo.classed("hidden", false);
             // compute in pixel coordinates length of difference vector
             var borderRadius_x = borderPoint_x - x;
@@ -2148,35 +2144,35 @@ export default function (graphContainerSelector) {
                 dy = wY - node.y + 20;
 
             var newRadius = Math.sqrt(dx * dx + dy * dy);
-            halo = container.getHalos().select("circle");
+            halo = container.haloGroupElement.select("circle");
             // sanity checks and setting new halo radius
             if (!nodeIsRect) {
-                defaultRadius = node.actualRadius() + offset;
+                defaultRadius = node.smallestRadius + offset;
                 if (newRadius < defaultRadius) {
                     newRadius = defaultRadius;
                 }
                 halo.attr("r", newRadius);
             } else {
-                defaultRadius = 0.5 * container.width();
+                defaultRadius = 0.5 * container.width;
                 if (newRadius < defaultRadius)
                     newRadius = defaultRadius;
                 halo.attr("r", newRadius);
             }
         } else { // node is in viewport , render original;
             // reset the halo to original radius
-            defaultRadius = node.actualRadius() + 15;
+            defaultRadius = node.smallestRadius + 15;
             if (!nodeIsRect) {
                 halo.attr("r", defaultRadius);
             } else { // this is rectangular node render as such
-                halo = container.getHalos().select("rect");
+                halo = container.haloGroupElement.select("rect");
                 halo.classed("hidden", false);
                 //halo.classed("searchResultB", true);
                 //halo.classed("searchResultA", false);
-                var aCircHalo = container.getHalos().select("circle");
+                var aCircHalo = container.haloGroupElement.select("circle");
                 aCircHalo.classed("hidden", true);
 
-                container.getHalos().select("rect").classed("hidden", false);
-                container.getHalos().select("circle").classed("hidden", true);
+                container.haloGroupElement.select("rect").classed("hidden", false);
+                container.haloGroupElement.select("circle").classed("hidden", true);
             }
         }
     }
@@ -2441,7 +2437,7 @@ export default function (graphContainerSelector) {
                     }
                 } else {
                     if (nodeInViewport(node, false)) {
-                        bbx = node.nodeElement().node().getBoundingClientRect();
+                        bbx = node.nodeElement.node().getBoundingClientRect();
                         if (bbx) {
                             contentBBox.tx = Math.min(contentBBox.tx, bbx.left);
                             contentBBox.bx = Math.max(contentBBox.bx, bbx.right);
@@ -2971,19 +2967,19 @@ export default function (graphContainerSelector) {
             }
         });
         if (hoveredNodeElement) {
-            var offsetDist = hoveredNodeElement.actualRadius() + 30;
+            var offsetDist = hoveredNodeElement.smallestRadius + 30;
             if (minDist > offsetDist) return null;
             if (tN.renderType === "rect") return null;
-            if (tN === hoveredNodeElement && minDist <= hoveredNodeElement.actualRadius()) {
+            if (tN === hoveredNodeElement && minDist <= hoveredNodeElement.smallestRadius) {
                 return tN;
-            } else if (tN === hoveredNodeElement && minDist > hoveredNodeElement.actualRadius()) {
+            } else if (tN === hoveredNodeElement && minDist > hoveredNodeElement.smallestRadius) {
                 return null;
             }
             return tN;
         }
         else {
 
-            if (minDist > (tN.actualRadius() + 30))
+            if (minDist > (tN.smallestRadius + 30))
                 return null;
             else return tN;
 
@@ -3242,7 +3238,7 @@ export default function (graphContainerSelector) {
             }
 
             // get domain actual raidus
-            var offset = 2 * domain.actualRadius() + 50;
+            var offset = 2 * domain.smallestRadius + 50;
             pX = domain.x + offset * nx;
             pY = domain.y + offset * ny;
         }
@@ -3319,8 +3315,8 @@ export default function (graphContainerSelector) {
             }
         }
 
-        var nX = node.x - node.actualRadius() - 100;
-        var nY = node.y + node.actualRadius() + 100;
+        var nX = node.x - node.smallestRadius - 100;
+        var nY = node.y + node.smallestRadius + 100;
         aNode.x = nX;
         aNode.y = nY;
         aNode.px = aNode.x;
@@ -3833,8 +3829,8 @@ export default function (graphContainerSelector) {
         var delX, delY = 0;
         if (node.renderType === "round") {
             var scale = 0.5 * Math.sqrt(2.0);
-            var oX = scale * node.actualRadius();
-            var oY = scale * node.actualRadius();
+            var oX = scale * node.smallestRadius;
+            var oY = scale * node.smallestRadius;
             delX = node.x - oX;
             delY = node.y + oY;
             addDataPropertyGroupElement.attr("transform", "translate(" + delX + "," + delY + ")");
@@ -3845,13 +3841,13 @@ export default function (graphContainerSelector) {
         var delX, delY = 0;
         if (node.renderType === "round") {
             var scale = 0.5 * Math.sqrt(2.0);
-            var oX = scale * node.actualRadius();
-            var oY = scale * node.actualRadius();
+            var oX = scale * node.smallestRadius;
+            var oY = scale * node.smallestRadius;
             delX = node.x + oX;
             delY = node.y - oY;
         } else {
-            delX = node.x + 0.5 * node.width() + 6;
-            delY = node.y - 0.5 * node.height() - 6;
+            delX = node.x + 0.5 * node.labelWidth + 6;
+            delY = node.y - 0.5 * node.height - 6;
         }
         deleteGroupElement.attr("transform", "translate(" + delX + "," + delY + ")");
     }

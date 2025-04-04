@@ -28,26 +28,26 @@ export default function () {
                 bgColor = undefined;
             }
             var cssClasses = that.collectCssClasses();
-            renderingElement = that.nodeElement().append("g");
+            renderingElement = that.nodeElement.append("g");
 
             if (that.getRectangularRepresentation() === true) {
                 drawTools.appendRectangularClass(renderingElement, 84, 84, ["white", "embedded"]);
                 drawTools.appendRectangularClass(renderingElement, 80 - CIRCLE_SIZE_DIFFERENCE, 80 - CIRCLE_SIZE_DIFFERENCE, cssClasses, that.labelForCurrentLanguage(), bgColor);
             } else {
-                drawTools.appendCircularClass(renderingElement, that.actualRadius(), ["white", "embedded"]);
+                drawTools.appendCircularClass(renderingElement, that.smallestRadius, ["white", "embedded"]);
                 console.log(cssClasses);
                 console.log(that.attributes);
                 console.log("what is bgColor" + bgColor);
-                drawTools.appendCircularClass(renderingElement, that.actualRadius() - CIRCLE_SIZE_DIFFERENCE, cssClasses, that.labelForCurrentLanguage(), bgColor);
+                drawTools.appendCircularClass(renderingElement, that.smallestRadius - CIRCLE_SIZE_DIFFERENCE, cssClasses, that.labelForCurrentLanguage(), bgColor);
 
             }
-            that.postDrawActions(that.nodeElement());
+            that.postDrawActions(that.nodeElement);
 
         };
         this.draw = function (parentElement) {
             var cssClasses = that.collectCssClasses();
 
-            that.nodeElement(parentElement);
+            that.nodeElement = parentElement;
             renderingElement = parentElement.append("g");
             var bgColor = that.backgroundColor;
             if (that.attributes.indexOf("deprecated") > -1) {
@@ -58,8 +58,8 @@ export default function () {
                 drawTools.appendRectangularClass(renderingElement, 84, 84, ["white", "embedded"]);
                 drawTools.appendRectangularClass(renderingElement, 80 - CIRCLE_SIZE_DIFFERENCE, 80 - CIRCLE_SIZE_DIFFERENCE, cssClasses, that.labelForCurrentLanguage(), bgColor);
             } else {
-                drawTools.appendCircularClass(renderingElement, that.actualRadius(), ["white", "embedded"]);
-                drawTools.appendCircularClass(renderingElement, that.actualRadius() - CIRCLE_SIZE_DIFFERENCE, cssClasses, that.labelForCurrentLanguage(), bgColor);
+                drawTools.appendCircularClass(renderingElement, that.smallestRadius, ["white", "embedded"]);
+                drawTools.appendCircularClass(renderingElement, that.smallestRadius - CIRCLE_SIZE_DIFFERENCE, cssClasses, that.labelForCurrentLanguage(), bgColor);
             }
             that.postDrawActions();
         };
@@ -69,7 +69,7 @@ export default function () {
          * @param enable
          */
         that.setHoverHighlighting = function (enable) {
-            that.nodeElement().selectAll("circle:last-of-type").classed("hovered", enable);
+            that.nodeElement.selectAll("circle:last-of-type").classed("hovered", enable);
         };
     };
     o.prototype = Object.create(RoundNode.prototype);

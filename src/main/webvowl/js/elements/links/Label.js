@@ -6,24 +6,24 @@ export default Label;
  * @param property the property; the inverse is inferred
  * @param link the link this label belongs to
  */
-function Label( property, link ){
-  this.link = function (){
+function Label(property, link) {
+  this.link = function () {
     return link;
   };
-  
-  this.property = function (){
+
+  this.property = function () {
     return property;
   };
-  
+
   // "Forward" the fixed value set on the property to avoid having to access this container
   Object.defineProperty(this, "fixed", {
-    get: function (){
+    get: function () {
       var inverseFixed = property.inverse() ? property.inverse().fixed : false;
       return property.fixed || inverseFixed;
     },
-    set: function ( v ){
+    set: function (v) {
       property.fixed = v;
-      if ( property.inverse() ) property.inverse().fixed = v;
+      if (property.inverse()) property.inverse().fixed = v;
     }
   });
   this.frozen = property.frozen;
@@ -31,32 +31,32 @@ function Label( property, link ){
   this.pinned = property.pinned;
 }
 
-Label.prototype.actualRadius = function (){
-  return this.property().actualRadius();
+Label.prototype.actualRadius = function () {
+  return this.property().smallestRadius;
 };
 
-Label.prototype.draw = function ( container ){
+Label.prototype.draw = function (container) {
   return this.property().draw(container);
 };
 
-Label.prototype.inverse = function (){
+Label.prototype.inverse = function () {
   return this.property().inverse();
 };
 
-Label.prototype.equals = function ( other ){
-  if ( !other ) {
+Label.prototype.equals = function (other) {
+  if (!other) {
     return false;
   }
-  
+
   var instance = other instanceof Label;
   var equalProperty = this.property().equals(other.property());
-  
+
   var equalInverse = false;
-  if ( this.inverse() ) {
+  if (this.inverse()) {
     equalInverse = this.inverse().equals(other.inverse());
-  } else if ( !other.inverse() ) {
+  } else if (!other.inverse()) {
     equalInverse = true;
   }
-  
+
   return instance && equalProperty && equalInverse;
 };

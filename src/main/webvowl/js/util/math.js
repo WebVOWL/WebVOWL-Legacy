@@ -69,11 +69,11 @@ export default (function () {
     var arcFrom = calculateRadian(startAngle),
       arcTo = calculateRadian(endAngle),
 
-      x1 = Math.cos(arcFrom) * node.actualRadius(),
-      y1 = Math.sin(arcFrom) * node.actualRadius(),
+      x1 = Math.cos(arcFrom) * node.smallestRadius,
+      y1 = Math.sin(arcFrom) * node.smallestRadius,
 
-      x2 = Math.cos(arcTo) * node.actualRadius(),
-      y2 = Math.sin(arcTo) * node.actualRadius(),
+      x2 = Math.cos(arcTo) * node.smallestRadius,
+      y2 = Math.sin(arcTo) * node.smallestRadius,
 
       fixPoint1 = { "x": node.x + x1, "y": node.y + y1 },
       fixPoint2 = { "x": node.x + x2, "y": node.y + y2 };
@@ -103,11 +103,11 @@ export default (function () {
     var arcFrom = calculateRadian(startAngle),
       arcTo = calculateRadian(endAngle),
 
-      x1 = Math.cos(arcFrom) * node.actualRadius(),
-      y1 = Math.sin(arcFrom) * node.actualRadius(),
+      x1 = Math.cos(arcFrom) * node.smallestRadius,
+      y1 = Math.sin(arcFrom) * node.smallestRadius,
 
-      x2 = Math.cos(arcTo) * node.actualRadius(),
-      y2 = Math.sin(arcTo) * node.actualRadius(),
+      x2 = Math.cos(arcTo) * node.smallestRadius,
+      y2 = Math.sin(arcTo) * node.smallestRadius,
 
       fixPoint1 = { "x": node.x + x1, "y": node.y + y1 },
       fixPoint2 = { "x": node.x + x2, "y": node.y + y2 };
@@ -134,11 +134,11 @@ export default (function () {
     var arcFrom = calculateRadian(startAngle),
       arcTo = calculateRadian(endAngle),
 
-      x1 = Math.cos(arcFrom) * node.actualRadius(),
-      y1 = Math.sin(arcFrom) * node.actualRadius(),
+      x1 = Math.cos(arcFrom) * node.smallestRadius,
+      y1 = Math.sin(arcFrom) * node.smallestRadius,
 
-      x2 = Math.cos(arcTo) * (node.actualRadius()),
-      y2 = Math.sin(arcTo) * (node.actualRadius()),
+      x2 = Math.cos(arcTo) * (node.smallestRadius),
+      y2 = Math.sin(arcTo) * (node.smallestRadius),
 
       fixPoint1 = { "x": node.x + x1, "y": node.y + y1 },
       fixPoint2 = { "x": node.x + x2, "y": node.y + y2 };

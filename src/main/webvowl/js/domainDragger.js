@@ -189,8 +189,8 @@ export default function (graph) {
         var nY = dir_Y / len;
 
 
-        var ep_range_x = dex + nX * Domain_dragger.parent.domain().actualRadius();
-        var ep_range_y = dey + nY * Domain_dragger.parent.domain().actualRadius();
+        var ep_range_x = dex + nX * Domain_dragger.parent.domain().smallestRadius;
+        var ep_range_y = dey + nY * Domain_dragger.parent.domain().smallestRadius;
 
         var angle = Math.atan2(ep_range_y - range_y, ep_range_x - range_x) * 180 / Math.PI;
 

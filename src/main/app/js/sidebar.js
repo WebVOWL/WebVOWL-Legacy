@@ -390,7 +390,7 @@ export default function (graph) {
         listNodeArray(equivalentIriSpan, node.equivalents);
 
         d3.select("#typeNode").text(node.type);
-        listNodeArray(d3.select("#individuals"), node.individuals());
+        listNodeArray(d3.select("#individuals"), node.individuals);
 
         /* Disjoint stuff. */
         var disjointNodes = d3.select("#disjointNodes");
@@ -481,7 +481,7 @@ export default function (graph) {
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-name", "warn_ExpandRightBarAnimation");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-duration", "0.5s");
             }
-            graph.options().width(window.innerWidth - (window.innerWidth * 0.22));
+            graph.options().width() = window.innerWidth - (window.innerWidth * 0.22);
             graph.options().navigationMenu().updateScrollButtonVisibility();
         }
         if (val === 0) {
@@ -513,7 +513,7 @@ export default function (graph) {
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-duration", "0.5s");
 
             }
-            graph.options().width(window.innerWidth);
+            graph.options().width() = window.innerWidth;
             graph.updateCanvasContainerSize();
             graph.options().navigationMenu().updateScrollButtonVisibility();
         }

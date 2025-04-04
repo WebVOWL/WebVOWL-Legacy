@@ -6,22 +6,21 @@ export class BaseNode extends BaseElement {
         this.complement     // Array<string> | undefined
         this.disjointUnion  // Array<string> | undefined
         this.disjointWith   // Array<string> | undefined
-        this.individuals = []
+        this.individuals = [] // Array<BaseNode>
         this.intersection   // Array<string> | undefined
         this.union          // Array<string> | undefined
-        this.links
+        this.links          // Array<Link>
         this.rendertype = "round"
 
         // Additional attributes
-        this.maxIndividualCount
-        this.fobj // foreigner object for editing
+        this.foreignerObject // foreigner object for editing
         this.ignoreLocalHoverEvents = false
         this.backupFullIri
 
         // Element containers
-        this.nodeElement
+        this.nodeElement    // HTMLElement | undefined
 
-        // array to store my properties; // we will need this also later for semantic zooming stuff
+        // Editing attributes
         this.assignedProperties = []
         this.editingTextElement = false
     }
@@ -93,15 +92,15 @@ export class BaseNode extends BaseElement {
 
     raiseDoubleClickEdit(forceIRISync) {
         d3.selectAll(".foreignelements").remove();
-        if (nodeElement === undefined || this.type === "owl:Thing" || this.type === "rdfs:Literal") {
+        if (this.nodeElement === undefined || this.type === "owl:Thing" || this.type === "rdfs:Literal") {
             console.log("No Container found");
             return;
         }
-        if (fobj !== undefined) {
-            nodeElement.selectAll(".foreignelements").remove();
+        if (this.foreignerObject !== undefined) {
+            this.nodeElement.selectAll(".foreignelements").remove();
         }
 
-        backupFullIri = undefined;
+        this.backupFullIri = undefined;
         graph.options().focuserModule().handle(undefined);
         graph.options().focuserModule().handle(this);
         // add again the editing elements to this one
@@ -109,11 +108,11 @@ export class BaseNode extends BaseElement {
             graph.activateHoverElements(true, this, true);
         }
         this.editingTextElement = true;
-        ignoreLocalHoverEvents = true;
-        this.nodeElement().selectAll("circle").classed("hoveredForEditing", true);
+        this.ignoreLocalHoverEvents = true;
+        this.nodeElement.selectAll("circle").classed("hoveredForEditing", true);
         graph.killDelayedTimer();
         graph.ignoreOtherHoverEvents(false);
-        fobj = nodeElement.append("foreignObject")
+        this.foreignerObject = this.nodeElement.append("foreignObject")
             .attr("x", -0.5 * (this.textWidth() - 2))
             .attr("y", -12)
             .attr("height", 30)
@@ -123,7 +122,7 @@ export class BaseNode extends BaseElement {
             })
             .attr("width", this.textWidth() - 2);
 
-        var editText = fobj.append("xhtml:input")
+        var editText = this.foreignerObject.append("xhtml:input")
             .attr("class", "nodeEditSpan")
             .attr("id", this.id)
             .attr("align", "center")
@@ -175,7 +174,7 @@ export class BaseNode extends BaseElement {
                     var labelName = editText.node().value;
                     var resourceName = labelName.replaceAll(" ", "_");
                     var syncedIRI = this.baseIri + resourceName;
-                    backupFullIri = syncedIRI;
+                    this.backupFullIri = syncedIRI;
 
                     d3.select("#element_iriEditor").node().title = syncedIRI;
                     d3.select("#element_iriEditor").node().value = graph.options().prefixModule().getPrefixRepresentationForFullURI(syncedIRI);
@@ -184,10 +183,10 @@ export class BaseNode extends BaseElement {
             })
             .on("blur", function () { // add a foreiner element to this thing;
                 this.editingTextElement = false;
-                ignoreLocalHoverEvents = false;
-                this.nodeElement().selectAll("circle").classed("hoveredForEditing", false);
+                this.ignoreLocalHoverEvents = false;
+                this.nodeElement.selectAll("circle").classed("hoveredForEditing", false);
                 var newLabel = editText.node().value;
-                nodeElement.selectAll(".foreignelements").remove();
+                this.nodeElement.selectAll(".foreignelements").remove();
                 // this.setLabelForCurrentLanguage(classNameConvention(editText.node().value));
                 this.label = newLabel;
                 this.backupLabel = newLabel;
@@ -196,14 +195,14 @@ export class BaseNode extends BaseElement {
                 this.locked = graph.paused();
                 graph.ignoreOtherHoverEvents(false);
                 // console.log("Calling blur on Node!");
-                if (backupFullIri) {
-                    var sanityCheckResult = graph.checkIfIriClassAlreadyExist(backupFullIri);
+                if (this.backupFullIri) {
+                    const sanityCheckResult = graph.checkIfIriClassAlreadyExist(this.backupFullIri);
                     if (sanityCheckResult === false) {
-                        this.iri = backupFullIri;
+                        this.iri = this.backupFullIri;
                     } else {
-                        // throw warnign
+                        // throw warning
                         graph.options().warningModule().showWarning("Already seen this class",
-                            "Input IRI: " + backupFullIri + " for element: " + this.labelForCurrentLanguage() + " already been set",
+                            "Input IRI: " + this.backupFullIri + " for element: " + this.labelForCurrentLanguage() + " already been set",
                             "Restoring previous IRI for Element : " + this.iri, 2, false, sanityCheckResult);
                     }
                 }
@@ -212,42 +211,6 @@ export class BaseNode extends BaseElement {
                     graph.options().focuserModule().handle(this);
                 }
             });
-    }
-
-    individuals(p) {
-        if (!arguments.length) return individuals;
-        individuals = p || [];
-        return this;
-    }
-
-    intersection(p) {
-        if (!arguments.length) return intersection;
-        intersection = p;
-        return this;
-    }
-
-    links(p) {
-        if (!arguments.length) return links;
-        links = p;
-        return this;
-    }
-
-    maxIndividualCount(p) {
-        if (!arguments.length) return maxIndividualCount;
-        maxIndividualCount = p;
-        return this;
-    }
-
-    nodeElement(p) {
-        if (!arguments.length) return nodeElement;
-        nodeElement = p;
-        return this;
-    }
-
-    union(p) {
-        if (!arguments.length) return union;
-        union = p;
-        return this;
     }
 
     /**
@@ -273,19 +236,19 @@ export class BaseNode extends BaseElement {
     // Reused functions TODO refactor
     addMouseListeners() {
         // Empty node
-        if (!this.nodeElement()) {
+        if (!this.nodeElement) {
             console.warn(this);
             return;
         }
-        this.nodeElement().selectAll("*")
+        this.nodeElement.selectAll("*")
             .on("mouseover", _onMouseOver)
             .on("mouseout", _onMouseOut);
     }
 
     animationProcess() {
         var animRuns = false;
-        if (this.getHalos()) {
-            var haloGr = this.getHalos();
+        if (this.haloGroupElement) {
+            var haloGr = this.haloGroupElement;
             var haloEls = haloGr.selectAll(".searchResultA");
             animRuns = haloGr.attr("animationRunning");
             if (typeof animRuns !== "boolean") {
@@ -301,7 +264,7 @@ export class BaseNode extends BaseElement {
     }
 
     foreground() {
-        var selectedNode = this.nodeElement().node(), nodeContainer = selectedNode.parentNode;
+        var selectedNode = this.nodeElement.node(), nodeContainer = selectedNode.parentNode;
         // check if the halo is present and an animation is running
         if (this.animationProcess() === false) {
             // Append hovered element as last child to the container list.
@@ -310,11 +273,11 @@ export class BaseNode extends BaseElement {
     }
 
     _onMouseOver() {
-        if (this.mouseEntered || ignoreLocalHoverEvents === true) {
+        if (this.mouseEntered || this.ignoreLocalHoverEvents === true) {
             return;
         }
 
-        var selectedNode = this.nodeElement().node(), nodeContainer = selectedNode.parentNode;
+        var selectedNode = this.nodeElement.node(), nodeContainer = selectedNode.parentNode;
 
         // Append hovered element as last child to the container list.
         if (this.animationProcess() === false) {

@@ -115,8 +115,8 @@ export default function (graph) {
     var arrayOfNodes = [];
     var arrayOfUnionNodes = [];
 
-    if (node.union()) {
-      var union = node.union();
+    if (node.union) {
+      var union = node.union;
       for (var u = 0; u < union.length; u++) {
         var u_node = Map_ID2Node[union[u]];
         arrayOfUnionNodes.push(u_node);
