@@ -223,7 +223,7 @@ export default function (graph) {
     var myProperties = [];
     var i;
     for (i = 0; i < allProps.length; i++) {
-      if (allProps[i].domain() === node &&
+      if (allProps[i].domain === node &&
         (allProps[i].type === "rdfs:subClassOf" ||
           allProps[i].type === "owl:allValuesFrom" ||
           allProps[i].type === "owl:someValuesFrom")
@@ -231,7 +231,7 @@ export default function (graph) {
         myProperties.push(allProps[i]);
       }
       // special case disjoint with>> both domain and range get that property
-      if ((allProps[i].domain() === node) &&
+      if ((allProps[i].domain === node) &&
         allProps[i].type === "owl:disjointWith") {
         myProperties.push(allProps[i]);
       }
@@ -244,8 +244,8 @@ export default function (graph) {
       if (myProperties[i].type === "owl:someValuesFrom") {
         objectDef += indent + " rdfs:subClassOf [ rdf:type owl:Restriction ; \r\n";
         objectDef += indent + "                   owl:onProperty " + myProperties[i].prefixRepresentation + ";\r\n";
-        if (myProperties[i].range().type !== "owl:Thing") {
-          objectDef += indent + "                   owl:someValuesFrom " + myProperties[i].range().prefixRepresentation + "\r\n";
+        if (myProperties[i].range.type !== "owl:Thing") {
+          objectDef += indent + "                   owl:someValuesFrom " + myProperties[i].range.prefixRepresentation + "\r\n";
         }
         objectDef += indent + "                 ];\r\n";
         continue;
@@ -254,16 +254,16 @@ export default function (graph) {
       if (myProperties[i].type === "owl:allValuesFrom") {
         objectDef += indent + " rdfs:subClassOf [ rdf:type owl:Restriction ; \r\n";
         objectDef += indent + "                   owl:onProperty " + myProperties[i].prefixRepresentation + ";\r\n";
-        if (myProperties[i].range().type !== "owl:Thing") {
-          objectDef += indent + "                   owl:allValuesFrom " + myProperties[i].range().prefixRepresentation + "\r\n";
+        if (myProperties[i].range.type !== "owl:Thing") {
+          objectDef += indent + "                   owl:allValuesFrom " + myProperties[i].range.prefixRepresentation + "\r\n";
         }
         objectDef += indent + "                 ];\r\n";
         continue;
       }
 
-      if (myProperties[i].range().type !== "owl:Thing") {
+      if (myProperties[i].range.type !== "owl:Thing") {
         objectDef += indent + " " + myProperties[i].prefixRepresentation +
-          " " + myProperties[i].range().prefixRepresentation + " ;\r\n";
+          " " + myProperties[i].range.prefixRepresentation + " ;\r\n";
 
 
       }
@@ -305,17 +305,17 @@ export default function (graph) {
     }
     var indent = getIndent(subject);
 
-    if (property.inverse()) {
+    if (property.inverse) {
       objectDef += "; \r\n";
-      objectDef += indent + " owl:inverseOf " + property.inverse().prefixRepresentation;
+      objectDef += indent + " owl:inverseOf " + property.inverse.prefixRepresentation;
     }
 
     // check for domain and range;
 
 
     var closeStatement = false;
-    var domain = property.domain();
-    var range = property.range();
+    var domain = property.domain;
+    var range = property.range;
 
 
     objectDef += " ;\r\n";
@@ -326,8 +326,8 @@ export default function (graph) {
       objectDef += indent + " rdfs:comment \"" + property.commentForCurrentLanguage() + "\" ;\r\n";
     }
 
-    if (property.superproperties()) {
-      var superProps = property.superproperties();
+    if (property.superproperties) {
+      var superProps = property.superproperties;
       for (var sP = 0; sP < superProps.length; sP++) {
         var sPelement = superProps[sP];
         objectDef += indent + "rdfs:subPropertyOf " + sPelement.prefixRepresentation + ";\r\n";

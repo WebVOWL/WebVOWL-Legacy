@@ -59,8 +59,8 @@ export default function () {
       }
 
       seenProperties.add(property);
-      if (property.inverse()) {
-        seenProperties.add(property.inverse());
+      if (property.inverse) {
+        seenProperties.add(property.inverse);
       }
     }
   }
@@ -126,7 +126,7 @@ export default function () {
 
     // and count properties this property represents
     count += countElementArray(property.equivalents);
-    count += countElementArray(property.redundantProperties());
+    count += countElementArray(property.redundantProperties);
 
     return count;
   }

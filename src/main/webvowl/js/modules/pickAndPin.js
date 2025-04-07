@@ -26,7 +26,7 @@ export default function () {
       }
     }
     if (elementTools.isProperty(selection)) {
-      if (selection.inverse() && selection.inverse().pinned) {
+      if (selection.inverse && selection.inverse.pinned) {
         return;
       } else if (hasNoParallelProperties(selection)) {
         return;
@@ -44,7 +44,7 @@ export default function () {
   }
 
   function hasNoParallelProperties(property) {
-    return _.intersection = property.domain().links, property.range().links.length === 1;
+    return _.intersection = property.domain.links, property.range.links.length === 1;
   }
 
   pap.enabled = function (p) {

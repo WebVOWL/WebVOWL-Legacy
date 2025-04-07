@@ -2,79 +2,79 @@ import elementToolsFactory from '../util/elementTools';
 const elementTools = elementToolsFactory();
 
 
-export default function (){
-  
+export default function () {
+
   var filter = {},
     nodes,
     properties,
     enabled = false,
     filteredNodes,
     filteredProperties;
-  
-  
+
+
   /**
    * If enabled, all object properties and things without any other property are filtered.
    * @param untouchedNodes
    * @param untouchedProperties
    */
-  filter.filter = function ( untouchedNodes, untouchedProperties ){
+  filter.filter = function (untouchedNodes, untouchedProperties) {
     nodes = untouchedNodes;
     properties = untouchedProperties;
-    
-    if ( this.enabled() ) {
+
+    if (this.enabled()) {
       removeObjectProperties();
     }
-    
+
     filteredNodes = nodes;
     filteredProperties = properties;
   };
-  
-  function removeObjectProperties(){
+
+  function removeObjectProperties() {
     properties = properties.filter(isNoObjectProperty);
     nodes = nodes.filter(isNoFloatingThing);
   }
-  
-  function isNoObjectProperty( property ){
+
+  function isNoObjectProperty(property) {
     return !elementTools.isObjectProperty(property);
   }
-  
-  function isNoFloatingThing( node ){
+
+  function isNoFloatingThing(node) {
     var isNoThing = !elementTools.isThing(node);
     var hasNonFilteredProperties = hasPropertiesOtherThanObjectProperties(node, properties);
     return isNoThing || hasNonFilteredProperties;
   }
-  
-  function hasPropertiesOtherThanObjectProperties( node, properties ){
-    for ( var i = 0; i < properties.length; i++ ) {
+
+  function hasPropertiesOtherThanObjectProperties(node, properties) {
+    for (var i = 0; i < properties.length; i++) {
       var property = properties[i];
-      if ( property.domain() !== node && property.range() !== node ) {
+      if (property.domain !== node && property.range !== node) {
         continue;
       }
-      
-      if ( isNoObjectProperty(property) ) {
+
+      if (isNoObjectProperty(property)) {
         return true;
       }
     }
-    
+
     return false;
   }
-  
-  filter.enabled = function ( p ){
-    if ( !arguments.length ) return enabled;
+
+  filter.enabled = function (p) {
+    if (!arguments.length) return enabled;
     enabled = p;
     return filter;
   };
-  
-  
+
+
   // Functions a filter must have
-  filter.filteredNodes = function (){
+  filter.filteredNodes = function () {
     return filteredNodes;
   };
-  
-  filter.filteredProperties = function (){
+
+  filter.filteredProperties = function () {
     return filteredProperties;
   };
-  
-  
+
+
   return filter;
 };

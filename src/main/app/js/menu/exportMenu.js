@@ -579,24 +579,24 @@ export default function (graph) {
             if (properties[i].annotations) {
                 pAttr.annotations = properties[i].annotations;
             }
-            if (properties[i].maxCardinality()) {
-                pAttr.maxCardinality = properties[i].maxCardinality();
+            if (properties[i].maxCardinality) {
+                pAttr.maxCardinality = properties[i].maxCardinality;
             }
-            if (properties[i].minCardinality()) {
-                pAttr.minCardinality = properties[i].minCardinality();
+            if (properties[i].minCardinality) {
+                pAttr.minCardinality = properties[i].minCardinality;
             }
-            if (properties[i].cardinality()) {
-                pAttr.cardinality = properties[i].cardinality();
+            if (properties[i].cardinality) {
+                pAttr.cardinality = properties[i].cardinality;
             }
             if (properties[i].description) {
                 pAttr.description = properties[i].description;
             }
 
-            pAttr.domain = properties[i].domain().id;
-            pAttr.range = properties[i].range().id;
+            pAttr.domain = properties[i].domain.id;
+            pAttr.range = properties[i].range.id;
             // sub properties;
-            if (properties[i].subproperties()) {
-                var subProps = properties[i].subproperties();
+            if (properties[i].subproperties) {
+                var subProps = properties[i].subproperties;
                 var subPropsIdArray = [];
                 for (j = 0; j < subProps.length; j++) {
                     if (subProps[j].id)
@@ -606,8 +606,8 @@ export default function (graph) {
             }
 
             // super properties
-            if (properties[i].superproperties()) {
-                var superProps = properties[i].superproperties();
+            if (properties[i].superproperties) {
+                var superProps = properties[i].superproperties;
                 var superPropsIdArray = [];
                 for (j = 0; j < superProps.length; j++) {
                     if (superProps[j].id)
@@ -617,9 +617,9 @@ export default function (graph) {
             }
 
             // check for inverse element
-            if (properties[i].inverse()) {
-                if (properties[i].inverse().id)
-                    pAttr.inverse = properties[i].inverse().id;
+            if (properties[i].inverse) {
+                if (properties[i].inverse.id)
+                    pAttr.inverse = properties[i].inverse.id;
             }
             propertyAttributeObjects.push(pAttr);
         }
@@ -969,17 +969,17 @@ export default function (graph) {
             var arrowType = "triangleBlack";
             var linkWidth = ",line width=2pt";
             if (prop.linkType) {
-                if (prop.linkType() === "dotted") {
+                if (prop.linkType === "dotted") {
                     //stroke-dasharray: 3;
                     linkStyle = ", dotted ";
                     arrowType = "triangleWhite";
                 }
-                if (prop.linkType() === "dashed") {
+                if (prop.linkType === "dashed") {
                     //stroke-dasharray: 3;
                     linkStyle = ", dashed ";
                 }
 
-                if (prop.linkType() === "values-from") {
+                if (prop.linkType === "values-from") {
                     colorStr = "valuesFrom";
                 }
 
@@ -989,8 +989,8 @@ export default function (graph) {
 
             if (link.layerSize === 1 && !link.loops()) {
 
-                linkDomainIntersection = graph.math().calculateIntersection(link.range(), link.domain(), 1);
-                linkRangeIntersection = graph.math().calculateIntersection(link.domain(), link.range(), 1);
+                linkDomainIntersection = graph.math().calculateIntersection(link.range, link.domain, 1);
+                linkRangeIntersection = graph.math().calculateIntersection(link.domain, link.range, 1);
                 center = graph.math().calculateCenter(linkDomainIntersection, linkRangeIntersection);
                 dx = linkDomainIntersection.x;
                 dy = -linkDomainIntersection.y;
@@ -1026,8 +1026,8 @@ export default function (graph) {
                     pathEnd = controlPoints[2];
                 } else {
                     curvePoint = link.label;
-                    pathStart = graph.math().calculateIntersection(curvePoint, link.domain(), 1);
-                    pathEnd = graph.math().calculateIntersection(curvePoint, link.range(), 1);
+                    pathStart = graph.math().calculateIntersection(curvePoint, link.domain, 1);
+                    pathEnd = graph.math().calculateIntersection(curvePoint, link.range, 1);
                 }
                 dx = pathStart.x;
                 dy = -pathStart.y;
@@ -1041,7 +1041,7 @@ export default function (graph) {
                 dx + "pt, " + dy + "pt) (" + px + "pt, " + py + "pt)  (" + rx + "pt, " + ry + "pt)};\n";
 
 
-            if (link.property().markerElement() === undefined) continue;
+            if (link.property().markerElement === undefined) continue;
 
             // add arrow head;
 
@@ -1114,7 +1114,7 @@ export default function (graph) {
             }
 
 
-            if (link.property().inverse()) {
+            if (link.property().inverse) {
                 lg = link.pathObj();
                 pathLen = Math.floor(lg.node().getTotalLength());
                 var p1_inv = lg.node().getPointAtLength(4);
@@ -1132,7 +1132,7 @@ export default function (graph) {
 
                 ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
                 ahAngle -= 90;
-                //   console.log("INV>>\n "+link.property().inverse().labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
+                //   console.log("INV>>\n "+link.property().inverse.labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
                 rx = markerCenter_inv.x;
                 ry = markerCenter_inv.y;
                 if (link.layerSize === 1 && !link.loops()) {
@@ -1165,7 +1165,7 @@ export default function (graph) {
             }
             var textColorStr = "";
             if (node.textBlock) {
-                var txtColor = node.textBlock()._textBlock().style("fill");
+                var txtColor = node.textBlock._textBlock().style("fill");
                 if (txtColor === "rgb(0, 0, 0)") {
                     textColorStr = ", text=black";
                 }
@@ -1174,7 +1174,7 @@ export default function (graph) {
                 }
 
 
-                var tspans = node.textBlock()._textBlock().node().children;
+                var tspans = node.textBlock._textBlock().node().children;
                 if (tspans[0]) {
                     identifier = tspans[0].innerHTML;
                     if (node.individuals && node.individuals.length === parseInt(tspans[0].innerHTML)) {
@@ -1285,8 +1285,8 @@ export default function (graph) {
             identifier = correspondingProp.labelForCurrentLanguage();
             if (identifier === undefined) identifier = "";
             var textColorStr = "";
-            if (correspondingProp.textBlock && correspondingProp.textBlock()) {
-                var txtColor = correspondingProp.textBlock()._textBlock().style("fill");
+            if (correspondingProp.textBlock && correspondingProp.textBlock) {
+                var txtColor = correspondingProp.textBlock._textBlock().style("fill");
                 //  console.log("PropertyTextColor="+txtColor);
                 if (txtColor === "rgb(0, 0, 0)") {
                     textColorStr = ", text=black";
@@ -1294,9 +1294,9 @@ export default function (graph) {
                 if (txtColor === "rgb(255, 255, 255)") {
                     textColorStr = ", text=white";
                 }
-                var tspans = correspondingProp.textBlock()._textBlock().node().children;
+                var tspans = correspondingProp.textBlock._textBlock().node().children;
 
-                // identifier=node.textBlock()._textBlock().text();
+                // identifier=node.textBlock._textBlock().text();
                 // console.log(tspans);
                 if (tspans[0]) {
                     identifier = tspans[0].innerHTML;
@@ -1366,18 +1366,18 @@ export default function (graph) {
             }
 
 
-            if (correspondingProp.inverse()) {
-                var inv_correspondingProp = correspondingProp.inverse();
+            if (correspondingProp.inverse) {
+                var inv_correspondingProp = correspondingProp.inverse;
                 // create the rendering element for the inverse property;
                 var inv_identifier = inv_correspondingProp.labelForCurrentLanguage();
                 if (inv_identifier === undefined) inv_identifier = "";
                 var inv_textColorStr = "";
                 //console.log(inv_correspondingProp);
-                //console.log(inv_correspondingProp.textBlock());
+                //console.log(inv_correspondingProp.textBlock);
 
-                if (inv_correspondingProp.textBlock && inv_correspondingProp.textBlock()) {
+                if (inv_correspondingProp.textBlock && inv_correspondingProp.textBlock) {
 
-                    var inv_txtColor = inv_correspondingProp.textBlock()._textBlock().style("fill");
+                    var inv_txtColor = inv_correspondingProp.textBlock._textBlock().style("fill");
                     //  console.log("PropertyTextColor="+inv_txtColor);
                     if (inv_txtColor === "rgb(0, 0, 0)") {
                         inv_textColorStr = ", text=black";
@@ -1385,9 +1385,9 @@ export default function (graph) {
                     if (inv_txtColor === "rgb(255, 255, 255)") {
                         inv_textColorStr = ", text=white";
                     }
-                    var inv_tspans = inv_correspondingProp.textBlock()._textBlock().node().children;
+                    var inv_tspans = inv_correspondingProp.textBlock._textBlock().node().children;
 
-                    // identifier=node.textBlock()._textBlock().text();
+                    // identifier=node.textBlock._textBlock().text();
                     //  console.log(inv_tspans);
                     if (inv_tspans[0]) {
                         inv_identifier = inv_tspans[0].innerHTML;

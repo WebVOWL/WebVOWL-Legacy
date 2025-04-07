@@ -46,7 +46,7 @@ export default (function () {
 
 
   math.getLoopPoints = function (link) {
-    var node = link.domain(),
+    var node = link.domain,
       label = link.label;
 
     var fairShareLoopAngle = 360 / link.loops().length,
@@ -81,7 +81,7 @@ export default (function () {
     return [fixPoint1, fixPoint2];
   };
   math.calculateLoopPath = function (link) {
-    var node = link.domain(),
+    var node = link.domain,
       label = link.label;
 
 
@@ -116,7 +116,7 @@ export default (function () {
   };
 
   math.calculateLoopPoints = function (link) {
-    var node = link.domain(),
+    var node = link.domain,
       label = link.label;
 
     var fairShareLoopAngle = 360 / link.loops().length,

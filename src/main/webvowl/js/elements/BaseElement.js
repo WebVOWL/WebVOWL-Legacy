@@ -9,18 +9,18 @@ export class BaseElement {
 
         // Basic attributes
         this.equivalents = []
-        this.id         // string
-        this.label      // string
-        this.type       // string
-        this.iri        // string
-        this.baseIri    // string
+        this.id         // String
+        this.label      // String
+        this.type       // String
+        this.iri        // String
+        this.baseIri    // String
 
         // Additional attributes
         this.annotations        // Array
         this.attributes = []    // Array
-        this.backgroundColor    // string | undefined | null
-        this.comment            // string | undefined
-        this.description        // string | undefined
+        this.backgroundColor    // String | undefined | null
+        this.comment            // String | undefined
+        this.description        // String | undefined
         this.equivalentBase     // Node | Property
         this.visualAttributes = []
 
@@ -28,9 +28,9 @@ export class BaseElement {
         this.focused = false
         this.indications = []   // Array
         this.mouseEntered = false
-        this.styleClass         // string | undefined
+        this.styleClass         // String | undefined
         this.visible = true
-        this.backupLabel        // string | undefined
+        this.backupLabel        // String | undefined
 
         // Force layout attributes
         this._locked = false
@@ -39,7 +39,7 @@ export class BaseElement {
         this._pinned = false
     }
 
-    _applyFixedLocationAttributes() {
+    #applyFixedLocationAttributes() {
         node.fixed = node.locked || node.frozen || node.pinned;
     }
 
@@ -54,7 +54,7 @@ export class BaseElement {
 
     set locked(p) {
         this._locked = p;
-        this._applyFixedLocationAttributes();
+        this.#applyFixedLocationAttributes();
     };
 
     get frozen() {
@@ -63,7 +63,7 @@ export class BaseElement {
 
     set frozen(p) {
         this._frozen = p;
-        this._applyFixedLocationAttributes();
+        this.#applyFixedLocationAttributes();
     };
 
     get halo() {
@@ -72,7 +72,7 @@ export class BaseElement {
 
     set halo(p) {
         this._halo = p;
-        this._applyFixedLocationAttributes();
+        this.#applyFixedLocationAttributes();
     };
 
     get pinned() {
@@ -81,15 +81,15 @@ export class BaseElement {
 
     set pinned(p) {
         this._pinned = p;
-        this._applyFixedLocationAttributes();
+        this.#applyFixedLocationAttributes();
     };
 
     commentForCurrentLanguage() {
-        return languageTools.textInLanguage(this.comment, graph.language());
+        return languageTools.textInLanguage(this.comment, this.graph.language());
     }
 
     descriptionForCurrentLanguage() {
-        return languageTools.textInLanguage(this.description, graph.language());
+        return languageTools.textInLanguage(this.description, this.graph.language());
     }
 
     defaultLabel() {
@@ -101,7 +101,7 @@ export class BaseElement {
     }
 
     labelForCurrentLanguage() {
-        const preferredLanguage = graph && graph.language ? graph.language() : null;
+        const preferredLanguage = graph && this.graph.language ? this.graph.language() : null;
         return languageTools.textInLanguage(this.label, preferredLanguage);
     }
 

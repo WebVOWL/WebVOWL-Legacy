@@ -34,52 +34,47 @@ export default function (graph) {
         if (Range_dragger.pathElement) Range_dragger.pathElement.classed("hidden", val);
         if (Range_dragger.nodeElement) Range_dragger.nodeElement.classed("hidden", val);
         if (Range_dragger.draggerObject) Range_dragger.draggerObject.classed("hidden", val);
-
-
     };
 
     Range_dragger.reDrawEverthing = function () {
         Range_dragger.setParentProperty(Range_dragger.parent);
     };
-    Range_dragger.updateRange = function (newRange) {
 
-        if (graph.genericPropertySanityCheck(Range_dragger.parent.domain(), newRange,
+    Range_dragger.updateRange = function (newRange) {
+        if (graph.genericPropertySanityCheck(Range_dragger.parent.domain, newRange,
             Range_dragger.parent.type,
             "Could not update range", "Restoring previous range") === false) return;
 
         // check for triple duplicates!
 
-        if (graph.propertyCheckExistenceChecker(Range_dragger.parent, Range_dragger.parent.domain(), newRange) === false)
+        if (graph.propertyCheckExistenceChecker(Range_dragger.parent, Range_dragger.parent.domain, newRange) === false)
             return;
-        if (Range_dragger.parent.labelElement() === undefined) return;
-        if (Range_dragger.parent.labelElement().attr("transform") === "translate(0,15)" ||
-            Range_dragger.parent.labelElement().attr("transform") === "translate(0,-15)") {
+        if (Range_dragger.parent.labelElement === undefined) return;
+        if (Range_dragger.parent.labelElement.attr("transform") === "translate(0,15)" ||
+            Range_dragger.parent.labelElement.attr("transform") === "translate(0,-15)") {
             var prop = Range_dragger.parent;
-            Range_dragger.parent.inverse().inverse(null);
-            Range_dragger.parent.inverse(null);
-            prop.range(newRange);
+            Range_dragger.parent.inverse.inverse = null;
+            Range_dragger.parent.inverse = null;
+            prop.range = newRange;
         }
-
         else {
-            Range_dragger.parent.range(newRange);
+            Range_dragger.parent.range = newRange;
         }
         // update the position of the new range
         var rX = newRange.x;
         var rY = newRange.y;
 
-        var dX = Range_dragger.parent.domain().x;
-        var dY = Range_dragger.parent.domain().y;
-
+        var dX = Range_dragger.parent.domain.x;
+        var dY = Range_dragger.parent.domain.y;
 
         // center
         var cX = 0.49 * (dX + rX);
         var cY = 0.49 * (dY + rY);
         // put position there;
-        Range_dragger.parent.labelElement().x = cX;
-        Range_dragger.parent.labelElement().px = cX;
-        Range_dragger.parent.labelElement().y = cY;
-        Range_dragger.parent.labelElement().py = cY;
-
+        Range_dragger.parent.labelElement.x = cX;
+        Range_dragger.parent.labelElement.px = cX;
+        Range_dragger.parent.labelElement.y = cY;
+        Range_dragger.parent.labelElement.py = cY;
     };
 
     Range_dragger.setParentProperty = function (parentProperty, inversed) {
@@ -87,11 +82,11 @@ export default function (graph) {
         var iP;
         var renElem;
         Range_dragger.isLoopProperty = false;
-        if (parentProperty.domain() === parentProperty.range()) Range_dragger.isLoopProperty = true;
+        if (parentProperty.domain === parentProperty.range) Range_dragger.isLoopProperty = true;
         Range_dragger.parent = parentProperty;
-        renElem = parentProperty.labelObject();
+        renElem = parentProperty.labelObject;
         if (inversed === true) {
-            if (parentProperty.labelElement() && parentProperty.labelElement().attr("transform") === "translate(0,15)") {
+            if (parentProperty.labelElement && parentProperty.labelElement.attr("transform") === "translate(0,15)") {
                 iP = renElem.linkDomainIntersection;
                 if (renElem.linkDomainIntersection) {
                     Range_dragger.x = iP.x;
@@ -194,8 +189,8 @@ export default function (graph) {
         var range_x = x;
         var range_y = y;
 
-        var dex = Range_dragger.parent.range().x;
-        var dey = Range_dragger.parent.range().y;
+        var dex = Range_dragger.parent.range.x;
+        var dey = Range_dragger.parent.range.y;
 
         var dir_X = x - dex;
         var dir_Y = y - dey;
@@ -206,8 +201,8 @@ export default function (graph) {
         var nY = dir_Y / len;
 
 
-        var ep_range_x = dex + nX * Range_dragger.parent.range().smallestRadius;
-        var ep_range_y = dey + nY * Range_dragger.parent.range().smallestRadius;
+        var ep_range_x = dex + nX * Range_dragger.parent.range.smallestRadius;
+        var ep_range_y = dey + nY * Range_dragger.parent.range.smallestRadius;
 
 
         var dx = range_x - ep_range_x;
@@ -228,13 +223,13 @@ export default function (graph) {
     Range_dragger.updateElement = function () {
         if (Range_dragger.mouseButtonPressed === true || Range_dragger.parent === undefined) return;
 
-        var range = Range_dragger.parent.range();
-        var iP = Range_dragger.parent.labelObject().linkRangeIntersection;
-        if (Range_dragger.parent.labelElement() === undefined) return;
+        var range = Range_dragger.parent.range;
+        var iP = Range_dragger.parent.labelObject.linkRangeIntersection;
+        if (Range_dragger.parent.labelElement === undefined) return;
         var offsetForLoop = 48;
-        if (Range_dragger.parent.labelElement().attr("transform") === "translate(0,15)") {
-            range = Range_dragger.parent.inverse().domain();
-            iP = Range_dragger.parent.labelObject().linkDomainIntersection;
+        if (Range_dragger.parent.labelElement.attr("transform") === "translate(0,15)") {
+            range = Range_dragger.parent.inverse.domain;
+            iP = Range_dragger.parent.labelObject.linkDomainIntersection;
             offsetForLoop = -48;
         }
 
@@ -326,8 +321,8 @@ export default function (graph) {
     };
 
     Range_dragger.setPosition = function (x, y) {
-        var range_x = Range_dragger.parent.domain().x;
-        var range_y = Range_dragger.parent.domain().y;
+        var range_x = Range_dragger.parent.domain.x;
+        var range_y = Range_dragger.parent.domain.y;
 
         // var position of the rangeEndPoint
         var ep_range_x = x;

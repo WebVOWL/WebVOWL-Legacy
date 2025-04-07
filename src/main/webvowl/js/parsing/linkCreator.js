@@ -23,11 +23,11 @@ export default (function () {
     for (var i = 0, l = links.length; i < l; i++) {
       var link = links[i];
 
-      const sortedKey = [link.domain().id, link.range().id].sort().join('|');
+      const sortedKey = [link.domain.id, link.range.id].sort().join('|');
       layerCounts.set(sortedKey, (layerCounts.get(sortedKey) || 0) + 1);
 
-      if (link.domain() === link.range()) {
-        const loopKey = link.domain();
+      if (link.domain === link.range) {
+        const loopKey = link.domain;
         const loops = loopMap.get(loopKey);
         if (loops) {
           loops.push(link);
@@ -39,12 +39,12 @@ export default (function () {
 
     for (var i = 0, l = links.length; i < l; i++) {
       var link = links[i];
-      const sortedKey = [link.domain().id, link.range().id].sort().join('|');
+      const sortedKey = [link.domain.id, link.range.id].sort().join('|');
       const layerCount = layerCounts.get(sortedKey);
       link.layerSize = layerCount;
 
-      if (link.domain() === link.range()) {
-        const loops = loopMap.get(link.domain());
+      if (link.domain === link.range) {
+        const loops = loopMap.get(link.domain);
         link.loops(loops);
         link.loopIndex(loops.findIndex((element) => element === link));
       }
@@ -69,16 +69,16 @@ export default (function () {
       if (!addedProperties.has(property)) {
         var link = createLink(property);
 
-        property.link(link);
-        if (property.inverse()) {
-          property.inverse().link(link);
+        property.link = link;
+        if (property.inverse) {
+          property.inverse.link = link;
         }
 
         links.push(link);
 
         addedProperties.add(property);
-        if (property.inverse()) {
-          addedProperties.add(property.inverse());
+        if (property.inverse) {
+          addedProperties.add(property.inverse);
         }
       }
     }
@@ -87,8 +87,8 @@ export default (function () {
   }
 
   function createLink(property) {
-    var domain = property.domain();
-    var range = property.range();
+    var domain = property.domain;
+    var range = property.range;
 
     if (property instanceof OwlDisjointWith) {
       return new PlainLink(domain, range, property);

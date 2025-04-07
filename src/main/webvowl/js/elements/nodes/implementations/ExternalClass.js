@@ -1,15 +1,10 @@
 import RoundNode from '../RoundNode';
 
-export default function () {
+export class ExternalClass extends RoundNode {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        RoundNode.apply(this, arguments);
-
-        this.attributes = ["external"];
-        this.type = "ExternalClass";
-    };
-    o.prototype = Object.create(RoundNode.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
+        this.attributes = ["external"]
+        this.type = "ExternalClass"
+    }
+}

@@ -309,19 +309,19 @@ export default function (graph) {
         let property = new Prototype(graph);
         property.annotations(element.annotations);
         property.baseIri = element.baseIri;
-        property.cardinality(element.cardinality);
+        property.cardinality = element.cardinality;
         property.comment = element.comment;
-        property.domain(element.domain);
+        property.domain = element.domain;
         property.description = element.description;
         property.equivalents = element.equivalent;
         property.id = element.id;
-        property.inverse(element.inverse);
+        property.inverse = element.inverse;
         property.label = element.label;
-        property.minCardinality(element.minCardinality);
-        property.maxCardinality(element.maxCardinality);
-        property.range(element.range);
-        property.subproperties(element.subproperty);
-        property.superproperties(element.superproperty);
+        property.minCardinality = element.minCardinality;
+        property.maxCardinality = element.maxCardinality;
+        property.range = element.range;
+        property.subproperties = element.subproperty;
+        property.superproperties = element.superproperty;
         // property.type=element.type; Ignore, because we predefined it
         property.iri = element.iri;
         if (element.pos) {
@@ -389,8 +389,8 @@ export default function (graph) {
             return;
         }
 
-        var domain = property.domain(),
-            range = property.range();
+        var domain = property.domain,
+            range = property.range;
 
         // Check the domain.
         if (!domain.disjointWith) {
@@ -402,8 +402,8 @@ export default function (graph) {
             range.disjointWith = [];
         }
 
-        domain.disjointWith.push(property.range());
-        range.disjointWith.push(property.domain());
+        domain.disjointWith.push(property.range);
+        range.disjointWith.push(property.domain);
     }
 
     /**
@@ -432,82 +432,80 @@ export default function (graph) {
 
             /* Skip properties that have no information about their domain and range, like
              inverse properties with optional inverse and optional domain and range attributes */
-            if ((property.domain() && property.range()) || property.inverse()) {
+            if ((property.domain && property.range) || property.inverse) {
 
-                var inversePropertyId = findId(property.inverse());
+                var inversePropertyId = findId(property.inverse);
                 // Look if an inverse property exists
                 if (inversePropertyId) {
                     inverse = propertyMap[inversePropertyId];
                     if (!inverse) {
                         console.warn("No inverse property was found for id: " + inversePropertyId);
-                        property.inverse(undefined);
+                        property.inverse = undefined;
                     }
                 }
 
                 // Either domain and range are set on this property or at the inverse
-                if (typeof property.domain() !== "undefined" && typeof property.range() !== "undefined") {
-                    domain = findId(property.domain());
-                    range = findId(property.range());
+                if (typeof property.domain !== "undefined" && typeof property.range !== "undefined") {
+                    domain = findId(property.domain);
+                    range = findId(property.range);
 
                     domainObject = classMap[domain];
                     rangeObject = classMap[range];
                 } else if (inverse) {
                     // Domain and range need to be switched
-                    domain = findId(inverse.range());
-                    range = findId(inverse.domain());
+                    domain = findId(inverse.range);
+                    range = findId(inverse.domain);
 
                     domainObject = classMap[domain];
                     rangeObject = classMap[range];
                 } else {
                     console.warn("Domain and range not found for property: " + property.id);
                 }
-
                 // Set the references on this property
-                property.domain(domainObject);
-                property.range(rangeObject);
+                property.domain = domainObject;
+                property.range = rangeObject;
 
                 // Also set the attributes of the inverse property
                 if (inverse) {
-                    property.inverse(inverse);
-                    inverse.inverse(property);
+                    property.inverse = inverse;
+                    inverse.inverse = property;
 
                     // Switch domain and range
-                    inverse.domain(rangeObject);
-                    inverse.range(domainObject);
+                    inverse.domain = rangeObject;
+                    inverse.range = domainObject;
                 }
             }
             // Reference sub- and superproperties
-            referenceSubOrSuperProperties(property.subproperties());
-            referenceSubOrSuperProperties(property.superproperties());
+            referenceSubOrSuperProperties(property.subproperties);
+            referenceSubOrSuperProperties(property.superproperties);
         });
 
         // Merge equivalent properties and process disjoints.
         rawProperties.forEach(function (property) {
             processEquivalentIds(property, propertyMap);
             processDisjoints(property);
-
             attributeParser.parsePropertyAttributes(property);
         });
+
         // Add additional information to the properties
         rawProperties.forEach(function (property) {
             // Properties of merged classes should point to/from the visible equivalent class
             var propertyWasRerouted = false;
-
-            if (property.domain() === undefined) {
+            if (property.domain === undefined) {
                 console.warn("No Domain was found for id:" + property.id);
                 return;
             }
 
-            if (wasNodeMerged(property.domain())) {
-                property.domain(property.domain().equivalentBase);
+            if (wasNodeMerged(property.domain)) {
+                property.domain = property.domain.equivalentBase;
                 propertyWasRerouted = true;
             }
-            if (property.range() === undefined) {
+            if (property.range === undefined) {
                 console.warn("No range was found for id:" + property.id);
                 return;
             }
-            if (wasNodeMerged(property.range())) {
-                property.range(property.range().equivalentBase);
+            if (wasNodeMerged(property.range)) {
+                property.range = property.range.equivalentBase;
                 propertyWasRerouted = true;
             }
 
@@ -516,12 +514,12 @@ export default function (graph) {
                 var equalProperty = getOtherEqualProperty(rawProperties, property);
                 if (equalProperty) {
                     property.visible = false;
-                    equalProperty.redundantProperties().push(property);
+                    equalProperty.redundantProperties.push(property);
                 }
             }
 
             // Hide property if source or target node is hidden
-            if (!property.domain().visible || !property.range().visible) {
+            if (!property.domain.visible || !property.range.visible) {
                 property.visible = false;
             }
 
@@ -566,8 +564,8 @@ export default function (graph) {
             if (referenceProperty === property) {
                 continue;
             }
-            if (referenceProperty.domain() !== property.domain() ||
-                referenceProperty.range() !== property.range()) {
+            if (referenceProperty.domain !== property.domain ||
+                referenceProperty.range !== property.range) {
                 continue;
             }
 

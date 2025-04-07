@@ -116,7 +116,7 @@ export class DrawTools {
         if (node.nodeElement)
             container = node.nodeElement;
         else
-            container = node.labelElement();
+            container = node.labelElement;
 
         if (!container) {
             // console.log("no container found");

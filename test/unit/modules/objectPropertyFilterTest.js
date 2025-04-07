@@ -33,7 +33,8 @@ describe("Filtering of object properties", function () {
 		var range = new OwlClass();
 		var objectProperty = new ObjectProperty();
 
-		objectProperty.domain(domain).range(range);
+		objectProperty.domain = domain
+		objectProperty.range = range;
 
 		filter.filter([domain, range], [objectProperty]);
 
@@ -46,7 +47,8 @@ describe("Filtering of object properties", function () {
 		var range = new OwlThing();
 		var objectProperty = new ObjectProperty();
 
-		objectProperty.domain(domain).range(range);
+		objectProperty.domain = domain
+		objectProperty.range = range;
 		var objectPropertyLink = new Link(domain, range, objectProperty);
 		domain.links = [objectPropertyLink];
 		range.links = [objectPropertyLink];
@@ -63,8 +65,12 @@ describe("Filtering of object properties", function () {
 		var objectProperty = new ObjectProperty();
 		var datatypeProperty = new DatatypeProperty();
 
-		objectProperty.domain(domain).range(range);
-		datatypeProperty.domain(domain).range(range);
+		objectProperty.domain = domain
+		objectProperty.range = range;
+
+		datatypeProperty.domain = domain
+		datatypeProperty.range = range;
+
 		var objectPropertyLink = new Link(domain, range, objectProperty);
 		var datatypePropertyLink = new Link(domain, range, datatypeProperty);
 		domain.links = [objectPropertyLink, datatypePropertyLink];

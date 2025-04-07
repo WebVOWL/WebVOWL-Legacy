@@ -13,7 +13,7 @@ ArrowLink.prototype.constructor = ArrowLink;
 
 ArrowLink.prototype.draw = function (linkGroup, markerContainer) {
   var property = this.label.property();
-  var inverse = this.label.inverse();
+  var inverse = this.label.inverse;
 
   createPropertyMarker(markerContainer, property);
   if (inverse) {
@@ -39,9 +39,9 @@ function createPropertyMarker(markerContainer, property) {
   marker.append("path")
     //.attr("d", "M0,-8L12,0L0,8Z")
     .attr("d", "M0,0L " + m1X + "," + m1Y + "L" + m2X + "," + m2Y + "L" + 0 + "," + 0)
-    .classed(property.markerType(), true);
+    .classed(property.markerType, true);
 
-  property.markerElement(marker);
+  property.markerElement = marker;
 }
 
 function createInverseMarker(markerContainer, inverse) {
@@ -53,9 +53,9 @@ function createInverseMarker(markerContainer, inverse) {
   inverseMarker.append("path")
     //.attr("d", "M12,-8L0,0L12,8Z")
     .attr("d", "M0,0L " + -m1X + "," + -m1Y + "L" + -m2X + "," + -m2Y + "L" + 0 + "," + 0)
-    .classed(inverse.markerType(), true);
+    .classed(inverse.markerType, true);
 
-  inverse.markerElement(inverseMarker);
+  inverse.markerElement = inverseMarker;
 }
 
 function appendBasicMarker(markerContainer, property) {

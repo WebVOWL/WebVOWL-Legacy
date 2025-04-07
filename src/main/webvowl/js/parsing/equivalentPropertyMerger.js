@@ -80,7 +80,7 @@ function mapPropertiesRangesToType(properties, nodeMap) {
     if (property === undefined) //@ WORKAROUND
       return;
 
-    var range = nodeMap[property.range()];
+    var range = nodeMap[property.range];
     var type = range.type;
 
     if (!typeMap.has(type)) {
@@ -113,8 +113,8 @@ function replaceRangesAndCollectNodesToHide(propertyWithEquivalents, mergeNode, 
 
     if (property === undefined || mergeNode === undefined) // @ WORKAROUND
       return;
-    var oldRangeId = property.range();
-    property.range(mergeNode.id);
+    var oldRangeId = property.range;
+    property.range = mergeNode.id;
     if (!isDomainOrRangeOfOtherProperty(oldRangeId, properties)) {
       nodesToHide.push(oldRangeId);
     }
@@ -128,7 +128,7 @@ function replaceRangesAndCollectNodesToHide(propertyWithEquivalents, mergeNode, 
 function isDomainOrRangeOfOtherProperty(nodeId, properties) {
   for (var i = 0; i < properties.length; i++) {
     var property = properties[i];
-    if (property.domain() === nodeId || property.range() === nodeId) {
+    if (property.domain === nodeId || property.range === nodeId) {
       return true;
     }
   }

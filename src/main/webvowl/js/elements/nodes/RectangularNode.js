@@ -1,237 +1,187 @@
-import BaseNode from './BaseNode';
 import CenteringTextElement from '../../util/CenteringTextElement';
-import drawToolsFactory from '../drawTools';
-const drawTools = drawToolsFactory();
-import rectangularElementToolsFactory from '../rectangularElementTools';
-const rectangularElementTools = rectangularElementToolsFactory();
+import { DrawTools } from '../drawTools';
+import { RectangularElementToolsMixin } from '../rectangularElementTools';
+import { BaseNode } from './BaseNode';
 
-class RectangularNode extends BaseNode {
+export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
     constructor(graph) {
+        super(graph)
 
-        var that = this, height = 20, width = 60, pinGroupElement, haloGroupElement, labelWidth = 80, myWidth = 80, defaultWidth = 80, shapeElement, textBlock, smallestRadius = height / 2;
-
-        that.renderType = "rect";
-
+        this.height = 20
+        this.width = 60
+        this.pinGroupElement    // HTMLElement | undefined
+        this.haloGroupElement   // HTMLElement | null
+        this.labelWidth = 80
+        this.myWidth = 80
+        this.defaultWidth = 80
+        this.shapeElement       // HTMLElement | undefined
+        this.textBlock          // HTMLElement | undefined
+        this.smallestRadius = height / 2
+        this.renderType = "rect"
     }
 
-
-    // Functions
-    // for compatibility reasons // TODO resolve
-
-    // TODO class refactor still work in progress. Width may have issues from refactor?
-
-    this.distanceToBorder = function (dx, dy) {
-    return rectangularElementTools.distanceToBorder(that, dx, dy);
-};
-
-this.setHoverHighlighting = function (enable) {
-    that.nodeElement.selectAll("rect").classed("hovered", enable);
-
-    var haloGroup = that.haloGroupElement;
-    if (haloGroup) {
-        var test = haloGroup.selectAll(".searchResultA");
-        test.classed("searchResultA", false);
-        test.classed("searchResultB", true);
+    setHoverHighlighting(enable) {
+        this.nodeElement.selectAll("rect").classed("hovered", enable);
+        const haloGroup = this.haloGroupElement;
+        if (haloGroup) {
+            var test = haloGroup.selectAll(".searchResultA");
+            test.classed("searchResultA", false);
+            test.classed("searchResultB", true);
+        }
     }
 
-};
-
-
-// overwrite the labelWith;
-this.textWidth = function () {
-    return labelWidth;
-};
-this.width = function () {
-    return labelWidth;
-};
-
-this.getMyWidth = function () {
-    // use a simple heuristic
-    var text = that.labelForCurrentLanguage();
-    myWidth = measureTextWidth(text, "text") + 20;
-
-    // check for sub names;
-    var indicatorText = that.indicationString();
-    var indicatorWidth = measureTextWidth(indicatorText, "subtext") + 20;
-    if (indicatorWidth > myWidth)
-        myWidth = indicatorWidth;
-
-    return myWidth;
-};
-
-this.textWidth = function () {
-    return that.width;
-};
-function measureTextWidth(text, textStyle) {
-    // Set a default value
-    if (!textStyle) {
-        textStyle = "text";
-    }
-    var d = d3.select("body")
-        .append("div")
-        .attr("class", textStyle)
-        .attr("id", "width-test") // tag this element to identify it
-        .attr("style", "position:absolute; float:left; white-space:nowrap; visibility:hidden;")
-        .text(text), w = document.getElementById("width-test").offsetWidth;
-    d.remove();
-    return w;
-}
-
-this.toggleFocus = function () {
-    that.focused = !that.focused;
-    that.nodeElement.select("rect").classed("focused", that.focused);
-    graph.resetSearchHighlight();
-    graph.options().searchMenu().clearText();
-};
-
-/**
- * Draws the rectangular node.
- * @param parentElement the element to which this node will be appended
- * @param [additionalCssClasses] additional css classes
- */
-this.draw = function (parentElement, additionalCssClasses) {
-    var cssClasses = that.collectCssClasses();
-
-    that.nodeElement = parentElement;
-
-    if (additionalCssClasses instanceof Array) {
-        cssClasses = cssClasses.concat(additionalCssClasses);
+    // REVIEW: Maybe remove note NOTE: This seemingly weird way of getting the labelwidth when calling `textWidth`
+    // is required for class interface compatibility. Might need a refactor
+    textWidth() {
+        return this.labelWidth;
     }
 
-    // set the value for that.width
-    // update labelWidth Value;
-    if (graph.options().dynamicLabelWidth() === true) labelWidth = Math.min(that.getMyWidth(), graph.options().maxLabelWidth());
-    else labelWidth = defaultWidth;
+    // REVIEW: Check if not having this causes issues
+    // get width() {
+    //     return this.labelWidth;
+    // }
 
-    width = labelWidth;
-    shapeElement = drawTools.appendRectangularClass(parentElement, that.width, that.height, cssClasses, that.labelForCurrentLanguage(), that.backgroundColor);
-
-    textBlock = new CenteringTextElement(parentElement, that.backgroundColor);
-    textBlock.addText(that.labelForCurrentLanguage());
-
-    that.addMouseListeners();
-
-    if (that.pinned) {
-        that.drawPin();
-    }
-    if (that.halo) {
-        that.drawHalo(false);
-    }
-};
-
-this.drawPin = function () {
-    that.pinned = true;
-    // if (graph.options().dynamicLabelWidth()===true) labelWidth=that.getMyWidth();
-    // else                							labelWidth=defaultWidth;
-    // width=labelWidth;
-    // console.log("this element label Width is "+labelWidth);
-    var dx = -0.5 * labelWidth + 5, dy = -1.1 * height;
-
-    pinGroupElement = drawTools.drawPin(that.nodeElement, dx, dy, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
-};
-
-this.removePin = function () {
-    that.pinned = false;
-    if (pinGroupElement) {
-        pinGroupElement.remove();
-    }
-    graph.updateStyle();
-};
-
-this.removeHalo = function () {
-    that.halo = false;
-    if (haloGroupElement) {
-        haloGroupElement.remove();
-        haloGroupElement = null;
-    }
-};
-
-this.drawHalo = function (pulseAnimation) {
-    that.halo = true;
-
-    var offset = 0;
-    haloGroupElement = drawTools.drawRectHalo(that, this.width, this.height, offset);
-
-    if (pulseAnimation === false) {
-        var pulseItem = haloGroupElement.selectAll(".searchResultA");
-        pulseItem.classed("searchResultA", false);
-        pulseItem.classed("searchResultB", true);
-        pulseItem.attr("animationRunning", false);
+    toggleFocus() {
+        this.focused = !this.focused;
+        this.nodeElement.select("rect").classed("focused", this.focused);
+        graph.resetSearchHighlight();
+        graph.options().searchMenu().clearText();
     }
 
-    if (that.pinned) {
-        var selectedNode = pinGroupElement.node();
-        var nodeContainer = selectedNode.parentNode;
-        nodeContainer.appendChild(selectedNode);
-    }
-};
+    /**
+     * Draws the rectangular node.
+     * @param parentElement the element to which this node will be appended
+     * @param {Array} additionalCssClasses additional css classes
+     */
+    draw(parentElement, additionalCssClasses) {
+        var cssClasses = this.collectCssClasses();
+        this.nodeElement = parentElement;
 
-this.updateTextElement = function () {
-    textBlock.updateAllTextElements();
-};
+        if (additionalCssClasses instanceof Array) {
+            cssClasses = cssClasses.concat(additionalCssClasses);
+        }
 
-this.textBlock = function () {
-    return textBlock;
-};
+        // set the value for this.width
+        // update labelWidth Value;
+        if (graph.options().dynamicLabelWidth() === true) {
+            this.labelWidth = Math.min(RectangularElementTools.getMyWidth(this.labelForCurrentLanguage(), this.indicationString()), graph.options().maxLabelWidth());
+        }
+        else {
+            this.labelWidth = this.defaultWidth;
+        }
+        width = this.labelWidth;
+        this.shapeElement = DrawTools.appendRectangularClass(parentElement, this.width, this.height, cssClasses, this.labelForCurrentLanguage(), this.backgroundColor);
 
-this.redrawLabelText = function () {
-    textBlock.remove();
-    textBlock = new CenteringTextElement(that.nodeElement, that.backgroundColor);
-    textBlock.addText(that.labelForCurrentLanguage());
-    that.animateDynamicLabelWidth(graph.options().dynamicLabelWidth());
-    shapeElement.select("title").text(that.labelForCurrentLanguage());
-};
+        this.textBlock = new CenteringTextElement(parentElement, this.backgroundColor);
+        this.textBlock.addText(this.labelForCurrentLanguage());
 
-this.animateDynamicLabelWidth = function (dynamic) {
-    that.removeHalo();
-    var height = that.height;
-    if (dynamic === true) {
-        labelWidth = Math.min(that.getMyWidth(), graph.options().maxLabelWidth());
-        shapeElement.transition().tween("attr", function () {
-        })
-            .ease('linear')
-            .duration(100)
-            .attr({ x: -labelWidth / 2, y: -height / 2, width: labelWidth, height: height })
-            .each("end", function () {
-                that.updateTextElement();
-            });
+        this.addMouseListeners();
 
-    } else {
-        labelWidth = defaultWidth;
-        that.updateTextElement();
-        shapeElement.transition().tween("attr", function () {
-        })
-            .ease('linear')
-            .duration(100)
-            .attr({ x: -labelWidth / 2, y: -height / 2, width: labelWidth, height: height });
-
+        if (this.pinned) {
+            this.drawPin();
+        }
+        if (this.halo) {
+            this.drawHalo(false);
+        }
     }
 
-    // for the pin we dont need to differ between different widths -- they are already set
-    if (that.pinned === true && pinGroupElement) {
+    drawPin() {
+        this.pinned = true;
+        // if (graph.options().dynamicLabelWidth()===true) this.labelWidth=RectangularElementTools.getMyWidth(this.labelForCurrentLanguage(), this.indicationString());
+        // else                							this.labelWidth=this.defaultWidth;
+        // width=this.labelWidth;
+        // console.log("this element label Width is "+this.labelWidth);
+        const dx = -0.5 * this.labelWidth + 5,
+            dy = -1.1 * this.height;
+        this.pinGroupElement = DrawTools.drawPin(this.nodeElement, dx, dy, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
+    }
 
-        var dx = 0.5 * labelWidth - 10, dy = -1.1 * height;
+    removePin() {
+        this.pinned = false;
+        if (this.pinGroupElement) {
+            this.pinGroupElement.remove();
+        }
+        graph.updateStyle();
+    }
 
-        pinGroupElement.transition()
-            .tween("attr.translate", function () {
+    removeHalo() {
+        this.halo = false;
+        if (this.haloGroupElement) {
+            this.haloGroupElement.remove();
+            this.haloGroupElement = null;
+        }
+    }
+
+    drawHalo(pulseAnimation) {
+        this.halo = true;
+        const offset = 0;
+        this.haloGroupElement = DrawTools.drawRectHalo(this, this.width, this.height, offset);
+
+        if (pulseAnimation === false) {
+            var pulseItem = this.haloGroupElement.selectAll(".searchResultA");
+            pulseItem.classed("searchResultA", false);
+            pulseItem.classed("searchResultB", true);
+            pulseItem.attr("animationRunning", false);
+        }
+
+        if (this.pinned) {
+            const selectedNode = this.pinGroupElement.node();
+            var nodeContainer = selectedNode.parentNode;
+            nodeContainer.appendChild(selectedNode);
+        }
+    }
+
+    updateTextElement() {
+        this.textBlock.updateAllTextElements();
+    }
+
+    redrawLabelText() {
+        this.textBlock.remove();
+        this.textBlock = new CenteringTextElement(this.nodeElement, this.backgroundColor);
+        this.textBlock.addText(this.labelForCurrentLanguage());
+        this.animateDynamicLabelWidth(graph.options().dynamicLabelWidth());
+        this.shapeElement.select("title").text(this.labelForCurrentLanguage());
+    }
+
+    // REVIEW: Almost identical to BaseProperty
+    animateDynamicLabelWidth(dynamic) {
+        this.removeHalo();
+        const height = this.height;
+        if (dynamic === true) {
+            this.labelWidth = Math.min(RectangularElementTools.getMyWidth(this.labelForCurrentLanguage(), this.indicationString()), graph.options().maxLabelWidth());
+            this.shapeElement.transition().tween("attr", function () {
             })
-            .attr("transform", "translate(" + dx + "," + dy + ")")
-            .ease('linear')
-            .duration(100);
+                .ease('linear')
+                .duration(100)
+                .attr({ x: -this.labelWidth / 2, y: -height / 2, width: this.labelWidth, height: height })
+                .each("end", function () {
+                    this.updateTextElement();
+                });
+        } else {
+            this.labelWidth = this.defaultWidth;
+            this.updateTextElement();
+            this.shapeElement.transition().tween("attr", function () {
+            })
+                .ease('linear')
+                .duration(100)
+                .attr({ x: -this.labelWidth / 2, y: -height / 2, width: this.labelWidth, height: height });
+        }
+
+        // for the pin we dont need to differ between different widths -- they are already set
+        if (this.pinned === true && this.pinGroupElement) {
+            const dx = 0.5 * this.labelWidth - 10,
+                dy = -1.1 * height;
+            this.pinGroupElement.transition()
+                .tween("attr.translate", function () {
+                })
+                .attr("transform", "translate(" + dx + "," + dy + ")")
+                .ease('linear')
+                .duration(100);
+        }
     }
-};
 
-this.addTextLabelElement = function () {
-    var parentElement = that.nodeElement;
-    textBlock = new CenteringTextElement(parentElement, this.backgroundColor);
-    textBlock.addText(that.labelForCurrentLanguage());
-};
+    addTextLabelElement() {
+        this.textBlock = new CenteringTextElement(this.nodeElement, this.backgroundColor);
+        this.textBlock.addText(this.labelForCurrentLanguage());
+    }
 }
-
-
-
-
-
-
-
-

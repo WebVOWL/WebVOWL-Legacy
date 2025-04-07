@@ -277,9 +277,9 @@ export default function (graph) {
         setIriLabel(d3.select("#propname"), property.labelForCurrentLanguage(), property.iri);
         d3.select("#typeProp").text(property.type);
 
-        if (property.inverse() !== undefined) {
+        if (property.inverse !== undefined) {
             d3.select("#inverse").classed("hidden", false);
-            setIriLabel(d3.select("#inverse span"), property.inverse().labelForCurrentLanguage(), property.inverse().iri);
+            setIriLabel(d3.select("#inverse span"), property.inverse.labelForCurrentLanguage(), property.inverse.iri);
         } else {
             d3.select("#inverse").classed("hidden", true);
         }
@@ -287,34 +287,34 @@ export default function (graph) {
         var equivalentIriSpan = d3.select("#propEquivUri");
         listNodeArray(equivalentIriSpan, property.equivalents);
 
-        listNodeArray(d3.select("#subproperties"), property.subproperties());
-        listNodeArray(d3.select("#superproperties"), property.superproperties());
+        listNodeArray(d3.select("#subproperties"), property.subproperties);
+        listNodeArray(d3.select("#superproperties"), property.superproperties);
 
-        if (property.minCardinality() !== undefined) {
+        if (property.minCardinality !== undefined) {
             d3.select("#infoCardinality").classed("hidden", true);
             d3.select("#minCardinality").classed("hidden", false);
-            d3.select("#minCardinality span").text(property.minCardinality());
+            d3.select("#minCardinality span").text(property.minCardinality);
             d3.select("#maxCardinality").classed("hidden", false);
 
-            if (property.maxCardinality() !== undefined) {
-                d3.select("#maxCardinality span").text(property.maxCardinality());
+            if (property.maxCardinality !== undefined) {
+                d3.select("#maxCardinality span").text(property.maxCardinality);
             } else {
                 d3.select("#maxCardinality span").text("*");
             }
 
-        } else if (property.cardinality() !== undefined) {
+        } else if (property.cardinality !== undefined) {
             d3.select("#minCardinality").classed("hidden", true);
             d3.select("#maxCardinality").classed("hidden", true);
             d3.select("#infoCardinality").classed("hidden", false);
-            d3.select("#infoCardinality span").text(property.cardinality());
+            d3.select("#infoCardinality span").text(property.cardinality);
         } else {
             d3.select("#infoCardinality").classed("hidden", true);
             d3.select("#minCardinality").classed("hidden", true);
             d3.select("#maxCardinality").classed("hidden", true);
         }
 
-        setIriLabel(d3.select("#domain"), property.domain().labelForCurrentLanguage(), property.domain().iri);
-        setIriLabel(d3.select("#range"), property.range().labelForCurrentLanguage(), property.range().iri);
+        setIriLabel(d3.select("#domain"), property.domain.labelForCurrentLanguage(), property.domain.iri);
+        setIriLabel(d3.select("#range"), property.range.labelForCurrentLanguage(), property.range.iri);
 
         displayAttributes(property.attributes, d3.select("#propAttributes"));
 

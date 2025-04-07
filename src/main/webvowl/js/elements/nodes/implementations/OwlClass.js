@@ -1,14 +1,9 @@
 import RoundNode from '../RoundNode';
 
-export default function () {
+export class OwlClass extends RoundNode {
+    constructor(graph) {
+        super(graph)
 
-  var o = function (graph) {
-    RoundNode.apply(this, arguments);
-
-    this.type = "owl:Class";
-  };
-  o.prototype = Object.create(RoundNode.prototype);
-  o.prototype.constructor = o;
-
-  return o;
-} ();
+        this.type = "owl:Class"
+    }
+}

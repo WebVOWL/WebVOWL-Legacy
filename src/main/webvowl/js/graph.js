@@ -245,8 +245,8 @@ export default function (graphContainerSelector) {
                 } else if (d.type && d.type === "Range_dragger") {
                     graph.ignoreOtherHoverEvents(true);
                     clearTimeout(delayedHider);
-                    frozenDomainForPropertyDragger = shadowClone.parentNode().domain();
-                    frozenRangeForPropertyDragger = shadowClone.parentNode().range();
+                    frozenDomainForPropertyDragger = shadowClone.parentNode().domain;
+                    frozenRangeForPropertyDragger = shadowClone.parentNode().range;
                     shadowClone.setInitialPosition();
                     shadowClone.hideClone(false);
                     shadowClone.hideParentProperty(true);
@@ -265,8 +265,8 @@ export default function (graphContainerSelector) {
                 } else if (d.type && d.type === "Domain_dragger") {
                     graph.ignoreOtherHoverEvents(true);
                     clearTimeout(delayedHider);
-                    frozenDomainForPropertyDragger = shadowClone.parentNode().domain();
-                    frozenRangeForPropertyDragger = shadowClone.parentNode().range();
+                    frozenDomainForPropertyDragger = shadowClone.parentNode().domain;
+                    frozenRangeForPropertyDragger = shadowClone.parentNode().range;
                     shadowClone.setInitialPosition();
                     shadowClone.hideClone(false);
                     shadowClone.hideParentProperty(true);
@@ -552,10 +552,10 @@ export default function (graphContainerSelector) {
                 var position;
 
                 // force centered positions on single-layered links
-                var link = label.link();
+                var link = label.link;
                 if (link.layerSize === 1 && !link.loops()) {
-                    var linkDomainIntersection = math.calculateIntersection(link.range(), link.domain(), 0);
-                    var linkRangeIntersection = math.calculateIntersection(link.domain(), link.range(), 0);
+                    var linkDomainIntersection = math.calculateIntersection(link.range, link.domain, 0);
+                    var linkRangeIntersection = math.calculateIntersection(link.domain, link.range, 0);
                     position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
                     label.x = position.x;
                     label.y = position.y;
@@ -568,8 +568,8 @@ export default function (graphContainerSelector) {
                     return math.calculateLoopPath(l);
                 }
                 var curvePoint = l.label;
-                var pathStart = math.calculateIntersection(curvePoint, l.domain(), 1);
-                var pathEnd = math.calculateIntersection(curvePoint, l.range(), 1);
+                var pathStart = math.calculateIntersection(curvePoint, l.domain, 1);
+                var pathEnd = math.calculateIntersection(curvePoint, l.range, 1);
 
                 return curveFunction([pathStart, curvePoint, pathEnd]);
             });
@@ -577,9 +577,9 @@ export default function (graphContainerSelector) {
             // Set cardinality positions
             cardinalityElements.attr("transform", function (property) {
 
-                var label = property.link().label,
-                    pos = math.calculateIntersection(label, property.range(), CARDINALITY_HDISTANCE),
-                    normalV = math.calculateNormalVector(label, property.range(), CARDINALITY_VDISTANCE);
+                var label = property.link.label,
+                    pos = math.calculateIntersection(label, property.range, CARDINALITY_HDISTANCE),
+                    normalV = math.calculateNormalVector(label, property.range, CARDINALITY_VDISTANCE);
 
                 return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
             });
@@ -601,10 +601,10 @@ export default function (graphContainerSelector) {
             var position;
 
             // force centered positions on single-layered links
-            var link = label.link();
+            var link = label.link;
             if (link.layerSize === 1 && !link.loops()) {
-                var linkDomainIntersection = math.calculateIntersection(link.range(), link.domain(), 0);
-                var linkRangeIntersection = math.calculateIntersection(link.domain(), link.range(), 0);
+                var linkDomainIntersection = math.calculateIntersection(link.range, link.domain, 0);
+                var linkRangeIntersection = math.calculateIntersection(link.domain, link.range, 0);
                 position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
                 label.x = position.x;
                 label.y = position.y;
@@ -613,17 +613,17 @@ export default function (graphContainerSelector) {
                 if (link.property().focused === true || hoveredPropertyElement !== undefined) {
                     rangeDragger.updateElement();
                     domainDragger.updateElement();
-                    // shadowClone.setPosition(link.property().range().x,link.property().range().y);
-                    // shadowClone.setPositionDomain(link.property().domain().x,link.property().domain().y);
+                    // shadowClone.setPosition(link.property().range.x,link.property().range.y);
+                    // shadowClone.setPositionDomain(link.property().domain.x,link.property().domain.y);
                 }
             } else {
-                label.linkDomainIntersection = math.calculateIntersection(link.label, link.domain(), 0);
-                label.linkRangeIntersection = math.calculateIntersection(link.label, link.range(), 0);
+                label.linkDomainIntersection = math.calculateIntersection(link.label, link.domain, 0);
+                label.linkRangeIntersection = math.calculateIntersection(link.label, link.range, 0);
                 if (link.property().focused === true || hoveredPropertyElement !== undefined) {
                     rangeDragger.updateElement();
                     domainDragger.updateElement();
-                    // shadowClone.setPosition(link.property().range().x,link.property().range().y);
-                    // shadowClone.setPositionDomain(link.property().domain().x,link.property().domain().y);
+                    // shadowClone.setPosition(link.property().range.x,link.property().range.y);
+                    // shadowClone.setPositionDomain(link.property().domain.x,link.property().domain.y);
                 }
 
             }
@@ -644,15 +644,15 @@ export default function (graphContainerSelector) {
                 return math.calculateLoopPath(l);
             }
             var curvePoint = l.label;
-            var pathStart = math.calculateIntersection(curvePoint, l.domain(), 1);
-            var pathEnd = math.calculateIntersection(curvePoint, l.range(), 1);
+            var pathStart = math.calculateIntersection(curvePoint, l.domain, 1);
+            var pathEnd = math.calculateIntersection(curvePoint, l.range, 1);
             l.linkRangeIntersection = pathStart;
             l.linkDomainIntersection = pathEnd;
             if (l.property().focused === true || hoveredPropertyElement !== undefined) {
                 domainDragger.updateElement();
                 rangeDragger.updateElement();
-                // shadowClone.setPosition(l.property().range().x,l.property().range().y);
-                // shadowClone.setPositionDomain(l.property().domain().x,l.property().domain().y);
+                // shadowClone.setPosition(l.property().range.x,l.property().range.y);
+                // shadowClone.setPositionDomain(l.property().domain.x,l.property().domain.y);
             }
             return curveFunction([pathStart, curvePoint, pathEnd]);
         });
@@ -660,9 +660,9 @@ export default function (graphContainerSelector) {
         // Set cardinality positions
         cardinalityElements.attr("transform", function (property) {
 
-            var label = property.link().label,
-                pos = math.calculateIntersection(label, property.range(), CARDINALITY_HDISTANCE),
-                normalV = math.calculateNormalVector(label, property.range(), CARDINALITY_VDISTANCE);
+            var label = property.link.label,
+                pos = math.calculateIntersection(label, property.range, CARDINALITY_HDISTANCE),
+                normalV = math.calculateNormalVector(label, property.range, CARDINALITY_VDISTANCE);
 
             return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
         });
@@ -753,8 +753,8 @@ export default function (graphContainerSelector) {
             //          domainDragger.hideDragger(false);
             //          domainDragger.addMouseEvents();
             //
-            //          if (clickedProperty.domain()===clickedProperty.range()){
-            //              clickedProperty.labelObject().increasedLoopAngle=true;
+            //          if (clickedProperty.domain===clickedProperty.range){
+            //              clickedProperty.labelObject.increasedLoopAngle=true;
             //              recalculatePositions();
             //
             //          }
@@ -772,8 +772,8 @@ export default function (graphContainerSelector) {
             //      else {
             //          rangeDragger.hideDragger(true);
             //          domainDragger.hideDragger(true);
-            //          if (clickedProperty.domain()===clickedProperty.range()){
-            //              clickedProperty.labelObject().increasedLoopAngle=false;
+            //          if (clickedProperty.domain===clickedProperty.range){
+            //              clickedProperty.labelObject.increasedLoopAngle=false;
             //              recalculatePositions();
             //
             //          }
@@ -991,23 +991,24 @@ export default function (graphContainerSelector) {
         return propertyData;
     };
 
+    // NOTE: Disabled to save memory while this method is not used
     /**
      * This function is a no-op. It is currently not used anywhere in the code base.
      * @returns An empty array. Always.
      */
-    graph.getAxiomsForTtlExport = function () {
-        var axioms = [];
-        var allProperties = unfilteredData.properties;
-        for (var i = 0; i < allProperties.length; i++) {
-            // currently using only the object properties
-            if (allProperties[i].type === "owl:ObjectProperty" ||
-                allProperties[i].type === "owl:DatatypeProperty" ||
-                allProperties[i].type === "owl:ObjectProperty" ||
-                allProperties[i].type === "rdfs:subClassOf"
-            ) { } else { }
-        }
-        return axioms;
-    };
+    // graph.getAxiomsForTtlExport = function () {
+    //     var axioms = [];
+    //     var allProperties = unfilteredData.properties;
+    //     for (var i = 0; i < allProperties.length; i++) {
+    //         // currently using only the object properties
+    //         if (allProperties[i].type === "owl:ObjectProperty" ||
+    //             allProperties[i].type === "owl:DatatypeProperty" ||
+    //             allProperties[i].type === "owl:ObjectProperty" ||
+    //             allProperties[i].type === "rdfs:subClassOf"
+    //         ) { } else { }
+    //     }
+    //     return axioms;
+    // };
 
     graph.getClassDataForTtlExport = function () {
         var allNodes = unfilteredData.nodes;
@@ -1104,7 +1105,7 @@ export default function (graphContainerSelector) {
 
         labelGroupElements.each(function (label) {
             var success = label.draw(d3.select(this));
-            label.property().labelObject(label);
+            label.property().labelObject = label;
             // Remove empty groups without a label.
             if (!success) {
                 d3.select(this).remove();
@@ -1250,7 +1251,7 @@ export default function (graphContainerSelector) {
             }
             if (node.property) {
                 nodeMap[node.property().id] = j;
-                var inverse = node.inverse();
+                var inverse = node.inverse;
                 if (inverse) {
                     nodeMap[inverse.id] = j;
                 }
@@ -1709,8 +1710,8 @@ export default function (graphContainerSelector) {
         storeLinksOnNodes(classNodes, links);
         setForceLayoutData(classNodes, labelNodes, links);
         // for (var i = 0; i < classNodes.length; i++) {
-        //     if (classNodes[i].setRectangularRepresentation)
-        //         classNodes[i].setRectangularRepresentation(graph.options().rectangularRepresentation());
+        //     if (classNodes[i].rectangularRepresentation)
+        //         classNodes[i].rectangularRepresentation = graph.options().rectangularRepresentation();
         // }
     }
 
@@ -1723,7 +1724,7 @@ export default function (graphContainerSelector) {
         if (nodes[0] === undefined) {
             let prop = unfilteredDataMap.properties.get(rootNodeID);
             if (prop !== undefined) {
-                nodes = [prop.domain(), prop.range()];
+                nodes = [prop.domain, prop.range];
             } else {
                 console.log(`Failed to find a node or property with id ${rootNodeID}`);
             }
@@ -1731,7 +1732,7 @@ export default function (graphContainerSelector) {
         let selectedNodes = breadthFirstSearchDepth(nodes, 2);
         let selectedProperties = [];
         for (const property of unfilteredData.properties) {
-            if (selectedNodes.get(property.domain().id) && selectedNodes.get(property.range().id)) {
+            if (selectedNodes.get(property.domain.id) && selectedNodes.get(property.range.id)) {
                 selectedProperties.push(property);
             }
         }
@@ -1777,8 +1778,8 @@ export default function (graphContainerSelector) {
                 // For every edge
                 for (let k = 0; k < linkArr.length; k++) {
                     let currentLink = linkArr[k];
-                    let domainNode = currentLink.domain();
-                    let rangeNode = currentLink.range();
+                    let domainNode = currentLink.domain;
+                    let rangeNode = currentLink.range;
 
                     // If the edge is connected to our current node, add the other end of the edge only if it hasn't already been visited or appended to our frontier
                     if (domainNode === currentNode) {
@@ -1808,23 +1809,23 @@ export default function (graphContainerSelector) {
         // look for properties where this node is the domain or range
         for (let i = 0; i < links.length; i++) {
             var link = links[i];
-            var domainobj = link.domain();
+            var domainobj = link.domain;
             var existingDomainLinks = domainobj.links;
             if (existingDomainLinks === undefined) {
                 existingDomainLinks = [link];
             } else {
                 existingDomainLinks.push(link);
             }
-            link.domain().links = existingDomainLinks;
+            link.domain.links = existingDomainLinks;
 
-            var rangeobj = link.range();
+            var rangeobj = link.range;
             var existingRangeLinks = rangeobj.links;
             if (existingRangeLinks === undefined) {
                 existingRangeLinks = [link];
             } else {
                 existingRangeLinks.push(link);
             }
-            link.range().links = existingRangeLinks;
+            link.range.links = existingRangeLinks;
         }
     }
 
@@ -1883,7 +1884,7 @@ export default function (graphContainerSelector) {
     }
 
     function calculateLinkPartDistance(linkPart) {
-        var link = linkPart.link();
+        var link = linkPart.link;
 
         if (link.isLoop()) {
             return options.loopDistance();
@@ -1891,13 +1892,13 @@ export default function (graphContainerSelector) {
 
         // divide by 2 to receive the length for a single link part
         var linkPartDistance = getVisibleLinkDistance(link) / 2;
-        linkPartDistance += linkPart.domain().smallestRadius;
-        linkPartDistance += linkPart.range().smallestRadius;
+        linkPartDistance += linkPart.domain.smallestRadius;
+        linkPartDistance += linkPart.range.smallestRadius;
         return linkPartDistance;
     }
 
     function getVisibleLinkDistance(link) {
-        if (elementTools.isDatatype(link.domain()) || elementTools.isDatatype(link.range())) {
+        if (elementTools.isDatatype(link.domain) || elementTools.isDatatype(link.range)) {
             return options.datatypeDistance();
         } else {
             return options.classDistance();
@@ -1940,9 +1941,9 @@ export default function (graphContainerSelector) {
                             if (name === searchString) computeDistanceToCenter(node);
                             else {
                                 node.property().removeHalo();
-                                if (node.property().inverse()) {
-                                    if (!node.property().inverse().haloGroupElement)
-                                        node.property().inverse().drawHalo();
+                                if (node.property().inverse) {
+                                    if (!node.property().inverse.haloGroupElement)
+                                        node.property().inverse.drawHalo();
                                     computeDistanceToCenter(node, true);
                                 }
                                 if (node.property().equivalents) {
@@ -2003,8 +2004,8 @@ export default function (graphContainerSelector) {
         var radius;
 
         if (node.property && highlightOfInv === true) {
-            if (node.property().inverse()) {
-                rectHalo = node.property().inverse().haloGroupElement.select("rect");
+            if (node.property().inverse) {
+                rectHalo = node.property().inverse.haloGroupElement.select("rect");
 
             } else {
                 if (node.property().haloGroupElement)
@@ -2015,17 +2016,17 @@ export default function (graphContainerSelector) {
                 }
             }
             rectHalo.classed("hidden", true);
-            if (node.property().inverse()) {
-                if (node.property().inverse().haloGroupElement) {
-                    roundHalo = node.property().inverse().haloGroupElement.select("circle");
+            if (node.property().inverse) {
+                if (node.property().inverse.haloGroupElement) {
+                    roundHalo = node.property().inverse.haloGroupElement.select("circle");
                 }
             } else {
                 roundHalo = node.property().haloGroupElement.select("circle");
             }
             if (roundHalo.node() === null) {
-                radius = node.property().inverse().labelWidth + 15;
+                radius = node.property().inverse.labelWidth + 15;
 
-                roundHalo = node.property().inverse().haloGroupElement.append("circle")
+                roundHalo = node.property().inverse.haloGroupElement.append("circle")
                     .classed("searchResultB", true)
                     .classed("searchResultA", false)
                     .attr("r", radius + 15);
@@ -2033,7 +2034,7 @@ export default function (graphContainerSelector) {
             }
             halo = roundHalo; // swap the halo to be round
             nodeIsRect = true;
-            container = node.property().inverse();
+            container = node.property().inverse;
         }
 
         if (node.id) {
@@ -2140,7 +2141,7 @@ export default function (graphContainerSelector) {
             if (highlightOfInv === true)
                 dy = wY - node.y - 20;
 
-            if (highlightOfInv === false && node.property && node.property().inverse())
+            if (highlightOfInv === false && node.property && node.property().inverse)
                 dy = wY - node.y + 20;
 
             var newRadius = Math.sqrt(dx * dx + dy * dy);
@@ -2426,8 +2427,8 @@ export default function (graphContainerSelector) {
             if (node) {
                 if (node.property) {
                     if (nodeInViewport(node, true)) {
-                        if (node.property().labelElement() === undefined) continue;
-                        bbx = node.property().labelElement().node().getBoundingClientRect();
+                        if (node.property().labelElement === undefined) continue;
+                        bbx = node.property().labelElement.node().getBoundingClientRect();
                         if (bbx) {
                             contentBBox.tx = Math.min(contentBBox.tx, bbx.left);
                             contentBBox.bx = Math.max(contentBBox.bx, bbx.right);
@@ -2653,35 +2654,31 @@ export default function (graphContainerSelector) {
         }
 
         if (typeString === "rdfs:Datatype") {
-            if (aNode.dType() === "undefined")
+            if (aNode.dType === "undefined")
                 aNode.label = "undefined";
             else {
-                var identifier = aNode.dType().split(":")[1];
+                var identifier = aNode.dType.split(":")[1];
                 aNode.label = identifier;
             }
         }
         var i;
         // updates the property domain and range
         for (i = 0; i < unfilteredData.properties.length; i++) {
-            if (unfilteredData.properties[i].domain() === element) {
-                //  unfilteredData.properties[i].toString();
-                unfilteredData.properties[i].domain(aNode);
+            if (unfilteredData.properties[i].domain === element) {
+                unfilteredData.properties[i].domain = aNode;
             }
-            if (unfilteredData.properties[i].range() === element) {
-                unfilteredData.properties[i].range(aNode);
-                //  unfilteredData.properties[i].toString();
+            if (unfilteredData.properties[i].range === element) {
+                unfilteredData.properties[i].range = aNode;
             }
         }
 
         // update for fastUpdate:
         for (i = 0; i < properties.length; i++) {
-            if (properties[i].domain() === element) {
-                //  unfilteredData.properties[i].toString();
-                properties[i].domain(aNode);
+            if (properties[i].domain === element) {
+                properties[i].domain = aNode;
             }
-            if (properties[i].range() === element) {
-                properties[i].range(aNode);
-                //  unfilteredData.properties[i].toString();
+            if (properties[i].range === element) {
+                properties[i].range = aNode;
             }
         }
 
@@ -2705,7 +2702,7 @@ export default function (graphContainerSelector) {
         var typeString = d3.select("#typeEditor").node().value;
 
         // create warning
-        if (graph.sanityCheckProperty(element.domain(), element.range(), typeString) === false) {
+        if (graph.sanityCheckProperty(element.domain, element.range, typeString) === false) {
             return false;
         }
 
@@ -2714,10 +2711,10 @@ export default function (graphContainerSelector) {
         aProp.copyInformation(element);
         aProp.id = element.id;
 
-        element.domain().removePropertyElement(element);
-        element.range().removePropertyElement(element);
-        aProp.domain(element.domain());
-        aProp.range(element.range());
+        element.domain.removePropertyElement(element);
+        element.range.removePropertyElement(element);
+        aProp.domain = element.domain;
+        aProp.range = element.range;
 
         if (element.backupLabel !== undefined) {
             aProp.label = element.backupLabel;
@@ -2733,7 +2730,7 @@ export default function (graphContainerSelector) {
             }
         }
 
-        if (graph.propertyCheckExistenceChecker(aProp, element.domain(), element.range()) === false) {
+        if (graph.propertyCheckExistenceChecker(aProp, element.domain, element.range) === false) {
             graph.options().editSidebar().updateSelectionInformation(element);
             return;
         }
@@ -2756,13 +2753,13 @@ export default function (graphContainerSelector) {
         if (remId !== -1)
             properties.splice(remId, 1);
         graph.fastUpdate();
-        aProp.domain().addProperty(aProp);
-        aProp.range().addProperty(aProp);
-        if (element.labelObject() && aProp.labelObject()) {
-            aProp.labelObject().x = element.labelObject().x;
-            aProp.labelObject().px = element.labelObject().px;
-            aProp.labelObject().y = element.labelObject().y;
-            aProp.labelObject().py = element.labelObject().py;
+        aProp.domain.addProperty(aProp);
+        aProp.range.addProperty(aProp);
+        if (element.labelObject && aProp.labelObject) {
+            aProp.labelObject.x = element.labelObject.x;
+            aProp.labelObject.px = element.labelObject.px;
+            aProp.labelObject.y = element.labelObject.y;
+            aProp.labelObject.py = element.labelObject.py;
         }
 
         options.focuserModule().handle(aProp);
@@ -3061,7 +3058,7 @@ export default function (graphContainerSelector) {
             // collect all properties which have that one as a domain or range
             var allProps = unfilteredData.properties;
             for (var i = 0; i < allProps.length; i++) {
-                if (allProps[i].range() === classElement || allProps[i].domain() === classElement) {
+                if (allProps[i].range === classElement || allProps[i].domain === classElement) {
                     // check for the type of that property
                     if (allProps[i].type === "owl:someValuesFrom") {
                         graph.options().warningModule().showWarning("Can not change class type",
@@ -3090,13 +3087,13 @@ export default function (graphContainerSelector) {
 
             for (i = 0; i < allProps.length; i++) {
                 if (allProps[i] === property) continue;
-                if (allProps[i].domain() === domain && allProps[i].range() === range && allProps[i].type === property.type) {
+                if (allProps[i].domain === domain && allProps[i].range === range && allProps[i].type === property.type) {
                     graph.options().warningModule().showWarning("Warning",
                         "This triple already exist!",
                         "Element not created!", 1, false);
                     return false;
                 }
-                if (allProps[i].domain() === range && allProps[i].range() === domain && allProps[i].type === property.type) {
+                if (allProps[i].domain === range && allProps[i].range === domain && allProps[i].type === property.type) {
                     graph.options().warningModule().showWarning("Warning",
                         "Inverse assignment already exist! ",
                         "Element not created!", 1, false);
@@ -3109,8 +3106,8 @@ export default function (graphContainerSelector) {
     };
 
     // graph.checkForTripleDuplicate=function(property){
-    //     var domain=property.domain();
-    //     var range=property.range();
+    //     var domain=property.domain;
+    //     var range=property.range;
     //     console.log("checking for duplicates");
     //     var b1= domain.isPropertyAssignedToThisElement(property);
     //     var b2= range.isPropertyAssignedToThisElement(property);
@@ -3190,18 +3187,18 @@ export default function (graphContainerSelector) {
 
     function createNewObjectProperty(domain, range, draggerEndposition) {
         // check type of the property that we want to create;
-
         var defaultPropertyName = d3.select("#defaultProperty").node().title;
 
         // check if we are allow to create that property
-        if (graph.sanityCheckProperty(domain, range, defaultPropertyName) === false) return false;
-
+        if (graph.sanityCheckProperty(domain, range, defaultPropertyName) === false) {
+            return false;
+        }
 
         var propPrototype = PropertyPrototypeMap.get(defaultPropertyName.toLowerCase());
         var aProp = new propPrototype(graph);
         aProp.id = "objectProperty" + eP++;
-        aProp.domain(domain);
-        aProp.range(range);
+        aProp.domain = domain;
+        aProp.range = range;
         aProp.label = "newObjectProperty";
         aProp.baseIri = d3.select("#iriEditor").node().value;
         aProp.iri = aProp.baseIri + aProp.id;
@@ -3214,7 +3211,6 @@ export default function (graphContainerSelector) {
         }
 
         var autoEditElement = false;
-
         if (defaultPropertyName === "owl:objectProperty") {
             autoEditElement = true;
         }
@@ -3252,10 +3248,10 @@ export default function (graphContainerSelector) {
         if (properties.indexOf(aProp) === -1)
             properties.push(aProp);
         graph.fastUpdate();
-        aProp.labelObject().x = pX;
-        aProp.labelObject().px = pX;
-        aProp.labelObject().y = pY;
-        aProp.labelObject().py = pY;
+        aProp.labelObject.x = pX;
+        aProp.labelObject.px = pX;
+        aProp.labelObject.y = pY;
+        aProp.labelObject.py = pY;
 
         aProp.frozen = graph.paused();
         aProp.locked = graph.paused();
@@ -3269,7 +3265,7 @@ export default function (graphContainerSelector) {
 
         options.focuserModule().handle(aProp);
         graph.activateHoverElementsForProperties(true, aProp, false, touchDevice);
-        aProp.labelObject().increasedLoopAngle = true;
+        aProp.labelObject.increasedLoopAngle = true;
         aProp.enableEditing(autoEditElement);
     }
 
@@ -3305,11 +3301,11 @@ export default function (graphContainerSelector) {
                 // TODO : HANDLER FOR UNDEFINED DATATYPES!!<<<>>>>>>>>>>>..
                 aNode.iri = "http://www.undefinedDatatype.org/#" + identifier;
                 aNode.baseIri = "http://www.undefinedDatatype.org/#";
-                aNode.dType(defaultDatatypeName);
+                aNode.dType = defaultDatatypeName;
             } else {
                 identifier = defaultDatatypeName.split(":")[1];
                 aNode.label = identifier;
-                aNode.dType(defaultDatatypeName);
+                aNode.dType = defaultDatatypeName;
                 aNode.iri = "http://www.w3.org/2001/XMLSchema#" + identifier;
                 aNode.baseIri = "http://www.w3.org/2001/XMLSchema#";
             }
@@ -3333,8 +3329,8 @@ export default function (graphContainerSelector) {
         aProp.id = "datatypeProperty" + eP++;
 
         // create the connection
-        aProp.domain(node);
-        aProp.range(aNode);
+        aProp.domain = node;
+        aProp.range = aNode;
         aProp.label = "newDatatypeProperty";
 
         // TODO: change its base IRI to proper value
@@ -3402,11 +3398,11 @@ export default function (graphContainerSelector) {
 
         nodesToRemove.push(node);
         for (var i = 0; i < unfilteredData.properties.length; i++) {
-            if (unfilteredData.properties[i].domain() === node || unfilteredData.properties[i].range() === node) {
+            if (unfilteredData.properties[i].domain === node || unfilteredData.properties[i].range === node) {
                 propsToRemove.push(unfilteredData.properties[i]);
                 if (unfilteredData.properties[i].type.toLocaleLowerCase() === "owl:datatypeproperty" &&
-                    unfilteredData.properties[i].range() !== node) {
-                    nodesToRemove.push(unfilteredData.properties[i].range());
+                    unfilteredData.properties[i].range !== node) {
+                    nodesToRemove.push(unfilteredData.properties[i].range);
                     datatypes++;
                 }
             }
@@ -3461,16 +3457,16 @@ export default function (graphContainerSelector) {
     };
 
     graph.removePropertyViaEditor = function (property) {
-        property.domain().removePropertyElement(property);
-        property.range().removePropertyElement(property);
+        property.domain.removePropertyElement(property);
+        property.range.removePropertyElement(property);
         var remId;
 
         if (property.type.toLocaleLowerCase() === "owl:datatypeproperty") {
-            var datatype = property.range();
-            remId = unfilteredData.nodes.indexOf(property.range());
+            var datatype = property.range;
+            remId = unfilteredData.nodes.indexOf(property.range);
             if (remId !== -1)
                 unfilteredData.nodes.splice(remId, 1);
-            remId = classNodes.indexOf(property.range());
+            remId = classNodes.indexOf(property.range);
             if (remId !== -1)
                 classNodes.splice(remId, 1);
             datatype = null;
@@ -3481,13 +3477,10 @@ export default function (graphContainerSelector) {
         remId = properties.indexOf(property);
         if (remId !== -1)
             properties.splice(remId, 1);
-        if (property.inverse()) {
+        if (property.inverse) {
             // so we have inverse
-            property.inverse().inverse(0);
-
+            property.inverse.inverse = 0;
         }
-
-
         hoveredPropertyElement = undefined;
         graph.fastUpdate();
         generateDictionary(unfilteredData);
@@ -3504,37 +3497,15 @@ export default function (graphContainerSelector) {
         if (unfilteredData) {
             options.compactNotationModule().filter(unfilteredData.nodes, unfilteredData.properties);
         }
-
     };
-    graph.executeEmptyLiteralFilter = function () {
 
+    graph.executeEmptyLiteralFilter = function () {
         if (unfilteredData && unfilteredData.nodes.length > 1) {
             options.literalFilter().filter(unfilteredData.nodes, unfilteredData.properties);
             unfilteredData.nodes = options.literalFilter().filteredNodes();
             unfilteredData.properties = options.literalFilter().filteredProperties();
         }
-
     };
-
-
-    /** --------------------------------------------------------- **/
-    /** -- animation functions for the nodes --                   **/
-    /** --------------------------------------------------------- **/
-
-    graph.animateDynamicLabelWidth = function () {
-        var wantedWidth = options.dynamicLabelWidth();
-        var i;
-        for (i = 0; i < classNodes.length; i++) {
-            var nodeElement = classNodes[i];
-            if (elementTools.isDatatype(nodeElement)) {
-                nodeElement.animateDynamicLabelWidth(wantedWidth);
-            }
-        }
-        for (i = 0; i < properties.length; i++) {
-            properties[i].animateDynamicLabelWidth(wantedWidth);
-        }
-    };
-
 
     /** --------------------------------------------------------- **/
     /** -- Touch behaviour functions --                   **/
@@ -3654,7 +3625,7 @@ export default function (graphContainerSelector) {
                 domainDragger.hideDragger(true);
                 shadowClone.hideClone(true);
                 if (hoveredPropertyElement && hoveredPropertyElement.focused === true && graph.options().drawPropertyDraggerOnHover() === true) {
-                    hoveredPropertyElement.labelObject().increasedLoopAngle = false;
+                    hoveredPropertyElement.labelObject.increasedLoopAngle = false;
                     // lazy update
                     recalculatePositions();
                 }
@@ -3738,8 +3709,8 @@ export default function (graphContainerSelector) {
         if (val === true) {
             clearTimeout(delayedHider);
             if (hoveredPropertyElement) {
-                if (hoveredPropertyElement.domain() === hoveredPropertyElement.range()) {
-                    hoveredPropertyElement.labelObject().increasedLoopAngle = false;
+                if (hoveredPropertyElement.domain === hoveredPropertyElement.range) {
+                    hoveredPropertyElement.labelObject.increasedLoopAngle = false;
                     recalculatePositions();
                 }
             }
@@ -3749,8 +3720,8 @@ export default function (graphContainerSelector) {
 
 
                 if (property.type !== "owl:DatatypeProperty") {
-                    if (property.domain() === property.range()) {
-                        property.labelObject().increasedLoopAngle = true;
+                    if (property.domain === property.range) {
+                        property.labelObject.increasedLoopAngle = true;
                         recalculatePositions();
                     }
                     shadowClone.setParentProperty(property, inversed);
@@ -3777,8 +3748,8 @@ export default function (graphContainerSelector) {
                     rangeDragger.hideDragger(true);
                     domainDragger.hideDragger(true);
                     shadowClone.hideClone(true);
-                    if (property.domain() === property.range()) {
-                        property.labelObject().increasedLoopAngle = false;
+                    if (property.domain === property.range) {
+                        property.labelObject.increasedLoopAngle = false;
                         recalculatePositions();
                     }
                 }
@@ -3853,17 +3824,17 @@ export default function (graphContainerSelector) {
     }
 
     function setDeleteHoverElementPositionProperty(property, inversed) {
-        if (property && property.labelElement()) {
-            var pos = [property.labelObject().x, property.labelObject().y];
-            var widthElement = parseFloat(property.getShapeElement().attr("width"));
-            var heightElement = parseFloat(property.getShapeElement().attr("height"));
+        if (property && property.labelElement) {
+            var pos = [property.labelObject.x, property.labelObject.y];
+            var widthElement = parseFloat(property.shapeElement.attr("width"));
+            var heightElement = parseFloat(property.shapeElement.attr("height"));
             var delX = pos[0] + 0.5 * widthElement + 6;
             var delY = pos[1] - 0.5 * heightElement - 6;
             // this is the lower element
-            if (property.labelElement().attr("transform") === "translate(0,15)")
+            if (property.labelElement.attr("transform") === "translate(0,15)")
                 delY += 15;
             // this is upper element
-            if (property.labelElement().attr("transform") === "translate(0,-15)")
+            if (property.labelElement.attr("transform") === "translate(0,-15)")
                 delY -= 15;
             deleteGroupElement.attr("transform", "translate(" + delX + "," + delY + ")");
         } else {
@@ -3899,7 +3870,7 @@ export default function (graphContainerSelector) {
                 node.locked = false;
             }
             if (hoveredPropertyElement && hoveredPropertyElement.focused === false) {
-                hoveredPropertyElement.labelObject().increasedLoopAngle = false;
+                hoveredPropertyElement.labelObject.increasedLoopAngle = false;
                 recalculatePositions();
                 // update the loopAngles;
             }

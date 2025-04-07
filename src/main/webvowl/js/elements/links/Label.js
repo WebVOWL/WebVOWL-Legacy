@@ -18,12 +18,12 @@ function Label(property, link) {
   // "Forward" the fixed value set on the property to avoid having to access this container
   Object.defineProperty(this, "fixed", {
     get: function () {
-      var inverseFixed = property.inverse() ? property.inverse().fixed : false;
+      var inverseFixed = property.inverse ? property.inverse.fixed : false;
       return property.fixed || inverseFixed;
     },
     set: function (v) {
       property.fixed = v;
-      if (property.inverse()) property.inverse().fixed = v;
+      if (property.inverse) property.inverse.fixed = v;
     }
   });
   this.frozen = property.frozen;
@@ -40,7 +40,7 @@ Label.prototype.draw = function (container) {
 };
 
 Label.prototype.inverse = function () {
-  return this.property().inverse();
+  return this.property().inverse;
 };
 
 Label.prototype.equals = function (other) {
@@ -52,9 +52,9 @@ Label.prototype.equals = function (other) {
   var equalProperty = this.property().equals(other.property());
 
   var equalInverse = false;
-  if (this.inverse()) {
-    equalInverse = this.inverse().equals(other.inverse());
-  } else if (!other.inverse()) {
+  if (this.inverse) {
+    equalInverse = this.inverse.equals(other.inverse);
+  } else if (!other.inverse) {
     equalInverse = true;
   }
 

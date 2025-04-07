@@ -1,38 +1,29 @@
 import SetOperatorNode from '../SetOperatorNode';
 
-export default function () {
+export class OwlComplementOf extends SetOperatorNode {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        SetOperatorNode.apply(this, arguments);
+        this.styleClass = "complementof"
+        this.type = "owl:complementOf"
+    }
 
-        var that = this,
-            superDrawFunction = that.draw;
+    draw(element) {
+        super.draw(element);
+        var symbol = element.append("g").classed("embedded", true);
 
-        this.styleClass = "complementof";
-        this.type = "owl:complementOf";
+        symbol.append("circle")
+            .attr("class", "symbol")
+            .classed("fineline", true)
+            .attr("r", 10);
+        symbol.append("path")
+            .attr("class", "nofill")
+            .attr("d", "m -7,-1.5 12,0 0,6")
+            .attr("transform", "scale(.5)");
 
-        this.draw = function (element) {
-            superDrawFunction(element);
+        symbol.attr("transform",
+            "translate(-" + (this.radius - 15) / 100 + ",-" + (this.radius - 15) / 100 + ")");
 
-            var symbol = element.append("g").classed("embedded", true);
-
-            symbol.append("circle")
-                .attr("class", "symbol")
-                .classed("fineline", true)
-                .attr("r", 10);
-            symbol.append("path")
-                .attr("class", "nofill")
-                .attr("d", "m -7,-1.5 12,0 0,6")
-                .attr("transform", "scale(.5)");
-
-            symbol.attr("transform",
-                "translate(-" + (that.radius() - 15) / 100 + ",-" + (that.radius() - 15) / 100 + ")");
-
-            that.postDrawActions();
-        };
-    };
-    o.prototype = Object.create(SetOperatorNode.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
+        this.postDrawActions();
+    }
+}

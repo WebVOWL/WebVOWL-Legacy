@@ -7,8 +7,8 @@ export default function () {
 
         var superGenerateCardinalityText = this.generateCardinalityText;
 
-        this.linkType("values-from");
-        this.markerType("filled values-from");
+        this.linkType = "values-from";
+        this.markerType = "filled values-from";
         this.styleClass = "allvaluesfromproperty";
         this.type = "owl:allValuesFrom";
 

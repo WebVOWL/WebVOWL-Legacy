@@ -22,7 +22,7 @@ export default function (graph) {
       graph.options().editSidebar().updateSelectionInformation(focusedElement);
       if (elementTools.isProperty(selectedElement) === true) {
         var inversed = false;
-        if (selectedElement.inverse()) {
+        if (selectedElement.inverse) {
           inversed = true;
         }
         graph.activateHoverElementsForProperties(true, selectedElement, inversed, graph.isTouchDevice());

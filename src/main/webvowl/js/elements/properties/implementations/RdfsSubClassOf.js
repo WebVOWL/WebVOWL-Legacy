@@ -10,7 +10,7 @@ export default function () {
             label = "Subclass of";
 
         this.draw = function (labelGroup) {
-            that.labelVisible(!graph.options().compactNotation());
+            that.labelVisible = !graph.options().compactNotation();
             return superDrawFunction(labelGroup);
         };
 
@@ -20,8 +20,8 @@ export default function () {
             return this;
         };
 
-        this.linkType("dotted");
-        this.markerType("white");
+        this.linkType = "dotted";
+        this.markerType = "white";
         this.styleClass = "subclass";
         this.type = "rdfs:subClassOf";
 

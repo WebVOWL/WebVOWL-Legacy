@@ -30,7 +30,8 @@ describe("Collapsing of subclassOf properties", function () {
 			subProperty = new RdfsSubClassOf(),
 			subclass = new OwlClass();
 
-		subProperty.domain(subclass).range(superClass);
+		subProperty.domain = subclass;
+		subProperty.range = superClass;
 
 		collapser.filter([superClass, subclass], [subProperty]);
 
@@ -46,8 +47,10 @@ describe("Collapsing of subclassOf properties", function () {
 			subSubProperty = new RdfsSubClassOf(),
 			subSubclass = new OwlClass();
 
-		subProperty.domain(subclass).range(superClass);
-		subSubProperty.domain(subSubclass).range(subclass);
+		subProperty.domain = subclass;
+		subProperty.range = superClass;
+		subSubProperty.domain = subSubclass;
+		subSubProperty.range = subclass;
 
 		collapser.filter([superClass, subclass, subSubclass], [subProperty, subSubProperty]);
 
@@ -64,8 +67,11 @@ describe("Collapsing of subclassOf properties", function () {
 			nodes = [superClass, subclass],
 			properties = [subProperty, otherProperty];
 
-		subProperty.domain(subclass).range(superClass);
-		otherProperty.domain(subclass).range(superClass);
+		subProperty.domain = subclass;
+		subProperty.range = superClass;
+
+		otherProperty.domain = subclass;
+		otherProperty.range = superClass;
 
 		collapser.filter(nodes, properties);
 
@@ -81,8 +87,10 @@ describe("Collapsing of subclassOf properties", function () {
 			nodes = [superClass, subclass],
 			properties = [subProperty, otherProperty];
 
-		subProperty.domain(subclass).range(superClass);
-		otherProperty.domain(superClass).range(subclass);
+		subProperty.domain = subclass;
+		subProperty.range = superClass;
+		otherProperty.domain = superClass;
+		otherProperty.range = subclass;
 
 		collapser.filter(nodes, properties);
 
@@ -101,9 +109,12 @@ describe("Collapsing of subclassOf properties", function () {
 			nodes = [superClass, subclass, subSubclass, otherNode],
 			properties = [subProperty, subSubclassProperty, otherProperty];
 
-		subProperty.domain(subclass).range(superClass);
-		subSubclassProperty.domain(subSubclass).range(subclass);
-		otherProperty.domain(otherNode).range(subSubclass);
+		subProperty.domain = subclass;
+		subProperty.range = superClass;
+		subSubclassProperty.domain = subSubclass;
+		subSubclassProperty.range = subclass;
+		otherProperty.domain = otherNode;
+		otherProperty.range = subSubclass;
 
 		collapser.filter(nodes, properties);
 
@@ -120,8 +131,10 @@ describe("Collapsing of subclassOf properties", function () {
 			nodes = [superClass1, superClass2, subclass],
 			properties = [subProperty1, subProperty2];
 
-		subProperty1.domain(subclass).range(superClass1);
-		subProperty2.domain(subclass).range(superClass2);
+		subProperty1.domain = subclass;
+		subProperty1.range = superClass1;
+		subProperty2.domain = subclass
+		subProperty2.range = superClass2;
 
 		collapser.filter(nodes, properties);
 
@@ -135,7 +148,8 @@ describe("Collapsing of subclassOf properties", function () {
 			nodes = [loopSubClass],
 			properties = [subProperty];
 
-		subProperty.domain(loopSubClass).range(loopSubClass);
+		subProperty.domain = loopSubClass;
+		subProperty.range = loopSubClass;
 
 		collapser.filter(nodes, properties);
 

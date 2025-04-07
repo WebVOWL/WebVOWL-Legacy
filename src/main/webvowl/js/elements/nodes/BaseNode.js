@@ -2,23 +2,25 @@ import BaseElement from '../BaseElement';
 
 export class BaseNode extends BaseElement {
     constructor(graph) {
+        super(graph)
+
         // Basic attributes
-        this.complement     // Array<string> | undefined
-        this.disjointUnion  // Array<string> | undefined
-        this.disjointWith   // Array<string> | undefined
+        this.complement     // Array<String> | undefined
+        this.disjointUnion  // Array<String> | undefined
+        this.disjointWith   // Array<String> | undefined
         this.individuals = [] // Array<BaseNode>
-        this.intersection   // Array<string> | undefined
-        this.union          // Array<string> | undefined
+        this.intersection   // Array<String> | undefined
+        this.union          // Array<String> | undefined
         this.links          // Array<Link>
         this.rendertype = "round"
 
         // Additional attributes
-        this.foreignerObject // foreigner object for editing
+        this.foreignerObject    // HTMLElement | undefined // foreigner object for editing
         this.ignoreLocalHoverEvents = false
-        this.backupFullIri
+        this.backupFullIri      // String | undefined
 
         // Element containers
-        this.nodeElement    // HTMLElement | undefined
+        this.nodeElement        // HTMLElement | undefined
 
         // Editing attributes
         this.assignedProperties = []
@@ -43,15 +45,16 @@ export class BaseNode extends BaseElement {
         return false;
     }
 
-    existingPropertyIRI(url) {
-        // this goes via IRIS
-        for (const property of this.assignedProperties) {
-            if (property.iri === url) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // NOTE: Disabled to save memory while this method is not used
+    // existingPropertyIRI(url) {
+    //     // this goes via IRIS
+    //     for (const property of this.assignedProperties) {
+    //         if (property.iri === url) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
 
     addProperty(property) {
         if (this.assignedProperties.indexOf(property) === -1) {
@@ -101,17 +104,17 @@ export class BaseNode extends BaseElement {
         }
 
         this.backupFullIri = undefined;
-        graph.options().focuserModule().handle(undefined);
-        graph.options().focuserModule().handle(this);
+        this.graph.options().focuserModule().handle(undefined);
+        this.graph.options().focuserModule().handle(this);
         // add again the editing elements to this one
-        if (graph.isTouchDevice() === true) {
-            graph.activateHoverElements(true, this, true);
+        if (this.graph.isTouchDevice() === true) {
+            this.graph.activateHoverElements(true, this, true);
         }
         this.editingTextElement = true;
         this.ignoreLocalHoverEvents = true;
         this.nodeElement.selectAll("circle").classed("hoveredForEditing", true);
-        graph.killDelayedTimer();
-        graph.ignoreOtherHoverEvents(false);
+        this.graph.killDelayedTimer();
+        this.graph.ignoreOtherHoverEvents(false);
         this.foreignerObject = this.nodeElement.append("foreignObject")
             .attr("x", -0.5 * (this.textWidth() - 2))
             .attr("y", -12)
@@ -177,7 +180,7 @@ export class BaseNode extends BaseElement {
                     this.backupFullIri = syncedIRI;
 
                     d3.select("#element_iriEditor").node().title = syncedIRI;
-                    d3.select("#element_iriEditor").node().value = graph.options().prefixModule().getPrefixRepresentationForFullURI(syncedIRI);
+                    d3.select("#element_iriEditor").node().value = this.graph.options().prefixModule().getPrefixRepresentationForFullURI(syncedIRI);
                 }
                 d3.select("#element_labelEditor").node().value = editText.node().value;
             })
@@ -191,30 +194,30 @@ export class BaseNode extends BaseElement {
                 this.label = newLabel;
                 this.backupLabel = newLabel;
                 this.redrawLabelText();
-                this.frozen = graph.paused();
-                this.locked = graph.paused();
-                graph.ignoreOtherHoverEvents(false);
+                this.frozen = this.graph.paused();
+                this.locked = this.graph.paused();
+                this.graph.ignoreOtherHoverEvents(false);
                 // console.log("Calling blur on Node!");
                 if (this.backupFullIri) {
-                    const sanityCheckResult = graph.checkIfIriClassAlreadyExist(this.backupFullIri);
+                    const sanityCheckResult = this.graph.checkIfIriClassAlreadyExist(this.backupFullIri);
                     if (sanityCheckResult === false) {
                         this.iri = this.backupFullIri;
                     } else {
                         // throw warning
-                        graph.options().warningModule().showWarning("Already seen this class",
+                        this.graph.options().warningModule().showWarning("Already seen this class",
                             "Input IRI: " + this.backupFullIri + " for element: " + this.labelForCurrentLanguage() + " already been set",
                             "Restoring previous IRI for Element : " + this.iri, 2, false, sanityCheckResult);
                     }
                 }
-                if (graph.isADraggerActive() === false) {
-                    graph.options().focuserModule().handle(undefined);
-                    graph.options().focuserModule().handle(this);
+                if (this.graph.isADraggerActive() === false) {
+                    this.graph.options().focuserModule().handle(undefined);
+                    this.graph.options().focuserModule().handle(this);
                 }
             });
     }
 
     /**
-     * @returns {string} the css class of this node
+     * @returns {String} the css class of this node
      */
     cssClassOfNode() {
         return "node" + this.id;
@@ -226,7 +229,7 @@ export class BaseNode extends BaseElement {
      */
     collectCssClasses() {
         var cssClasses = [];
-        if (typeof this.styleClass === "string") {
+        if (typeof this.styleClass === "String") {
             cssClasses.push(this.styleClass);
         }
         cssClasses = cssClasses.concat(this.visualAttributes);
@@ -241,8 +244,8 @@ export class BaseNode extends BaseElement {
             return;
         }
         this.nodeElement.selectAll("*")
-            .on("mouseover", _onMouseOver)
-            .on("mouseout", _onMouseOut);
+            .on("mouseover", this.#onMouseOver)
+            .on("mouseout", this.#onMouseOut);
     }
 
     animationProcess() {
@@ -272,35 +275,34 @@ export class BaseNode extends BaseElement {
         }
     }
 
-    _onMouseOver() {
+    #onMouseOver() {
         if (this.mouseEntered || this.ignoreLocalHoverEvents === true) {
             return;
         }
 
         var selectedNode = this.nodeElement.node(), nodeContainer = selectedNode.parentNode;
-
         // Append hovered element as last child to the container list.
         if (this.animationProcess() === false) {
             nodeContainer.appendChild(selectedNode);
         }
-        if (graph.isTouchDevice() === false) {
+        if (this.graph.isTouchDevice() === false) {
             this.setHoverHighlighting(true);
             this.mouseEntered = true;
-            if (graph.editorMode() === true && graph.ignoreOtherHoverEvents() === false) {
-                graph.activateHoverElements(true, this);
+            if (this.graph.editorMode() === true && this.graph.ignoreOtherHoverEvents() === false) {
+                this.graph.activateHoverElements(true, this);
             }
         } else {
-            if (graph.editorMode() === true && graph.ignoreOtherHoverEvents() === false) {
-                graph.activateHoverElements(true, this, true);
+            if (this.graph.editorMode() === true && this.graph.ignoreOtherHoverEvents() === false) {
+                this.graph.activateHoverElements(true, this, true);
             }
         }
     }
 
-    _onMouseOut() {
+    #onMouseOut() {
         this.setHoverHighlighting(false);
         this.mouseEntered = false;
-        if (graph.editorMode() === true && graph.ignoreOtherHoverEvents() === false) {
-            graph.activateHoverElements(false);
+        if (this.graph.editorMode() === true && this.graph.ignoreOtherHoverEvents() === false) {
+            this.graph.activateHoverElements(false);
         }
     }
 }

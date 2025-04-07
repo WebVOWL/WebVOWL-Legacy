@@ -566,7 +566,7 @@ export default function (graph) {
             d3.select("#element_labelEditor").node().disabled = false;
         }
         element.label = identifier;
-        element.dType(givenName);
+        element.dType = givenName;
         element.iri = "http://www.w3.org/2001/XMLSchema#" + identifier;
         element.baseIri = "http://www.w3.org/2001/XMLSchema#";
         element.redrawLabelText();
@@ -682,6 +682,7 @@ export default function (graph) {
             }
         }
 
+        // NOTE: Remember to enable method `existingPropertyIRI` in classes `BaseNode` and `BaseProperty` if this code is ever used
         // if (element.existingPropertyIRI(url)===true){
         //     console.log("I Have seen this Particular URL already "+url);
         //     graph.options().warningModule().showWarning("Already Seen This one ",
@@ -925,7 +926,7 @@ export default function (graph) {
                 d3.select("#element_iriEditor").node().disabled = true;
                 d3.select("#element_labelEditor").node().disabled = true;
 
-                datatypeEditorSelection.node().value = element.dType();
+                datatypeEditorSelection.node().value = element.dType;
                 if (datatypeEditorSelection.node().value === "undefined") {
                     d3.select("#element_iriEditor").node().disabled = true; // always prevent IRI modifications
                     d3.select("#element_labelEditor").node().disabled = false;
@@ -1250,7 +1251,7 @@ export default function (graph) {
             else {
                 availiblePrototypes.push("owl:ObjectProperty");
                 // handling loops !
-                if (selectedElement.domain() !== selectedElement.range()) {
+                if (selectedElement.domain !== selectedElement.range) {
                     availiblePrototypes.push("rdfs:subClassOf");
                 }
                 availiblePrototypes.push("owl:disjointWith");

@@ -14,7 +14,7 @@ export default function () {
             return this;
         };
 
-        this.linkType("dashed");
+        this.linkType = "dashed";
         this.styleClass = "disjointwith";
         this.type = "owl:disjointWith";
 
@@ -40,9 +40,6 @@ export default function () {
                 textElement.addSubText("disjoint");
             }
             textElement.translation(0, 20);
-        };
-        this.getShapeElement = function () {
-            return shapeElement;
         };
         this.markerElement = function () {
             return undefined;

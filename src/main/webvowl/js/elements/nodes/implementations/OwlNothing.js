@@ -1,16 +1,11 @@
 import OwlThing from './OwlThing';
 
-export default function () {
+export class OwlNothing extends OwlThing {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        OwlThing.apply(this, arguments);
-
-        this.label = "Nothing";
-        this.type = "owl:Nothing";
-        this.iri = "http://www.w3.org/2002/07/owl#Nothing";
-    };
-    o.prototype = Object.create(OwlThing.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
+        this.label = "Nothing"
+        this.type = "owl:Nothing"
+        this.iri = "http://www.w3.org/2002/07/owl#Nothing"
+    }
+}

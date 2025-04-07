@@ -32,21 +32,21 @@ export default function () {
       var prop = properties[i];
 
       // checking for literals
-      if (prop.range()) {
-        node = prop.range();
+      if (prop.range) {
+        node = prop.range;
         if (node.type === "rdfs:Literal") {
           literalUsageMap[node.id] = 1;
         }
       }
       // checking for thing
-      if (prop.range()) {
-        node = prop.range();
+      if (prop.range) {
+        node = prop.range;
         if (node.type === "owl:Thing") {
           thingUsageMap[node.id] = 1;
         }
       }
-      if (prop.domain()) {
-        node = prop.domain();
+      if (prop.domain) {
+        node = prop.domain;
         if (node.type === "owl:Thing") {
           thingUsageMap[node.id] = 1;
         }

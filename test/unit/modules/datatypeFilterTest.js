@@ -30,7 +30,8 @@ describe("Collapsing of datatypes", function () {
 			datatypeProperty = new DatatypeProperty(),
 			datatypeClass = new RdfsDatatype();
 
-		datatypeProperty.domain(domain).range(datatypeClass);
+		datatypeProperty.domain = domain
+		datatypeProperty.range = datatypeClass;
 
 		filter.filter([domain, datatypeClass], [datatypeProperty]);
 

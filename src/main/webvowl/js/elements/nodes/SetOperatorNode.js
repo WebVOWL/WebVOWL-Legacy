@@ -1,73 +1,61 @@
 import AbsoluteTextElement from '../../util/AbsoluteTextElement';
+import { DrawTools } from '../drawTools';
 import BoxArrowLink from '../links/BoxArrowLink';
-import RoundNode from './RoundNode';
-import drawToolsFactory from '../drawTools';
-const drawTools = drawToolsFactory();
+import { RoundNode } from './RoundNode';
 
-export default function () {
+export class SetOperatorNode extends RoundNode {
+    constructor(graph) {
+        super(graph)
+    }
+    setHoverHighlighting(enable) {
+        super.setHoverHighlighting(enable);
 
-  var o = function (graph) {
-    RoundNode.apply(this, arguments);
+        // Highlight links pointing to included nodes when hovering the set operator
+        this.links
+            .filter(function (link) {
+                return link instanceof BoxArrowLink;
+            })
+            .filter(function (link) {
+                return link.domain.equals(this);
+            })
+            .forEach(function (link) {
+                link.property().setHighlighting(enable);
+            });
+    }
 
-    var that = this,
-      superHoverHighlightingFunction = that.setHoverHighlighting,
-      superPostDrawActions = that.postDrawActions;
+    draw(element) {
+        this.nodeElement = element;
+        DrawTools.appendCircularClass(element, this.smallestRadius,
+            this.collectCssClasses().join(" "),
+            this.labelForCurrentLanguage(), this.backgroundColor);
+    }
 
-    this.setHoverHighlighting = function (enable) {
-      superHoverHighlightingFunction(enable);
+    postDrawActions() {
+        super.postDrawActions();
+        this.textBlock.remove();
 
-      // Highlight links pointing to included nodes when hovering the set operator
-      that.links
-        .filter(function (link) {
-          return link instanceof BoxArrowLink;
-        })
-        .filter(function (link) {
-          return link.domain().equals(that);
-        })
-        .forEach(function (link) {
-          link.property().setHighlighting(enable);
-        });
-    };
+        var textElement = new AbsoluteTextElement(this.nodeElement, this.backgroundColor);
+        const equivalentsString = this.equivalentsString();
+        const offsetForFollowingEquivalents = equivalentsString ? -30 : -17;
+        const suffixForFollowingEquivalents = equivalentsString ? "," : "";
+        textElement.addText(
+            this.labelForCurrentLanguage(),
+            offsetForFollowingEquivalents,
+            "",
+            suffixForFollowingEquivalents
+        );
 
-    this.draw = function (element) {
-      that.nodeElement = element;
-      drawTools.appendCircularClass(element, that.smallestRadius,
-        that.collectCssClasses().join(" "),
-        that.labelForCurrentLanguage(), that.backgroundColor);
-    };
-
-    this.postDrawActions = function () {
-      superPostDrawActions();
-      that.textBlock().remove();
-
-      var textElement = new AbsoluteTextElement(that.nodeElement, that.backgroundColor);
-
-      var equivalentsString = that.equivalentsString();
-      var offsetForFollowingEquivalents = equivalentsString ? -30 : -17;
-      var suffixForFollowingEquivalents = equivalentsString ? "," : "";
-      textElement.addText(that.labelForCurrentLanguage(), offsetForFollowingEquivalents, "",
-        suffixForFollowingEquivalents);
-
-      textElement.addEquivalents(equivalentsString, -17);
-
-
-      if (!graph.options().compactNotation()) {
-
-        if (that.indicationString().length > 0) {
-          textElement.addSubText(that.indicationString(), 17);
-          textElement.addInstanceCount(that.individuals.length, 30);
+        textElement.addEquivalents(equivalentsString, -17);
+        if (!graph.options().compactNotation()) {
+            if (this.indicationString().length > 0) {
+                textElement.addSubText(this.indicationString(), 17);
+                textElement.addInstanceCount(this.individuals.length, 30);
+            } else {
+                textElement.addInstanceCount(this.individuals.length, 17);
+            }
         } else {
-          textElement.addInstanceCount(that.individuals.length, 17);
+            textElement.addInstanceCount(this.individuals.length, 17);
         }
-      } else {
-        textElement.addInstanceCount(that.individuals.length, 17);
-      }
-
-      that.textBlock(textElement);
-    };
-  };
-  o.prototype = Object.create(RoundNode.prototype);
-  o.prototype.constructor = o;
-
-  return o;
-} ();
+        this.textBlock = textElement;
+    }
+}
