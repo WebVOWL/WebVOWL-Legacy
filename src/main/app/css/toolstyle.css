@@ -159,7 +159,7 @@ html {
     cursor: pointer;
 }
 
-.dbEntry:hover, .dbEntry:focus {
+.dbEntry:hover, .dbEntry:focus .entryClickable:hover, .entryClickable:focus {
     background-color: #bdc3c7;
 }
 
