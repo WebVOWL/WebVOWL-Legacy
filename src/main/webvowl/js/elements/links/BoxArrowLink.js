@@ -1,62 +1,54 @@
-import PlainLink from './PlainLink';
+import { PlainLink } from "./PlainLink";
 
-
-export default BoxArrowLink;
-
-function BoxArrowLink(domain, range, property) {
-    PlainLink.apply(this, arguments);
-}
-
-BoxArrowLink.prototype = Object.create(PlainLink.prototype);
-BoxArrowLink.prototype.constructor = BoxArrowLink;
-
-
-BoxArrowLink.prototype.draw = function (linkGroup, markerContainer) {
-    var property = this.label.property();
-    var inverse = this.label.inverse;
-
-    createPropertyMarker(markerContainer, property);
-    if (inverse) {
-        createInverseMarker(markerContainer, inverse);
+export class BoxArrowLink extends PlainLink {
+    constructor(domain, range, property) {
+        super(domain, range, property)
     }
 
-    PlainLink.prototype.draw.apply(this, arguments);
-
-    // attach the markers to the link
-    linkGroup.attr("marker-start", "url(#" + property.markerId() + ")");
-    if (inverse) {
-        linkGroup.attr("marker-end", "url(#" + inverse.markerId() + ")");
+    #createPropertyMarker(markerContainer, inverse) {
+        var inverseMarker = this.#appendBasicMarker(markerContainer, inverse);
+        inverseMarker.attr("refX", -8);
+        inverseMarker.append("path")
+            .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
+            .classed(inverse.markerType, true);
+        inverse.markerElement = inverseMarker;
     }
-};
 
+    #createInverseMarker(markerContainer, property) {
+        var marker = this.#appendBasicMarker(markerContainer, property);
+        marker.attr("refX", 8);
+        marker.append("path")
+            .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
+            .classed(property.markerType, true);
+        property.markerElement = marker;
+    }
 
-function createPropertyMarker(markerContainer, inverse) {
-    var inverseMarker = appendBasicMarker(markerContainer, inverse);
-    inverseMarker.attr("refX", -8);
-    inverseMarker.append("path")
-        .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
-        .classed(inverse.markerType, true);
+    #appendBasicMarker(markerContainer, property) {
+        return markerContainer.append("marker")
+            .datum(property)
+            .attr("id", property.markerId())
+            .attr("viewBox", "-10 -10 20 20")
+            .attr("markerWidth", 20)
+            .attr("markerHeight", 20)
+            .attr("markerUnits", "userSpaceOnUse")
+            .attr("orient", "auto");
+    }
 
-    inverse.markerElement = inverseMarker;
-}
+    draw(linkGroup, markerContainer) {
+        var property = this.label.property;
+        var inverse = this.label.inverse;
 
-function createInverseMarker(markerContainer, property) {
-    var marker = appendBasicMarker(markerContainer, property);
-    marker.attr("refX", 8);
-    marker.append("path")
-        .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
-        .classed(property.markerType, true);
+        this.#createPropertyMarker(markerContainer, property);
+        if (inverse) {
+            this.#createInverseMarker(markerContainer, inverse);
+        }
 
-    property.markerElement = marker;
-}
+        super.draw(linkGroup);
 
-function appendBasicMarker(markerContainer, property) {
-    return markerContainer.append("marker")
-        .datum(property)
-        .attr("id", property.markerId())
-        .attr("viewBox", "-10 -10 20 20")
-        .attr("markerWidth", 20)
-        .attr("markerHeight", 20)
-        .attr("markerUnits", "userSpaceOnUse")
-        .attr("orient", "auto");
+        // attach the markers to the link
+        linkGroup.attr("marker-start", "url(#" + property.markerId() + ")");
+        if (inverse) {
+            linkGroup.attr("marker-end", "url(#" + inverse.markerId() + ")");
+        }
+    }
 }

@@ -1,107 +1,96 @@
+// Style
+const ANONYMOUS = "anonymous"
+const DATATYPE = "datatype"
+const DEPRECATED = "deprecated"
+const EXTERNAL = "external"
+const OBJECT = "object"
+const RDF = "rdf"
+
+// Representations
+const ASYMMETRIC = "asymmetric"
+const FUNCTIONAL = "functional"
+const INVERSE_FUNCTIONAL = "inverse functional"
+const IRREFLEXIVE = "irreflexive"
+const KEY = "key"
+const REFLEXIVE = "reflexive"
+const SYMMETRIC = "symmetric"
+const TRANSITIVE = "transitive"
+
+// Attribute groups
+const VISUAL_ATTRIBUTE_GROUPS = [
+    [DEPRECATED, DATATYPE, OBJECT, RDF],
+    [ANONYMOUS]
+]
+const CLASS_INDICATIONS = [DEPRECATED, EXTERNAL]
+const PROPERTY_INDICATIONS = [
+    ASYMMETRIC,
+    FUNCTIONAL,
+    INVERSE_FUNCTIONAL,
+    IRREFLEXIVE,
+    KEY,
+    REFLEXIVE,
+    SYMMETRIC,
+    TRANSITIVE
+]
+
+
 /**
  * Parses the attributes an element has and sets the corresponding attributes.
  * @returns {Function}
  */
-export default (function () {
-  var attributeParser = {},
-    // Style
-    ANONYMOUS = "anonymous",
-    DATATYPE = "datatype",
-    DEPRECATED = "deprecated",
-    EXTERNAL = "external",
-    OBJECT = "object",
-    RDF = "rdf",
-    // Representations
-    ASYMMETRIC = "asymmetric",
-    FUNCTIONAL = "functional",
-    INVERSE_FUNCTIONAL = "inverse functional",
-    IRREFLEXIVE = "irreflexive",
-    KEY = "key",
-    REFLEXIVE = "reflexive",
-    SYMMETRIC = "symmetric",
-    TRANSITIVE = "transitive",
-    // Attribute groups
-    VISUAL_ATTRIBUTE_GROUPS = [
-      [DEPRECATED, DATATYPE, OBJECT, RDF],
-      [ANONYMOUS]
-    ],
-    CLASS_INDICATIONS = [DEPRECATED, EXTERNAL],
-    PROPERTY_INDICATIONS = [ASYMMETRIC, FUNCTIONAL, INVERSE_FUNCTIONAL, IRREFLEXIVE, KEY, REFLEXIVE, SYMMETRIC,
-      TRANSITIVE];
-
-  /**
-   * Parses and sets the attributes of a class.
-   * @param clazz
-   */
-  attributeParser.parseClassAttributes = function (clazz) {
-    if (!(clazz.attributes instanceof Array)) {
-      return;
+export class AttributeParser {
+    static #parsePropertyIndications(property) {
+        for (const indication of PROPERTY_INDICATIONS) {
+            if (property.attributes.indexOf(indication) >= 0) {
+                property.indications.push(indication);
+            }
+        }
     }
 
-    parseVisualAttributes(clazz);
-    parseClassIndications(clazz);
-  };
-
-  function parseVisualAttributes(element) {
-    VISUAL_ATTRIBUTE_GROUPS.forEach(function (attributeGroup) {
-      setVisualAttributeOfGroup(element, attributeGroup);
-    });
-  }
-
-  function setVisualAttributeOfGroup(element, group) {
-    var i, l, attribute;
-
-    for (i = 0, l = group.length; i < l; i++) {
-      attribute = group[i];
-      if (element.attributes.indexOf(attribute) >= 0) {
-        element.visualAttributes.push(attribute);
-
-        // Just a single attribute is possible
-        break;
-      }
-    }
-  }
-
-  function parseClassIndications(clazz) {
-    var i, l, indication;
-
-    for (i = 0, l = CLASS_INDICATIONS.length; i < l; i++) {
-      indication = CLASS_INDICATIONS[i];
-
-      if (clazz.attributes.indexOf(indication) >= 0) {
-        clazz.indications.push(indication);
-      }
-    }
-  }
-
-  /**
-   * Parses and sets the attributes of a property.
-   * @param property
-   */
-  attributeParser.parsePropertyAttributes = function (property) {
-    if (!(property.attributes instanceof Array)) {
-      return;
+    static #parseVisualAttributes(element) {
+        for (const attributeGroup of VISUAL_ATTRIBUTE_GROUPS) {
+            this.#setVisualAttributeOfGroup(element, attributeGroup);
+        }
     }
 
-    parseVisualAttributes(property);
-    parsePropertyIndications(property);
-  };
-
-  function parsePropertyIndications(property) {
-    var i, l, indication;
-
-    for (i = 0, l = PROPERTY_INDICATIONS.length; i < l; i++) {
-      indication = PROPERTY_INDICATIONS[i];
-
-      if (property.attributes.indexOf(indication) >= 0) {
-        property.indications.push(indication);
-      }
+    static #setVisualAttributeOfGroup(element, group) {
+        for (const attribute of group) {
+            if (element.attributes.indexOf(attribute) >= 0) {
+                element.visualAttributes.push(attribute);
+                break; // Just a single attribute is possible
+            }
+        }
     }
-  }
 
+    static #parseClassIndications(_class) {
+        for (const indication of CLASS_INDICATIONS) {
+            if (_class.attributes.indexOf(indication) >= 0) {
+                _class.indications.push(indication);
+            }
+        }
+    }
 
-  return function () {
-    // Return a function to keep module interfaces consistent
-    return attributeParser;
-  };
-})();
+    /**
+     * Parses and sets the attributes of a class.
+     * @param _class
+     */
+    static parseClassAttributes(_class) {
+        if (!(_class.attributes instanceof Array)) {
+            return;
+        }
+        this.#parseVisualAttributes(_class);
+        this.#parseClassIndications(_class);
+    }
+
+    /**
+     * Parses and sets the attributes of a property.
+     * @param property
+     */
+    static parsePropertyAttributes(property) {
+        if (!(property.attributes instanceof Array)) {
+            return;
+        }
+        this.#parseVisualAttributes(property);
+        this.#parsePropertyIndications(property);
+    }
+}

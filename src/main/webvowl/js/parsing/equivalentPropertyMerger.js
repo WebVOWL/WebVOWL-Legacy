@@ -1,149 +1,150 @@
-import OwlThing from '../elements/nodes/implementations/OwlThing';
-import RdfsLiteral from '../elements/nodes/implementations/RdfsLiteral';
+import { OwlThing } from '../elements/nodes/implementations/OwlThing';
+import { RdfsLiteral } from '../elements/nodes/implementations/RdfsLiteral';
 import elementToolsFactory from '../util/elementTools';
 const elementTools = elementToolsFactory();
 
-var equivalentPropertyMerger = {};
 
-export default function () {
-  return equivalentPropertyMerger;
-};
-
-var PREFIX = "GENERATED-MERGED_RANGE-";
-var OBJECT_PROPERTY_DEFAULT_RANGE_TYPE = "owl:Thing";
-var DATA_PROPERTY_DEFAULT_RANGE_TYPE = "rdfs:Literal";
+const PREFIX = "GENERATED-MERGED_RANGE-"
+const OBJECT_PROPERTY_DEFAULT_RANGE_TYPE = "owl:Thing"
+const DATA_PROPERTY_DEFAULT_RANGE_TYPE = "rdfs:Literal"
 
 
-equivalentPropertyMerger.merge = function (properties, nodes, propertyMap, nodeMap, graph) {
-  var totalNodeIdsToHide = d3.set();
-  var processedPropertyIds = d3.set();
-  var mergeNodes = [];
+export class EquivalentPropertyMerger {
 
-  for (var i = 0; i < properties.length; i++) {
-    var property = properties[i];
-    var equivalents = property.equivalents.map(createIdToPropertyMapper(propertyMap));
+    /**
+     * @param {Array} properties
+     * @param {Array} nodes
+     * @param {Object} propertyMap
+     * @param {Object} nodeMap
+     * @param {Object} graph
+     * @returns
+     */
+    static merge(properties, nodes, propertyMap, nodeMap, graph) {
+        var totalNodeIdsToHide = new Set();
+        var processedPropertyIds = new Set();
+        var mergeNodes = [];
 
-    if (equivalents.length === 0 || processedPropertyIds.has(property.id)) {
-      continue;
+        for (const property of properties) {
+            const equivalents = property.equivalents.map(this.#createIdToPropertyMapper(propertyMap));
+
+            if (equivalents.length === 0 || processedPropertyIds.has(property.id)) {
+                continue;
+            }
+
+            const propertyWithEquivalents = equivalents.concat(property);
+            var mergeNode = this.#findMergeNode(propertyWithEquivalents, nodeMap);
+
+            if (!mergeNode) {
+                if (mergeNode !== undefined) {
+                    mergeNode = this.#createDefaultMergeNode(property, graph);
+                    mergeNodes.push(mergeNode);
+                }
+            }
+
+            // FIXME: This call makes this function's runtime O(n^2) w.r.t. properties
+            const nodeIdsToHide = this.#replaceRangesAndCollectNodesToHide(propertyWithEquivalents, mergeNode, properties, processedPropertyIds);
+            for (const hiddenNodeID of nodeIdsToHide) {
+                totalNodeIdsToHide.add(hiddenNodeID);
+            }
+        }
+        return this.#filterVisibleNodes(nodes.concat(mergeNodes), totalNodeIdsToHide);
     }
 
-    var propertyWithEquivalents = equivalents.concat(property);
-
-    var mergeNode = findMergeNode(propertyWithEquivalents, nodeMap);
-    if (!mergeNode) {
-      if (mergeNode !== undefined) {
-        mergeNode = createDefaultMergeNode(property, graph);
-        mergeNodes.push(mergeNode);
-      }
+    static #createIdToPropertyMapper(propertyMap) {
+        return function (id) {
+            return propertyMap[id];
+        };
     }
 
-    var nodeIdsToHide = replaceRangesAndCollectNodesToHide(propertyWithEquivalents, mergeNode, properties,
-      processedPropertyIds);
-    for (var j = 0; j < nodeIdsToHide.length; j++) {
-      totalNodeIdsToHide.add(nodeIdsToHide[j]);
-    }
-  }
+    static #findMergeNode(propertyWithEquivalents, nodeMap) {
+        var typeMap = this.#mapPropertiesRangesToType(propertyWithEquivalents, nodeMap);
+        var typeSet = new Set(typeMap.keys());
 
-  return filterVisibleNodes(nodes.concat(mergeNodes), totalNodeIdsToHide);
-};
+        // default types are the fallback values and should be ignored for the type determination
+        typeSet.delete(OBJECT_PROPERTY_DEFAULT_RANGE_TYPE);
+        typeSet.delete(DATA_PROPERTY_DEFAULT_RANGE_TYPE);
 
+        // exactly one type to chose from -> take the node of this type as range
+        if (typeSet.size === 1) {
+            var type = typeSet.values()[0];
+            var ranges = typeMap.get(type);
 
-function createIdToPropertyMapper(propertyMap) {
-  return function (id) {
-    return propertyMap[id];
-  };
-}
-
-function findMergeNode(propertyWithEquivalents, nodeMap) {
-  var typeMap = mapPropertiesRangesToType(propertyWithEquivalents, nodeMap);
-  var typeSet = d3.set(typeMap.keys());
-
-  // default types are the fallback values and should be ignored for the type determination
-  typeSet.remove(OBJECT_PROPERTY_DEFAULT_RANGE_TYPE);
-  typeSet.remove(DATA_PROPERTY_DEFAULT_RANGE_TYPE);
-
-  // exactly one type to chose from -> take the node of this type as range
-  if (typeSet.size() === 1) {
-    var type = typeSet.values()[0];
-    var ranges = typeMap.get(type);
-
-    if (ranges.length === 1) {
-      return ranges[0];
-    }
-  }
-}
-
-function mapPropertiesRangesToType(properties, nodeMap) {
-  var typeMap = d3.map();
-
-  properties.forEach(function (property) {
-    if (property === undefined) //@ WORKAROUND
-      return;
-
-    var range = nodeMap[property.range];
-    var type = range.type;
-
-    if (!typeMap.has(type)) {
-      typeMap.set(type, []);
+            if (ranges.length === 1) {
+                return ranges[0];
+            }
+        }
     }
 
-    typeMap.get(type).push(range);
-  });
+    /**
+     *
+     * @param {Array} properties
+     * @param {Object} nodeMap
+     * @returns {Map}
+     */
+    static #mapPropertiesRangesToType(properties, nodeMap) {
+        var typeMap = new Map();
+        for (const property of properties) {
+            if (property === undefined) {
+                //@ WORKAROUND
+                throw new TypeError(`Property cannot be '${property}' in this context`)
+            }
+            const range = nodeMap[property.range];
+            const type = range.type;
 
-  return typeMap;
-}
-
-function createDefaultMergeNode(property, graph) {
-  var range;
-
-  if (elementTools.isDatatypeProperty(property)) {
-    range = new RdfsLiteral(graph);
-  } else {
-    range = new OwlThing(graph);
-  }
-  range.id = PREFIX + property.id;
-
-  return range;
-}
-
-function replaceRangesAndCollectNodesToHide(propertyWithEquivalents, mergeNode, properties, processedPropertyIds) {
-  var nodesToHide = [];
-
-  propertyWithEquivalents.forEach(function (property) {
-
-    if (property === undefined || mergeNode === undefined) // @ WORKAROUND
-      return;
-    var oldRangeId = property.range;
-    property.range = mergeNode.id;
-    if (!isDomainOrRangeOfOtherProperty(oldRangeId, properties)) {
-      nodesToHide.push(oldRangeId);
+            if (!typeMap.has(type)) {
+                typeMap.set(type, []);
+            }
+            typeMap.get(type).push(range);
+        }
+        return typeMap;
     }
 
-    processedPropertyIds.add(property.id);
-  });
-
-  return nodesToHide;
-}
-
-function isDomainOrRangeOfOtherProperty(nodeId, properties) {
-  for (var i = 0; i < properties.length; i++) {
-    var property = properties[i];
-    if (property.domain === nodeId || property.range === nodeId) {
-      return true;
+    static #createDefaultMergeNode(property, graph) {
+        var range;
+        if (elementTools.isDatatypeProperty(property)) {
+            range = new RdfsLiteral(graph);
+        } else {
+            range = new OwlThing(graph);
+        }
+        range.id = PREFIX + property.id;
+        return range;
     }
-  }
 
-  return false;
-}
+    static #replaceRangesAndCollectNodesToHide(propertyWithEquivalents, mergeNode, properties, processedPropertyIds) {
+        var nodesToHide = [];
 
-function filterVisibleNodes(nodes, nodeIdsToHide) {
-  var filteredNodes = [];
-
-  nodes.forEach(function (node) {
-    if (!nodeIdsToHide.has(node.id)) {
-      filteredNodes.push(node);
+        for (let property of propertyWithEquivalents) {
+            if (property === undefined || mergeNode === undefined) {
+                //@ WORKAROUND
+                throw new TypeError(`Property (${property}) and mergeNode (${mergeNode}) cannot be undefined in this context`)
+            }
+            var oldRangeId = property.range;
+            property.range = mergeNode.id;
+            if (!this.#isDomainOrRangeOfOtherProperty(oldRangeId, properties)) {
+                nodesToHide.push(oldRangeId);
+            }
+            processedPropertyIds.add(property.id);
+        }
+        return nodesToHide;
     }
-  });
 
-  return filteredNodes;
+    static #isDomainOrRangeOfOtherProperty(nodeId, properties) {
+        for (var i = 0; i < properties.length; i++) {
+            var property = properties[i];
+            if (property.domain === nodeId || property.range === nodeId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static #filterVisibleNodes(nodes, nodeIdsToHide) {
+        var filteredNodes = [];
+        nodes.forEach(function (node) {
+            if (!nodeIdsToHide.has(node.id)) {
+                filteredNodes.push(node);
+            }
+        });
+        return filteredNodes;
+    }
 }

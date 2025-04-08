@@ -1,31 +1,22 @@
-import BaseProperty from '../BaseProperty';
+import { BaseProperty } from "../BaseProperty";
 
-export default function () {
+export class OwlAllValuesFromProperty extends BaseProperty {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        BaseProperty.apply(this, arguments);
+        this.linkType = "values-from"
+        this.markerType = "filled values-from"
+        this.styleClass = "allvaluesfromproperty"
+        this.type = "owl:allValuesFrom"
+    }
 
-        var superGenerateCardinalityText = this.generateCardinalityText;
-
-        this.linkType = "values-from";
-        this.markerType = "filled values-from";
-        this.styleClass = "allvaluesfromproperty";
-        this.type = "owl:allValuesFrom";
-
-        this.generateCardinalityText = function () {
-            var cardinalityText = "A";
-
-            var superCardinalityText = superGenerateCardinalityText();
-            if (superCardinalityText) {
-                cardinalityText += ", " + superCardinalityText;
-            }
-            return cardinalityText;
-        };
-    };
-    o.prototype = Object.create(BaseProperty.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
-
+    generateCardinalityText() {
+        var cardinalityText = "A";
+        const superCardinalityText = super.generateCardinalityText();
+        if (superCardinalityText) {
+            cardinalityText += ", " + superCardinalityText;
+        }
+        return cardinalityText;
+    }
+}
 

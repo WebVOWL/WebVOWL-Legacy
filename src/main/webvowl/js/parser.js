@@ -259,8 +259,7 @@ export default function (graph) {
                         graph.options().pickAndPinModule().addPinnedElement(object);
                     }
                     if (element.attributes) {
-                        let deduplicatedAttributes = d3.set(element.attributes.concat(object.attributes));
-                        object.attributes = deduplicatedAttributes.values();
+                        object.attributes = element.attributes.concat(object.attributes);
                     }
                     combinations.push(object);
                 } else {
@@ -514,7 +513,11 @@ export default function (graph) {
                 var equalProperty = getOtherEqualProperty(rawProperties, property);
                 if (equalProperty) {
                     property.visible = false;
-                    equalProperty.redundantProperties.push(property);
+                    if (equalProperty.redundantProperties instanceof Array) {
+                        equalProperty.redundantProperties.push(property);
+                    } else {
+                        equalProperty.redundantProperties = [property];
+                    }
                 }
             }
 

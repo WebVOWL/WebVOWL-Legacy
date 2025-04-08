@@ -15,14 +15,13 @@ export class DrawTools {
         var circle = parent.append("circle")
             .classed("class", true)
             .attr("r", radius);
-
-        this._addCssClasses(circle, cssClasses);
-        this._addToolTip(circle, tooltip);
-        this._addBackgroundColor(circle, backgroundColor);
+        this.#addCssClasses(circle, cssClasses);
+        this.#addToolTip(circle, tooltip);
+        this.#addBackgroundColor(circle, backgroundColor);
         return circle;
     }
 
-    static _addCssClasses(element, cssClasses) {
+    static #addCssClasses(element, cssClasses) {
         if (cssClasses instanceof Array) {
             cssClasses.forEach(function (cssClass) {
                 element.classed(cssClass, true);
@@ -30,13 +29,13 @@ export class DrawTools {
         }
     }
 
-    static _addToolTip(element, tooltip) {
+    static #addToolTip(element, tooltip) {
         if (tooltip) {
             element.append("title").text(tooltip);
         }
     }
 
-    static _addBackgroundColor(element, backgroundColor) {
+    static #addBackgroundColor(element, backgroundColor) {
         if (backgroundColor) {
             element.style("fill", backgroundColor);
         }
@@ -59,10 +58,9 @@ export class DrawTools {
             .attr("y", -height / 2)
             .attr("width", width)
             .attr("height", height);
-
-        this._addCssClasses(rectangle, cssClasses);
-        this._addToolTip(rectangle, tooltip);
-        this._addBackgroundColor(rectangle, backgroundColor);
+        this.#addCssClasses(rectangle, cssClasses);
+        this.#addToolTip(rectangle, tooltip);
+        this.#addBackgroundColor(rectangle, backgroundColor);
         return rectangle;
     }
 

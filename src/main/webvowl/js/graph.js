@@ -403,7 +403,7 @@ export default function (graphContainerSelector) {
                             pnp.handle(d, true);
                         }
                         if (d.property) {
-                            pnp.handle(d.property(), true);
+                            pnp.handle(d.property, true);
                         }
                     }
                 }
@@ -553,7 +553,7 @@ export default function (graphContainerSelector) {
 
                 // force centered positions on single-layered links
                 var link = label.link;
-                if (link.layerSize === 1 && !link.loops()) {
+                if (link.layerSize === 1 && !link.loops) {
                     var linkDomainIntersection = math.calculateIntersection(link.range, link.domain, 0);
                     var linkRangeIntersection = math.calculateIntersection(link.domain, link.range, 0);
                     position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
@@ -602,7 +602,7 @@ export default function (graphContainerSelector) {
 
             // force centered positions on single-layered links
             var link = label.link;
-            if (link.layerSize === 1 && !link.loops()) {
+            if (link.layerSize === 1 && !link.loops) {
                 var linkDomainIntersection = math.calculateIntersection(link.range, link.domain, 0);
                 var linkRangeIntersection = math.calculateIntersection(link.domain, link.range, 0);
                 position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
@@ -610,20 +610,20 @@ export default function (graphContainerSelector) {
                 label.y = position.y;
                 label.linkRangeIntersection = linkRangeIntersection;
                 label.linkDomainIntersection = linkDomainIntersection;
-                if (link.property().focused === true || hoveredPropertyElement !== undefined) {
+                if (link.property.focused === true || hoveredPropertyElement !== undefined) {
                     rangeDragger.updateElement();
                     domainDragger.updateElement();
-                    // shadowClone.setPosition(link.property().range.x,link.property().range.y);
-                    // shadowClone.setPositionDomain(link.property().domain.x,link.property().domain.y);
+                    // shadowClone.setPosition(link.property.range.x,link.property.range.y);
+                    // shadowClone.setPositionDomain(link.property.domain.x,link.property.domain.y);
                 }
             } else {
                 label.linkDomainIntersection = math.calculateIntersection(link.label, link.domain, 0);
                 label.linkRangeIntersection = math.calculateIntersection(link.label, link.range, 0);
-                if (link.property().focused === true || hoveredPropertyElement !== undefined) {
+                if (link.property.focused === true || hoveredPropertyElement !== undefined) {
                     rangeDragger.updateElement();
                     domainDragger.updateElement();
-                    // shadowClone.setPosition(link.property().range.x,link.property().range.y);
-                    // shadowClone.setPositionDomain(link.property().domain.x,link.property().domain.y);
+                    // shadowClone.setPosition(link.property.range.x,link.property.range.y);
+                    // shadowClone.setPositionDomain(link.property.domain.x,link.property.domain.y);
                 }
 
             }
@@ -637,7 +637,7 @@ export default function (graphContainerSelector) {
                 l.label.linkRangeIntersection = ptrAr[1];
                 l.label.linkDomainIntersection = ptrAr[0];
 
-                if (l.property().focused === true || hoveredPropertyElement !== undefined) {
+                if (l.property.focused === true || hoveredPropertyElement !== undefined) {
                     rangeDragger.updateElement();
                     domainDragger.updateElement();
                 }
@@ -648,11 +648,11 @@ export default function (graphContainerSelector) {
             var pathEnd = math.calculateIntersection(curvePoint, l.range, 1);
             l.linkRangeIntersection = pathStart;
             l.linkDomainIntersection = pathEnd;
-            if (l.property().focused === true || hoveredPropertyElement !== undefined) {
+            if (l.property.focused === true || hoveredPropertyElement !== undefined) {
                 domainDragger.updateElement();
                 rangeDragger.updateElement();
-                // shadowClone.setPosition(l.property().range.x,l.property().range.y);
-                // shadowClone.setPositionDomain(l.property().domain.x,l.property().domain.y);
+                // shadowClone.setPosition(l.property.range.x,l.property.range.y);
+                // shadowClone.setPositionDomain(l.property.domain.x,l.property.domain.y);
             }
             return curveFunction([pathStart, curvePoint, pathEnd]);
         });
@@ -1105,7 +1105,7 @@ export default function (graphContainerSelector) {
 
         labelGroupElements.each(function (label) {
             var success = label.draw(d3.select(this));
-            label.property().labelObject = label;
+            label.property.labelObject = label;
             // Remove empty groups without a label.
             if (!success) {
                 d3.select(this).remove();
@@ -1118,7 +1118,7 @@ export default function (graphContainerSelector) {
                 return;
             }
 
-            if (elementTools.isRdfsSubClassOf(label.property())) {
+            if (elementTools.isRdfsSubClassOf(label.property)) {
                 var parentNode = this.parentNode;
                 parentNode.insertBefore(this, parentNode.firstChild);
             }
@@ -1206,9 +1206,9 @@ export default function (graphContainerSelector) {
         labelNodes = computeLabelNodes(linkCreator.createLinks(unfilteredData.properties));
         for (var i = 0; i < labelNodes.length; i++) {
             var label = labelNodes[i];
-            if (label.property().x && label.property().y) {
-                label.x = label.property().x;
-                label.y = label.property().y;
+            if (label.property.x && label.property.y) {
+                label.x = label.property.x;
+                label.y = label.property.y;
                 // also set the prev position of the label
                 label.px = label.x;
                 label.py = label.y;
@@ -1250,7 +1250,7 @@ export default function (graphContainerSelector) {
                 }
             }
             if (node.property) {
-                nodeMap[node.property().id] = j;
+                nodeMap[node.property.id] = j;
                 var inverse = node.inverse;
                 if (inverse) {
                     nodeMap[inverse.id] = j;
@@ -1275,7 +1275,7 @@ export default function (graphContainerSelector) {
             }
 
             if (node.property) {
-                haloElement = node.property().haloGroupElement;
+                haloElement = node.property.haloGroupElement;
                 if (haloElement) {
                     halo = haloElement.selectAll(".searchResultA");
                     halo.classed("searchResultA", false);
@@ -1456,7 +1456,7 @@ export default function (graphContainerSelector) {
         // go through the dictionary and remove the ids;
         for (let i = 0; i < originalDict.length; i++) {
             let dictElement = originalDict[i];
-            let dictElementId = dictElement.property ? dictElement.property().id : dictElement.id;
+            let dictElementId = dictElement.property ? dictElement.property.id : dictElement.id;
             if (!idsToRemove.has(dictElementId)) {
                 newDict.push(dictElement);
             }
@@ -1935,25 +1935,25 @@ export default function (graphContainerSelector) {
                 if (node) {
                     if (node.property) {
                         // match search strings with property label
-                        if (node.property().inverse) {
+                        if (node.property.inverse) {
                             var searchString = graph.options().searchMenu().getSearchString().toLowerCase();
-                            var name = node.property().labelForCurrentLanguage().toLowerCase();
+                            var name = node.property.labelForCurrentLanguage().toLowerCase();
                             if (name === searchString) computeDistanceToCenter(node);
                             else {
-                                node.property().removeHalo();
-                                if (node.property().inverse) {
-                                    if (!node.property().inverse.haloGroupElement)
-                                        node.property().inverse.drawHalo();
+                                node.property.removeHalo();
+                                if (node.property.inverse) {
+                                    if (!node.property.inverse.haloGroupElement)
+                                        node.property.inverse.drawHalo();
                                     computeDistanceToCenter(node, true);
                                 }
-                                if (node.property().equivalents) {
-                                    var eq = node.property().equivalents;
+                                if (node.property.equivalents) {
+                                    var eq = node.property.equivalents;
                                     for (var e = 0; e < eq.length; e++) {
                                         if (!eq[e].haloGroupElement)
                                             eq[e].drawHalo();
                                     }
-                                    if (!node.property().haloGroupElement)
-                                        node.property().drawHalo();
+                                    if (!node.property.haloGroupElement)
+                                        node.property.drawHalo();
                                     computeDistanceToCenter(node, false);
 
                                 }
@@ -2004,29 +2004,29 @@ export default function (graphContainerSelector) {
         var radius;
 
         if (node.property && highlightOfInv === true) {
-            if (node.property().inverse) {
-                rectHalo = node.property().inverse.haloGroupElement.select("rect");
+            if (node.property.inverse) {
+                rectHalo = node.property.inverse.haloGroupElement.select("rect");
 
             } else {
-                if (node.property().haloGroupElement)
-                    rectHalo = node.property().haloGroupElement.select("rect");
+                if (node.property.haloGroupElement)
+                    rectHalo = node.property.haloGroupElement.select("rect");
                 else {
-                    node.property().drawHalo();
-                    rectHalo = node.property().haloGroupElement.select("rect");
+                    node.property.drawHalo();
+                    rectHalo = node.property.haloGroupElement.select("rect");
                 }
             }
             rectHalo.classed("hidden", true);
-            if (node.property().inverse) {
-                if (node.property().inverse.haloGroupElement) {
-                    roundHalo = node.property().inverse.haloGroupElement.select("circle");
+            if (node.property.inverse) {
+                if (node.property.inverse.haloGroupElement) {
+                    roundHalo = node.property.inverse.haloGroupElement.select("circle");
                 }
             } else {
-                roundHalo = node.property().haloGroupElement.select("circle");
+                roundHalo = node.property.haloGroupElement.select("circle");
             }
             if (roundHalo.node() === null) {
-                radius = node.property().inverse.labelWidth + 15;
+                radius = node.property.inverse.labelWidth + 15;
 
-                roundHalo = node.property().inverse.haloGroupElement.append("circle")
+                roundHalo = node.property.inverse.haloGroupElement.append("circle")
                     .classed("searchResultB", true)
                     .classed("searchResultA", false)
                     .attr("r", radius + 15);
@@ -2034,7 +2034,7 @@ export default function (graphContainerSelector) {
             }
             halo = roundHalo; // swap the halo to be round
             nodeIsRect = true;
-            container = node.property().inverse;
+            container = node.property.inverse;
         }
 
         if (node.id) {
@@ -2063,15 +2063,15 @@ export default function (graphContainerSelector) {
             }
         }
         if (node.property && !inverse) {
-            if (!node.property().haloGroupElement) return; // something went wrong before
-            rectHalo = node.property().haloGroupElement.select("rect");
+            if (!node.property.haloGroupElement) return; // something went wrong before
+            rectHalo = node.property.haloGroupElement.select("rect");
             rectHalo.classed("hidden", true);
 
-            roundHalo = node.property().haloGroupElement.select("circle");
+            roundHalo = node.property.haloGroupElement.select("circle");
             if (roundHalo.node() === null) {
-                radius = node.property().width;
+                radius = node.property.width;
 
-                roundHalo = node.property().haloGroupElement.append("circle")
+                roundHalo = node.property.haloGroupElement.append("circle")
                     .classed("searchResultB", true)
                     .classed("searchResultA", false)
                     .attr("r", radius + 15);
@@ -2079,7 +2079,7 @@ export default function (graphContainerSelector) {
             }
             halo = roundHalo; // swap the halo to be round
             nodeIsRect = true;
-            container = node.property();
+            container = node.property;
         }
 
         if (x < 0 || x > w || y < 0 || y > h) {
@@ -2141,7 +2141,7 @@ export default function (graphContainerSelector) {
             if (highlightOfInv === true)
                 dy = wY - node.y - 20;
 
-            if (highlightOfInv === false && node.property && node.property().inverse)
+            if (highlightOfInv === false && node.property && node.property.inverse)
                 dy = wY - node.y + 20;
 
             var newRadius = Math.sqrt(dx * dx + dy * dy);
@@ -2249,7 +2249,7 @@ export default function (graphContainerSelector) {
             locationId++;
             locationId = locationId % pulseNodeIds.length;
             if (node.id) node.foreground();
-            if (node.property) node.property().foreground();
+            if (node.property) node.property.foreground();
 
             targetLocationZoom(node);
         }
@@ -2329,8 +2329,8 @@ export default function (graphContainerSelector) {
                 if (le_node.property) {
                     if (pulseNodeIds.indexOf(forceId) === -1) {
                         pulseNodeIds.push(forceId);
-                        le_node.property().foreground();
-                        le_node.property().drawHalo();
+                        le_node.property.foreground();
+                        le_node.property.drawHalo();
                     }
                 }
             }
@@ -2427,8 +2427,8 @@ export default function (graphContainerSelector) {
             if (node) {
                 if (node.property) {
                     if (nodeInViewport(node, true)) {
-                        if (node.property().labelElement === undefined) continue;
-                        bbx = node.property().labelElement.node().getBoundingClientRect();
+                        if (node.property.labelElement === undefined) continue;
+                        bbx = node.property.labelElement.node().getBoundingClientRect();
                         if (bbx) {
                             contentBBox.tx = Math.min(contentBBox.tx, bbx.left);
                             contentBBox.bx = Math.max(contentBBox.bx, bbx.right);

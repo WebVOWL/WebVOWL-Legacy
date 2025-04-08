@@ -1,16 +1,11 @@
-import BaseProperty from '../BaseProperty';
+import { BaseProperty } from "../BaseProperty";
 
-export default function () {
+export class OwlFunctionalProperty extends BaseProperty {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        BaseProperty.apply(this, arguments);
-
-        this.attributes = ["functional"];
-        this.styleClass = "functionalproperty";
-        this.type = "owl:FunctionalProperty";
-    };
-    o.prototype = Object.create(BaseProperty.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
+        this.attributes = ["functional"]
+        this.styleClass = "functionalproperty"
+        this.type = "owl:FunctionalProperty"
+    }
+}

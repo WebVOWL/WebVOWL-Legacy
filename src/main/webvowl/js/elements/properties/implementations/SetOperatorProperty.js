@@ -1,18 +1,13 @@
-import BaseProperty from '../BaseProperty';
+import { BaseProperty } from "../BaseProperty";
 
-export default function () {
+export class SetOperatorProperty extends BaseProperty {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        BaseProperty.apply(this, arguments);
-
-        this.labelVisible = false;
-        this.linkType = "dashed";
-        this.markerType = "white";
-        this.styleClass = "setoperatorproperty";
-        this.type = "setOperatorProperty";
-    };
-    o.prototype = Object.create(BaseProperty.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
+        this.labelVisible = false
+        this.linkType = "dashed"
+        this.markerType = "white"
+        this.styleClass = "setoperatorproperty"
+        this.type = "setOperatorProperty"
+    }
+}

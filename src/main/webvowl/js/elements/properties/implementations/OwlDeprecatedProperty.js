@@ -1,16 +1,11 @@
 import BaseProperty from '../BaseProperty';
 
-export default function () {
+export class OwlDeprecatedProperty extends BaseProperty {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        BaseProperty.apply(this, arguments);
-
-        this.attributes = ["deprecated"];
-        this.styleClass = "deprecatedproperty";
-        this.type = "owl:DeprecatedProperty";
-    };
-    o.prototype = Object.create(BaseProperty.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
+        this.attributes = ["deprecated"]
+        this.styleClass = "deprecatedproperty"
+        this.type = "owl:DeprecatedProperty"
+    }
+}

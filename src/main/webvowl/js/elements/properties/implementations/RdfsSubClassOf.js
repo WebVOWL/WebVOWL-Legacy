@@ -1,35 +1,29 @@
-import BaseProperty from '../BaseProperty';
+import { BaseProperty } from "../BaseProperty";
 
-export default function () {
+export class RdfsSubClassOf extends BaseProperty {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        BaseProperty.apply(this, arguments);
+        this._label = "Subclass of"
+        this.linkType = "dotted"
+        this.markerType = "white"
+        this.styleClass = "subclass"
+        this.type = "rdfs:subClassOf"
+        this.baseIri = "http://www.w3.org/2000/01/rdf-schema#"
+        this.iri = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+    }
 
-        var that = this,
-            superDrawFunction = that.draw,
-            label = "Subclass of";
+    draw(labelGroup) {
+        this.labelVisible = !graph.options().compactNotation();
+        return super.draw(labelGroup);
+    }
 
-        this.draw = function (labelGroup) {
-            that.labelVisible = !graph.options().compactNotation();
-            return superDrawFunction(labelGroup);
-        };
+    get label() {
+        return this._label
+    }
 
-        // Disallow overwriting the label
-        this.label = function (p) {
-            if (!arguments.length) return label;
-            return this;
-        };
-
-        this.linkType = "dotted";
-        this.markerType = "white";
-        this.styleClass = "subclass";
-        this.type = "rdfs:subClassOf";
-
-        that.baseIri("http://www.w3.org/2000/01/rdf-schema#");
-        that.iri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-    };
-    o.prototype = Object.create(BaseProperty.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
+    // Disallow overwriting the label
+    set label(p) {
+        return
+    }
+}

@@ -468,7 +468,6 @@ export default function (graph) {
                 }
             }
         }
-        prefixModule.updatePrefixModel();
     }
 
     function deletePrefixLine() {
@@ -478,7 +477,6 @@ export default function (graph) {
         d3.select("#prefixContainerFor_" + selector).remove();
         graph.options().removePrefix(selector);
         prefix_editMode = false; // <<TODO make some sanity checks
-        prefixModule.updatePrefixModel();
     }
 
     function enablePrefixEdit(item) {
@@ -514,15 +512,11 @@ export default function (graph) {
             var editPath = d3.select("#pathFor_" + agent.selectorName);
             editPath.attr("d", "M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z");
             editPath.attr("transform", "matrix(0.45,0,0,0.45,0,5)");
-
             highlightEditButton(true, agent.selectorName, true);
-
-
         }
         if (stl === "save") {
             var newPrefixURL = d3.select("#prefixURLFor_" + selector).node().value;
             var newPrefix = d3.select("#prefixInputFor_" + selector).node().value;
-
 
             if (graph.options().updatePrefix(oldPrefix, newPrefix, oldPrefixURL, newPrefixURL) === true) {
                 d3.select("#prefixInputFor_" + newPrefix).node().disabled = true;
@@ -532,10 +526,8 @@ export default function (graph) {
                     d3.select("#containerFor_" + selector).node().title = "Edit prefix and IRI";
 
                 // change the button content
-
                 agent.elementStyle = "edit";
                 prefix_editMode = false;
-                prefixModule.updatePrefixModel();
                 var saveButton = d3.select(agent);
                 saveButton.selectAll("g").on("mouseover", function () {
                     highlightEditButton(true, agent.selectorName, false);

@@ -7,12 +7,11 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
     constructor(graph) {
         super(graph)
 
-        this.height = 20
-        this.width = 60
         this.pinGroupElement    // HTMLElement | undefined
         this.haloGroupElement   // HTMLElement | null
+        this.height = 20
+        this.width = 60
         this.labelWidth = 80
-        this.myWidth = 80
         this.defaultWidth = 80
         this.shapeElement       // HTMLElement | undefined
         this.textBlock          // HTMLElement | undefined
@@ -30,8 +29,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
         }
     }
 
-    // REVIEW: Maybe remove note NOTE: This seemingly weird way of getting the labelwidth when calling `textWidth`
-    // is required for class interface compatibility. Might need a refactor
+    // Required for class interface compatibility
     textWidth() {
         return this.labelWidth;
     }

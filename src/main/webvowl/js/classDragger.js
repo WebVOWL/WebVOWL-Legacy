@@ -33,7 +33,7 @@ export default function (graph) {
         Class_dragger.parent = parentNode;
 
         if (Class_dragger.mouseButtonPressed === false) {
-            if (Class_dragger.parent.actualRadius && Class_dragger.parent.smallestRadius) {
+            if (Class_dragger.parent.actualRadius() && Class_dragger.parent.smallestRadius) {
                 Class_dragger.x = Class_dragger.parent.x + 10 + Class_dragger.parent.smallestRadius;
                 Class_dragger.y = Class_dragger.parent.y + 10 + Class_dragger.parent.smallestRadius;
             } else {

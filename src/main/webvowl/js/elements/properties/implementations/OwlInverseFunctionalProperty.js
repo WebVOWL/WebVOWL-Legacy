@@ -1,16 +1,11 @@
-import BaseProperty from '../BaseProperty';
+import { BaseProperty } from "../BaseProperty";
 
-export default function () {
+export class OwlInverseFunctionalProperty extends BaseProperty {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        BaseProperty.apply(this, arguments);
-
-        this.attributes = ["inverse functional"];
-        this.styleClass = "inversefunctionalproperty";
-        this.type = "owl:InverseFunctionalProperty";
-    };
-    o.prototype = Object.create(BaseProperty.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
+        this.attributes = ["inverse functional"]
+        this.styleClass = "inversefunctionalproperty"
+        this.type = "owl:InverseFunctionalProperty"
+    }
+}

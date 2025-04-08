@@ -1,16 +1,11 @@
-import BaseProperty from '../BaseProperty';
+import { BaseProperty } from "../BaseProperty";
 
-export default function () {
+export class RdfProperty extends BaseProperty {
+    constructor(graph) {
+        super(graph)
 
-    var o = function (graph) {
-        BaseProperty.apply(this, arguments);
-
-        this.attributes = ["rdf"];
-        this.styleClass = "rdfproperty";
-        this.type = "rdf:Property";
-    };
-    o.prototype = Object.create(BaseProperty.prototype);
-    o.prototype.constructor = o;
-
-    return o;
-} ();
+        this.attributes = ["rdf"]
+        this.styleClass = "rdfproperty"
+        this.type = "rdf:Property"
+    }
+}

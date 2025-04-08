@@ -77,7 +77,7 @@ export class BaseNode extends BaseElement {
         this.complement = other.complement;
         this.iri = other.iri;
         this.assignedProperties = other.assignedProperties;
-        this.baseIri(other.baseIri);
+        this.baseIri = other.baseIri;
         if (other.type === "owl:Class") {
             this.backupLabel = other.label;
         }

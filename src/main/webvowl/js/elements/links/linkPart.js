@@ -1,35 +1,16 @@
 /**
  * A linkPart connects two force layout nodes.
  * It reprents a link which can be used in d3's force layout.
- * @param _domain
- * @param _range
- * @param _link
+ * @param domain
+ * @param range
+ * @param link
  */
-export default function ( _domain, _range, _link ){
-  var linkPart = {},
-    domain = _domain,
-    link = _link,
-    range = _range;
-  
-  // Define d3 properties
-  Object.defineProperties(linkPart, {
-    "source": { value: domain, writable: true },
-    "target": { value: range, writable: true }
-  });
-  
-  
-  linkPart.domain = function (){
-    return domain;
-  };
-  
-  linkPart.link = function (){
-    return link;
-  };
-  
-  linkPart.range = function (){
-    return range;
-  };
-  
-  
-  return linkPart;
-};
+export class LinkPart {
+    constructor(domain, range, link) {
+        this.domain = domain // REVIEW: Check if necessary to store
+        this.range = range // REVIEW: Check if necessary to store
+        this.link = link // REVIEW: Check if necessary to store
+        this.source = domain
+        this.target = range
+    }
+}

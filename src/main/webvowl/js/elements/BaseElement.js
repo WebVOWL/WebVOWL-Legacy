@@ -9,11 +9,11 @@ export class BaseElement {
 
         // Basic attributes
         this.equivalents = []
-        this.id         // String
-        this.label      // String
-        this.type       // String
-        this.iri        // String
-        this.baseIri    // String
+        this.id         // String | undefined
+        this.label      // String | undefined
+        this.type       // String | undefined
+        this.iri        // String | undefined
+        this.baseIri    // String | undefined
 
         // Additional attributes
         this.annotations        // Array

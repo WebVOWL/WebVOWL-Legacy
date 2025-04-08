@@ -673,7 +673,7 @@ export default function (graph) {
         });
         // property attribute variables
         for (j = 0; j < propElements.length; j++) {
-            var correspondingProp = propElements[j].property();
+            var correspondingProp = propElements[j].property;
             for (i = 0; i < propAttribute.length; i++) {
                 propertyObj = propAttribute[i];
                 if (propertyObj.id === correspondingProp.id) {
@@ -947,9 +947,9 @@ export default function (graph) {
         // draw Links;
         for (i = 0; i < links.length; i++) {
             var link = links[i];
-            // console.log("\n****************\nInverstigating Link for property "+link.property().labelForCurrentLanguage());
+            // console.log("\n****************\nInverstigating Link for property "+link.property.labelForCurrentLanguage());
 
-            var prop = link.property();
+            var prop = link.property;
             var dx, dy, px, py, rx, ry;
             var colorStr = "black";
             var linkDomainIntersection;
@@ -987,7 +987,7 @@ export default function (graph) {
 
             var startX, startY, endX, endY, normX, normY, lg;
 
-            if (link.layerSize === 1 && !link.loops()) {
+            if (link.layerSize === 1 && !link.loops) {
 
                 linkDomainIntersection = graph.math().calculateIntersection(link.range, link.domain, 1);
                 linkRangeIntersection = graph.math().calculateIntersection(link.domain, link.range, 1);
@@ -1041,22 +1041,22 @@ export default function (graph) {
                 dx + "pt, " + dy + "pt) (" + px + "pt, " + py + "pt)  (" + rx + "pt, " + ry + "pt)};\n";
 
 
-            if (link.property().markerElement === undefined) continue;
+            if (link.property.markerElement === undefined) continue;
 
             // add arrow head;
 
 
-            if (link.property().type === "owl:someValuesFrom" || link.property().type === "owl:allValuesFrom") {
+            if (link.property.type === "owl:someValuesFrom" || link.property.type === "owl:allValuesFrom") {
                 arrowType = "triangleBlue";
             }
 
-            lg = link.pathObj();
+            lg = link.pathElement;
             pathLen = Math.floor(lg.node().getTotalLength());
             var p1 = lg.node().getPointAtLength(pathLen - 4);
             var p2 = lg.node().getPointAtLength(pathLen);
             var markerCenter = lg.node().getPointAtLength(pathLen - 6);
 
-            if (link.property().type === "setOperatorProperty") {
+            if (link.property.type === "setOperatorProperty") {
                 p1 = lg.node().getPointAtLength(4);
                 p2 = lg.node().getPointAtLength(0);
                 markerCenter = lg.node().getPointAtLength(8);
@@ -1075,13 +1075,13 @@ export default function (graph) {
 
             ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
             ahAngle -= 90;
-            if (link.property().type === "setOperatorProperty") {
+            if (link.property.type === "setOperatorProperty") {
                 ahAngle -= 45;
             }
-            // console.log(link.property().labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
+            // console.log(link.property.labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
             rx = markerCenter.x;
             ry = markerCenter.y;
-            if (link.layerSize === 1 && !link.loops()) {
+            if (link.layerSize === 1 && !link.loops) {
                 // markerOffset=-1*m
                 ry = -1 * ry;
                 texString += "\\node[" + arrowType + ", rotate=" + ahAngle + "] at (" + rx + "pt, " + ry + "pt)   (single_marker" + i + ") {};\n ";
@@ -1095,7 +1095,7 @@ export default function (graph) {
             // }
 
             // add cardinality;
-            var cardinalityText = link.property().generateCardinalityText();
+            var cardinalityText = link.property.generateCardinalityText();
             if (cardinalityText && cardinalityText.length > 0) {
                 var cardinalityCenter = lg.node().getPointAtLength(pathLen - 18);
                 var cx = cardinalityCenter.x - (10 * normY);
@@ -1108,14 +1108,11 @@ export default function (graph) {
                 if (cardinalityText.indexOf("E") > -1) {
                     cardinalityText = "$\\exists$";
                 }
-
-
                 texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily },text=" + textColor + "] at (" + cx + "pt, " + cy + "pt)   (cardinalityText" + i + ") {" + cardinalityText + "};\n ";
             }
 
-
-            if (link.property().inverse) {
-                lg = link.pathObj();
+            if (link.property.inverse) {
+                lg = link.pathElement;
                 pathLen = Math.floor(lg.node().getTotalLength());
                 var p1_inv = lg.node().getPointAtLength(4);
                 var p2_inv = lg.node().getPointAtLength(0);
@@ -1132,10 +1129,10 @@ export default function (graph) {
 
                 ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
                 ahAngle -= 90;
-                //   console.log("INV>>\n "+link.property().inverse.labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
+                //   console.log("INV>>\n "+link.property.inverse.labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
                 rx = markerCenter_inv.x;
                 ry = markerCenter_inv.y;
-                if (link.layerSize === 1 && !link.loops()) {
+                if (link.layerSize === 1 && !link.loops) {
                     // markerOffset=-1*m
                     ry = -1 * ry;
                     texString += "\\node[" + arrowType + ", rotate=" + ahAngle + "] at (" + rx + "pt, " + ry + "pt)   (INV_single_marker" + i + ") {};\n ";
@@ -1279,7 +1276,7 @@ export default function (graph) {
 
         });
         for (i = 0; i < propElements.length; i++) {
-            var correspondingProp = propElements[i].property();
+            var correspondingProp = propElements[i].property;
             var p_px = propElements[i].x;
             var p_py = -propElements[i].y;
             identifier = correspondingProp.labelForCurrentLanguage();
@@ -1445,21 +1442,5 @@ export default function (graph) {
         var dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(texString);
         exportTexButton.attr("href", dataURI)
             .attr("download", exportFilename + ".tex");
-
-
     }
-
-    function calculateRadian(angle) {
-        angle = angle % 360;
-        if (angle < 0) {
-            angle = angle + 360;
-        }
-        return (Math.PI * angle) / 180;
-    }
-
-    function calculateAngle(radian) {
-        return radian * (180 / Math.PI);
-    }
-
-    return exportMenu;
 };

@@ -120,7 +120,7 @@ export default function (menu) {
 
   function filterOutDatatypes(links) {
     return links.filter(function (link) {
-      return !elementTools.isDatatypeProperty(link.property());
+      return !elementTools.isDatatypeProperty(link.property);
     });
   }
 

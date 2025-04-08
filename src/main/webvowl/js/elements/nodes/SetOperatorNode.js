@@ -19,7 +19,7 @@ export class SetOperatorNode extends RoundNode {
                 return link.domain.equals(this);
             })
             .forEach(function (link) {
-                link.property().setHighlighting(enable);
+                link.property.setHighlighting(enable);
             });
     }
 
