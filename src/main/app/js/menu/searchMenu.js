@@ -248,33 +248,117 @@ module.exports = function (graph) {
             // TODO: Figure out how to show nodes in nodeIDs
             // Showing all of them (as is done below) causes nodeString to be repeated nodeIDs.length times
             // (as all nodeIDs nodes are pointing to nodeString by definition)
-            for (const nodeID of nodeIDs) {
-                //add results to the dropdown menu
-                let testEntry = document.createElement('li');
-                testEntry.title = nodeString;
-                testEntry.setAttribute('elementID', nodeID);
-                testEntry.onclick = handleClick(nodeString, nodeIDs);
-                testEntry.setAttribute('class', "dbEntry");
 
-                let croppedText = cropText(nodeString);
-                let searchEntryNode = d3.select(testEntry);
-                if (nodeMap[nodeID] === undefined) {
-                    searchEntryNode.style("color", "#979797");
-                    testEntry.onclick = function () {
-                        try {
-                            graph.loadSearchData(nodeID);
-                            searchMenu.requestDictionaryUpdate();
-                            handleClick(nodeString, nodeIDs)();
-                        } catch (error) {
-                            console.error(error);
-                        }
-                    };
-                    d3.select(testEntry).style("cursor", "default");
-                }
+            if (nodeIDs.length > 1) {   
+
+                let testEntry = document.createElement('li');
+                let renderedNodes = 0;
+                // Change to nodeIDs.length
+                for (let nodeID of nodeIDs) if (nodeMap[nodeID] != undefined) renderedNodes++;
+                
+                let clickableAnchor = document.createElement('a');
+                clickableAnchor.setAttribute('class', "entryClickable");
+                clickableAnchor.title = nodeString + ' (' + renderedNodes + '/' + nodeIDs.length + ')';
+                clickableAnchor.onclick = handleClick(nodeString, nodeIDs, clickableAnchor);
+                clickableAnchor
+                testEntry.appendChild(clickableAnchor)
+
+                testEntry.title = nodeString + ' (' + renderedNodes + '/' + nodeIDs.length + ')';
+                testEntry.setAttribute('elementID', nodeIDs);
+                //testEntry.onclick = handleClick(nodeString, nodeIDs, testEntry);
+                //testEntry.setAttribute('class', "dbEntry");
+                let croppedText = cropText(nodeString + ' (' + renderedNodes + '/' + nodeIDs.length + ')');
+                let searchEntryNode = d3.select(clickableAnchor);
                 searchEntryNode.node().innerHTML = croppedText;
+
+                let subEntryList = document.createElement('ul');
+                subEntryList.setAttribute('class', "subEntryList");
+
+                testEntry.appendChild(subEntryList);
                 m_search.node().appendChild(testEntry);
+
+                testEntry.addEventListener("mouseenter", (e) => {
+                    let tEntry = e.target;
+                    let subEntryList = tEntry.querySelector(".subEntryList");
+                    subEntryList.style.display = "block";
+                    subEntryList.style.marginLeft = tEntry.offsetWidth + "px";
+
+                    let node = tEntry.nextSibling;
+                    let nextSiblings = 0;
+                    while (node) { 
+                        if (node.getAttribute('class', "dnEntry")) nextSiblings++;
+                        node = node.nextSibling;
+                    }
+                    subEntryList.style.marginBottom = (tEntry.offsetHeight + 0.8) * nextSiblings + 'px';
+                });
+
+                testEntry.addEventListener("mouseleave", (e) => {
+                    let tEntry = e.target;
+                    let subEntryList = tEntry.querySelector(".subEntryList");
+                    subEntryList.style.display = "none";
+                });
+                
+                generateGroupedEntries(nodeString, nodeIDs, subEntryList);
+
+            }
+            else {
+                for (const nodeID of nodeIDs) {
+                    //add results to the dropdown menu
+                    let testEntry = document.createElement('li');
+                    testEntry.title = nodeString;
+                    testEntry.setAttribute('elementID', nodeID);
+                    testEntry.onclick = handleClick(nodeString, nodeIDs);
+                    testEntry.setAttribute('class', "dbEntry");
+
+                    let croppedText = cropText(nodeString);
+                    let searchEntryNode = d3.select(testEntry);
+                    if (nodeMap[nodeID] === undefined) {
+                        searchEntryNode.style("color", "#979797");
+                        testEntry.onclick = function () {
+                            try {
+                                graph.loadSearchData(nodeID);
+                                searchMenu.requestDictionaryUpdate();
+                                handleClick(nodeString, nodeIDs)();
+                            } catch (error) {
+                                console.error(error);
+                            }
+                        };
+                        d3.select(testEntry).style("cursor", "default");
+                    }
+                    searchEntryNode.node().innerHTML = croppedText;
+                    m_search.node().appendChild(testEntry);
+                }
             }
         }
+    }
+
+    function generateGroupedEntries(titleString, nodeIDs, parent) {
+        
+        let firstShown = false;
+        for (nodeID of nodeIDs) {
+            let subEntry = document.createElement('li');
+            subEntry.title = titleString + ' id: ' + nodeID;
+            subEntry.setAttribute('elementID', nodeID);
+            subEntry.setAttribute('class', "subEntry");
+            subEntry.innerHTML = titleString + ' (' + nodeID + ')';
+            // .onclick handler
+
+            if (firstShown == false) {
+                firstShown = true;
+                subEntry.style.borderStyle = "none";
+            }
+
+            parent.appendChild(subEntry);
+        }
+
+        let showAllEntry = document.createElement('li');
+        //make this entry pretty
+        showAllEntry.title = "show all"
+        showAllEntry.setAttribute('class', "subEntry");
+        showAllEntry.innerHTML = "Show All"
+        //showAllEntry.setAttribute('class', "showAllButton");
+        parent.appendChild(showAllEntry);
+        //.onclick stuff
     }
 
     function userInput() {
