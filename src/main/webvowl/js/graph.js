@@ -1748,8 +1748,6 @@ module.exports = function (graphContainerSelector) {
     }
 
     function filterFunction(module, data, initializing) {
-        
-        
         if (initializing) {
             if (module.initialize) {
                 module.initialize(data.nodes, data.properties);
