@@ -1325,9 +1325,9 @@ module.exports = function (graphContainerSelector) {
     // resetting the graph
     graph.reset = function () {
         if(unfilteredData) {
-            options.filterModules().forEach(function (module) {
-                filterFunction(module, unfilteredData, true);
-            });
+            links = linkCreator.createLinks(unfilteredData.properties);
+            storeLinksOnNodes(unfilteredData.nodes, links);
+            filterFunction(options.nodeDegreeFilter(), unfilteredData, true);
         }
         currentData = unfilteredData;
         // window size
@@ -1748,6 +1748,8 @@ module.exports = function (graphContainerSelector) {
     }
 
     function filterFunction(module, data, initializing) {
+        
+        
         if (initializing) {
             if (module.initialize) {
                 module.initialize(data.nodes, data.properties);
