@@ -3985,7 +3985,6 @@ module.exports = function (graphContainerSelector) {
 
     function logNodeLinks(nodes) {
         let linksOnNodes = new Set();
-        forEach
         nodes.forEach((node) => {
             let nodeLinks = node.links();
             nodeLinks.forEach(function (link) {
