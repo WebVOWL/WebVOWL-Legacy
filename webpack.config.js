@@ -1,5 +1,5 @@
 "use strict";
-const paths = require("./config.js").path_func;
+const paths = require("./paths.js").path_func;
 const path = require('path');
 const webpack = require("webpack");
 const MergeWebPackPlugin = require('webpack-merge');
@@ -141,7 +141,7 @@ function getConfig(args) {
 				args: '--verbose',
 				extraArgs: '--no-typescript --target web --mode normal',
 				forceMode: "production",
-				// outDir: path.resolve(__dirname, paths.pkgPath),
+				outDir: path.resolve(__dirname, paths.pkgPath),
 				pluginLogLevel: 'info'
 			}),
 		]

@@ -1,5 +1,5 @@
 "use strict";
-const paths = require("./config.js").path_func;
+const paths = require("./paths.js").path_func;
 const getWebpackConfig = require("./webpack.config.js");
 
 
