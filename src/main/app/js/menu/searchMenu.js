@@ -1,4 +1,5 @@
 const { Trie } = require("../../../webvowl/js/datastructures/trie");
+const nodeMap = require("../../../webvowl/js/elements/nodes/nodeMap");
 
 /**
  * Contains the search "engine"
@@ -256,14 +257,24 @@ module.exports = function (graph) {
                 // Change to nodeIDs.length
                 for (let nodeID of nodeIDs) if (nodeMap[nodeID] != undefined) renderedNodes++;
                 
+                
                 let clickableAnchor = document.createElement('a');
                 clickableAnchor.setAttribute('class', "entryClickable");
                 clickableAnchor.title = nodeString + ' (' + renderedNodes + '/' + nodeIDs.length + ')';
-                clickableAnchor.onclick = handleClick(nodeString, nodeIDs, clickableAnchor);
-                clickableAnchor
-                testEntry.appendChild(clickableAnchor)
+                //clickableAnchor.onclick = handleClick(nodeString, nodeIDs, clickableAnchor);
+                testEntry.onclick = function () {
+                    try {
+                        graph.loadSearchData(Array.from(nodeIDs.values()));
+                        searchMenu.requestDictionaryUpdate();
+                        handleClick(nodeString, nodeIDs)();
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
 
-                testEntry.title = nodeString + ' (' + renderedNodes + '/' + nodeIDs.length + ')';
+                if (renderedNodes == 0) clickableAnchor.style.color = "rgb(151, 151, 151)";
+                testEntry.appendChild(clickableAnchor)
+                
                 testEntry.setAttribute('elementID', nodeIDs);
                 //testEntry.onclick = handleClick(nodeString, nodeIDs, testEntry);
                 //testEntry.setAttribute('class', "dbEntry");
@@ -298,7 +309,7 @@ module.exports = function (graph) {
                     subEntryList.style.display = "none";
                 });
                 
-                generateGroupedEntries(nodeString, nodeIDs, subEntryList);
+                generateGroupedEntries(nodeString, nodeIDs, subEntryList, nodeMap);
 
             }
             else {
@@ -314,6 +325,7 @@ module.exports = function (graph) {
                     let searchEntryNode = d3.select(testEntry);
                     if (nodeMap[nodeID] === undefined) {
                         searchEntryNode.style("color", "#979797");
+                        //testEntry.onclick = renderUnrendered(nodeString, nodeIDs)
                         testEntry.onclick = function () {
                             try {
                                 graph.loadSearchData(nodeID);
@@ -332,7 +344,17 @@ module.exports = function (graph) {
         }
     }
 
-    function generateGroupedEntries(titleString, nodeIDs, parent) {
+    function renderUnrendered(nodeString, rootNodes) {
+        try {
+            graph.loadSearchData(rootNodes);
+            searchMenu.requestDictionaryUpdate();
+            handleClick(nodeString, rootNodes)();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    function generateGroupedEntries(titleString, nodeIDs, parent, nodeMap) {
         
         let firstShown = false;
         for (nodeID of nodeIDs) {
@@ -346,6 +368,9 @@ module.exports = function (graph) {
             if (firstShown == false) {
                 firstShown = true;
                 subEntry.style.borderStyle = "none";
+            }
+            if (nodeMap[nodeID] == undefined) {
+                subEntry.style.color = "rgb(151, 151, 151)";
             }
 
             parent.appendChild(subEntry);

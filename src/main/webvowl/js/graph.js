@@ -1725,6 +1725,22 @@ module.exports = function (graphContainerSelector) {
      * @param {string} rootNodeID
      */
     graph.loadSearchData = function (rootNodeID) {
+        let rootNodes = [];
+        for(nodeID of rootNodeID) {
+            let tempNode = unfilteredDataMap.nodes.get(nodeID);
+            if (tempNode === undefined) {
+                // this is not a node - maybe a link?
+                let prop = unfilteredDataMap.properties.get(nodeID);
+                if (prop !== undefined) {
+                    rootNodes.push(prop.domain(), prop.range());
+                } else {
+                    console.log(`Failed to find a node or property with id ${rootNodeID}`);
+                }
+            } else {
+                rootNodes.push(tempNode);
+            }
+            
+        }/*
         let nodes = [unfilteredDataMap.nodes.get(rootNodeID)];
         if (nodes[0] === undefined) {
             let prop = unfilteredDataMap.properties.get(rootNodeID);
@@ -1733,8 +1749,8 @@ module.exports = function (graphContainerSelector) {
             } else {
                 console.log(`Failed to find a node or property with id ${rootNodeID}`);
             }
-        }
-        let selectedNodes = breadthFirstSearchDepth(nodes, 2);
+        }*/
+        let selectedNodes = breadthFirstSearchDepth(rootNodes, 2);
         let selectedProperties = [];
         for (const property of unfilteredData.properties) {
             if (selectedNodes.get(property.domain().id()) && selectedNodes.get(property.range().id())) {
@@ -1744,7 +1760,7 @@ module.exports = function (graphContainerSelector) {
         currentData = { nodes: Array.from(selectedNodes.values()), properties: selectedProperties };
         graph.update(false, currentData);
         graph.resetSearchHighlight();
-        graph.highLightNodes(rootNodeID);
+        graph.highLightNodes(rootNodes);
     }
 
     function filterFunction(module, data, initializing) {
