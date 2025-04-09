@@ -1,4 +1,5 @@
-import SetOperatorNode from '../SetOperatorNode';
+import { SetOperatorNode } from "../SetOperatorNode";
+
 
 function createIntersectionPath() {
     const height = 18;
@@ -19,6 +20,7 @@ function createIntersectionPath() {
 
 const INTERSECTION_BACKGROUND_PATH = createIntersectionPath();
 
+
 export class OwlIntersectionOf extends SetOperatorNode {
     constructor(graph) {
         super(graph)
@@ -27,6 +29,9 @@ export class OwlIntersectionOf extends SetOperatorNode {
         this.type = "owl:intersectionOf"
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} element
+     */
     draw(element) {
         super.draw(element);
         var symbol = element.append("g").classed("embedded", true);

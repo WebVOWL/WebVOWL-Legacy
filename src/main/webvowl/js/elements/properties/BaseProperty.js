@@ -1,48 +1,116 @@
 import CenteringTextElement from '../../util/CenteringTextElement';
 import { BaseElement } from '../BaseElement';
 import { DrawTools } from '../drawTools';
+import { PlainLink } from '../links/PlainLink';
+import { BaseNode } from '../nodes/BaseNode';
 import { RectangularElementToolsMixin } from '../rectangularElementTools';
 
 export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     constructor(graph) {
         super(graph)
+        if (this.constructor === BaseProperty) {
+            throw new Error("Abstract classes can't be instantiated")
+        }
 
         // Basic attributes
-        this.domain                 // Node
-        this.range                  // Node
-        this.inverse                // String | Number | undefined | null
-        this.link                   // Link
-        this.cardinality            // String | undefined
-        this.minCardinality         // String | undefined
-        this.maxCardinality         // String | undefined
-        this.subproperties          // Array | undefined
-        this.superproperties        // Array | undefined
+        /**
+         * @type {BaseNode | undefined}
+         */
+        this.domain = undefined
+        /**
+         * @type {BaseNode | undefined}
+         */
+        this.range = undefined
+        /**
+         * @type {BaseProperty | undefined}
+         */
+        this.inverse = undefined
+        /**
+         * @type {PlainLink}
+         */
+        this.link = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.cardinality = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.minCardinality = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.maxCardinality = undefined
+        /**
+         * @type {BaseProperty[] | undefined}
+         */
+        this.subproperties = undefined
+        /**
+         * @type {BaseProperty[] | undefined}
+         */
+        this.superproperties = undefined
+        /**
+         * @type {BaseProperty[] | undefined}
+         */
+        this.redundantProperties = undefined
 
         // Style attributes
+        /**
+         * @type {string}
+         */
         this.linkType = "normal"
+        /**
+         * @type {string}
+         */
         this.markerType = "filled"
+        /**
+         * @type {boolean}
+         */
         this.labelVisible = true
 
-        // Element containers
-        this.cardinalityElement     // HTMLElement | undefined
-        this.labelElement           // HTMLElement | undefined
-        this.linkGroup              // HTMLElement | undefined
-        this.markerElement          // HTMLElement | undefined
-
-        // Other
-        this.ignoreLocalHoverEvents // Boolean
-        this.foreignerObject        // HTMLElement | undefined
-        this.pinGroupElement        // HTMLElement | undefined
-        this.haloGroupElement       // HTMLElement | undefined
+        // Size attributes
+        /**
+         * @type {number}
+         */
         this.defaultWidth = 80
+        /**
+         * @type {number}
+         */
         this.height = 28 // labelHeight
+        /**
+         * @type {number}
+         */
         this.width = 80  // labelWidth && myWidth
+        /**
+         * @type {number}
+         */
         this.smallestRadius = this.height / 2
-        this.shapeElement           // HTMLElement | undefined
-        this.textBlock              // HTMLElement | undefined
-        this.parent_labelObject     // HTMLElement | undefined
-        this.backupFullIri          // String | undefined
-        this.redundantProperties    // Array | undefined
+
+        // Element containers
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.cardinalityElement = undefined
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.labelElement = undefined
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.linkGroup = undefined
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.markerElement = undefined
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.shapeElement = undefined
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.parent_labelObject = undefined
     }
 
     // NOTE: Disabled to save memory while this method is not used
@@ -55,7 +123,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     }
 
     /**
-     * @param {Array|any} args
+     * @param {any[] | any} args
      */
     set labelObject(args) {
         let lo = args,
@@ -70,6 +138,9 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         }
     }
 
+    /**
+     * @param {boolean} val
+     */
     hide(val) {
         this.labelElement.classed("hidden", val);
         this.linkGroup.classed("hidden", val);
@@ -90,8 +161,8 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     toggleFocus() {
         this.focused = !this.focused;
         this.labelElement.select("rect").classed("focused", this.focused);
-        graph.resetSearchHighlight();
-        graph.options().searchMenu().clearText();
+        this.graph.resetSearchHighlight();
+        this.graph.options().searchMenu().clearText();
     }
 
     redrawElement() {
@@ -99,7 +170,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         this.textBlock.remove();
 
         this.drawLabel(this.labelElement);
-        this.animateDynamicLabelWidth(graph.options().dynamicLabelWidth());
+        this.animateDynamicLabelWidth(this.graph.options().dynamicLabelWidth());
         //this. shapeElement=this.addRect(this.labelElement);
         //
         // var equivalentsString = this.equivalentsString();
@@ -112,7 +183,13 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     }
 
     // Reused functions TODO refactor
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} labelGroup
+     */
     draw(labelGroup) {
+        /**
+         * @param {BaseProperty} property
+         */
         function attachLabel(property) {
             var labelContainer = labelGroup.append("g")
                 .datum(property)
@@ -126,8 +203,8 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         if (!this.labelVisible) {
             return undefined;
         }
-        if (graph.options().dynamicLabelWidth() === true) {
-            this.width = Math.min(this.getMyWidth(), graph.options().maxLabelWidth());
+        if (this.graph.options().dynamicLabelWidth() === true) {
+            this.width = Math.min(this.getMyWidth(), this.graph.options().maxLabelWidth());
         } else {
             this.width = this.defaultWidth;
         }
@@ -137,7 +214,6 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         if (this.inverse) {
             const yTransformation = (this.height / 2) + 1 /* additional space */;
             this.inverse.labelElement = attachLabel(this.inverse);
-
             this.labelElement.attr("transform", "translate(" + 0 + ",-" + yTransformation + ")");
             this.inverse
                 .labelElement
@@ -156,6 +232,9 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         return this.labelElement;
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} labelContainer
+     */
     addRect(labelContainer) {
         var rect = labelContainer.append("rect")
             .classed(this.styleClass, true)
@@ -187,6 +266,9 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         return rect;
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} labelContainer
+     */
     drawLabel(labelContainer) {
         this.shapeElement = this.addRect(labelContainer);
         var equivalentsString = this.equivalentsString();
@@ -209,7 +291,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         }
 
         return equivalentProperties
-            .map(function (property) {
+            .map(function (/** @type {BaseProperty} */ property) {
                 if (property === undefined || typeof (property) === "string") { // @WORKAROUND
                     return "ERROR";
                 }
@@ -219,8 +301,8 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     }
 
     /**
-     * @param {*} container
-     * @returns {boolean} True if drawing successful
+     * @param {d3.Selection<any,any,null,undefined>} container
+     * @returns {boolean} True if drawing is successful
      */
     drawCardinality(container) {
         const cardinalityText = this.generateCardinalityText();
@@ -267,8 +349,12 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
             var maxBoundary = this.maxCardinality || "*";
             return minBoundary + ".." + maxBoundary;
         }
+        throw new Error(`Cannot generate cardinality from values (${this.cardinality}, ${this.minCardinality}, ${this.maxCardinality})`)
     }
 
+    /**
+     * @param {boolean} enable
+     */
     setHighlighting(enable) {
         if (this.labelElement && this.labelElement) {
             this.labelElement.select("rect").classed("hovered", enable);
@@ -290,12 +376,12 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         });
 
         var inversed = false;
-        if (graph.ignoreOtherHoverEvents() === false) {
+        if (this.graph.ignoreOtherHoverEvents() === false) {
             if (this.inverse) {
                 inversed = true;
             }
-            if (graph.isTouchDevice() === false) {
-                graph.activateHoverElementsForProperties(enable, this, inversed);
+            if (this.graph.isTouchDevice() === false) {
+                this.graph.activateHoverElementsForProperties(enable, this, inversed);
             }
             else {
                 this.labelElement.select("rect").classed("hovered", false);
@@ -306,7 +392,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                         this.cardinalityElement.classed("hovered", false);
                     }
                 }
-                graph.activateHoverElementsForProperties(enable, this, inversed, true);
+                this.graph.activateHoverElementsForProperties(enable, this, inversed, true);
             }
         }
     }
@@ -314,9 +400,11 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     /**
      * Combines the sub- and superproperties into a single array, because
      * they're often used equivalently.
-     * @returns {Array}
      */
     #getSubAndSuperProperties() {
+        /**
+         * @type {BaseProperty[]}
+         */
         var properties = [];
 
         if (this.subproperties) {
@@ -353,10 +441,11 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
      * This is separated from the foreground-function to prevent endless loops.
      */
     #foregroundSubAndSuperProperties() {
-        var subAndSuperProperties = this.getSubAndSuperProperties();
-        subAndSuperProperties.forEach(function (property) {
-            if (property.foreground) property.foreground();
-        });
+        for (const property of this.#getSubAndSuperProperties()) {
+            if (property.foreground) {
+                property.foreground();
+            }
+        }
     }
 
     #onMouseOver() {
@@ -376,7 +465,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
 
     drawPin() {
         this.pinned = true;
-        if (graph.options().dynamicLabelWidth() === true) {
+        if (this.graph.options().dynamicLabelWidth() === true) {
             this.width = this.getMyWidth();
         } else {
             this.width = this.defaultWidth;
@@ -389,12 +478,31 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
             var invY = /translate\(\s*([^\s,)]+)[ ,]([^\s,)]+)/.exec(tr_inv)[2];
 
             if (thatY < invY)
-                this.pinGroupElement = DrawTools.drawPin(this.labelElement, -0.5 * this.width + 10, -25, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
+                this.pinGroupElement = DrawTools.drawPin(
+                    this.labelElement,
+                    -0.5 * this.width + 10,
+                    -25, this.removePin,
+                    this.graph.options().showDraggerObject,
+                    this.graph.options().useAccuracyHelper()
+                );
             else
-                this.pinGroupElement = DrawTools.drawPin(this.inverse.labelElement, -0.5 * this.inverse.labelWidth + 10, -25, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
+                this.pinGroupElement = DrawTools.drawPin(
+                    this.inverse.labelElement,
+                    -0.5 * this.inverse.labelWidth + 10,
+                    -25, this.removePin,
+                    this.graph.options().showDraggerObject,
+                    this.graph.options().useAccuracyHelper()
+                );
         }
         else {
-            this.pinGroupElement = DrawTools.drawPin(this.labelElement, -0.5 * this.width + 10, -25, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
+            this.pinGroupElement = DrawTools.drawPin(
+                this.labelElement,
+                -0.5 * this.width + 10,
+                -25,
+                this.removePin,
+                this.graph.options().showDraggerObject,
+                this.graph.options().useAccuracyHelper()
+            );
         }
     }
 
@@ -406,14 +514,14 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         if (this.pinGroupElement) {
             this.pinGroupElement.remove();
         }
-        graph.updateStyle();
+        this.graph.updateStyle();
     }
 
     removeHalo() {
         this.halo = false;
         if (this.haloGroupElement) {
             this.haloGroupElement.remove();
-            this.haloGroupElement = null;
+            this.haloGroupElement = undefined;
         }
     }
 
@@ -436,6 +544,9 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         return animRuns;
     }
 
+    /**
+     * @param {boolean} pulseAnimation
+     */
     drawHalo(pulseAnimation) {
         this.halo = true;
         var offset = 0;
@@ -480,38 +591,37 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         return this.width;
     }
 
+    /**
+     * @param {boolean} dynamic
+     */
     animateDynamicLabelWidth(dynamic) {
         this.removeHalo();
         if (this.shapeElement === undefined) { // this handles setOperatorProperties which dont have a shapeElement!
             return;
         }
-
-        var h = this.height;
+        const _this = this
         if (dynamic === true) {
-            this.width = Math.min(this.getMyWidth(), graph.options().maxLabelWidth());
-            this.shapeElement.transition().tween("attr", function () {
-            })
+            this.width = Math.min(this.getMyWidth(), this.graph.options().maxLabelWidth());
+            this.shapeElement.transition().tween("attr", function () { })
                 .ease('linear')
                 .duration(100)
-                .attr({ x: -this.width / 2, y: -h / 2, width: this.width, height: h })
+                .attr({ x: -this.width / 2, y: -this.height / 2, width: this.width, height: this.height })
                 .each("end", function () {
-                    this.updateTextElement();
+                    _this.updateTextElement();
                 });
         } else {
             // Static width for property labels = 80
             this.width = this.defaultWidth;
             this.updateTextElement();
-            this.shapeElement.transition().tween("attr", function () {
-            })
+            this.shapeElement.transition().tween("attr", function () { })
                 .ease('linear')
                 .duration(100)
-                .attr({ x: -this.width / 2, y: -h / 2, width: this.width, height: h });
+                .attr({ x: -this.width / 2, y: -this.height / 2, width: this.width, height: this.height });
         }
         if (this.pinned === true && this.pinGroupElement) {
             var dx = -0.5 * this.width + 10, dy = -25;
             this.pinGroupElement.transition()
-                .tween("attr.translate", function () {
-                })
+                .tween("attr.translate", function () { })
                 .attr("transform", "translate(" + dx + "," + dy + ")")
                 .ease('linear')
                 .duration(100);
@@ -521,7 +631,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     redrawLabelText() {
         this.textBlock.remove();
         this.addTextLabelElement();
-        this.animateDynamicLabelWidth(graph.options().dynamicLabelWidth());
+        this.animateDynamicLabelWidth(this.graph.options().dynamicLabelWidth());
         this.shapeElement.select("title").text(this.labelForCurrentLanguage());
     }
 
@@ -538,6 +648,9 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         this.textBlock.updateAllTextElements();
     }
 
+    /**
+     * @param {boolean} autoEditing
+     */
     enableEditing(autoEditing) {
         if (autoEditing === false) {
             return;
@@ -545,6 +658,9 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         this.raiseDoubleClickEdit(true);
     }
 
+    /**
+     * @param {boolean} forceIRISync
+     */
     raiseDoubleClickEdit(forceIRISync) {
         d3.selectAll(".foreignelements").remove();
         if (this.labelElement === undefined || this.type === "owl:disjointWith" || this.type === "rdfs:subClassOf") {
@@ -555,14 +671,14 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
             this.labelElement.selectAll(".foreignelements").remove();
         }
         this.backupFullIri = undefined;
-        graph.options().focuserModule().handle(undefined);
+        this.graph.options().focuserModule().handle(undefined);
         graph.options().focuserModule().handle(this);
         this.editingTextElement = true;
         this.ignoreLocalHoverEvents = true;
         this.labelElement.selectAll("rect").classed("hoveredForEditing", true);
         this.frozen = true;
-        graph.killDelayedTimer();
-        graph.ignoreOtherHoverEvents(false);
+        this.graph.killDelayedTimer();
+        this.graph.ignoreOtherHoverEvents(false);
         this.foreignerObject = this.labelElement.append("foreignObject")
             .attr("x", -0.5 * this.textWidth())
             .attr("y", -13)
@@ -620,6 +736,8 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                 d3.event.sourceEvent.stopPropagation();
             }
         });
+
+        const _this = this
         editText.on("mousedown", function () {
             if (d3.event.stopPropagation) {
                 d3.event.stopPropagation();
@@ -659,45 +777,50 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                 this.backupLabel = newLabel;
                 this.redrawLabelText();
                 this.updateHoverElements(true);
-                graph.showHoverElementsAfterAnimation(this, false);
-                graph.ignoreOtherHoverEvents(false);
+                _this.graph.showHoverElementsAfterAnimation(this, false);
+                _this.graph.ignoreOtherHoverEvents(false);
 
-                this.frozen = graph.paused();
-                this.locked = graph.paused();
-                this.domain.frozen = graph.paused();
-                this.domain.locked = graph.paused();
-                this.range.frozen = graph.paused();
-                this.range.locked = graph.paused();
-                graph.removeEditElements();
+                this.frozen = _this.graph.paused();
+                this.locked = _this.graph.paused();
+                this.domain.frozen = _this.graph.paused();
+                this.domain.locked = _this.graph.paused();
+                this.range.frozen = _this.graph.paused();
+                this.range.locked = _this.graph.paused();
+                _this.graph.removeEditElements();
                 if (this.backupFullIri) {
                     // console.log("Checking if element is Identical ?");
-                    var sanityCheckResult = graph.options().editSidebar().checkProperIriChange(this, this.backupFullIri);
+                    var sanityCheckResult = _this.graph.options().editSidebar().checkProperIriChange(this, this.backupFullIri);
                     if (sanityCheckResult !== false) {
-                        graph.options().warningModule().showWarning("Already seen this property",
+                        _this.graph.options().warningModule().showWarning("Already seen this property",
                             "Input IRI: " + this.backupFullIri + " for element: " + this.labelForCurrentLanguage() + " already been set",
                             "Continuing with duplicate property!", 1, false, sanityCheckResult);
                     }
                     this.iri = this.backupFullIri;
                 }
-                graph.options().focuserModule().handle(undefined);
-                graph.options().focuserModule().handle(this);
-                graph.updatePropertyDraggerElements(this);
+                _this.graph.options().focuserModule().handle(undefined);
+                _this.graph.options().focuserModule().handle(this);
+                _this.graph.updatePropertyDraggerElements(this);
             });
     }
 
-    // update hover elements
+    /**
+     * @param {boolean} enable
+     */
     updateHoverElements(enable) {
-        if (graph.ignoreOtherHoverEvents() === false) {
+        if (this.graph.ignoreOtherHoverEvents() === false) {
             var inversed = false;
             if (this.inverse) {
                 inversed = true;
             }
             if (enable === true) {
-                graph.activateHoverElementsForProperties(enable, this, inversed);
+                this.graph.activateHoverElementsForProperties(enable, this, inversed);
             }
         }
     }
 
+    /**
+     * @param {any} other
+     */
     copyInformation(other) {
         this.label = other.label;
         this.iri = other.iri;
@@ -713,6 +836,6 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     }
 
     actualRadius() {
-        return smallestRadius;
+        return this.smallestRadius;
     }
 }

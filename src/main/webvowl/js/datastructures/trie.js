@@ -1,4 +1,7 @@
 class TrieNode {
+    /**
+     * @param {string} key
+     */
     constructor(key) {
         // the "key" value will be the character in sequence
         this.key = key;

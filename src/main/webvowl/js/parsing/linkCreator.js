@@ -1,22 +1,20 @@
-import ArrowLink from '../elements/links/ArrowLink';
-import BoxArrowLink from '../elements/links/BoxArrowLink';
-import PlainLink from '../elements/links/PlainLink';
-import OwlDisjointWith from '../elements/properties/implementations/OwlDisjointWith';
-import SetOperatorProperty from '../elements/properties/implementations/SetOperatorProperty';
+import { ArrowLink } from '../elements/links/ArrowLink';
+import { BoxArrowLink } from '../elements/links/BoxArrowLink';
+import { PlainLink } from '../elements/links/PlainLink';
+import { OwlDisjointWith } from '../elements/properties/implementations/OwlDisjointWith';
+import { SetOperatorProperty } from '../elements/properties/implementations/SetOperatorProperty';
 
 /**
  * Stores the passed properties in links.
  * @returns {Function}
  */
-export default (function () {
-    var linkCreator = {};
-
+export class LinkCreator {
     /**
      * Creates links from the passed properties.
      * @param properties
      */
-    linkCreator.createLinks = function (properties) {
-        var links = groupPropertiesToLinks(properties);
+    static createLinks(properties) {
+        var links = this.#groupPropertiesToLinks(properties);
 
         let layerCounts = new Map();
         let loopMap = new Map();
@@ -51,14 +49,14 @@ export default (function () {
         }
 
         return links;
-    };
+    }
 
     /**
      * Creates links of properties and - if existing - their inverses.
      * @param properties the properties
      * @returns {Array}
      */
-    function groupPropertiesToLinks(properties) {
+    static #groupPropertiesToLinks(properties) {
         var links = [],
             property,
             addedProperties = new Set();
@@ -67,7 +65,7 @@ export default (function () {
             property = properties[i];
 
             if (!addedProperties.has(property.id)) {
-                var link = createLink(property);
+                var link = this.#createLink(property);
 
                 property.link = link;
                 if (property.inverse) {
@@ -82,11 +80,10 @@ export default (function () {
                 }
             }
         }
-
         return links;
     }
 
-    function createLink(property) {
+    static #createLink(property) {
         var domain = property.domain;
         var range = property.range;
 
@@ -97,9 +94,4 @@ export default (function () {
         }
         return new ArrowLink(domain, range, property);
     }
-
-    return function () {
-        // Return a function to keep module interfaces consistent
-        return linkCreator;
-    };
-})();
+}

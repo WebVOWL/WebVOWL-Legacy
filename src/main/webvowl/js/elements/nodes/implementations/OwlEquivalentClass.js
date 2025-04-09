@@ -24,24 +24,46 @@ export class OwlEquivalentClass extends RoundNode {
         if (this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined;
         }
-        var cssClasses = this.collectCssClasses();
+        const cssClasses = this.collectCssClasses();
         this.renderingElement = this.nodeElement.append("g");
 
         if (this.rectangularRepresentation === true) {
-            DrawTools.appendRectangularClass(this.renderingElement, 84, 84, ["white", "embedded"]);
-            DrawTools.appendRectangularClass(this.renderingElement, 80 - CIRCLE_SIZE_DIFFERENCE, 80 - CIRCLE_SIZE_DIFFERENCE, cssClasses, this.labelForCurrentLanguage(), bgColor);
+            DrawTools.appendRectangularClass(
+                this.renderingElement,
+                84,
+                84,
+                ["white", "embedded"]
+            );
+            DrawTools.appendRectangularClass(
+                this.renderingElement,
+                80 - CIRCLE_SIZE_DIFFERENCE,
+                80 - CIRCLE_SIZE_DIFFERENCE,
+                cssClasses,
+                this.labelForCurrentLanguage(),
+                bgColor
+            );
         } else {
-            DrawTools.appendCircularClass(this.renderingElement, this.smallestRadius, ["white", "embedded"]);
-            console.log(cssClasses);
-            console.log(this.attributes);
-            console.log("what is bgColor" + bgColor);
-            DrawTools.appendCircularClass(this.renderingElement, this.smallestRadius - CIRCLE_SIZE_DIFFERENCE, cssClasses, this.labelForCurrentLanguage(), bgColor);
+            DrawTools.appendCircularClass(
+                this.renderingElement,
+                this.actualRadius(),
+                ["white", "embedded"]
+            );
+            DrawTools.appendCircularClass(
+                this.renderingElement,
+                this.actualRadius() - CIRCLE_SIZE_DIFFERENCE,
+                cssClasses,
+                this.labelForCurrentLanguage(),
+                bgColor
+            );
         }
         this.postDrawActions();
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} parentElement
+     */
     draw(parentElement) {
-        var cssClasses = this.collectCssClasses();
+        const cssClasses = this.collectCssClasses();
         this.nodeElement = parentElement;
         this.renderingElement = parentElement.append("g");
         var bgColor = this.backgroundColor;
@@ -51,18 +73,40 @@ export class OwlEquivalentClass extends RoundNode {
         }
         // draw the outer circle at first and afterwards the inner circle
         if (this.rectangularRepresentation === true) {
-            DrawTools.appendRectangularClass(this.renderingElement, 84, 84, ["white", "embedded"]);
-            DrawTools.appendRectangularClass(this.renderingElement, 80 - CIRCLE_SIZE_DIFFERENCE, 80 - CIRCLE_SIZE_DIFFERENCE, cssClasses, this.labelForCurrentLanguage(), bgColor);
+            DrawTools.appendRectangularClass(
+                this.renderingElement,
+                84,
+                84,
+                ["white", "embedded"]
+            );
+            DrawTools.appendRectangularClass(
+                this.renderingElement,
+                80 - CIRCLE_SIZE_DIFFERENCE,
+                80 - CIRCLE_SIZE_DIFFERENCE,
+                cssClasses,
+                this.labelForCurrentLanguage(),
+                bgColor
+            );
         } else {
-            DrawTools.appendCircularClass(this.renderingElement, this.smallestRadius, ["white", "embedded"]);
-            DrawTools.appendCircularClass(this.renderingElement, this.smallestRadius - CIRCLE_SIZE_DIFFERENCE, cssClasses, this.labelForCurrentLanguage(), bgColor);
+            DrawTools.appendCircularClass(
+                this.renderingElement,
+                this.actualRadius(),
+                ["white", "embedded"]
+            );
+            DrawTools.appendCircularClass(
+                this.renderingElement,
+                this.actualRadius() - CIRCLE_SIZE_DIFFERENCE,
+                cssClasses,
+                this.labelForCurrentLanguage(),
+                bgColor
+            );
         }
         this.postDrawActions();
     }
 
     /**
      * Sets the hover highlighting of this node.
-     * @param enable
+     * @param {boolean} enable
      */
     setHoverHighlighting(enable) {
         this.nodeElement.selectAll("circle:last-of-type").classed("hovered", enable);

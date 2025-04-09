@@ -10,7 +10,6 @@ const DATA_PROPERTY_DEFAULT_RANGE_TYPE = "rdfs:Literal"
 
 
 export class EquivalentPropertyMerger {
-
     /**
      * @param {Array} properties
      * @param {Array} nodes
@@ -47,6 +46,7 @@ export class EquivalentPropertyMerger {
                 totalNodeIdsToHide.add(hiddenNodeID);
             }
         }
+        // FIXME: This call can be optimized away and replaced with info from `nodes` of this function
         return this.#filterVisibleNodes(nodes.concat(mergeNodes), totalNodeIdsToHide);
     }
 

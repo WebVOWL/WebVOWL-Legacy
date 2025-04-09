@@ -1,4 +1,4 @@
-import OwlThing from './OwlThing';
+import { OwlThing } from "./OwlThing"
 
 export class OwlNothing extends OwlThing {
     constructor(graph) {

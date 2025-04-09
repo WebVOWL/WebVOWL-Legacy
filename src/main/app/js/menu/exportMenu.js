@@ -1162,7 +1162,7 @@ export default function (graph) {
             }
             var textColorStr = "";
             if (node.textBlock) {
-                var txtColor = node.textBlock._textBlock().style("fill");
+                var txtColor = node.textBlock.textBlock.style("fill");
                 if (txtColor === "rgb(0, 0, 0)") {
                     textColorStr = ", text=black";
                 }
@@ -1171,7 +1171,7 @@ export default function (graph) {
                 }
 
 
-                var tspans = node.textBlock._textBlock().node().children;
+                var tspans = node.textBlock.textBlock.node().children;
                 if (tspans[0]) {
                     identifier = tspans[0].innerHTML;
                     if (node.individuals && node.individuals.length === parseInt(tspans[0].innerHTML)) {
@@ -1283,7 +1283,7 @@ export default function (graph) {
             if (identifier === undefined) identifier = "";
             var textColorStr = "";
             if (correspondingProp.textBlock && correspondingProp.textBlock) {
-                var txtColor = correspondingProp.textBlock._textBlock().style("fill");
+                var txtColor = correspondingProp.textBlock.textBlock.style("fill");
                 //  console.log("PropertyTextColor="+txtColor);
                 if (txtColor === "rgb(0, 0, 0)") {
                     textColorStr = ", text=black";
@@ -1291,9 +1291,9 @@ export default function (graph) {
                 if (txtColor === "rgb(255, 255, 255)") {
                     textColorStr = ", text=white";
                 }
-                var tspans = correspondingProp.textBlock._textBlock().node().children;
+                var tspans = correspondingProp.textBlock.textBlock.node().children;
 
-                // identifier=node.textBlock._textBlock().text();
+                // identifier=node.textBlock.textBlock.text();
                 // console.log(tspans);
                 if (tspans[0]) {
                     identifier = tspans[0].innerHTML;
@@ -1374,7 +1374,7 @@ export default function (graph) {
 
                 if (inv_correspondingProp.textBlock && inv_correspondingProp.textBlock) {
 
-                    var inv_txtColor = inv_correspondingProp.textBlock._textBlock().style("fill");
+                    var inv_txtColor = inv_correspondingProp.textBlock.textBlock.style("fill");
                     //  console.log("PropertyTextColor="+inv_txtColor);
                     if (inv_txtColor === "rgb(0, 0, 0)") {
                         inv_textColorStr = ", text=black";
@@ -1382,9 +1382,9 @@ export default function (graph) {
                     if (inv_txtColor === "rgb(255, 255, 255)") {
                         inv_textColorStr = ", text=white";
                     }
-                    var inv_tspans = inv_correspondingProp.textBlock._textBlock().node().children;
+                    var inv_tspans = inv_correspondingProp.textBlock.textBlock.node().children;
 
-                    // identifier=node.textBlock._textBlock().text();
+                    // identifier=node.textBlock.textBlock.text();
                     //  console.log(inv_tspans);
                     if (inv_tspans[0]) {
                         inv_identifier = inv_tspans[0].innerHTML;

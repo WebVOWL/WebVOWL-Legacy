@@ -1,12 +1,14 @@
-
-
 /**
  * Mixin class for shared methods
- * @param {*} Base Inherit from this class
+ * @param {any} Base Inherit from this class
  * @returns
  */
 export const RectangularElementToolsMixin = (Base) =>
     class extends Base {
+        /**
+         * @param {number} dx
+         * @param {number} dy
+         */
         distanceToBorder(dx, dy) {
             var innerDistance;
             const width = this.labelWidth;
@@ -26,6 +28,10 @@ export const RectangularElementToolsMixin = (Base) =>
             return innerDistance;
         }
 
+        /**
+         * @param {string} text
+         * @param {string} textStyle
+         */
         #measureTextWidth(text, textStyle) {
             // Set a default value
             if (!textStyle) {
@@ -53,18 +59,21 @@ export const RectangularElementToolsMixin = (Base) =>
         }
 
         // TODO: Ensure version in Property/RectangularNode uses its special values
+        /**
+         * @param {boolean} dynamic
+         */
         animateDynamicLabelWidth(dynamic) {
             this.removeHalo();
-            const height = this.height;
+            const _this = this
             if (dynamic === true) {
                 this.labelWidth = Math.min(this.getMyWidth(), graph.options().maxLabelWidth());
                 this.shapeElement.transition().tween("attr", function () {
                 })
                     .ease('linear')
                     .duration(100)
-                    .attr({ x: -this.labelWidth / 2, y: -height / 2, width: this.labelWidth, height: height })
+                    .attr({ x: -_this.labelWidth / 2, y: -_this.height / 2, width: _this.labelWidth, height: _this.height })
                     .each("end", function () {
-                        this.updateTextElement();
+                        _this.updateTextElement();
                     });
             } else {
                 this.labelWidth = this.defaultWidth;
@@ -73,13 +82,13 @@ export const RectangularElementToolsMixin = (Base) =>
                 })
                     .ease('linear')
                     .duration(100)
-                    .attr({ x: -this.labelWidth / 2, y: -height / 2, width: this.labelWidth, height: height });
+                    .attr({ x: -_this.labelWidth / 2, y: -_this.height / 2, width: _this.labelWidth, height: _this.height });
             }
 
             // for the pin we dont need to differ between different widths -- they are already set
             if (this.pinned === true && this.pinGroupElement) {
-                const dx = 0.5 * this.labelWidth - 10,
-                    dy = -1.1 * height;
+                const dx = 0.5 * this.labelWidth - 10;
+                const dy = -1.1 * this.height;
                 this.pinGroupElement.transition()
                     .tween("attr.translate", function () {
                     })

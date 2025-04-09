@@ -1,10 +1,16 @@
+import { BaseProperty } from "../properties/BaseProperty";
+import { PlainLink } from "./PlainLink";
+
 /**
  * A label represents the element(s) which further describe a link.
  * It encapsulates the property and its inverse property.
- * @param property the property; the inverse is inferred
- * @param link the link this label belongs to
  */
 export class Label {
+    /**
+     *
+     * @param {BaseProperty} property the property; the inverse is inferred
+     * @param {PlainLink} link the link this label belongs to
+     */
     constructor(property, link) {
         this.frozen = property.frozen;
         this.locked = property.locked;
@@ -29,10 +35,16 @@ export class Label {
         return this.property.smallestRadius;
     }
 
+    /**
+     * @param {any} container
+     */
     draw(container) {
         return this.property.draw(container);
     }
 
+    /**
+     * @param {Label} other
+     */
     equals(other) {
         if (!other) {
             return false;
@@ -41,8 +53,8 @@ export class Label {
         const equalProperty = this.property.equals(other.property);
         var equalInverse = false;
         if (this.property.inverse) {
-            equalInverse = this.property.inverse.equals(other.inverse);
-        } else if (!other.inverse) {
+            equalInverse = this.property.inverse.equals(other.property.inverse);
+        } else if (!other.property.inverse) {
             equalInverse = true;
         }
         return isInstance && equalProperty && equalInverse;

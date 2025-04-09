@@ -6,26 +6,49 @@ export class RoundNode extends BaseNode {
     constructor(graph) {
         super(graph)
 
+        // Additional attributes
+        /**
+         * @type {boolean}
+         */
         this.collapsible = false
-        this.radius = 50 // This might not be equal to the actual radius, because the instance count is used for its calculation.
-        this.collapsingGroupElement     // HTMLElement | undefined
-        this.pinGroupElement            // HTMLElement | undefined
-        this.haloGroupElement = null    // HTMLElement | null
+        /**
+         * @type {boolean}
+         */
         this.rectangularRepresentation = false
-        this.renderingElement           // HTMLElement | undefined
-        this.textBlock                  // HTMLElement | undefined
+
+        // Size attributes
+        /**
+         * @type {number}
+         */
+        this.radius = 50 // This might not be equal to the actual radius, because the instance count is used for its calculation.
+
+        // Element containers
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.renderingElement
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.collapsingGroupElement
     }
 
-    // Functions
+    /**
+     * @param {boolean} enable
+     */
     setHoverHighlighting(enable) {
         this.nodeElement.selectAll("circle").classed("hovered", enable);
     }
 
+    /**
+     * @param {number} yOffset
+     */
+    // @ts-ignore
     textWidth(yOffset) {
-        var availableWidth = this.smallestRadius * 2;
+        var availableWidth = this.actualRadius() * 2;
         // if the text is not placed in the center of the circle, it can't have the full width
         if (yOffset) {
-            var relativeOffset = Math.abs(yOffset) / this.smallestRadius;
+            var relativeOffset = Math.abs(yOffset) / this.actualRadius();
             var isOffsetInsideOfNode = relativeOffset <= 1;
 
             if (isOffsetInsideOfNode) {
@@ -42,12 +65,16 @@ export class RoundNode extends BaseNode {
         if (this.nodeElement) {
             this.nodeElement.select("circle").classed("focused", this.focused);
         }
-        graph.resetSearchHighlight();
-        graph.options().searchMenu().clearText();
+        this.graph.resetSearchHighlight();
+        this.graph.options().searchMenu().clearText();
     }
 
+    /**
+     * Get the true radius
+     * @returns {number}
+     */
     actualRadius() {
-        if (!graph.options().scaleNodesByIndividuals() || this.individuals.length <= 0) {
+        if (!this.graph.options().scaleNodesByIndividuals() || this.individuals.length <= 0) {
             return this.radius;
         } else {
             // we could "listen" for radius and individualCount changes, but this is easier
@@ -57,7 +84,7 @@ export class RoundNode extends BaseNode {
     }
 
     distanceToBorder() {
-        return this.smallestRadius;
+        return this.actualRadius();
     }
 
     removeHalo() {
@@ -69,12 +96,15 @@ export class RoundNode extends BaseNode {
         }
     }
 
+    /**
+     * @param {boolean} pulseAnimation
+     */
     drawHalo(pulseAnimation) {
         this.halo = true;
         if (this.rectangularRepresentation === true) {
             this.haloGroupElement = DrawTools.drawRectHalo(this.nodeElement, 80, 80, 5);
         } else {
-            this.haloGroupElement = DrawTools.drawHalo(this.nodeElement, this.smallestRadius, this.removeHalo);
+            this.haloGroupElement = DrawTools.drawHalo(this.nodeElement, this.actualRadius());
         }
         if (pulseAnimation === false) {
             var pulseItem = this.haloGroupElement.selectAll(".searchResultA");
@@ -89,9 +119,16 @@ export class RoundNode extends BaseNode {
      */
     drawPin() {
         this.pinned = true;
-        const dx = (-3.5 / 5) * this.smallestRadius,
-            dy = (-7 / 10) * this.smallestRadius;
-        this.pinGroupElement = DrawTools.drawPin(this.nodeElement, dx, dy, this.removePin, graph.options().showDraggerObject, graph.options().useAccuracyHelper());
+        const dx = (-3.5 / 5) * this.actualRadius();
+        const dy = (-7 / 10) * this.actualRadius();
+        this.pinGroupElement = DrawTools.drawPin(
+            this.nodeElement,
+            dx,
+            dy,
+            this.removePin,
+            this.graph.options().showDraggerObject,
+            this.graph.options().useAccuracyHelper()
+        );
     }
 
     /**
@@ -102,15 +139,16 @@ export class RoundNode extends BaseNode {
         if (this.pinGroupElement) {
             this.pinGroupElement.remove();
         }
-        graph.updateStyle();
+        this.graph.updateStyle();
     }
 
     drawCollapsingButton() {
+        const _this = this
         this.collapsingGroupElement = this.nodeElement
             .append("g")
             .classed("hidden-in-export", true)
             .attr("transform", function () {
-                var dx = (-2 / 5) * this.smallestRadius, dy = (1 / 2) * this.smallestRadius;
+                var dx = (-2 / 5) * _this.actualRadius(), dy = (1 / 2) * _this.actualRadius();
                 return "translate(" + dx + "," + dy + ")";
             });
         this.collapsingGroupElement.append("rect")
@@ -133,8 +171,8 @@ export class RoundNode extends BaseNode {
 
     /**
      * Draws a circular node.
-     * @param parentElement the element to which this node will be appended
-     * @param [additionalCssClasses] additional css classes
+     * @param {any} parentElement the element to which this node will be appended
+     * @param {Array<string>} additionalCssClasses additional css classes
      */
     draw(parentElement, additionalCssClasses) {
         var cssClasses = this.collectCssClasses();
@@ -151,9 +189,22 @@ export class RoundNode extends BaseNode {
             cssClasses = cssClasses.concat(additionalCssClasses);
         }
         if (this.rectangularRepresentation === true) {
-            this.renderingElement = DrawTools.appendRectangularClass(parentElement, 80, 80, cssClasses, this.labelForCurrentLanguage(), bgColor);
+            this.renderingElement = DrawTools.appendRectangularClass(
+                parentElement,
+                80,
+                80,
+                cssClasses,
+                this.labelForCurrentLanguage(),
+                bgColor
+            );
         } else {
-            this.renderingElement = DrawTools.appendCircularClass(parentElement, this.smallestRadius, cssClasses, this.labelForCurrentLanguage(), bgColor);
+            this.renderingElement = DrawTools.appendCircularClass(
+                parentElement,
+                this.actualRadius(),
+                cssClasses,
+                this.labelForCurrentLanguage(),
+                bgColor
+            );
         }
         this.postDrawActions();
     }
@@ -168,9 +219,22 @@ export class RoundNode extends BaseNode {
 
         var cssClasses = this.collectCssClasses();
         if (this.rectangularRepresentation === true) {
-            this.renderingElement = DrawTools.appendRectangularClass(this.nodeElement, 80, 80, cssClasses, this.labelForCurrentLanguage(), bgColor);
+            this.renderingElement = DrawTools.appendRectangularClass(
+                this.nodeElement,
+                80,
+                80,
+                cssClasses,
+                this.labelForCurrentLanguage(),
+                bgColor
+            );
         } else {
-            this.renderingElement = DrawTools.appendCircularClass(this.nodeElement, this.smallestRadius, cssClasses, this.labelForCurrentLanguage(), bgColor);
+            this.renderingElement = DrawTools.appendCircularClass(
+                this.nodeElement,
+                this.actualRadius(),
+                cssClasses,
+                this.labelForCurrentLanguage(),
+                bgColor
+            );
         }
         this.postDrawActions();
     }
@@ -209,7 +273,7 @@ export class RoundNode extends BaseNode {
 
         textBlock.addText(this.labelForCurrentLanguage(), "", suffixForFollowingEquivalents);
         textBlock.addEquivalents(equivalentsString);
-        if (!graph.options().compactNotation()) {
+        if (!this.graph.options().compactNotation()) {
             textBlock.addSubText(this.indicationString());
         }
         textBlock.addInstanceCount(this.individuals.length);
@@ -219,7 +283,7 @@ export class RoundNode extends BaseNode {
     equivalentsString() {
         var equivalentClasses = this.equivalents;
         if (!equivalentClasses) {
-            return;
+            return "";
         }
         return equivalentClasses
             .map(function (node) {

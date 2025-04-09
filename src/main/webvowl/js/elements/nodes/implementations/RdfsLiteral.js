@@ -1,4 +1,5 @@
-import DatatypeNode from '../DatatypeNode';
+import { DatatypeNode } from "../DatatypeNode";
+
 
 export class RdfsLiteral extends DatatypeNode {
     constructor(graph) {
@@ -11,6 +12,9 @@ export class RdfsLiteral extends DatatypeNode {
         this.iri = "http://www.w3.org/2000/01/rdf-schema#Literal";
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} element
+     */
     draw(element) {
         super.draw(element, ["dashed"]);
     }

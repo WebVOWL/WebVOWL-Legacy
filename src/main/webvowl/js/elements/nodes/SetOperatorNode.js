@@ -1,33 +1,38 @@
 import AbsoluteTextElement from '../../util/AbsoluteTextElement';
 import { DrawTools } from '../drawTools';
-import BoxArrowLink from '../links/BoxArrowLink';
+import { BoxArrowLink } from '../links/BoxArrowLink';
 import { RoundNode } from './RoundNode';
 
 export class SetOperatorNode extends RoundNode {
     constructor(graph) {
         super(graph)
     }
+
+    /**
+     * @param {boolean} enable
+     */
     setHoverHighlighting(enable) {
         super.setHoverHighlighting(enable);
 
         // Highlight links pointing to included nodes when hovering the set operator
-        this.links
-            .filter(function (link) {
-                return link instanceof BoxArrowLink;
-            })
-            .filter(function (link) {
-                return link.domain.equals(this);
-            })
-            .forEach(function (link) {
-                link.property.setHighlighting(enable);
-            });
+        for (const link of this.links) {
+            if (link instanceof BoxArrowLink && link.domain.equals(this)) {
+                link.property.setHighlighting(enable)
+            }
+        }
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} element
+     */
     draw(element) {
         this.nodeElement = element;
-        DrawTools.appendCircularClass(element, this.smallestRadius,
+        DrawTools.appendCircularClass(
+            element,
+            this.actualRadius(),
             this.collectCssClasses().join(" "),
-            this.labelForCurrentLanguage(), this.backgroundColor);
+            this.labelForCurrentLanguage(), this.backgroundColor
+        );
     }
 
     postDrawActions() {
@@ -46,7 +51,7 @@ export class SetOperatorNode extends RoundNode {
         );
 
         textElement.addEquivalents(equivalentsString, -17);
-        if (!graph.options().compactNotation()) {
+        if (!this.graph.options().compactNotation()) {
             if (this.indicationString().length > 0) {
                 textElement.addSubText(this.indicationString(), 17);
                 textElement.addInstanceCount(this.individuals.length, 30);

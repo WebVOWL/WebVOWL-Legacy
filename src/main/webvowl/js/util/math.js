@@ -1,9 +1,11 @@
+
 /**
  * Contains a collection of mathematical functions with some additional data
  * used for WebVOWL.
  */
 export class MathUtils {
     constructor() {
+        // @ts-ignore
         this.loopFunction = d3.svg.line()
             .x(function (d) {
                 return d.x;
@@ -16,8 +18,8 @@ export class MathUtils {
     }
 
     /**
-     * @param angle
-     * @returns {Number} the radian of the angle
+     * Get the radian of `angle`
+     * @param {number} angle
      */
     #calculateRadian(angle) {
         angle = angle % 360;
@@ -28,8 +30,8 @@ export class MathUtils {
     }
 
     /**
-     * @param radian
-     * @returns {Number} the angle of the radian
+     * Get the angle of `radian`
+     * @param {number} radian
      */
     #calculateAngle(radian) {
         return radian * (180 / Math.PI);
@@ -37,10 +39,10 @@ export class MathUtils {
 
     /**
      * Calculates the normal vector of the path between the two nodes.
-     * @param source the first node
-     * @param target the second node
-     * @param length the length of the calculated normal vector
-     * @returns {{x: Number, y: Number}}
+     * @param {{ x: number; y: number; }} source the first node
+     * @param {{ x: number; y: number; }} target the second node
+     * @param {number} length the length of the calculated normal vector
+     * @returns {{ x: number; y: number; }}
      */
     calculateNormalVector(source, target, length) {
         const dx = target.x - source.x,
@@ -57,9 +59,8 @@ export class MathUtils {
     }
 
     /**
-     * Calculates the path for a link, if it is a loop. Currently only working for circlular nodes.
-     * @param link the link
-     * @returns {Array}
+     * Calculates the path for a link, if it is a loop. Currently only working for circular nodes.
+     * @param {any} link the link
      */
     getLoopPoints(link) {
         const node = link.domain;
@@ -67,7 +68,7 @@ export class MathUtils {
 
         const fairShareLoopAngle = 360 / link.loops.length;
         const fairShareLoopAngleWithMargin = fairShareLoopAngle * 0.8;
-        const loopAngle = Math.min(60, fairShareLoopAngleWithMargin);
+        let loopAngle = Math.min(60, fairShareLoopAngleWithMargin);
 
         if (label.increasedLoopAngle === true) {
             loopAngle = 120;
@@ -84,31 +85,29 @@ export class MathUtils {
         const arcFrom = this.#calculateRadian(startAngle);
         const arcTo = this.#calculateRadian(endAngle);
 
-        const x1 = Math.cos(arcFrom) * node.smallestRadius;
-        const y1 = Math.sin(arcFrom) * node.smallestRadius;
+        const x1 = Math.cos(arcFrom) * node.actualRadius();
+        const y1 = Math.sin(arcFrom) * node.actualRadius();
 
-        const x2 = Math.cos(arcTo) * node.smallestRadius;
-        const y2 = Math.sin(arcTo) * node.smallestRadius;
+        const x2 = Math.cos(arcTo) * node.actualRadius();
+        const y2 = Math.sin(arcTo) * node.actualRadius();
 
         const fixPoint1 = { "x": node.x + x1, "y": node.y + y1 };
         const fixPoint2 = { "x": node.x + x2, "y": node.y + y2 };
-
         return [fixPoint1, fixPoint2];
     }
 
     /**
      * Calculates the path for a link, if it is a loop. Currently only working for circlular nodes.
-     * @param link the link
+     * @param {any} link the link
      * @returns {*} loop function
      */
     calculateLoopPath(link) {
-        return loopFunction(this.calculateLoopPoints(link));
+        return this.loopFunction(this.calculateLoopPoints(link));
     }
 
     /**
      * Calculates the path for a link, if it is a loop. Currently only working for circlular nodes.
-     * @param link the link
-     * @returns {Array}
+     * @param {any} link the link
      */
     calculateLoopPoints(link) {
         const points = this.getLoopPoints(link);
@@ -118,10 +117,10 @@ export class MathUtils {
     /**
      * Calculates the point where the link between the source and target node
      * intersects the border of the target node.
-     * @param source the source node
-     * @param target the target node
-     * @param additionalDistance additional distance the
-     * @returns {{x: number, y: number}}
+     * @param {any} source the source node
+     * @param {any} target the target node
+     * @param {number} additionalDistance additional distance the
+     * @returns {{ x: number; y: number; }}
      */
     calculateIntersection(source, target, additionalDistance) {
         const dx = target.x - source.x;
@@ -141,9 +140,9 @@ export class MathUtils {
 
     /**
      * Calculates the position between the two points.
-     * @param firstPoint
-     * @param secondPoint
-     * @returns {{x: Number, y: Number}}
+     * @param {{ x: number; y: number; }} firstPoint
+     * @param {{ x: number; y: number; }} secondPoint
+     * @returns {{ x: number; y: number; }}
      */
     calculateCenter(firstPoint, secondPoint) {
         return {

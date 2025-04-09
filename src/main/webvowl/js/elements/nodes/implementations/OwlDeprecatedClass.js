@@ -1,4 +1,4 @@
-import RoundNode from '../RoundNode';
+import { RoundNode } from "../RoundNode"
 
 export class OwlDeprecatedClass extends RoundNode {
     constructor(graph) {

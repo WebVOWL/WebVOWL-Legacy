@@ -1,10 +1,21 @@
+import { BaseNode } from "../nodes/BaseNode";
+import { BaseProperty } from "../properties/BaseProperty";
 import { PlainLink } from "./PlainLink";
 
 export class BoxArrowLink extends PlainLink {
+    /**
+     * @param {BaseNode} domain
+     * @param {BaseNode} range
+     * @param {BaseProperty} property
+     */
     constructor(domain, range, property) {
         super(domain, range, property)
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} markerContainer
+     * @param {BaseProperty} inverse
+     */
     #createPropertyMarker(markerContainer, inverse) {
         var inverseMarker = this.#appendBasicMarker(markerContainer, inverse);
         inverseMarker.attr("refX", -8);
@@ -14,6 +25,10 @@ export class BoxArrowLink extends PlainLink {
         inverse.markerElement = inverseMarker;
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} markerContainer
+     * @param {BaseProperty} property
+     */
     #createInverseMarker(markerContainer, property) {
         var marker = this.#appendBasicMarker(markerContainer, property);
         marker.attr("refX", 8);
@@ -23,6 +38,10 @@ export class BoxArrowLink extends PlainLink {
         property.markerElement = marker;
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} markerContainer
+     * @param {BaseProperty} property
+     */
     #appendBasicMarker(markerContainer, property) {
         return markerContainer.append("marker")
             .datum(property)
@@ -34,9 +53,14 @@ export class BoxArrowLink extends PlainLink {
             .attr("orient", "auto");
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} linkGroup
+     * @param {d3.Selection<any,any,null,undefined>} markerContainer
+     */
+    // @ts-ignore
     draw(linkGroup, markerContainer) {
         var property = this.label.property;
-        var inverse = this.label.inverse;
+        var inverse = property.inverse;
 
         this.#createPropertyMarker(markerContainer, property);
         if (inverse) {

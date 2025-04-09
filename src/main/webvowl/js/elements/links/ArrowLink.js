@@ -1,12 +1,23 @@
+import { BaseNode } from "../nodes/BaseNode";
+import { BaseProperty } from "../properties/BaseProperty";
 import { PlainLink } from "./PlainLink";
 
 export class ArrowLink extends PlainLink {
+    /**
+     * @param {BaseNode} domain
+     * @param {BaseNode} range
+     * @param {BaseProperty} property
+     */
     constructor(domain, range, property) {
         super(domain, range, property)
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} markerContainer
+     * @param {BaseProperty} property
+     */
     #createPropertyMarker(markerContainer, property) {
-        let marker = appendBasicMarker(markerContainer, property);
+        let marker = this.#appendBasicMarker(markerContainer, property);
         //marker.attr("refX", 12);
         const m1X = -12;
         const m1Y = 8;
@@ -19,6 +30,10 @@ export class ArrowLink extends PlainLink {
         property.markerElement = marker;
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} markerContainer
+     * @param {BaseProperty} inverse
+     */
     #createInverseMarker(markerContainer, inverse) {
         const m1X = -12;
         const m1Y = 8;
@@ -32,11 +47,14 @@ export class ArrowLink extends PlainLink {
         inverse.markerElement = inverseMarker;
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} markerContainer
+     * @param {BaseProperty} property
+     */
     #appendBasicMarker(markerContainer, property) {
         return markerContainer.append("marker")
             .datum(property)
             .attr("id", property.markerId())
-
             .attr("viewBox", "-14 -10 28 20")
             .attr("markerWidth", 10)
             .attr("markerHeight", 10)
@@ -44,9 +62,14 @@ export class ArrowLink extends PlainLink {
             .attr("orient", "auto");
     }
 
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} linkGroup
+     * @param {d3.Selection<any,any,null,undefined>} markerContainer
+     */
+    // @ts-ignore
     draw(linkGroup, markerContainer) {
         var property = this.label.property;
-        var inverse = this.label.inverse;
+        var inverse = property.inverse;
 
         this.#createPropertyMarker(markerContainer, property);
         if (inverse) {

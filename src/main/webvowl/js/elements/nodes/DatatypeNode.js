@@ -1,4 +1,4 @@
-import RectangularNode from './RectangularNode';
+import { RectangularNode } from "./RectangularNode";
 
 export class DatatypeNode extends RectangularNode {
     constructor(graph) {

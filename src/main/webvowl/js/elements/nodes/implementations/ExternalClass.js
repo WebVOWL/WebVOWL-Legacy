@@ -1,4 +1,5 @@
-import RoundNode from '../RoundNode';
+import { RoundNode } from "../RoundNode"
+
 
 export class ExternalClass extends RoundNode {
     constructor(graph) {

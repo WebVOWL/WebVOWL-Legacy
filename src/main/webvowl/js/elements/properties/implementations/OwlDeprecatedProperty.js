@@ -1,4 +1,5 @@
-import BaseProperty from '../BaseProperty';
+import { BaseProperty } from "../BaseProperty"
+
 
 export class OwlDeprecatedProperty extends BaseProperty {
     constructor(graph) {

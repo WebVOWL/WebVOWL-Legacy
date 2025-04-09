@@ -272,7 +272,7 @@ export default function (graph) {
 
     function combineClasses(element, Prototype) {
         let node = new Prototype(graph);
-        node.annotations(element.annotations);
+        node.annotations = element.annotations;
         node.baseIri = element.baseIri;
         node.comment = element.comment;
         node.complement = element.complement;
@@ -306,7 +306,7 @@ export default function (graph) {
 
     function combineProperties(element, Prototype) {
         let property = new Prototype(graph);
-        property.annotations(element.annotations);
+        property.annotations = element.annotations;
         property.baseIri = element.baseIri;
         property.cardinality = element.cardinality;
         property.comment = element.comment;

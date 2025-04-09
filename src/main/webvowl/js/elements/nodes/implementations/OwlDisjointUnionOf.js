@@ -1,4 +1,4 @@
-import SetOperatorNode from '../SetOperatorNode';
+import { SetOperatorNode } from "../SetOperatorNode";
 
 export class OwlDisjointUnionOf extends SetOperatorNode {
     constructor(graph) {
@@ -8,6 +8,9 @@ export class OwlDisjointUnionOf extends SetOperatorNode {
         this.type = "owl:disjointUnionOf"
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} element
+     */
     draw(element) {
         super.draw(element);
         var symbol = element.append("g").classed("embedded", true);

@@ -3,8 +3,11 @@ export class PrefixRepresentation {
         this.graph = graph
     }
 
+    /**
+     * @param {string} fullURL
+     */
     getPrefixRepresentationForFullURI(fullURL) {
-        let currentPrefixModel = graph.options().prefixList();
+        let currentPrefixModel = this.graph.options().prefixList();
         const splittedURL = this.#splitURLIntoBaseAndResource(fullURL);
 
         // lazy approach: for-loop over prefix model
@@ -16,13 +19,15 @@ export class PrefixRepresentation {
                 }
             }
         }
-
         if (splittedURL.base === ":") {
             return ":" + splittedURL.resource;
         }
         return fullURL;
-    };
+    }
 
+    /**
+     * @param {string} fullURL
+     */
     #splitURLIntoBaseAndResource(fullURL) {
         var splitedURL = { base: "", resource: "" };
         if (fullURL === undefined) {
@@ -36,7 +41,7 @@ export class PrefixRepresentation {
             resource = fullURL.substring(fullURL.lastIndexOf('#') + 1);
             base = fullURL.substring(0, fullURL.length - resource.length);
             // overwrite base if it is ontologyIri;
-            if (base === graph.options().getGeneralMetaObjectProperty('iri')) {
+            if (base === this.graph.options().getGeneralMetaObjectProperty('iri')) {
                 base = ":";
             }
             splitedURL.base = base;
@@ -45,7 +50,7 @@ export class PrefixRepresentation {
             resource = fullURL.substring(fullURL.lastIndexOf('/') + 1);
             base = fullURL.substring(0, fullURL.length - resource.length);
             // overwrite base if it is ontologyIri;
-            if (base === graph.options().getGeneralMetaObjectProperty('iri')) {
+            if (base === this.graph.options().getGeneralMetaObjectProperty('iri')) {
                 base = ":";
             }
             splitedURL.base = base;
@@ -54,6 +59,9 @@ export class PrefixRepresentation {
         return splitedURL;
     }
 
+    /**
+     * @param {string} str
+     */
     validURL(str) {
         const urlregex = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/;
         return urlregex.test(str);

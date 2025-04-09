@@ -4,6 +4,11 @@ import { Constants } from "./constants";
  * Encapsulates methods which return a label in a specific language for a preferred language.
  */
 export class LanguageTools {
+    /**
+     * @param {object | string | undefined} textObject
+     * @param {string | null} preferredLanguage
+     * @returns {string}
+     */
     static textInLanguage(textObject, preferredLanguage) {
         if (typeof textObject === "undefined") {
             return undefined;
@@ -28,6 +33,11 @@ export class LanguageTools {
         return textObject[Constants.LANG_IRIBASED];
     }
 
+    /**
+     * @param {object | string | undefined} textObject
+     * @param {string | null} preferredLanguage
+     * @returns {string | void}
+     */
     static #searchLanguage(textObject, preferredLanguage) {
         for (const language of textObject) {
             if (language === preferredLanguage && textObject.hasOwnProperty(language)) {

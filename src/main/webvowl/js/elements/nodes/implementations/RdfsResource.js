@@ -1,4 +1,5 @@
-import RoundNode from '../RoundNode';
+import { RoundNode } from "../RoundNode"
+
 
 export class RdfsResource extends RoundNode {
     constructor(graph) {
@@ -11,6 +12,9 @@ export class RdfsResource extends RoundNode {
         this.type = "rdfs:Resource"
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} element
+     */
     draw(element) {
         super.draw(element, ["rdf", "dashed"]);
     }

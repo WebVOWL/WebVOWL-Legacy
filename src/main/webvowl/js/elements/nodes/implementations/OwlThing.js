@@ -1,4 +1,5 @@
-import RoundNode from '../RoundNode';
+import { RoundNode } from "../RoundNode"
+
 
 export class OwlThing extends RoundNode {
     constructor(graph) {
@@ -10,6 +11,9 @@ export class OwlThing extends RoundNode {
         this.radius = 30
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} element
+     */
     draw(element) {
         super.draw(element, ["white", "dashed"]);
     }

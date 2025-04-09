@@ -1,4 +1,5 @@
-import DatatypeNode from '../DatatypeNode';
+import { DatatypeNode } from "../DatatypeNode"
+
 
 export class RdfsDataType extends DatatypeNode {
     constructor(graph) {

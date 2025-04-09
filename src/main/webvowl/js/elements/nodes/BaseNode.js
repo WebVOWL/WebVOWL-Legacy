@@ -1,32 +1,90 @@
-import BaseElement from '../BaseElement';
+// @ts-nocheck
+import { BaseElement } from "../BaseElement"
+import { PlainLink } from "../links/PlainLink"
+import { BaseProperty } from "../properties/BaseProperty"
 
 export class BaseNode extends BaseElement {
+    /**
+     * @param {any} graph
+     */
     constructor(graph) {
         super(graph)
+        if (this.constructor === BaseNode) {
+            throw new Error("Abstract classes can't be instantiated")
+        }
 
         // Basic attributes
-        this.complement     // Array<String> | undefined
-        this.disjointUnion  // Array<String> | undefined
-        this.disjointWith   // Array<String> | undefined
-        this.individuals = [] // Array<BaseNode>
-        this.intersection   // Array<String> | undefined
-        this.union          // Array<String> | undefined
-        this.links          // Array<Link>
+        /**
+         * @type {string[] | undefined}
+         */
+        this.complement = undefined
+        /**
+         * @type {string[] | undefined}
+         */
+        this.disjointUnion = undefined
+        /**
+         * @type {string[] | undefined}
+         */
+        this.disjointWith = undefined
+        /**
+         * @type {BaseNode[]}
+         */
+        this.individuals = []
+        /**
+         * @type {string[] | undefined}
+         */
+        this.intersection = undefined
+        /**
+         * @type {string[] | undefined}
+         */
+        this.union = undefined
+        /**
+         * @type {PlainLink[]}
+         */
+        this.links = []
+        /**
+         * @type {string}
+         */
         this.rendertype = "round"
 
-        // Additional attributes
-        this.foreignerObject    // HTMLElement | undefined // foreigner object for editing
-        this.ignoreLocalHoverEvents = false
-        this.backupFullIri      // String | undefined
 
         // Element containers
-        this.nodeElement        // HTMLElement | undefined
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.nodeElement = undefined
+
 
         // Editing attributes
+        /**
+         * @type {BaseProperty[]}
+         */
         this.assignedProperties = []
+        /**
+         * @type {boolean}
+         */
         this.editingTextElement = false
     }
 
+    /**
+     * Abstract method
+     * @returns {number}
+     */
+    textWidth() {
+        throw new Error("Method textWidth() must be implemented")
+    }
+
+    /**
+     * Abstract method
+     * @param {boolean} enable
+     */
+    setHoverHighlighting(enable) {
+        throw new Error("Method setHoverHighlighting() must be implemented")
+    }
+
+    /**
+     * @param {BaseProperty} property
+     */
     isPropertyAssignedToThisElement(property) {
         // this goes via IRIS
         // console.log("Element IRI :" + property.iri);
@@ -56,12 +114,18 @@ export class BaseNode extends BaseElement {
     //     return false;
     // }
 
+    /**
+     * @param {BaseProperty} property
+     */
     addProperty(property) {
         if (this.assignedProperties.indexOf(property) === -1) {
             this.assignedProperties.push(property);
         }
     }
 
+    /**
+     * @param {BaseProperty} property
+     */
     removePropertyElement(property) {
         const i = this.assignedProperties.indexOf(property);
         if (i !== -1) {
@@ -69,8 +133,10 @@ export class BaseNode extends BaseElement {
         }
     }
 
+    /**
+     * @param {BaseNode} other
+     */
     copyInformation(other) {
-        // console.log(other.labelForCurrentLanguage());
         if (other.type !== "owl:Thing") {
             this.label = other.label;
         }
@@ -86,6 +152,9 @@ export class BaseNode extends BaseElement {
         }
     }
 
+    /**
+     * @param {boolean} autoEditing
+     */
     enableEditing(autoEditing) {
         if (autoEditing === false) {
             return;
@@ -93,6 +162,9 @@ export class BaseNode extends BaseElement {
         this.raiseDoubleClickEdit(true);
     }
 
+    /**
+     * @param {boolean} forceIRISync
+     */
     raiseDoubleClickEdit(forceIRISync) {
         d3.selectAll(".foreignelements").remove();
         if (this.nodeElement === undefined || this.type === "owl:Thing" || this.type === "rdfs:Literal") {
@@ -115,33 +187,33 @@ export class BaseNode extends BaseElement {
         this.nodeElement.selectAll("circle").classed("hoveredForEditing", true);
         this.graph.killDelayedTimer();
         this.graph.ignoreOtherHoverEvents(false);
+        const textWidth = this.textWidth()
         this.foreignerObject = this.nodeElement.append("foreignObject")
-            .attr("x", -0.5 * (this.textWidth() - 2))
+            .attr("x", -0.5 * (textWidth - 2))
             .attr("y", -12)
             .attr("height", 30)
             .attr("class", "foreignelements")
-            .on("dragstart", function () {// remove drag operations of text element)
+            // remove drag operations of text element)
+            .on("dragstart", function () {
                 return false;
             })
-            .attr("width", this.textWidth() - 2);
+            .attr("width", textWidth - 2);
 
         var editText = this.foreignerObject.append("xhtml:input")
             .attr("class", "nodeEditSpan")
             .attr("id", this.id)
             .attr("align", "center")
             .attr("contentEditable", "true")
-            .on("dragstart", function () {// remove drag operations of text element)
+            // remove drag operations of text element)
+            .on("dragstart", function () {
                 return false;
             });
-
-        var bgColor = '#f00';
-        var txtWidth = this.textWidth() - 2;
         editText.style({
             'align': 'center',
             'color': 'black',
-            'width': txtWidth + "px",
+            'width': (textWidth - 2) + "px",
             'height': '15px',
-            'background-color': bgColor,
+            'background-color': '#f00',
             'border-bottom': '2px solid black'
         });
         var txtNode = editText.node();
@@ -197,7 +269,6 @@ export class BaseNode extends BaseElement {
                 this.frozen = this.graph.paused();
                 this.locked = this.graph.paused();
                 this.graph.ignoreOtherHoverEvents(false);
-                // console.log("Calling blur on Node!");
                 if (this.backupFullIri) {
                     const sanityCheckResult = this.graph.checkIfIriClassAlreadyExist(this.backupFullIri);
                     if (sanityCheckResult === false) {
@@ -217,7 +288,7 @@ export class BaseNode extends BaseElement {
     }
 
     /**
-     * @returns {String} the css class of this node
+     * @returns {string} the css class of this node
      */
     cssClassOfNode() {
         return "node" + this.id;
@@ -225,11 +296,14 @@ export class BaseNode extends BaseElement {
 
     /**
      * Returns css classes generated from the data of this object.
-     * @returns {Array}
+     * @returns {string[]}
      */
     collectCssClasses() {
+        /**
+         * @type {string[]}
+         */
         var cssClasses = [];
-        if (typeof this.styleClass === "String") {
+        if (typeof this.styleClass === "string") {
             cssClasses.push(this.styleClass);
         }
         cssClasses = cssClasses.concat(this.visualAttributes);
@@ -240,7 +314,7 @@ export class BaseNode extends BaseElement {
     addMouseListeners() {
         // Empty node
         if (!this.nodeElement) {
-            console.warn(this);
+            console.warn(`Cannot add mouse listeners to empty nodeElement of ${this}`);
             return;
         }
         this.nodeElement.selectAll("*")
@@ -253,10 +327,10 @@ export class BaseNode extends BaseElement {
         if (this.haloGroupElement) {
             var haloGr = this.haloGroupElement;
             var haloEls = haloGr.selectAll(".searchResultA");
-            animRuns = haloGr.attr("animationRunning");
-            if (typeof animRuns !== "boolean") {
+            const animRunsString = haloGr.attr("animationRunning");
+            if (typeof animRunsString !== "boolean") {
                 // parse this to a boolean value
-                animRuns = (animRuns === 'true');
+                animRuns = (animRunsString === 'true');
             }
             if (animRuns === false) {
                 haloEls.classed("searchResultA", false);
@@ -267,7 +341,8 @@ export class BaseNode extends BaseElement {
     }
 
     foreground() {
-        var selectedNode = this.nodeElement.node(), nodeContainer = selectedNode.parentNode;
+        const selectedNode = this.nodeElement.node();
+        const nodeContainer = selectedNode.parentNode;
         // check if the halo is present and an animation is running
         if (this.animationProcess() === false) {
             // Append hovered element as last child to the container list.
@@ -280,7 +355,8 @@ export class BaseNode extends BaseElement {
             return;
         }
 
-        var selectedNode = this.nodeElement.node(), nodeContainer = selectedNode.parentNode;
+        const selectedNode = this.nodeElement.node();
+        const nodeContainer = selectedNode.parentNode;
         // Append hovered element as last child to the container list.
         if (this.animationProcess() === false) {
             nodeContainer.appendChild(selectedNode);
