@@ -1325,8 +1325,6 @@ module.exports = function (graphContainerSelector) {
     // resetting the graph
     graph.reset = function () {
         if(unfilteredData) {
-            links = linkCreator.createLinks(unfilteredData.properties);
-            storeLinksOnNodes(unfilteredData.nodes, links);
             filterFunction(options.nodeDegreeFilter(), unfilteredData, true);
         }
         currentData = unfilteredData;
@@ -1702,8 +1700,6 @@ module.exports = function (graphContainerSelector) {
         options.literalFilter().enabled(shouldExecuteEmptyFilter);
 
         // Filter the data
-        links = linkCreator.createLinks(preprocessedData.properties);
-        storeLinksOnNodes(preprocessedData.nodes, links);
         options.filterModules().forEach(function (module) {
             preprocessedData = filterFunction(module, preprocessedData);
         });
@@ -1745,9 +1741,12 @@ module.exports = function (graphContainerSelector) {
         graph.update(false, currentData);
         graph.resetSearchHighlight();
         graph.highLightNodes(rootNodeID);
+        filterFunction(options.nodeDegreeFilter(), currentData, true);
     }
 
     function filterFunction(module, data, initializing) {
+        links = linkCreator.createLinks(unfilteredData.properties);
+        storeLinksOnNodes(unfilteredData.nodes, links);
         if (initializing) {
             if (module.initialize) {
                 module.initialize(data.nodes, data.properties);
