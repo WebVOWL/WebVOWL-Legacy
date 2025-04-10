@@ -67,7 +67,6 @@ export class BaseNode extends BaseElement {
     }
 
     /**
-     * Abstract method
      * @returns {number}
      */
     textWidth() {
@@ -75,7 +74,6 @@ export class BaseNode extends BaseElement {
     }
 
     /**
-     * Abstract method
      * @param {boolean} enable
      */
     setHoverHighlighting(enable) {
@@ -299,9 +297,6 @@ export class BaseNode extends BaseElement {
      * @returns {string[]}
      */
     collectCssClasses() {
-        /**
-         * @type {string[]}
-         */
         var cssClasses = [];
         if (typeof this.styleClass === "string") {
             cssClasses.push(this.styleClass);

@@ -156,15 +156,11 @@ export class BaseElement {
     //     this.fixed = this.locked || this.frozen || node.pinned;
     // }
 
-    /**
-     * Abstract method
-     */
     redrawElement() {
         throw new Error("Method redrawElement() must be implemented")
     }
 
     /**
-     * Abstract method
      * @returns {number}
      */
     actualRadius() {

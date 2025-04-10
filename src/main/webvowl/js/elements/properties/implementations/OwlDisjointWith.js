@@ -1,4 +1,4 @@
-import CenteringTextElement from '../../../util/CenteringTextElement';
+import { CenteringTextElement } from '../../../util/CenteringTextElement';
 import { BaseProperty } from '../BaseProperty';
 
 export class OwlDisjointWith extends BaseProperty {
@@ -18,11 +18,15 @@ export class OwlDisjointWith extends BaseProperty {
 
     // Disallow overwriting the label
     set label(p) {
+        console.warn("Attempting to override disjoint label") // REVIEW: Check if this getter/setter pair are necessary
         return
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} labelContainer
+     */
     drawLabel(labelContainer) {
-        shapeElement = this.addRect(labelContainer);
+        this.shapeElement = this.addRect(labelContainer);
 
         labelContainer.append("circle")
             .classed("symbol", true)
@@ -39,13 +43,9 @@ export class OwlDisjointWith extends BaseProperty {
             .attr("r", 10);
 
         var textElement = new CenteringTextElement(labelContainer, this.backgroundColor);
-        if (!graph.options().compactNotation()) {
+        if (!this.graph.options().compactNotation()) {
             textElement.addSubText("disjoint");
         }
         textElement.translation(0, 20);
-    }
-
-    markerElement() {
-        return undefined;
     }
 }

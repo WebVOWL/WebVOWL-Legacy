@@ -1,5 +1,8 @@
-import elementToolsFactory from '../util/elementTools';
-const elementTools = elementToolsFactory();
+import { ElementTools } from "../util/elementTools";
+
+export class Collapsing {
+    cons
+}
 
 export default function () {
     var collapsing = {},
@@ -16,7 +19,7 @@ export default function () {
 
         for (i = 0, l = nodes.length; i < l; i++) {
             node = nodes[i];
-            if (!elementTools.isDatatype(node)) {
+            if (!ElementTools.isDatatype(node)) {
                 node.collapsible = enabled;
             }
         }

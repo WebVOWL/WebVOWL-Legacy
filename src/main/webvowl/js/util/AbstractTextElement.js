@@ -13,6 +13,9 @@ export class AbstractTextElement {
      * @param {string} backgroundColor
      */
     constructor(container, backgroundColor) {
+        if (this.constructor === AbstractTextElement) {
+            throw new Error("Abstract classes can't be instantiated")
+        }
         this.textBlock = container.append("text")
             .classed("text", true)
             .style("fill", this.#getTextColor(backgroundColor))
@@ -21,8 +24,8 @@ export class AbstractTextElement {
 
     /**
      *
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      */
     translation(x, y) {
         this.textBlock.attr("transform", "translate(" + x + ", " + y + ")");
@@ -35,9 +38,9 @@ export class AbstractTextElement {
     }
 
     /**
-     * @param {String} text
-     * @param {String} prefix
-     * @param {String} postfix
+     * @param {string} text
+     * @param {string} prefix
+     * @param {string} postfix
      */
     applyPreAndPostFix(text, prefix, postfix) {
         if (prefix) {

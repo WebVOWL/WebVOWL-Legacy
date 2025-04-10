@@ -108,10 +108,10 @@ export default function (graphContainerSelector) {
     //var prefixModule=require("./prefixRepresentationModule")(graph);
     var NodePrototypeMap = createLowerCasePrototypeMap(nodePrototypeMap);
     var PropertyPrototypeMap = createLowerCasePrototypeMap(propertyPrototypeMap);
-    var classDragger = require("./classDragger")(graph);
-    var rangeDragger = require("./rangeDragger")(graph);
-    var domainDragger = require("./domainDragger")(graph);
-    var shadowClone = require("./shadowClone")(graph);
+    var classDragger = require("./draggers/classDragger")(graph);
+    var rangeDragger = require("./draggers/rangeDragger")(graph);
+    var domainDragger = require("./draggers/domainDragger")(graph);
+    var shadowClone = require("./draggers/shadowClone")(graph);
 
     graph.math = function () {
         return math;
@@ -356,7 +356,7 @@ export default function (graphContainerSelector) {
                     }
 
                     if (targetRangeNode === null) {
-                        d.reDrawEverthing();
+                        d.redrawEverything();
                         shadowClone.hideParentProperty(false);
                     }
                     else {
@@ -386,7 +386,7 @@ export default function (graphContainerSelector) {
                     }
                     shadowClone.hideClone(true);
                     if (targetDomainNode === null) {
-                        d.reDrawEverthing();
+                        d.redrawEverything();
                         shadowClone.hideParentProperty(false);
                     }
                     else {
@@ -553,7 +553,7 @@ export default function (graphContainerSelector) {
 
                 // force centered positions on single-layered links
                 var link = label.link;
-                if (link.layerSize === 1 && !link.loops) {
+                if (link.layers === 1 && !link.loops) {
                     var linkDomainIntersection = math.calculateIntersection(link.range, link.domain, 0);
                     var linkRangeIntersection = math.calculateIntersection(link.domain, link.range, 0);
                     position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
@@ -602,7 +602,7 @@ export default function (graphContainerSelector) {
 
             // force centered positions on single-layered links
             var link = label.link;
-            if (link.layerSize === 1 && !link.loops) {
+            if (link.layers === 1 && !link.loops) {
                 var linkDomainIntersection = math.calculateIntersection(link.range, link.domain, 0);
                 var linkRangeIntersection = math.calculateIntersection(link.domain, link.range, 0);
                 position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
@@ -1061,7 +1061,7 @@ export default function (graphContainerSelector) {
             })
             .call(dragBehaviour);
         drElement.each(function (node) {
-            node.svgRoot(d3.select(this));
+            node.svgRoot = d3.select(this);
             node.svgPathLayer(draggerPathLayer);
             if (node.type === "shadowClone") {
                 node.drawClone();
@@ -3901,7 +3901,7 @@ export default function (graphContainerSelector) {
 
             // add the dragger element;
             if (node.renderType === "round") {
-                classDragger.svgRoot(draggerLayer);
+                classDragger.svgRoot = draggerLayer;
                 classDragger.setParentNode(node);
                 classDragger.hideDragger(false);
                 addDataPropertyGroupElement.classed("hidden", false);

@@ -32,7 +32,7 @@ export class OwlEquivalentClass extends RoundNode {
                 this.renderingElement,
                 84,
                 84,
-                ["white", "embedded"]
+                ["white", "embedded"],
             );
             DrawTools.appendRectangularClass(
                 this.renderingElement,

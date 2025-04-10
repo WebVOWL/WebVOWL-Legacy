@@ -1,6 +1,5 @@
 import { SetOperatorNode } from "../SetOperatorNode";
 
-
 export class OwlComplementOf extends SetOperatorNode {
     constructor(graph) {
         super(graph)

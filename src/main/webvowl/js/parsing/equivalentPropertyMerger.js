@@ -1,7 +1,8 @@
+import { BaseNode } from '../elements/nodes/BaseNode';
 import { OwlThing } from '../elements/nodes/implementations/OwlThing';
 import { RdfsLiteral } from '../elements/nodes/implementations/RdfsLiteral';
-import elementToolsFactory from '../util/elementTools';
-const elementTools = elementToolsFactory();
+import { BaseProperty } from '../elements/properties/BaseProperty';
+import { ElementTools } from '../util/elementTools';
 
 
 const PREFIX = "GENERATED-MERGED_RANGE-"
@@ -11,8 +12,8 @@ const DATA_PROPERTY_DEFAULT_RANGE_TYPE = "rdfs:Literal"
 
 export class EquivalentPropertyMerger {
     /**
-     * @param {Array} properties
-     * @param {Array} nodes
+     * @param {BaseProperty[]} properties
+     * @param {BaseNode[]} nodes
      * @param {Object} propertyMap
      * @param {Object} nodeMap
      * @param {Object} graph
@@ -50,12 +51,19 @@ export class EquivalentPropertyMerger {
         return this.#filterVisibleNodes(nodes.concat(mergeNodes), totalNodeIdsToHide);
     }
 
+    /**
+     * @param {{ [x: string]: any; }} propertyMap
+     */
     static #createIdToPropertyMapper(propertyMap) {
-        return function (id) {
+        return function (/** @type {string | number} */ id) {
             return propertyMap[id];
         };
     }
 
+    /**
+     * @param {BaseProperty[]} propertyWithEquivalents
+     * @param {{}} nodeMap
+     */
     static #findMergeNode(propertyWithEquivalents, nodeMap) {
         var typeMap = this.#mapPropertiesRangesToType(propertyWithEquivalents, nodeMap);
         var typeSet = new Set(typeMap.keys());
@@ -66,7 +74,7 @@ export class EquivalentPropertyMerger {
 
         // exactly one type to chose from -> take the node of this type as range
         if (typeSet.size === 1) {
-            var type = typeSet.values()[0];
+            var type = typeSet.values().next();
             var ranges = typeMap.get(type);
 
             if (ranges.length === 1) {
@@ -76,10 +84,8 @@ export class EquivalentPropertyMerger {
     }
 
     /**
-     *
-     * @param {Array} properties
-     * @param {Object} nodeMap
-     * @returns {Map}
+     * @param {BaseProperty[]} properties
+     * @param {{ [x: string]: any; }} nodeMap
      */
     static #mapPropertiesRangesToType(properties, nodeMap) {
         var typeMap = new Map();
@@ -88,7 +94,7 @@ export class EquivalentPropertyMerger {
                 //@ WORKAROUND
                 throw new TypeError(`Property cannot be '${property}' in this context`)
             }
-            const range = nodeMap[property.range];
+            const range = nodeMap[property.range.id];
             const type = range.type;
 
             if (!typeMap.has(type)) {
@@ -99,9 +105,13 @@ export class EquivalentPropertyMerger {
         return typeMap;
     }
 
+    /**
+     * @param {BaseProperty} property
+     * @param {any} graph
+     */
     static #createDefaultMergeNode(property, graph) {
         var range;
-        if (elementTools.isDatatypeProperty(property)) {
+        if (ElementTools.isDatatypeProperty(property)) {
             range = new RdfsLiteral(graph);
         } else {
             range = new OwlThing(graph);
@@ -110,6 +120,12 @@ export class EquivalentPropertyMerger {
         return range;
     }
 
+    /**
+     * @param {BaseProperty[]} propertyWithEquivalents
+     * @param {BaseNode} mergeNode
+     * @param {BaseProperty[]} properties
+     * @param {Set<string>} processedPropertyIds
+     */
     static #replaceRangesAndCollectNodesToHide(propertyWithEquivalents, mergeNode, properties, processedPropertyIds) {
         var nodesToHide = [];
 
@@ -118,8 +134,8 @@ export class EquivalentPropertyMerger {
                 //@ WORKAROUND
                 throw new TypeError(`Property (${property}) and mergeNode (${mergeNode}) cannot be undefined in this context`)
             }
-            var oldRangeId = property.range;
-            property.range = mergeNode.id;
+            const oldRangeId = property.range.id;
+            property.range.id = mergeNode.id;
             if (!this.#isDomainOrRangeOfOtherProperty(oldRangeId, properties)) {
                 nodesToHide.push(oldRangeId);
             }
@@ -128,23 +144,30 @@ export class EquivalentPropertyMerger {
         return nodesToHide;
     }
 
+    /**
+     * @param {string} nodeId
+     * @param {BaseProperty[]} properties
+     */
     static #isDomainOrRangeOfOtherProperty(nodeId, properties) {
-        for (var i = 0; i < properties.length; i++) {
-            var property = properties[i];
-            if (property.domain === nodeId || property.range === nodeId) {
+        for (const property of properties) {
+            if (property.domain.id === nodeId || property.range.id === nodeId) {
                 return true;
             }
         }
         return false;
     }
 
+    /**
+     * @param {BaseNode[]} nodes
+     * @param {Set<string>} nodeIdsToHide
+     */
     static #filterVisibleNodes(nodes, nodeIdsToHide) {
         var filteredNodes = [];
-        nodes.forEach(function (node) {
+        for (const node of nodes) {
             if (!nodeIdsToHide.has(node.id)) {
                 filteredNodes.push(node);
             }
-        });
+        }
         return filteredNodes;
     }
 }

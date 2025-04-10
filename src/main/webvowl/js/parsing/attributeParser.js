@@ -1,3 +1,6 @@
+import { BaseElement } from "../elements/BaseElement"
+import { BaseProperty } from "../elements/properties/BaseProperty"
+
 // Style
 const ANONYMOUS = "anonymous"
 const DATATYPE = "datatype"
@@ -39,6 +42,9 @@ const PROPERTY_INDICATIONS = [
  * @returns {Function}
  */
 export class AttributeParser {
+    /**
+     * @param {BaseElement} property
+     */
     static #parsePropertyIndications(property) {
         for (const indication of PROPERTY_INDICATIONS) {
             if (property.attributes.indexOf(indication) >= 0) {
@@ -47,12 +53,19 @@ export class AttributeParser {
         }
     }
 
+    /**
+     * @param {BaseElement} element
+     */
     static #parseVisualAttributes(element) {
         for (const attributeGroup of VISUAL_ATTRIBUTE_GROUPS) {
             this.#setVisualAttributeOfGroup(element, attributeGroup);
         }
     }
 
+    /**
+     * @param {BaseElement} element
+     * @param {string[]} group
+     */
     static #setVisualAttributeOfGroup(element, group) {
         for (const attribute of group) {
             if (element.attributes.indexOf(attribute) >= 0) {
@@ -62,35 +75,40 @@ export class AttributeParser {
         }
     }
 
-    static #parseClassIndications(_class) {
+    /**
+     * @param {BaseElement} element
+     */
+    static #parseClassIndications(element) {
         for (const indication of CLASS_INDICATIONS) {
-            if (_class.attributes.indexOf(indication) >= 0) {
-                _class.indications.push(indication);
+            if (element.attributes.indexOf(indication) >= 0) {
+                element.indications.push(indication);
             }
         }
     }
 
     /**
      * Parses and sets the attributes of a class.
-     * @param _class
+     * @param {BaseElement} element
      */
-    static parseClassAttributes(_class) {
-        if (!(_class.attributes instanceof Array)) {
+    static parseClassAttributes(element) {
+        if (!(element.attributes instanceof Array)) {
             return;
         }
-        this.#parseVisualAttributes(_class);
-        this.#parseClassIndications(_class);
+        this.#parseVisualAttributes(element);
+        this.#parseClassIndications(element);
     }
 
     /**
      * Parses and sets the attributes of a property.
-     * @param property
+     * @param {BaseProperty} property
      */
     static parsePropertyAttributes(property) {
         if (!(property.attributes instanceof Array)) {
             return;
         }
+        // @ts-ignore
         this.#parseVisualAttributes(property);
+        // @ts-ignore
         this.#parsePropertyIndications(property);
     }
 }

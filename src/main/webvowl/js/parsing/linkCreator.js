@@ -1,6 +1,7 @@
 import { ArrowLink } from '../elements/links/ArrowLink';
 import { BoxArrowLink } from '../elements/links/BoxArrowLink';
 import { PlainLink } from '../elements/links/PlainLink';
+import { BaseProperty } from '../elements/properties/BaseProperty';
 import { OwlDisjointWith } from '../elements/properties/implementations/OwlDisjointWith';
 import { SetOperatorProperty } from '../elements/properties/implementations/SetOperatorProperty';
 
@@ -11,7 +12,7 @@ import { SetOperatorProperty } from '../elements/properties/implementations/SetO
 export class LinkCreator {
     /**
      * Creates links from the passed properties.
-     * @param properties
+     * @param {BaseProperty[]} properties
      */
     static createLinks(properties) {
         var links = this.#groupPropertiesToLinks(properties);
@@ -26,7 +27,7 @@ export class LinkCreator {
 
             if (link.domain === link.range) {
                 const loopKey = link.domain;
-                const loops = loopMap.get(loopKey);
+                let loops = loopMap.get(loopKey);
                 if (loops) {
                     loops.push(link);
                 } else {
@@ -39,22 +40,20 @@ export class LinkCreator {
             var link = links[i];
             const sortedKey = [link.domain.id, link.range.id].sort().join('|');
             const layerCount = layerCounts.get(sortedKey);
-            link.layerSize = layerCount;
+            link.layers = layerCount;
 
             if (link.domain === link.range) {
                 const loops = loopMap.get(link.domain);
                 link.loops = loops;
-                link.loopIndex = loops.findIndex((element) => element === link);
+                link.loopIndex = loops.findIndex((/** @type {any} */ element) => element === link);
             }
         }
-
         return links;
     }
 
     /**
      * Creates links of properties and - if existing - their inverses.
-     * @param properties the properties
-     * @returns {Array}
+     * @param {BaseProperty[]} properties the properties
      */
     static #groupPropertiesToLinks(properties) {
         var links = [],
@@ -83,6 +82,9 @@ export class LinkCreator {
         return links;
     }
 
+    /**
+     * @param {BaseProperty} property
+     */
     static #createLink(property) {
         var domain = property.domain;
         var range = property.range;

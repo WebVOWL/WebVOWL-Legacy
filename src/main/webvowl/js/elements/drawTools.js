@@ -4,14 +4,13 @@
 export class DrawTools {
     /**
      * Append a circular class node with the passed attributes.
-     * @param parent the parent element to which the circle will be appended
-     * @param radius
-     * @param [cssClasses] an array of additional css classes
-     * @param [tooltip]
-     * @param [backgroundColor]
-     * @returns {*}
+     * @param {d3.Selection<any, any, null, undefined>} parent the parent element to which the circle will be appended
+     * @param {number} radius
+     * @param {string | string[]} cssClasses an array of additional css classes
+     * @param {string} tooltip
+     * @param {string} backgroundColor
      */
-    static appendCircularClass(parent, radius, cssClasses, tooltip, backgroundColor) {
+    static appendCircularClass(parent, radius, cssClasses, tooltip = undefined, backgroundColor = undefined) {
         var circle = parent.append("circle")
             .classed("class", true)
             .attr("r", radius);
@@ -21,20 +20,33 @@ export class DrawTools {
         return circle;
     }
 
+    /**
+     *
+     * @param {d3.Selection<any, any, null, undefined>} element
+     * @param {string | string[]} cssClasses
+     */
     static #addCssClasses(element, cssClasses) {
         if (cssClasses instanceof Array) {
-            cssClasses.forEach(function (cssClass) {
+            for (const cssClass of cssClasses) {
                 element.classed(cssClass, true);
-            });
+            }
         }
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} element
+     * @param {string} tooltip
+     */
     static #addToolTip(element, tooltip) {
         if (tooltip) {
             element.append("title").text(tooltip);
         }
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} element
+     * @param {string} backgroundColor
+     */
     static #addBackgroundColor(element, backgroundColor) {
         if (backgroundColor) {
             element.style("fill", backgroundColor);
@@ -43,15 +55,14 @@ export class DrawTools {
 
     /**
      * Appends a rectangular class node with the passed attributes.
-     * @param parent the parent element to which the rectangle will be appended
-     * @param width
-     * @param height
-     * @param [cssClasses] an array of additional css classes
-     * @param [tooltip]
-     * @param [backgroundColor]
-     * @returns {*}
+     * @param {d3.Selection<any, any, null, undefined>} parent the parent element to which the rectangle will be appended
+     * @param {number} width
+     * @param {number} height
+     * @param {string | string[]} cssClasses an array of additional css classes
+     * @param {string} tooltip
+     * @param {string} backgroundColor
      */
-    static appendRectangularClass(parent, width, height, cssClasses, tooltip, backgroundColor) {
+    static appendRectangularClass(parent, width, height, cssClasses, tooltip = undefined, backgroundColor = undefined) {
         var rectangle = parent.append("rect")
             .classed("class", true)
             .attr("x", -width / 2)
@@ -64,6 +75,14 @@ export class DrawTools {
         return rectangle;
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} container
+     * @param {string | number} dx
+     * @param {string | number} dy
+     * @param {() => any} onClick
+     * @param {() => any} accuraciesHelperFunction
+     * @param {boolean} useAccuracyHelper
+     */
     static drawPin(container, dx, dy, onClick, accuraciesHelperFunction, useAccuracyHelper) {
         var pinGroupElement = container
             .append("g")
@@ -79,7 +98,6 @@ export class DrawTools {
                 }
                 d3.event.stopPropagation();
             });
-
         pinGroupElement.append("line")
             .attr("x1", 0)
             .attr("x2", 0)
@@ -109,6 +127,12 @@ export class DrawTools {
         return pinGroupElement;
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} node
+     * @param {number} width
+     * @param {number} height
+     * @param {number} offset
+     */
     static drawRectHalo(node, width, height, offset) {
         var container;
         if (node.nodeElement)
@@ -149,6 +173,10 @@ export class DrawTools {
         return haloGroupElement;
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} container
+     * @param {number} radius
+     */
     static drawHalo(container, radius) {
         if (container === undefined) {
             return null;

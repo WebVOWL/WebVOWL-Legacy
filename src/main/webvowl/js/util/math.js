@@ -4,24 +4,22 @@
  * used for WebVOWL.
  */
 export class MathUtils {
-    constructor() {
-        // @ts-ignore
-        this.loopFunction = d3.svg.line()
-            .x(function (d) {
-                return d.x;
-            })
-            .y(function (d) {
-                return d.y;
-            })
-            .interpolate("cardinal")
-            .tension(-1);
-    }
+    // @ts-ignore
+    static loopFunction = d3.svg.line()
+        .x(function (d) {
+            return d.x;
+        })
+        .y(function (d) {
+            return d.y;
+        })
+        .interpolate("cardinal")
+        .tension(-1);
 
     /**
      * Get the radian of `angle`
      * @param {number} angle
      */
-    #calculateRadian(angle) {
+    static #calculateRadian(angle) {
         angle = angle % 360;
         if (angle < 0) {
             angle = angle + 360;
@@ -33,7 +31,7 @@ export class MathUtils {
      * Get the angle of `radian`
      * @param {number} radian
      */
-    #calculateAngle(radian) {
+    static #calculateAngle(radian) {
         return radian * (180 / Math.PI);
     }
 
@@ -44,7 +42,7 @@ export class MathUtils {
      * @param {number} length the length of the calculated normal vector
      * @returns {{ x: number; y: number; }}
      */
-    calculateNormalVector(source, target, length) {
+    static calculateNormalVector(source, target, length) {
         const dx = target.x - source.x,
             dy = target.y - source.y;
 
@@ -62,7 +60,7 @@ export class MathUtils {
      * Calculates the path for a link, if it is a loop. Currently only working for circular nodes.
      * @param {any} link the link
      */
-    getLoopPoints(link) {
+    static getLoopPoints(link) {
         const node = link.domain;
         const label = link.label;
 
@@ -101,16 +99,16 @@ export class MathUtils {
      * @param {any} link the link
      * @returns {*} loop function
      */
-    calculateLoopPath(link) {
-        return this.loopFunction(this.calculateLoopPoints(link));
+    static calculateLoopPath(link) {
+        return MathUtils.loopFunction(MathUtils.calculateLoopPoints(link));
     }
 
     /**
      * Calculates the path for a link, if it is a loop. Currently only working for circlular nodes.
      * @param {any} link the link
      */
-    calculateLoopPoints(link) {
-        const points = this.getLoopPoints(link);
+    static calculateLoopPoints(link) {
+        const points = MathUtils.getLoopPoints(link);
         return [points[0], link.label, points[1]];
     }
 
@@ -122,7 +120,7 @@ export class MathUtils {
      * @param {number} additionalDistance additional distance the
      * @returns {{ x: number; y: number; }}
      */
-    calculateIntersection(source, target, additionalDistance) {
+    static calculateIntersection(source, target, additionalDistance) {
         const dx = target.x - source.x;
         const dy = target.y - source.y;
         const length = Math.sqrt(dx * dx + dy * dy);
@@ -144,7 +142,7 @@ export class MathUtils {
      * @param {{ x: number; y: number; }} secondPoint
      * @returns {{ x: number; y: number; }}
      */
-    calculateCenter(firstPoint, secondPoint) {
+    static calculateCenter(firstPoint, secondPoint) {
         return {
             x: (firstPoint.x + secondPoint.x) / 2,
             y: (firstPoint.y + secondPoint.y) / 2

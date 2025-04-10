@@ -145,14 +145,3 @@ export class CenteringTextElement extends AbstractTextElement {
         return this.textBlock.property("childElementCount");
     }
 }
-
-
-
-
-
-
-
-
-
-
-

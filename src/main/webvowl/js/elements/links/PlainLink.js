@@ -14,12 +14,24 @@ export class PlainLink {
      * @param {BaseProperty} property
      */
     constructor(domain, range, property) {
-        // this.layers
+        this.layers = undefined
         // this.layerIndex
+        /**
+         * @type {BaseNode}
+         */
         this.domain = domain
+        /**
+         * @type {BaseNode}
+         */
         this.range = range
+        /**
+         * @type {PlainLink[] | undefined}
+         */
         this.loops = undefined
         this.loopIndex = undefined // REVIEW: This property is not used
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
         this.pathElement
         this.label = new Label(property, this)
         this.backPart = new LinkPart(domain, this.label, this)

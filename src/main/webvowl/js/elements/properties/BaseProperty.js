@@ -1,6 +1,8 @@
-import CenteringTextElement from '../../util/CenteringTextElement';
+import { CenteringTextElement } from '../../util/CenteringTextElement';
 import { BaseElement } from '../BaseElement';
 import { DrawTools } from '../drawTools';
+import { ArrowLink } from '../links/ArrowLink';
+import { BoxArrowLink } from '../links/BoxArrowLink';
 import { PlainLink } from '../links/PlainLink';
 import { BaseNode } from '../nodes/BaseNode';
 import { RectangularElementToolsMixin } from '../rectangularElementTools';
@@ -26,7 +28,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
          */
         this.inverse = undefined
         /**
-         * @type {PlainLink}
+         * @type {PlainLink | BoxArrowLink | ArrowLink}
          */
         this.link = undefined
         /**

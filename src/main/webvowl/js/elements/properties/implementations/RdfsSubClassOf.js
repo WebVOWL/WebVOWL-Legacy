@@ -13,8 +13,11 @@ export class RdfsSubClassOf extends BaseProperty {
         this.iri = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
     }
 
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} labelGroup
+     */
     draw(labelGroup) {
-        this.labelVisible = !graph.options().compactNotation();
+        this.labelVisible = !this.graph.options().compactNotation();
         return super.draw(labelGroup);
     }
 
@@ -24,6 +27,7 @@ export class RdfsSubClassOf extends BaseProperty {
 
     // Disallow overwriting the label
     set label(p) {
+        console.warn("Attempting to override disjoint label") // REVIEW: Check if this getter/setter pair are necessary
         return
     }
 }
