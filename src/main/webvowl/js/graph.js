@@ -3999,6 +3999,18 @@ module.exports = function (graphContainerSelector) {
         }
     };
 
+    function logNodeLinks(nodes) {
+        let linksOnNodes = new Set();
+        nodes.forEach((node) => {
+            let nodeLinks = node.links();
+            nodeLinks.forEach(function (link) {
+                linksOnNodes.add(link);
+            });
+        });
+        console.log(linksOnNodes);
+        return linksOnNodes;
+    }
+
 
     return graph;
 };
