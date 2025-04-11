@@ -46,11 +46,12 @@ Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
 > The [OWL2VOWL converter](https://github.com/VisualDataWeb/OWL2VOWL) is not supported on the local development server
 
 1. Clone the project locally
-2. Download and install Node.js from http://nodejs.org/download/
-3. Open the terminal in the `WebVOWL` directory
-4. Run `npm install` to install dependencies
+2. Install Maven from https://maven.apache.org/download.cgi
+3. Install Rust from https://www.rust-lang.org/tools/install
+4. In a terminal, run `cargo install wasm-pack`
+5. Open the terminal in the `WebVOWL` directory
 
-Now you can execute these commands in the terminal:
+Now you can execute these commands:
 * `npm run webserver` to start a local live-updating webserver with the current development version
 * `npm run release` builds the release files into the deploy directory
 
