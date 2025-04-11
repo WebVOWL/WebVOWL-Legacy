@@ -320,7 +320,7 @@ module.exports = function (graph) {
                         //testEntry.onclick = renderUnrendered(nodeString, nodeIDs)
                         testEntry.onclick = function () {
                             try {
-                                graph.loadSearchData(nodeID);
+                                graph.loadSearchData([nodeID]);
                                 searchMenu.requestDictionaryUpdate();
                                 handleClick(nodeString, nodeIDs);
                             } catch (error) {
@@ -387,7 +387,7 @@ module.exports = function (graph) {
                 try {
                     graph.loadSearchData(Array.from(nodeIDs.values()));
                     searchMenu.requestDictionaryUpdate();
-                    handleClick(nodeString, Array.from(nodeIDs.values()));
+                    handleClick(nodeString, nodeIDs);
                 } catch (error) {
                     console.error(error);
                 }
