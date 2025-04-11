@@ -85,15 +85,6 @@ export class RoundNode extends BaseNode {
         return this.actualRadius();
     }
 
-    removeHalo() {
-        if (this.halo) {
-            this.halo = false;
-            if (this.haloGroupElement) {
-                this.haloGroupElement.remove();
-            }
-        }
-    }
-
     /**
      * @param {boolean} pulseAnimation
      */
@@ -127,17 +118,6 @@ export class RoundNode extends BaseNode {
             this.graph.options().showDraggerObject,
             this.graph.options().useAccuracyHelper()
         );
-    }
-
-    /**
-     * Removes the pin and refreshs the graph to update the force layout.
-     */
-    removePin() {
-        this.pinned = false;
-        if (this.pinGroupElement) {
-            this.pinGroupElement.remove();
-        }
-        this.graph.updateStyle();
     }
 
     drawCollapsingButton() {

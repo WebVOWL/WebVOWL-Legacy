@@ -134,22 +134,6 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
         );
     }
 
-    removePin() {
-        this.pinned = false;
-        if (this.pinGroupElement) {
-            this.pinGroupElement.remove();
-        }
-        this.graph.updateStyle();
-    }
-
-    removeHalo() {
-        this.halo = false;
-        if (this.haloGroupElement) {
-            this.haloGroupElement.remove();
-            this.haloGroupElement = undefined;
-        }
-    }
-
     /**
      * @param {boolean} pulseAnimation
      */

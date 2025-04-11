@@ -140,6 +140,14 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         }
     }
 
+    textWidth() {
+        return this.width;
+    }
+
+    markerId() {
+        return "marker" + this.id;
+    }
+
     /**
      * @param {boolean} val
      */
@@ -155,10 +163,6 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     // linkHasMarker() {
     //     return this.linkType !== "dashed";
     // }
-
-    markerId() {
-        return "marker" + this.id;
-    }
 
     toggleFocus() {
         this.focused = !this.focused;
@@ -508,25 +512,6 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         }
     }
 
-    /**
-     * Removes the pin and refreshs the graph to update the force layout.
-     */
-    removePin() {
-        this.pinned = false;
-        if (this.pinGroupElement) {
-            this.pinGroupElement.remove();
-        }
-        this.graph.updateStyle();
-    }
-
-    removeHalo() {
-        this.halo = false;
-        if (this.haloGroupElement) {
-            this.haloGroupElement.remove();
-            this.haloGroupElement = undefined;
-        }
-    }
-
     animationProcess() {
         var animRuns = false;
         if (this.haloGroupElement) {
@@ -586,11 +571,6 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
             pulseItem.classed("searchResultB", true);
             pulseItem.attr("animationRunning", false);
         }
-    }
-
-    // Required for class interface compatibility
-    textWidth() {
-        return this.width;
     }
 
     /**

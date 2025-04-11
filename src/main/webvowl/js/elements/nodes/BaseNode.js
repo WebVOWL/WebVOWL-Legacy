@@ -67,13 +67,6 @@ export class BaseNode extends BaseElement {
     }
 
     /**
-     * @returns {number}
-     */
-    textWidth() {
-        throw new Error("Method textWidth() must be implemented")
-    }
-
-    /**
      * @param {boolean} enable
      */
     setHoverHighlighting(enable) {

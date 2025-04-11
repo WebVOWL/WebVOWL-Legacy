@@ -1,5 +1,5 @@
-import AbsoluteTextElement from "../util/AbsoluteTextElement";
-import CenteringTextElement from "../util/CenteringTextElement";
+import { AbsoluteTextElement } from "../util/AbsoluteTextElement";
+import { CenteringTextElement } from "../util/CenteringTextElement";
 import { LanguageTools } from "../util/languageTools";
 import { BaseNode } from "./nodes/BaseNode";
 import { BaseProperty } from "./properties/BaseProperty";
@@ -160,6 +160,17 @@ export class BaseElement {
         throw new Error("Method redrawElement() must be implemented")
     }
 
+    redrawLabelText() {
+        throw new Error("Method redrawLabelText() must be implemented")
+    }
+
+    /**
+     * @returns {number}
+     */
+    textWidth() {
+        throw new Error("Method textWidth() must be implemented")
+    }
+
     /**
      * @returns {number}
      */
@@ -169,6 +180,17 @@ export class BaseElement {
 
     toggleFocus() {
         throw new Error("Method toggleFocus() must be implemented")
+    }
+
+    drawPin() {
+        throw new Error("Method drawPin() must be implemented")
+    }
+
+    /**
+     * @param {boolean} pulseAnimation
+     */
+    drawHalo(pulseAnimation) {
+        throw new Error("Method drawHalo() must be implemented")
     }
 
     get locked() {
@@ -205,6 +227,25 @@ export class BaseElement {
     set pinned(p) {
         this._pinned = p;
         // this.#applyFixedLocationAttributes();
+    }
+
+    /**
+     * Removes the pin and refreshs the graph to update the force layout.
+     */
+    removePin() {
+        this.pinned = false;
+        if (this.pinGroupElement) {
+            this.pinGroupElement.remove();
+        }
+        this.graph.updateStyle();
+    }
+
+    removeHalo() {
+        this.halo = false;
+        if (this.haloGroupElement) {
+            this.haloGroupElement.remove();
+            this.haloGroupElement = undefined;
+        }
     }
 
     commentForCurrentLanguage() {

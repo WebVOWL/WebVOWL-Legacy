@@ -1,65 +1,68 @@
 import _ from 'lodash/array';
-import elementToolsFactory from '../util/elementTools';
-const elementTools = elementToolsFactory();
+import { BaseElement } from '../elements/BaseElement';
+import { BaseProperty } from '../elements/properties/BaseProperty';
+import { ElementTools } from '../util/elementTools';
 
-export default function () {
-  var pap = {},
-    enabled = false,
-    pinnedElements = [];
 
-  pap.addPinnedElement = function (element) {
-    // check if element is already in list
-    var indexInArray = pinnedElements.indexOf(element);
-    if (indexInArray === -1) {
-      pinnedElements.push(element);
-    }
-  };
-
-  pap.handle = function (selection, forced) {
-    if (!enabled) {
-      return;
+export class PickAndPin {
+    constructor() {
+        this.enabled = false
+        /**
+         * @type {BaseElement[]}
+         */
+        this.pinnedElements = []
     }
 
-    if (!forced) {
-      if (wasNotDragged()) {
-        return;
-      }
-    }
-    if (elementTools.isProperty(selection)) {
-      if (selection.inverse && selection.inverse.pinned) {
-        return;
-      } else if (hasNoParallelProperties(selection)) {
-        return;
-      }
+    /**
+     * @param {BaseElement} element
+     */
+    addPinnedElement(element) {
+        // check if element is already in list
+        if (this.pinnedElements.indexOf(element) === -1) {
+            this.pinnedElements.push(element);
+        }
     }
 
-    if (!selection.pinned) {
-      selection.drawPin();
-      pap.addPinnedElement(selection);
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} selection
+     * @param {boolean} forced
+     */
+    handle(selection, forced) {
+        if (!this.enabled) {
+            return;
+        }
+
+        if (!forced) {
+            if (!d3.event.defaultPrevented) {
+                // was not dragged
+                return;
+            }
+        }
+        if (ElementTools.isProperty(selection)) {
+            if (selection.inverse && selection.inverse.pinned) {
+                return;
+            } else if (this.#hasNoParallelProperties(selection)) {
+                return;
+            }
+        }
+
+        if (!selection.pinned) {
+            selection.drawPin();
+            this.addPinnedElement(selection);
+        }
     }
-  };
 
-  function wasNotDragged() {
-    return !d3.event.defaultPrevented;
-  }
+    /**
+     * @param {BaseProperty} property
+     */
+    #hasNoParallelProperties(property) {
+        return _.intersection = property.domain.links, property.range.links.length === 1;
+    }
 
-  function hasNoParallelProperties(property) {
-    return _.intersection = property.domain.links, property.range.links.length === 1;
-  }
-
-  pap.enabled = function (p) {
-    if (!arguments.length) return enabled;
-    enabled = p;
-    return pap;
-  };
-
-  pap.reset = function () {
-    pinnedElements.forEach(function (element) {
-      element.removePin();
-    });
-    // Clear the array of stored nodes
-    pinnedElements.length = 0;
-  };
-
-  return pap;
-};
+    reset() {
+        for (const element of this.pinnedElements) {
+            element.removePin()
+        }
+        this.pinnedElements = []
+    }
+}

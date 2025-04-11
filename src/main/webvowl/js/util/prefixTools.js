@@ -1,4 +1,4 @@
-export class PrefixRepresentation {
+export class PrefixTools {
     constructor(graph) {
         this.graph = graph
     }
