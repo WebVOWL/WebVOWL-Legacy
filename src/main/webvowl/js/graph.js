@@ -1760,7 +1760,7 @@ module.exports = function (graphContainerSelector) {
         currentData = { nodes: Array.from(selectedNodes.values()), properties: selectedProperties };
         graph.update(false, currentData);
         graph.resetSearchHighlight();
-        graph.highLightNodes(rootNodes);
+        graph.highLightNodes(rootNodeID);
     }
 
     function filterFunction(module, data, initializing) {

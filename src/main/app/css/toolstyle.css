@@ -159,7 +159,7 @@ html {
     cursor: pointer;
 }
 
-.dbEntry:hover, .dbEntry:focus .entryClickable:hover, .entryClickable:focus {
+.dbEntry:hover, .dbEntry:focus .groupEntry:hover, .groupEntry:focus {
     background-color: #bdc3c7;
 }
 
@@ -2518,7 +2518,11 @@ a#locateSearchResult {
     display: none;
 }
 
-.entryClickable {
+.groupEntry:hover {
+    background-color: #e1e1e1;
+}
+
+.groupEntry {
     background-color: #ffffff;
     color: #2980b9;
     padding: 10px;

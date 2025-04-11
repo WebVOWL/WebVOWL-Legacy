@@ -253,33 +253,25 @@ module.exports = function (graph) {
             if (nodeIDs.length > 1) {   
 
                 let testEntry = document.createElement('li');
-                let renderedNodes = 0;
-                // Change to nodeIDs.length
-                for (let nodeID of nodeIDs) if (nodeMap[nodeID] != undefined) renderedNodes++;
                 
-                
-                let clickableAnchor = document.createElement('a');
-                clickableAnchor.setAttribute('class', "entryClickable");
-                clickableAnchor.title = nodeString + ' (' + renderedNodes + '/' + nodeIDs.length + ')';
-                //clickableAnchor.onclick = handleClick(nodeString, nodeIDs, clickableAnchor);
-                testEntry.onclick = function () {
-                    try {
-                        graph.loadSearchData(Array.from(nodeIDs.values()));
-                        searchMenu.requestDictionaryUpdate();
-                        handleClick(nodeString, nodeIDs)();
-                    } catch (error) {
-                        console.error(error);
-                    }
-                }
+                let renderedNodes = [];
+                for (let nodeID of nodeIDs) if (nodeMap[nodeID] != undefined) renderedNodes.push(nodeID);
 
-                if (renderedNodes == 0) clickableAnchor.style.color = "rgb(151, 151, 151)";
-                testEntry.appendChild(clickableAnchor)
+                
+                let groupEntry = document.createElement('a');
+                groupEntry.setAttribute('class', "groupEntry");
+                groupEntry.title = `${nodeString} (${renderedNodes.length}/${nodeIDs.length})`;
+                
+                groupEntry.onclick = handleClick(nodeString, nodeIDs);
+
+                if (renderedNodes.length == 0) groupEntry.style.color = "rgb(151, 151, 151)";
+                testEntry.appendChild(groupEntry);
                 
                 testEntry.setAttribute('elementID', nodeIDs);
                 //testEntry.onclick = handleClick(nodeString, nodeIDs, testEntry);
                 //testEntry.setAttribute('class', "dbEntry");
-                let croppedText = cropText(nodeString + ' (' + renderedNodes + '/' + nodeIDs.length + ')');
-                let searchEntryNode = d3.select(clickableAnchor);
+                let croppedText = cropText(nodeString + ' (' + renderedNodes.length + '/' + nodeIDs.length + ')');
+                let searchEntryNode = d3.select(groupEntry);
                 searchEntryNode.node().innerHTML = croppedText;
 
                 let subEntryList = document.createElement('ul');
@@ -344,26 +336,15 @@ module.exports = function (graph) {
         }
     }
 
-    function renderUnrendered(nodeString, rootNodes) {
-        try {
-            graph.loadSearchData(rootNodes);
-            searchMenu.requestDictionaryUpdate();
-            handleClick(nodeString, rootNodes)();
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    function generateGroupedEntries(titleString, nodeIDs, parent, nodeMap) {
+    function generateGroupedEntries(nodeString, nodeIDs, parent, nodeMap) {
         
         let firstShown = false;
-        for (nodeID of nodeIDs) {
+        for (const nodeID of nodeIDs) {
             let subEntry = document.createElement('li');
-            subEntry.title = titleString + ' id: ' + nodeID;
+            subEntry.title = nodeString + ' id: ' + nodeID;
             subEntry.setAttribute('elementID', nodeID);
             subEntry.setAttribute('class', "subEntry");
-            subEntry.innerHTML = titleString + ' (' + nodeID + ')';
-            // .onclick handler
+            subEntry.innerHTML = nodeString + ' (' + nodeID + ')';
 
             if (firstShown == false) {
                 firstShown = true;
@@ -372,8 +353,23 @@ module.exports = function (graph) {
             if (nodeMap[nodeID] == undefined) {
                 subEntry.style.color = "rgb(151, 151, 151)";
             }
-
+            
             parent.appendChild(subEntry);
+            subEntry.onclick = handleClick(nodeString, nodeID);
+
+            if (nodeMap[nodeID] === undefined) {
+                subEntry.onclick = function () {
+                    try {
+                        graph.loadSearchData(Array.from(nodeIDs.values()));
+                        searchMenu.requestDictionaryUpdate();
+                        handleClick(nodeString, [nodeID])();
+                    } catch (error) {
+                        console.error(error);
+                    }
+                };
+                d3.select(subEntry).style("cursor", "default");
+            }
+            
         }
 
         let showAllEntry = document.createElement('li');
@@ -383,7 +379,15 @@ module.exports = function (graph) {
         showAllEntry.innerHTML = "Show All"
         //showAllEntry.setAttribute('class', "showAllButton");
         parent.appendChild(showAllEntry);
-        //.onclick stuff
+        showAllEntry.onclick = function () {
+            try {
+                graph.loadSearchData(nodeIDs);
+                searchMenu.requestDictionaryUpdate();
+                handleClick(nodeString, nodeIDs)();
+            } catch (error) {
+                console.error(error);
+            }
+        };
     }
 
     function userInput() {
