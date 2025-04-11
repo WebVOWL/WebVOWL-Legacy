@@ -11,7 +11,7 @@ export class ShadowClone extends AbstractDragger {
     constructor(graph) {
         super(graph)
 
-        this.nodeId = 10003
+        this.id = 10003
         this.s_x = 0
         this.s_y = 0
         this.e_x = 0

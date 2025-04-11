@@ -55,7 +55,7 @@ export class BaseElement {
          */
         this.attributes = []
         /**
-         * @type {string | undefined | null}
+         * @type {string | undefined}
          */
         this.backgroundColor = undefined
         /**
@@ -165,6 +165,10 @@ export class BaseElement {
      */
     actualRadius() {
         throw new Error("Method actualRadius() must be implemented")
+    }
+
+    toggleFocus() {
+        throw new Error("Method toggleFocus() must be implemented")
     }
 
     get locked() {

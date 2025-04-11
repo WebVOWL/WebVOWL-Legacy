@@ -1,4 +1,4 @@
-import AbsoluteTextElement from '../../util/AbsoluteTextElement';
+import { AbsoluteTextElement } from '../../util/AbsoluteTextElement';
 import { DrawTools } from '../drawTools';
 import { BoxArrowLink } from '../links/BoxArrowLink';
 import { RoundNode } from './RoundNode';

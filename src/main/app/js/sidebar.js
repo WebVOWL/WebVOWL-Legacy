@@ -186,17 +186,17 @@ export default function (graph) {
         deliveredMetrics = deliveredMetrics || {};
 
         d3.select("#classCount")
-            .text(deliveredMetrics.classCount || statistics.classCount());
+            .text(deliveredMetrics.classCount || statistics.classCount);
         d3.select("#objectPropertyCount")
-            .text(deliveredMetrics.objectPropertyCount || statistics.objectPropertyCount());
+            .text(deliveredMetrics.objectPropertyCount || statistics.objectPropertyCount);
         d3.select("#datatypePropertyCount")
-            .text(deliveredMetrics.datatypePropertyCount || statistics.datatypePropertyCount());
+            .text(deliveredMetrics.datatypePropertyCount || statistics.datatypePropertyCount);
         d3.select("#individualCount")
-            .text(deliveredMetrics.totalIndividualCount || statistics.totalIndividualCount());
+            .text(deliveredMetrics.totalIndividualCount || statistics.totalIndividualCount);
         d3.select("#nodeCount")
-            .text(statistics.nodeCount());
+            .text(statistics.nodeCount);
         d3.select("#edgeCount")
-            .text(statistics.edgeCount());
+            .text(statistics.edgeCount);
     }
 
     function displayMetadata(metadata) {

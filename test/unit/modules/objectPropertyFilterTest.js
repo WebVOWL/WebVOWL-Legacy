@@ -25,7 +25,7 @@ describe("Filtering of object properties", function () {
 
 	beforeEach(function () {
 		filter = require("../../../src/webvowl/js/modules/objectPropertyFilter")();
-		filter.enabled(true);
+		filter.enabled = true;
 	});
 
 	it("should remove object properties", function () {

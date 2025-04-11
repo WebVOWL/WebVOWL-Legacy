@@ -62,9 +62,7 @@ export class RoundNode extends BaseNode {
 
     toggleFocus() {
         this.focused = !this.focused;
-        if (this.nodeElement) {
-            this.nodeElement.select("circle").classed("focused", this.focused);
-        }
+        this.nodeElement.select("circle").classed("focused", this.focused);
         this.graph.resetSearchHighlight();
         this.graph.options().searchMenu().clearText();
     }

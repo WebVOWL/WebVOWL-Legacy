@@ -65,4 +65,12 @@ export class PlainLink {
     isLoop() {
         return this.domain.equals(this.range);
     }
+
+    get inverse() {
+        return this.label.inverse;
+    }
+
+    get property() {
+        return this.label.property;
+    }
 }

@@ -21,7 +21,7 @@ describe("Collapsing of subclassOf properties", function () {
 
 	beforeEach(function () {
 		collapser = require("../../../src/webvowl/js/modules/subclassFilter")();
-		collapser.enabled(true);
+		collapser.enabled = true;
 	});
 
 

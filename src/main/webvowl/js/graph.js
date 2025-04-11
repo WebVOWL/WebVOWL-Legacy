@@ -398,7 +398,7 @@ export default function (graphContainerSelector) {
                 else {
                     d.locked = false;
                     var pnp = graph.options().pickAndPinModule();
-                    if (pnp.enabled() === true && moved === true) {
+                    if (pnp.enabled === true && moved === true) {
                         if (d.id) { // node
                             pnp.handle(d, true);
                         }
@@ -1449,7 +1449,7 @@ export default function (graphContainerSelector) {
         parser.setDictionary(originalDictionary);
 
         var literFilter = graph.options().literalFilter();
-        var idsToRemove = literFilter.removedNodes(); // A set
+        var idsToRemove = literFilter.removedNodes; // A set
         var originalDict = parser.getDictionary();
         var newDict = [];
 
@@ -1692,9 +1692,9 @@ export default function (graphContainerSelector) {
      *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
      */
     function refreshGraphData(preprocessedData) {
-        let shouldExecuteEmptyFilter = options.literalFilter().enabled();
+        let shouldExecuteEmptyFilter = options.literalFilter().enabled;
         graph.executeEmptyLiteralFilter();
-        options.literalFilter().enabled(shouldExecuteEmptyFilter);
+        options.literalFilter().enabled = shouldExecuteEmptyFilter;
 
         // Filter the data
         links = linkCreator.createLinks(preprocessedData.properties);
@@ -2856,7 +2856,7 @@ export default function (graphContainerSelector) {
                 compactNotationContainer.style("pointer-events", "auto");
                 d3.select("#compactNotationOption").style("color", "");
                 d3.select("#compactNotationOption").node().title = "";
-                options.literalFilter().enabled(true);
+                options.literalFilter().enabled = true;
                 graph.update();
             } else {
                 // if editor Mode
@@ -2864,8 +2864,8 @@ export default function (graphContainerSelector) {
                 d3.select("#compactNotationOption").node().title = "Compact notation can only be used in view mode";
                 compactNotationContainer.node().disabled = true;
                 compactNotationContainer.node().checked = false;
-                options.compactNotationModule().enabled(false);
-                options.literalFilter().enabled(false);
+                options.compactNotationModule().enabled = false;
+                options.literalFilter().enabled = false;
                 graph.executeCompactNotationModule();
                 graph.executeEmptyLiteralFilter();
                 graph.lazyRefresh();
@@ -3129,14 +3129,14 @@ export default function (graphContainerSelector) {
         // check for duplicate triple in the element;
 
 
-        if (typeString === "owl:objectProperty" && graph.options().objectPropertyFilter().enabled() === true) {
+        if (typeString === "owl:objectProperty" && graph.options().objectPropertyFilter().enabled === true) {
             graph.options().warningModule().showWarning("Warning",
                 "Object properties are filtered out in the visualization!",
                 "Element not created!", 1, false);
             return false;
         }
 
-        if (typeString === "owl:disjointWith" && graph.options().disjointPropertyFilter().enabled() === true) {
+        if (typeString === "owl:disjointWith" && graph.options().disjointPropertyFilter().enabled === true) {
             graph.options().warningModule().showWarning("Warning",
                 "owl:disjointWith properties are filtered out in the visualization!",
                 "Element not created!", 1, false);
@@ -3273,7 +3273,7 @@ export default function (graphContainerSelector) {
         // random postion issues;
         clearTimeout(nodeFreezer);
         // tells user when element is filtered out
-        if (graph.options().datatypeFilter().enabled() === true) {
+        if (graph.options().datatypeFilter().enabled === true) {
             graph.options().warningModule().showWarning("Warning",
                 "Datatype properties are filtered out in the visualization!",
                 "Element not created!", 1, false);

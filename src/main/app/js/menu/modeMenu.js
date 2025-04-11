@@ -120,20 +120,19 @@ export default function (graph) {
         moduleOptionContainer = d3.select(selector)
             .append("div")
             .classed("checkboxContainer", true)
-            .datum({ module: module, defaultState: module.enabled() });
+            .datum({ module: module, defaultState: module.enabled });
 
         moduleCheckbox = moduleOptionContainer.append("input")
             .classed("moduleCheckbox", true)
             .attr("id", identifier + "ModuleCheckbox")
             .attr("type", "checkbox")
-            .property("checked", module.enabled());
+            .property("checked", module.enabled);
 
         // Store for easier resetting all modes
         checkboxes.push(moduleCheckbox);
 
         moduleCheckbox.on("click", function (d, silent) {
-            var isEnabled = moduleCheckbox.property("checked");
-            d.module.enabled(isEnabled);
+            d.module.enabled = moduleCheckbox.property("checked");
             if (updateGraphOnClick && silent !== true) {
                 graph.executeColorExternalsModule();
                 graph.executeCompactNotationModule();
@@ -156,7 +155,7 @@ export default function (graph) {
             var data = button.datum();
             data.active = !data.active;
             applyColorModeSwitchState(button, colorExternalsMode);
-            if (colorExternalsMode.enabled() && silent !== true) {
+            if (colorExternalsMode.enabled && silent !== true) {
                 graph.executeColorExternalsModule();
                 graph.lazyRefresh();
             }
@@ -173,7 +172,7 @@ export default function (graph) {
             .text(activeColorMode.text);
 
         if (colorExternalsMode) {
-            colorExternalsMode.colorModeType(activeColorMode.type);
+            colorExternalsMode.colorModeType = activeColorMode.type;
         }
     }
 

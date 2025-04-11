@@ -21,7 +21,7 @@ describe("Collapsing of datatypes", function () {
 
 	beforeEach(function () {
 		filter = require("../../../src/webvowl/js/modules/datatypeFilter")();
-		filter.enabled(true);
+		filter.enabled = true;
 	});
 
 

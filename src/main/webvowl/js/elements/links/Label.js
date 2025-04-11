@@ -31,6 +31,10 @@ export class Label {
         }
     }
 
+    get inverse() {
+        return this.property.inverse;
+    }
+
     actualRadius() {
         return this.property.smallestRadius;
     }

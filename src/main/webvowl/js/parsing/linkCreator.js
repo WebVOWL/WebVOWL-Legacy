@@ -15,13 +15,11 @@ export class LinkCreator {
      * @param {BaseProperty[]} properties
      */
     static createLinks(properties) {
-        var links = this.#groupPropertiesToLinks(properties);
-
+        const links = this.#groupPropertiesToLinks(properties);
         let layerCounts = new Map();
         let loopMap = new Map();
-        for (var i = 0, l = links.length; i < l; i++) {
-            var link = links[i];
 
+        for (const link of links) {
             const sortedKey = [link.domain.id, link.range.id].sort().join('|');
             layerCounts.set(sortedKey, (layerCounts.get(sortedKey) || 0) + 1);
 
@@ -36,8 +34,7 @@ export class LinkCreator {
             }
         }
 
-        for (var i = 0, l = links.length; i < l; i++) {
-            var link = links[i];
+        for (const link of links) {
             const sortedKey = [link.domain.id, link.range.id].sort().join('|');
             const layerCount = layerCounts.get(sortedKey);
             link.layers = layerCount;
@@ -56,23 +53,17 @@ export class LinkCreator {
      * @param {BaseProperty[]} properties the properties
      */
     static #groupPropertiesToLinks(properties) {
-        var links = [],
-            property,
-            addedProperties = new Set();
+        let links = [];
+        let addedProperties = new Set();
 
-        for (var i = 0, l = properties.length; i < l; i++) {
-            property = properties[i];
-
+        for (const property of properties) {
             if (!addedProperties.has(property.id)) {
-                var link = this.#createLink(property);
-
+                const link = this.#createLink(property);
                 property.link = link;
                 if (property.inverse) {
                     property.inverse.link = link;
                 }
-
                 links.push(link);
-
                 addedProperties.add(property.id);
                 if (property.inverse) {
                     addedProperties.add(property.inverse.id);
@@ -86,8 +77,8 @@ export class LinkCreator {
      * @param {BaseProperty} property
      */
     static #createLink(property) {
-        var domain = property.domain;
-        var range = property.range;
+        const domain = property.domain;
+        const range = property.range;
 
         if (property instanceof OwlDisjointWith) {
             return new PlainLink(domain, range, property);
