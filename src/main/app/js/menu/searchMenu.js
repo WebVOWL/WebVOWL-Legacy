@@ -322,7 +322,7 @@ module.exports = function (graph) {
                             try {
                                 graph.loadSearchData(nodeID);
                                 searchMenu.requestDictionaryUpdate();
-                                handleClick(nodeString, nodeIDs)();
+                                handleClick(nodeString, nodeIDs);
                             } catch (error) {
                                 console.error(error);
                             }
@@ -337,7 +337,7 @@ module.exports = function (graph) {
     }
 
     function generateGroupedEntries(nodeString, nodeIDs, parent, nodeMap) {
-        
+        let existsUnrendered = false;
         let firstShown = false;
         for (const nodeID of nodeIDs) {
             let subEntry = document.createElement('li');
@@ -355,14 +355,15 @@ module.exports = function (graph) {
             }
             
             parent.appendChild(subEntry);
-            subEntry.onclick = handleClick(nodeString, nodeID);
+            subEntry.onclick = handleClick(nodeString, new Set([nodeID]));
 
             if (nodeMap[nodeID] === undefined) {
+                existsUnrendered = true;
                 subEntry.onclick = function () {
                     try {
-                        graph.loadSearchData(Array.from(nodeIDs.values()));
+                        graph.loadSearchData([nodeID]);
                         searchMenu.requestDictionaryUpdate();
-                        handleClick(nodeString, [nodeID])();
+                        handleClick(nodeString, new Set([nodeID]));
                     } catch (error) {
                         console.error(error);
                     }
@@ -379,15 +380,19 @@ module.exports = function (graph) {
         showAllEntry.innerHTML = "Show All"
         //showAllEntry.setAttribute('class', "showAllButton");
         parent.appendChild(showAllEntry);
-        showAllEntry.onclick = function () {
-            try {
-                graph.loadSearchData(nodeIDs);
-                searchMenu.requestDictionaryUpdate();
-                handleClick(nodeString, nodeIDs)();
-            } catch (error) {
-                console.error(error);
-            }
-        };
+        showAllEntry.onclick = handleClick(nodeString, nodeIDs);
+
+        if (existsUnrendered === true) {
+            showAllEntry.onclick = function () {
+                try {
+                    graph.loadSearchData(Array.from(nodeIDs.values()));
+                    searchMenu.requestDictionaryUpdate();
+                    handleClick(nodeString, Array.from(nodeIDs.values()));
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+        }
     }
 
     function userInput() {
