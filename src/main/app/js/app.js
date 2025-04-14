@@ -1,9 +1,6 @@
 import init, { init_rust } from "../../../../pkg/index.js";
 
-String.prototype.replaceAll = function (search, replacement) {
-    var target = this;
-    return target.split(search).join(replacement);
-};
+
 export default function () {
     var newOntologyCounter = 1;
     var app = {},
@@ -275,7 +272,7 @@ export default function () {
             ontologyMenu.setup();
             configMenu.setup();
 
-            leftSidebar.showSidebar(0);
+            leftSidebar.showSidebar(false);
             leftSidebar.hideCollapseButton(true);
 
             graph.start();
@@ -363,7 +360,7 @@ export default function () {
             height = window.innerHeight - 40,
             width = window.innerWidth - (window.innerWidth * 0.22);
 
-        if (sidebar.getSidebarVisibility() === "0") {
+        if (sidebar.getSidebarVisibility()) {
             height = window.innerHeight - 40;
             width = window.innerWidth;
         }

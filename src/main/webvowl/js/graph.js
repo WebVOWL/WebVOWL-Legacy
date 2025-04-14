@@ -2473,7 +2473,7 @@ export default function (graphContainerSelector) {
         var botRight = getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
 
         var w = graph.options().width();
-        if (graph.options().leftSidebar().isSidebarVisible() === true)
+        if (graph.options().leftSidebar().visibleSidebar === true)
             w -= 200;
         var h = graph.options().height();
         topLeft.x += bboxOffset;
@@ -2490,7 +2490,7 @@ export default function (graphContainerSelector) {
         var cx = 0.5 * w,
             cy = 0.5 * h;
 
-        if (graph.options().leftSidebar().isSidebarVisible() === true)
+        if (graph.options().leftSidebar().visibleSidebar === true)
             cx += 200;
         var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
 
@@ -2533,7 +2533,7 @@ export default function (graphContainerSelector) {
         var botRight = getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
 
         var w = graph.options().width();
-        if (graph.options().leftSidebar().isSidebarVisible() === true)
+        if (graph.options().leftSidebar().visibleSidebar === true)
             w -= 200;
         var h = graph.options().height();
         topLeft.x += bboxOffset;
@@ -2550,7 +2550,7 @@ export default function (graphContainerSelector) {
         var cx = 0.5 * w,
             cy = 0.5 * h;
 
-        if (graph.options().leftSidebar().isSidebarVisible() === true)
+        if (graph.options().leftSidebar().visibleSidebar === true)
             cx += 200;
         var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
 

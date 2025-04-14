@@ -15,13 +15,6 @@ export default function (graph) {
 
     var exportTTLModule = require("./exportTTLModule")(graph);
 
-
-    String.prototype.replaceAll = function (search, replacement) {
-        var target = this;
-        return target.split(search).join(replacement);
-    };
-
-
     /**
      * Adds the export button to the website.
      */
