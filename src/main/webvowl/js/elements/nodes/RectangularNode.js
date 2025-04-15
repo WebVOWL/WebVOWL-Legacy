@@ -112,7 +112,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
             this.drawPin();
         }
         if (this.halo) {
-            this.drawHalo(false);
+            this.drawHalo();
         }
     }
 
@@ -137,10 +137,10 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
     /**
      * @param {boolean} pulseAnimation
      */
-    drawHalo(pulseAnimation) {
+    drawHalo(pulseAnimation = false) {
         this.halo = true;
         const offset = 0;
-        this.haloGroupElement = DrawTools.drawRectHalo(this, this.width, this.height, offset);
+        this.haloGroupElement = DrawTools.drawRectHalo(this.nodeElement, this.width, this.height, offset);
 
         if (pulseAnimation === false) {
             var pulseItem = this.haloGroupElement.selectAll(".searchResultA");

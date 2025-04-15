@@ -1,49 +1,56 @@
 // const wasm = require("../../../../target/pkg/index.js");
 
-export default function (graph) {
+
+export class OnologyLoading {
     /** some constants **/
-    var PREDEFINED = 0,
-        FILE_UPLOAD = 1,
-        JSON_URL = 2,
-        IRI_URL = 3;
+    PREDEFINED = 0
+    FILE_UPLOAD = 1
+    JSON_URL = 2
+    IRI_URL = 3
 
-    var PROGRESS_BAR_ERROR = 0,
-        PROGRESS_BAR_BUSY = 1,
-        PROGRESS_BAR_PERCENT = 2,
-        progressBarMode = 1;
+    PROGRESS_BAR_ERROR = 0
+    PROGRESS_BAR_BUSY = 1
+    PROGRESS_BAR_PERCENT = 2
 
-    var loadingWasSuccessFul = false;
-    var missingImportsWarning = false;
-    var showLoadingDetails = false;
-    var visibilityStatus = true;
+    DEFAULT_JSON_NAME = "foaf" // This file is loaded by default
+    URL_PREFIX = "o2v/" // Path to the OWL2VOWL converter
 
-    var DEFAULT_JSON_NAME = "foaf"; // This file is loaded by default
-    var conversion_sessionId;
-    let jsonText;
-    let statistics;
-    let adjustSizeCallable;
-    const URL_PREFIX = "o2v/"
+    /**
+     * @param {any} graph
+     */
+    constructor(graph) {
+        this.graph = graph
+        this.progressBarMode = 1
+        this.newOntologyCounter = 1;
 
-    /** variable defs **/
-    var loadingModule = {},
-        menuContainer = d3.select("#loading-info"),
-        loadingInfoContainer = d3.select("#loadingInfo-container"),
-        detailsButton = d3.select("#show-loadingInfo-button"),
-        closeButton = d3.select("#loadingIndicator_closeButton"),
-        ontologyMenu,
-        ontologyIdentifierFromURL;
+        this.loadingWasSuccessFul = false
+        this.missingImportsWarning = false
+        this.showLoadingDetails = false
+        this.visibilityStatus = true
 
-    /** functon defs **/
-    loadingModule.checkForScreenSize = function () {
+        this.conversion_sessionId = undefined
+        this.jsonText = undefined
+        this.statistics = undefined
+        this.adjustSizeCallable = undefined
+
+        this.menuContainer = d3.select("#loading-info")
+        this.loadingInfoContainer = d3.select("#loadingInfo-container")
+        this.detailsButton = d3.select("#show-loadingInfo-button")
+        this.closeButton = d3.select("#loadingIndicator_closeButton")
+        this.ontologyMenu = undefined
+        this.ontologyIdentifierFromURL = undefined
+    }
+
+    checkForScreenSize() {
         // checks for window size and adjusts the loading indicator
-        var w = graph.options().width(),
-            h = graph.options().height();
+        const w = this.graph.options().width();
+        const h = this.graph.options().height();
 
         if (w < 270) {
             d3.select("#loading-info").classed("hidden", true);
         } else {
             // check if it should be visible
-            if (visibilityStatus === true) {
+            if (this.visibilityStatus) {
                 d3.select("#loading-info").classed("hidden", false);
             } else {
                 d3.select("#loading-info").classed("hidden", true);
@@ -61,199 +68,186 @@ export default function (graph) {
             d3.select("#progressBarContext").classed("hidden", false);
             d3.select("#layoutLoadingProgressBarContainer").style("height", "50px");
         }
-    };
-
-    loadingModule.getJSONText = function () {
-        return jsonText;
     }
 
-    loadingModule.setJSONText = function (text) {
-        jsonText = text;
+    /**
+     * @param {any} m
+     */
+    setOntologyMenu(m) {
+        this.ontologyMenu = m;
     }
 
-    loadingModule.getMessageVisibilityStatus = function () {
-        return visibilityStatus;
-    };
-
-    loadingModule.getProgressBarMode = function () {
-        return progressBarMode;
-    };
-
-    loadingModule.successfullyLoadedOntology = function () {
-        return loadingWasSuccessFul;
-    };
-
-    loadingModule.missingImportsWarning = function () {
-        return missingImportsWarning;
-    };
-
-    loadingModule.setOntologyMenu = function (m) {
-        ontologyMenu = m;
-    };
-
-    loadingModule.showErrorDetailsMessage = function () {
-        loadingModule.showLoadingIndicator();
-        loadingModule.expandDetails();
+    showErrorDetailsMessage() {
+        this.showLoadingIndicator();
+        this.expandDetails();
         d3.select("#loadingIndicator_closeButton").classed("hidden", true);
-        loadingModule.scrollDownDetails();
-    };
+        this.scrollDownDetails();
+    }
 
-    loadingModule.showWarningDetailsMessage = function () {
+    showWarningDetailsMessage() {
         d3.select("#currentLoadingStep").style("color", "#ff0");
-        loadingModule.showLoadingIndicator();
-        loadingModule.expandDetails();
+        this.showLoadingIndicator();
+        this.expandDetails();
         d3.select("#loadingIndicator_closeButton").classed("hidden", false);
-        loadingModule.scrollDownDetails();
-    };
+        this.scrollDownDetails();
+    }
 
-    loadingModule.scrollDownDetails = function () {
-        var scrollingElement = d3.select("#loadingInfo-container").node();
+    scrollDownDetails() {
+        const scrollingElement = d3.select("#loadingInfo-container").node();
         scrollingElement.scrollTop = scrollingElement.scrollHeight;
-    };
+    }
 
-    loadingModule.hideLoadingIndicator = function () {
+    hideLoadingIndicator() {
         d3.select("#loading-info").classed("hidden", true);
-        visibilityStatus = false;
-    };
+        this.visibilityStatus = false;
+    }
 
-    loadingModule.showLoadingIndicator = function () {
+    showLoadingIndicator() {
         d3.select("#loading-info").classed("hidden", false);
-        visibilityStatus = true;
+        this.visibilityStatus = true;
 
-    };
+    }
 
-    // -- SETUP -- **/
-    loadingModule.setup = function (args) {
-        [statistics, adjustSizeCallable] = args;
+    /**
+     * @param {[any, any]} args
+     */
+    setup(args) {
+        [this.statistics, this.adjustSizeCallable] = args;
 
         // create connections for close and details button;
-        loadingInfoContainer.classed("hidden", !showLoadingDetails);
-        detailsButton.on("click", function () {
-            showLoadingDetails = !showLoadingDetails;
-            loadingInfoContainer.classed("hidden", !showLoadingDetails);
-            detailsButton.classed("accordion-trigger-active", showLoadingDetails);
+        this.loadingInfoContainer.classed("hidden", !this.showLoadingDetails);
+        this.detailsButton.on("click", () => {
+            this.showLoadingDetails = !this.showLoadingDetails;
+            this.loadingInfoContainer.classed("hidden", !this.showLoadingDetails);
+            this.detailsButton.classed("accordion-trigger-active", this.showLoadingDetails);
         });
 
-        closeButton.on("click", function () {
-            menuContainer.classed("hidden", true);
+        this.closeButton.on("click", () => {
+            this.menuContainer.classed("hidden", true);
         });
-        loadingModule.setBusyMode();
-    };
+        this.setBusyMode();
+    }
 
-    loadingModule.updateSize = function () {
-        showLoadingDetails = !(loadingInfoContainer.classed("hidden"));
-        loadingInfoContainer.classed("hidden", !showLoadingDetails);
-        detailsButton.classed("accordion-trigger-active", showLoadingDetails);
-    };
+    // NOTE: Disabled to save memory while this method is not used
+    // updateSize () {
+    //     this. showLoadingDetails = !(this.loadingInfoContainer.classed("hidden"));
+    //     this. loadingInfoContainer.classed("hidden", !this.showLoadingDetails);
+    //     this. detailsButton.classed("accordion-trigger-active", this.showLoadingDetails);
+    // }
 
-    loadingModule.getDetailsState = function () {
-        return showLoadingDetails;
-    };
+    expandDetails() {
+        this.showLoadingDetails = true;
+        this.loadingInfoContainer.classed("hidden", !this.showLoadingDetails);
+        this.detailsButton.classed("accordion-trigger-active", this.showLoadingDetails);
+    }
 
-    loadingModule.expandDetails = function () {
-        showLoadingDetails = true;
-        loadingInfoContainer.classed("hidden", !showLoadingDetails);
-        detailsButton.classed("accordion-trigger-active", showLoadingDetails);
-    };
+    collapseDetails() {
+        this.showLoadingDetails = false;
+        this.loadingInfoContainer.classed("hidden", !this.showLoadingDetails);
+        this.detailsButton.classed("accordion-trigger-active", this.showLoadingDetails);
+    }
 
-    loadingModule.collapseDetails = function () {
-        showLoadingDetails = false;
-        loadingInfoContainer.classed("hidden", !showLoadingDetails);
-        detailsButton.classed("accordion-trigger-active", showLoadingDetails);
-    };
-
-    loadingModule.setBusyMode = function () {
+    setBusyMode() {
         d3.select("#currentLoadingStep").style("color", "#fff");
         d3.select("#progressBarValue").node().innherHTML = "";
         d3.select("#progressBarValue").style("width", "20%");
         d3.select("#progressBarValue").classed("busyProgressBar", true);
-        progressBarMode = PROGRESS_BAR_BUSY;
-    };
+        this.progressBarMode = this.PROGRESS_BAR_BUSY;
+    }
 
-    loadingModule.setSuccessful = function () {
+    setSuccessful() {
         d3.select("#currentLoadingStep").style("color", "#0f0");
-    };
+    }
 
-    loadingModule.setErrorMode = function () {
+    setErrorMode() {
         d3.select("#currentLoadingStep").style("color", "#f00");
         d3.select("#progressBarValue").style("width", "0%");
         d3.select("#progressBarValue").classed("busyProgressBar", false);
         d3.select("#progressBarValue").node().innherHTML = "";
-        progressBarMode = PROGRESS_BAR_ERROR;
-    };
+        this.progressBarMode = this.PROGRESS_BAR_ERROR;
+    }
 
-    loadingModule.setPercentMode = function () {
+    setPercentMode() {
         d3.select("#currentLoadingStep").style("color", "#fff");
         d3.select("#progressBarValue").classed("busyProgressBar", false);
         d3.select("#progressBarValue").node().innherHTML = "0%";
         d3.select("#progressBarValue").style("width", "0%");
-        progressBarMode = PROGRESS_BAR_PERCENT;
-    };
+        this.progressBarMode = this.PROGRESS_BAR_PERCENT;
+    }
 
-    loadingModule.setPercentValue = function (val) {
+    /**
+     * @param {string} val
+     */
+    setPercentValue(val) {
         d3.select("#progressBarValue").node().innherHTML = val;
-    };
+    }
 
-    loadingModule.emptyGraphContentError = function () {
-        graph.clearGraphData();
-        ontologyMenu.append_message_toLastBulletPoint("<span style='color:red;'>failed</span>");
-        ontologyMenu.append_message_toLastBulletPoint("<br><span style=\"color:red;\">Error: Received empty graph</span>");
-        loadingWasSuccessFul = false;
-        graph.handleOnLoadingError();
-        loadingModule.setErrorMode();
-    };
+    emptyGraphContentError() {
+        this.graph.clearGraphData();
+        this.ontologyMenu.append_message_toLastBulletPoint("<span style='color:red;'>failed</span>");
+        this.ontologyMenu.append_message_toLastBulletPoint("<br><span style=\"color:red;\">Error: Received empty graph</span>");
+        this.loadingWasSuccessFul = false;
+        this.graph.handleOnLoadingError();
+        this.setErrorMode();
+    }
 
-    loadingModule.initializeLoader = function (storeCache) {
-        if (storeCache === true && graph.getCachedJsonObj() !== null) {
+    /**
+     * @param {boolean} storeCache
+     */
+    initializeLoader(storeCache) {
+        if (storeCache === true && this.graph.getCachedJsonObj() !== null) {
             // save cached ontology;
-            var cachedContent = JSON.stringify(graph.getCachedJsonObj());
-            var cachedName = ontologyIdentifierFromURL;
-            ontologyMenu.setCachedOntology(cachedName, cachedContent);
+            const cachedContent = JSON.stringify(this.graph.getCachedJsonObj());
+            const cachedName = this.ontologyIdentifierFromURL;
+            this.ontologyMenu.setCachedOntology(cachedName, cachedContent);
         }
-        conversion_sessionId = -10000;
-        ontologyMenu.setConversionID(conversion_sessionId);
-        ontologyMenu.stopLoadingTimer();
-        graph.clearGraphData();
-        loadingModule.setBusyMode();
-        loadingModule.showLoadingIndicator();
-        loadingModule.collapseDetails();
-        missingImportsWarning = false;
+        this.conversion_sessionId = -10000;
+        this.ontologyMenu.setConversionID(this.conversion_sessionId);
+        this.ontologyMenu.stopLoadingTimer();
+        this.graph.clearGraphData();
+        this.setBusyMode();
+        this.showLoadingIndicator();
+        this.collapseDetails();
+        this.missingImportsWarning = false;
         d3.select("#loadingIndicator_closeButton").classed("hidden", true);
-        ontologyMenu.clearDetailInformation();
-    };
+        this.ontologyMenu.clearDetailInformation();
+    }
 
-    /** ------------------ URL Interpreter -------------- **/
-    loadingModule.parseUrlAndLoadOntology = function (storeCache) {
-        var autoStore = true;
+    // ------------------ URL Interpreter -------------- //
+    /**
+     * @param {boolean} storeCache
+     */
+    parseUrlAndLoadOntology(storeCache) {
+        let autoStore = true;
         if (storeCache === false) {
             autoStore = false;
         }
 
-        graph.clearAllGraphData();
-        loadingModule.initializeLoader(autoStore);
-        var urlString = String(location);
-        var parameterArray = identifyParameter(urlString);
-        ontologyIdentifierFromURL = DEFAULT_JSON_NAME;
-        loadGraphOptions(parameterArray); // identifies and loads configuration values
-        var loadingMethod = identifyOntologyLoadingMethod(ontologyIdentifierFromURL);
+        this.graph.clearAllGraphData();
+        this.initializeLoader(autoStore);
+        const urlString = String(location);
+        const parameterArray = this.#identifyParameter(urlString);
+        this.ontologyIdentifierFromURL = this.DEFAULT_JSON_NAME;
+        this.#loadGraphOptions(parameterArray); // identifies and loads configuration values
+        const loadingMethod = this.#identifyOntologyLoadingMethod(this.ontologyIdentifierFromURL);
         d3.select("#progressBarValue").node().innerHTML = " ";
         switch (loadingMethod) {
             case 0:
-                loadingModule.from_presetOntology(ontologyIdentifierFromURL);
+                this.from_presetOntology(this.ontologyIdentifierFromURL);
                 break;
             case 1:
-                loadingModule.from_FileUpload(ontologyIdentifierFromURL);
+                this.from_FileUpload(this.ontologyIdentifierFromURL);
                 break;
             case 2:
-                loadingModule.from_JSON_URL(ontologyIdentifierFromURL);
+                this.from_JSON_URL(this.ontologyIdentifierFromURL);
                 break;
             case 3:
-                loadingModule.from_IRI_URL(ontologyIdentifierFromURL);
+                this.from_IRI_URL(this.ontologyIdentifierFromURL);
                 break;
             default:
                 console.log("Could not identify loading method , or not IMPLEMENTED YET");
         }
-    };
+    }
 
     // ------------------- LOADING --------------------- **/
     // the loading module splits into 3 branches
@@ -261,112 +255,132 @@ export default function (graph) {
     // 2] File Upload
     // 3] Load From URL / IRI
 
-    loadingModule.from_JSON_URL = function (fileName) {
+    /**
+     * @param {string} fileName
+     */
+    from_JSON_URL(fileName) {
         const filename = decodeURIComponent(fileName.slice("url=".length));
-        ontologyIdentifierFromURL = filename;
+        this.ontologyIdentifierFromURL = filename;
 
-        if (ontologyMenu.cachedOntology(filename)) {
-            ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
-            loadingWasSuccessFul = true; // cached Ontology should be true;
-            loadOntologyContent(parseOntologyContent(ontologyMenu.cachedOntology(filename)));
+        if (this.ontologyMenu.cachedOntology(filename)) {
+            this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
+            this.loadingWasSuccessFul = true; // cached Ontology should be true;
+            this.#loadOntologyContent(this.#parseOntologyContent(this.ontologyMenu.cachedOntology(filename)));
         } else {
             // involve the o2v conveter;
-            ontologyMenu.append_message("Retrieving ontology from JSON URL " + filename);
-            requestServerTimeStampForJSON_URL(ontologyMenu.callbackLoad_JSON_FromURL, ["read?json=" + filename, filename]);
+            this.ontologyMenu.append_message("Retrieving ontology from JSON URL " + filename);
+            this.#requestServerTimeStampForJSON_URL(this.ontologyMenu.callbackLoad_JSON_FromURL, ["read?json=" + filename, filename]);
         }
-    };
+    }
 
-    function requestServerTimeStampForJSON_URL(callback, parameter) {
-        d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
+    /**
+     * @param {(arg0: any) => void} callback
+     * @param {any[]} parameter
+     */
+    #requestServerTimeStampForJSON_URL(callback, parameter) {
+        d3.xhr(this.URL_PREFIX + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
             if (error) {
                 // could not get server timestamp -> no connection to owl2vowl
-                ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
-                fallbackForJSON_URL(callback, parameter);
+                this.ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
+                this.#fallbackForJSON_URL(callback, parameter);
             } else {
-                conversion_sessionId = request.responseText;
-                ontologyMenu.setConversionID(conversion_sessionId);
-                parameter.push(conversion_sessionId);
+                this.conversion_sessionId = request.responseText;
+                this.ontologyMenu.setConversionID(this.conversion_sessionId);
+                parameter.push(this.conversion_sessionId);
                 callback(parameter);
             }
         });
     }
 
-    loadingModule.requestServerTimeStampForDirectInput = function (callback, text) {
-        d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
+    /**
+     * @param {(arg0: any, arg1: any[]) => void} callback
+     * @param {string} text
+     */
+    requestServerTimeStampForDirectInput(callback, text) {
+        d3.xhr(this.URL_PREFIX + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
             if (error) {
                 // could not get server timestamp -> no connection to owl2vowl
-                ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
-                loadingModule.setErrorMode();
-                ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
-                loadingModule.showErrorDetailsMessage();
+                this.ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
+                this.setErrorMode();
+                this.ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
+                this.showErrorDetailsMessage();
                 d3.select("#progressBarValue").style("width", "0%");
                 d3.select("#progressBarValue").classed("busyProgressBar", false);
                 d3.select("#progressBarValue").text("0%");
             } else {
-                conversion_sessionId = request.responseText;
-                ontologyMenu.setConversionID(conversion_sessionId);
-                callback(text, ["conversionID" + conversion_sessionId, conversion_sessionId]);
+                this.conversion_sessionId = request.responseText;
+                this.ontologyMenu.setConversionID(this.conversion_sessionId);
+                callback(text, ["conversionID" + this.conversion_sessionId, this.conversion_sessionId]);
             }
         });
-    };
+    }
 
-    loadingModule.from_IRI_URL = function (fileName) {
+    /**
+     * @param {string} fileName
+     */
+    from_IRI_URL(fileName) {
         // owl2vowl converters the given ontology url and returns json file;
         const filename = decodeURIComponent(fileName.slice("iri=".length));
-        ontologyIdentifierFromURL = filename;
+        this.ontologyIdentifierFromURL = filename;
 
-        if (ontologyMenu.cachedOntology(filename)) {
-            ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
-            loadingWasSuccessFul = true; // cached Ontology should be true;
-            loadOntologyContent(parseOntologyContent(ontologyMenu.cachedOntology(filename)));
+        if (this.ontologyMenu.cachedOntology(filename)) {
+            this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
+            this.loadingWasSuccessFul = true; // cached Ontology should be true;
+            this.#loadOntologyContent(this.#parseOntologyContent(this.ontologyMenu.cachedOntology(filename)));
         } else {
             // involve the o2v conveter;
-            var encoded = encodeURIComponent(filename);
-            ontologyMenu.append_bulletPoint("Retrieving ontology from IRI: " + filename);
-            requestServerTimeStampForIRI_Converte(ontologyMenu.callbackLoad_Ontology_FromIRI, ["convert?iri=" + encoded, filename]);
+            const encoded = encodeURIComponent(filename);
+            this.ontologyMenu.append_bulletPoint("Retrieving ontology from IRI: " + filename);
+            this.#requestServerTimeStampForIRI_Converte(this.ontologyMenu.callbackLoad_Ontology_FromIRI, ["convert?iri=" + encoded, filename]);
         }
-    };
+    }
 
-    loadingModule.fromFileDrop = async function (fileName, file) {
+    /**
+     * @param {string} fileName
+     * @param {any} file
+     */
+    async fromFileDrop(fileName, file) {
         d3.select("#progressBarValue").node().innerHTML = " ";
-        loadingModule.initializeLoader(false);
-        ontologyMenu.append_bulletPoint("Retrieving ontology from dropped file: " + fileName);
+        this.initializeLoader(false);
+        this.ontologyMenu.append_bulletPoint("Retrieving ontology from dropped file: " + fileName);
 
         // two options here
         //1] Direct Json Upload
         if (fileName.match(/\.json$/)) {
-            ontologyMenu.setConversionID(-10000);
-            // const parseResult = parseOntologyContent(await wasm.parse_json(file));
-            ontologyIdentifierFromURL = fileName;
-            // loadOntologyContent(parseResult);
+            this.ontologyMenu.setConversionID(-10000);
+            this.ontologyIdentifierFromURL = fileName;
+            this.#loadOntologyContent(this.#parseOntologyContent(await wasm.parse_json(file))); // FIXME
         } else {
             //2] File Upload to OWL2VOWL Converter
             // 1) check if we can get a timeStamp;
-            var parameterArray = [file, fileName];
-            requestServerTimeStamp(ontologyMenu.callbackLoadFromOntology, parameterArray);
+            const parameterArray = [file, fileName];
+            this.#requestServerTimeStamp(this.ontologyMenu.callbackLoadFromOntology, parameterArray);
         }
-    };
+    }
 
-    loadingModule.from_FileUpload = async function (fileName) {
-        loadingModule.setBusyMode();
-        var filename = decodeURIComponent(fileName.slice("file=".length));
-        ontologyIdentifierFromURL = filename;
+    /**
+     * @param {string} fileName
+     */
+    async from_FileUpload(fileName) {
+        this.setBusyMode();
+        let filename = decodeURIComponent(fileName.slice("file=".length));
+        this.ontologyIdentifierFromURL = filename;
 
-        if (ontologyMenu.cachedOntology(filename)) {
-            ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
-            loadingWasSuccessFul = true; // cached Ontology should be true;
-            loadOntologyContent(parseOntologyContent(ontologyMenu.cachedOntology(filename)));
+        if (this.ontologyMenu.cachedOntology(filename)) {
+            this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
+            this.loadingWasSuccessFul = true; // cached Ontology should be true;
+            this.#loadOntologyContent(this.#parseOntologyContent(this.ontologyMenu.cachedOntology(filename)));
         } else {
             // d3.select("#currentLoadingStep").node().innerHTML="Loading ontology from file "+ filename;
-            ontologyMenu.append_bulletPoint("Retrieving ontology from file: " + filename);
+            this.ontologyMenu.append_bulletPoint("Retrieving ontology from file: " + filename);
             // get the file
-            var selectedFile = d3.select("#file-converter-input").property("files")[0];
+            const selectedFile = d3.select("#file-converter-input").property("files")[0];
             // No selection -> this was triggered by the iri. Unequal names -> reuploading another file
             if (!selectedFile || (filename && (filename !== selectedFile.name))) {
-                ontologyMenu.append_message_toLastBulletPoint("<br><span style=\"color:red;\">No cached version of \"" + filename + "\" was found.</span><br>Please reupload the file.");
-                loadingModule.setErrorMode();
+                this.ontologyMenu.append_message_toLastBulletPoint("<br><span style=\"color:red;\">No cached version of \"" + filename + "\" was found.</span><br>Please reupload the file.");
+                this.setErrorMode();
                 d3.select("#progressBarValue").classed("busyProgressBar", false);
-                graph.handleOnLoadingError();
+                this.graph.handleOnLoadingError();
                 return;
             } else {
                 filename = selectedFile.name;
@@ -374,90 +388,104 @@ export default function (graph) {
             // two options here
             //1] Direct Json Upload
             if (filename.match(/\.json$/)) {
-                ontologyMenu.setConversionID(-10000);
-                // const parseResult = parseOntologyContent(await wasm.parse_json(selectedFile));
-                ontologyIdentifierFromURL = filename;
-                // loadOntologyContent(parseResult);
+                this.ontologyMenu.setConversionID(-10000);
+                this.ontologyIdentifierFromURL = filename;
+                this.#loadOntologyContent(this.#parseOntologyContent(await wasm.parse_json(selectedFile))); // FIXME
             } else {
                 //2] File Upload to OWL2VOWL Converter
                 // 1) check if we can get a timeStamp;
-                var parameterArray = [selectedFile, filename];
-                requestServerTimeStamp(ontologyMenu.callbackLoadFromOntology, parameterArray);
+                const parameterArray = [selectedFile, filename];
+                this.#requestServerTimeStamp(this.ontologyMenu.callbackLoadFromOntology, parameterArray);
             }
         }
-    };
+    }
 
-    function fallbackForJSON_URL(callback, parameter) {
-        ontologyMenu.append_message_toLastBulletPoint("<br>Trying to convert with other communication protocol.");
+    /**
+     * @param {(arg0: any) => void} callback
+     * @param {any} parameter
+     */
+    #fallbackForJSON_URL(callback, parameter) {
+        this.ontologyMenu.append_message_toLastBulletPoint("<br>Trying to convert with other communication protocol.");
         callback(parameter);
     }
 
-    function fallbackConversion(parameter) {
-        ontologyMenu.append_message_toLastBulletPoint("<br>Trying to convert with other communication protocol.");
-        var file = parameter[0];
-        var name = parameter[1];
-        var formData = new FormData();
+    /**
+     * @param {any[]} parameter
+     */
+    #fallbackConversion(parameter) {
+        this.ontologyMenu.append_message_toLastBulletPoint("<br>Trying to convert with other communication protocol.");
+        const file = parameter[0];
+        const name = parameter[1];
+        const formData = new FormData();
         formData.append("ontology", file);
 
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", URL_PREFIX + "convert", true);
-        xhr.onload = function () {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", this.URL_PREFIX + "convert", true);
+        xhr.onload = () => {
             if (xhr.status === 200) {
                 const ontologyContent = xhr.responseText; // Memory leak as text is only garbage collected when this function returns (thus only when the graph, is loaded). This can be several GB if the ontology is large
-                ontologyMenu.setCachedOntology(name, ontologyContent);
-                ontologyIdentifierFromURL = name;
-                missingImportsWarning = true; // using this variable for warnings
-                ontologyMenu.append_message_toLastBulletPoint("<br>Success, <span style='color:yellow'>but you are using a deprecated OWL2VOWL service!<span>");
-                const parseResult = parseOntologyContent(ontologyContent);
-                loadOntologyContent(parseResult);
+                this.ontologyMenu.setCachedOntology(name, ontologyContent);
+                this.ontologyIdentifierFromURL = name;
+                this.missingImportsWarning = true; // using this variable for warnings
+                this.ontologyMenu.append_message_toLastBulletPoint("<br>Success, <span style='color:yellow'>but you are using a deprecated OWL2VOWL service!<span>");
+                const parseResult = this.#parseOntologyContent(ontologyContent);
+                this.#loadOntologyContent(parseResult);
             }
         };
 
         // check what this thing is doing;
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = () => {
             if (xhr.readyState === 4 && xhr.status === 0) {
-                ontologyMenu.append_message_toLastBulletPoint("<br>Old protocol also failed to establish connection to OWL2VOWL service!");
-                loadingModule.setErrorMode();
-                ontologyMenu.append_bulletPoint("Failed to load ontology");
-                ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
-                loadingModule.showErrorDetailsMessage();
+                this.ontologyMenu.append_message_toLastBulletPoint("<br>Old protocol also failed to establish connection to OWL2VOWL service!");
+                this.setErrorMode();
+                this.ontologyMenu.append_bulletPoint("Failed to load ontology");
+                this.ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
+                this.showErrorDetailsMessage();
             }
         };
         xhr.send(formData);
     }
 
-    function requestServerTimeStampForIRI_Converte(callback, parameterArray) {
-        d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
-            loadingModule.setBusyMode();
+    /**
+     * @param {(arg0: any) => void} callback
+     * @param {any[]} parameterArray
+     */
+    #requestServerTimeStampForIRI_Converte(callback, parameterArray) {
+        d3.xhr(this.URL_PREFIX + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
+            this.setBusyMode();
             if (error) {
                 // could not get server timestamp -> no connection to owl2vowl
-                ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
-                loadingModule.setErrorMode();
-                ontologyMenu.append_bulletPoint("Failed to load ontology");
-                ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
-                loadingModule.showErrorDetailsMessage();
+                this.ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
+                this.setErrorMode();
+                this.ontologyMenu.append_bulletPoint("Failed to load ontology");
+                this.ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red'>Could not connect to OWL2VOWL service </span>");
+                this.showErrorDetailsMessage();
             } else {
-                conversion_sessionId = request.responseText;
-                ontologyMenu.setConversionID(conversion_sessionId);
+                this.conversion_sessionId = request.responseText;
+                this.ontologyMenu.setConversionID(this.conversion_sessionId);
                 // update paramater for new communication paradigm
-                parameterArray[0] = parameterArray[0] + "&sessionId=" + conversion_sessionId;
-                parameterArray.push(conversion_sessionId);
+                parameterArray[0] = parameterArray[0] + "&sessionId=" + this.conversion_sessionId;
+                parameterArray.push(this.conversion_sessionId);
                 callback(parameterArray);
             }
         });
     }
 
-    function requestServerTimeStamp(callback, parameterArray) {
-        d3.xhr(URL_PREFIX + "serverTimeStamp", "application/text", function (error, request) {
+    /**
+     * @param {(arg0: any, arg1: any, arg2: any) => void} callback
+     * @param {any[]} parameterArray
+     */
+    #requestServerTimeStamp(callback, parameterArray) {
+        d3.xhr(this.URL_PREFIX + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
             if (error) {
                 // could not get server timestamp -> no connection to owl2vowl
-                ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
-                fallbackConversion(parameterArray); // tries o2v version0.3.4 communication
+                this.ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
+                this.#fallbackConversion(parameterArray); // tries o2v version0.3.4 communication
             } else {
-                conversion_sessionId = request.responseText;
-                ontologyMenu.setConversionID(conversion_sessionId);
-                console.log("Request Session ID:" + conversion_sessionId);
-                callback(parameterArray[0], parameterArray[1], conversion_sessionId);
+                this.conversion_sessionId = request.responseText;
+                this.ontologyMenu.setConversionID(this.conversion_sessionId);
+                console.log("Request Session ID:" + this.conversion_sessionId);
+                callback(parameterArray[0], parameterArray[1], this.conversion_sessionId);
             }
         });
     }
@@ -467,65 +495,71 @@ export default function (graph) {
      * is only garbage collected when the entire graph is loaded.
      * @param {string} text
      */
-    loadingModule.directInput = function (text) {
-        ontologyMenu.clearDetailInformation();
-        loadOntologyContent(parseOntologyContent(text));
+    directInput(text) {
+        this.ontologyMenu.clearDetailInformation();
+        this.#loadOntologyContent(this.#parseOntologyContent(text));
     };
 
     /**
      * @param {string} filename
-     * @returns {Array}
      */
-    loadingModule.loadFromOWL2VOWL = function (filename) {
-        loadingWasSuccessFul = false;
+    loadFromOWL2VOWL(filename) {
+        this.loadingWasSuccessFul = false;
 
-        var old = d3.select("#bulletPoint_container").node().innerHTML;
+        const old = d3.select("#bulletPoint_container").node().innerHTML;
         if (old.indexOf("(with warnings)") !== -1) {
-            missingImportsWarning = true;
+            this.missingImportsWarning = true;
         }
-        if (ontologyMenu.cachedOntology(this.getJSONText())) {
-            ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
+        if (this.ontologyMenu.cachedOntology(this.jsonText)) {
+            this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
         }
-        const parseResult = parseOntologyContent(this.getJSONText());
-        this.setJSONText(""); // Nuke reference to save memory
+        const parseResult = this.#parseOntologyContent(this.jsonText);
+        this.jsonText = ""; // Nuke reference to save memory
         return parseResult;
-    };
+    }
 
-    loadingModule.from_presetOntology = function (selectedOntology) {
-        ontologyMenu.append_bulletPoint("Retrieving ontology: " + selectedOntology);
-        loadPresetOntology(selectedOntology);
-    };
+    /**
+     * @param {string} selectedOntology
+     */
+    from_presetOntology(selectedOntology) {
+        this.ontologyMenu.append_bulletPoint("Retrieving ontology: " + selectedOntology);
+        this.#loadPresetOntology(selectedOntology);
+    }
 
-    function loadPresetOntology(ontology) {
+    /**
+     * @param {string} ontology
+     */
+    #loadPresetOntology(ontology) {
         // check if already cached in ontology menu?
-        var f2r;
-        var loadingNewOntologyForEditor = false;
+        let f2r;
+        let loadingNewOntologyForEditor = false;
         if (ontology.indexOf("new_ontology") !== -1) {
-            loadingModule.hideLoadingIndicator();
-            graph.showEditorHintIfNeeded();
+            this.hideLoadingIndicator();
+            this.graph.showEditorHintIfNeeded();
             f2r = "./data/new_ontology.json";
             loadingNewOntologyForEditor = true;
         }
-        loadingWasSuccessFul = false;
-        if (ontologyMenu.cachedOntology(ontology)) {
-            ontologyMenu.append_bulletPoint("Loading already cached ontology: " + ontology);
-            loadingWasSuccessFul = true; // cached Ontology should be true;
-            loadingModule.showLoadingIndicator();
-            loadOntologyContent(parseOntologyContent(ontologyMenu.cachedOntology(ontology)));
+        this.loadingWasSuccessFul = false;
+        if (this.ontologyMenu.cachedOntology(ontology)) {
+            this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + ontology);
+            this.loadingWasSuccessFul = true; // cached Ontology should be true;
+            this.showLoadingIndicator();
+            this.#loadOntologyContent(this.#parseOntologyContent(this.ontologyMenu.cachedOntology(ontology)));
         } else {
             // read the file name
-            var fileToRead = "./data/" + ontology + ".json";
+            let fileToRead = "./data/" + ontology + ".json";
             if (f2r) {
                 // overwrite the newOntology Index
                 fileToRead = f2r;
             }
             // read file
-            d3.xhr(fileToRead, "application/json", function (error, request) {
-                var loadingSuccessful = !error;
+            d3.xhr(fileToRead, "application/json", (/** @type {{ status: string | number; }} */ error, /** @type {{ responseText: string; }} */ request) => {
+                const loadingSuccessful = !error;
                 if (loadingSuccessful) {
-                    const parseResult = parseOntologyContent(request.responseText);
-                    request, error = undefined, undefined; // Nuke references to save memory
-                    loadOntologyContent(parseResult);
+                    const parseResult = this.#parseOntologyContent(request.responseText);
+                    request = undefined
+                    error = undefined // Nuke references to save memory
+                    this.#loadOntologyContent(parseResult);
                 } else {
                     if (loadingNewOntologyForEditor) {
                         const ontologyContent = '{\n' +
@@ -556,111 +590,103 @@ export default function (graph) {
                             '    "individualCount": 0\n' +
                             '  }\n' +
                             '}\n';
-                        loadOntologyContent(parseOntologyContent(ontologyContent));
+                        this.#loadOntologyContent(this.#parseOntologyContent(ontologyContent));
                     } else {
                         // some error occurred
-                        ontologyMenu.append_bulletPoint("Failed to load: " + ontology);
+                        this.ontologyMenu.append_bulletPoint("Failed to load: " + ontology);
                         if (error.status === 0) { // assumption this is CORS error when running locally (error status == 0)
-                            ontologyMenu.append_message_toLastBulletPoint(" <span style='color: red'>ERROR STATUS:</span> " + error.status);
+                            this.ontologyMenu.append_message_toLastBulletPoint(" <span style='color: red'>ERROR STATUS:</span> " + error.status);
                             if (window.location.toString().startsWith("file:/")) {
-                                ontologyMenu.append_message_toLastBulletPoint("<br><p>WebVOWL runs in a local instance.</p>");
-                                ontologyMenu.append_message_toLastBulletPoint("<p>CORS prevents to automatically load files on host system.</p>");
-                                ontologyMenu.append_message_toLastBulletPoint("<p>You can load preprocessed ontologies (i.e. VOWL-JSON files) using the upload feature in the ontology menu or by dragging the files and dropping them on the canvas.</p>");
-                                ontologyMenu.append_message_toLastBulletPoint("<p><i>Hint: </i>Note that the conversion of ontologies into the VOWL-JSON format is not part of WebVOWL but requires an additional converter such as OWL2VOWL.</p>");
-                                ontologyMenu.append_message_toLastBulletPoint("<p>Ontologies can be created using the editor mode (i.e. activate editing mode in <b>Modes</b> menu and create a new ontology using the <b>Ontology</b> menu.</p>");
+                                this.ontologyMenu.append_message_toLastBulletPoint("<br><p>WebVOWL runs in a local instance.</p>");
+                                this.ontologyMenu.append_message_toLastBulletPoint("<p>CORS prevents to automatically load files on host system.</p>");
+                                this.ontologyMenu.append_message_toLastBulletPoint("<p>You can load preprocessed ontologies (i.e. VOWL-JSON files) using the upload feature in the ontology menu or by dragging the files and dropping them on the canvas.</p>");
+                                this.ontologyMenu.append_message_toLastBulletPoint("<p><i>Hint: </i>Note that the conversion of ontologies into the VOWL-JSON format is not part of WebVOWL but requires an additional converter such as OWL2VOWL.</p>");
+                                this.ontologyMenu.append_message_toLastBulletPoint("<p>Ontologies can be created using the editor mode (i.e. activate editing mode in <b>Modes</b> menu and create a new ontology using the <b>Ontology</b> menu.</p>");
                             }
                         } else {
-                            ontologyMenu.append_message_toLastBulletPoint(" <span style='color: red'>ERROR STATUS:</span> " + error.status);
+                            this.ontologyMenu.append_message_toLastBulletPoint(" <span style='color: red'>ERROR STATUS:</span> " + error.status);
                         }
-                        graph.handleOnLoadingError();
-                        loadingModule.setErrorMode();
+                        this.graph.handleOnLoadingError();
+                        this.setErrorMode();
                     }
                 }
             });
         }
     }
 
-    // /**
-    //  * @param {string} file
-    //  * @returns {Promise<string>}
-    //  */
-    // function readFile(file) {
-    //     return new Promise((resolve, reject) => {
-    //         const reader = new FileReader()
-    //         reader.onload = () => resolve(reader.result)
-    //         reader.onerror = () => reject()
-    //         reader.readAsText(file)
-    //     })
-    // }
-
     /**
      * Parse JSON content
      * @param {string} content
-     * @returns {Array}
      */
-    function parseOntologyContent(content) {
-        ontologyMenu.append_bulletPoint("Reading ontology graph ... ");
-        const _parser = graph.parser().parseOntologyFromText;
-        return _parser(content, ontologyIdentifierFromURL, "noAlternativeNameYet")
+    #parseOntologyContent(content) {
+        this.ontologyMenu.append_bulletPoint("Reading ontology graph ... ");
+        const _parser = this.graph.parser().parseOntologyFromText;
+        return _parser(content, this.ontologyIdentifierFromURL, "noAlternativeNameYet")
     }
 
     /**
      * Load parsed JSON object
-     * @param {Array} parseResult
+     * @param {[{} | undefined, boolean]} parseResult
      */
-    function loadOntologyContent(parseResult) {
+    #loadOntologyContent(parseResult) {
         const [data, isValidData] = parseResult;
         d3.select("#reloadCachedOntology").classed("hidden", true);
-        graph.options().pauseMenu().reset();
-        graph.options().navigationMenu().hideAllMenus();
-        graph.editorMode(); // updates the checkbox
+        this.graph.options().pauseMenu().reset();
+        this.graph.options().navigationMenu().hideAllMenus();
+        this.graph.editorMode(); // updates the checkbox
 
-        var loadEmptyOntologyForEditing = false;
+        let loadEmptyOntologyForEditing = false;
         if (location.hash.indexOf("#new_ontology") !== -1) {
             loadEmptyOntologyForEditing = true;
-            newOntologyCounter++;
-            d3.select("#empty").node().href = "#opts=editorMode=true;#new_ontology" + newOntologyCounter;
+            this.newOntologyCounter++;
+            d3.select("#empty").node().href = "#opts=editorMode=true;#new_ontology" + this.newOntologyCounter;
         }
-        if (!isValidData && graph.editorMode() === false && loadEmptyOntologyForEditing === false) {
+        if (!isValidData && this.graph.editorMode() === false && loadEmptyOntologyForEditing === false) {
             // generate message for the user;
-            loadingModule.emptyGraphContentError();
+            this.emptyGraphContentError();
         } else {
-            graph.options().loadingModule().setPercentMode();
+            this.graph.options().this().setPercentMode();
             if (loadEmptyOntologyForEditing === true) {
-                graph.editorMode(true);
+                this.graph.editorMode(true);
             }
-            graph.load();
-            graph.options().sidebar().updateOntologyInformation(data, statistics);
-            graph.updateZoomSliderValueFromOutside();
-            adjustSizeCallable();
+            this.graph.load();
+            this.graph.options().sidebar().updateOntologyInformation(data, this.statistics);
+            this.graph.updateZoomSliderValueFromOutside();
+            this.adjustSizeCallable();
 
-            var flagOfCheckBox = d3.select("#editorModeModuleCheckbox").node().checked;
-            graph.editorMode(flagOfCheckBox);// update gui
+            const flagOfCheckBox = d3.select("#editorModeModuleCheckbox").node().checked;
+            this.graph.editorMode(flagOfCheckBox);// update gui
         }
     }
 
-    loadingModule.notValidJsonFile = function () {
-        graph.clearGraphData();
-        ontologyMenu.append_message_toLastBulletPoint(" <span style='color:red;'>failed</span>");
-        ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red;'>Error: Received empty graph</span>");
-        loadingWasSuccessFul = false;
-        graph.handleOnLoadingError();
-    };
+    notValidJsonFile() {
+        this.graph.clearGraphData();
+        this.ontologyMenu.append_message_toLastBulletPoint(" <span style='color:red;'>failed</span>");
+        this.ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red;'>Error: Received empty graph</span>");
+        this.loadingWasSuccessFul = false;
+        this.graph.handleOnLoadingError();
+    }
 
-    loadingModule.validJsonFile = function () {
-        ontologyMenu.append_message_toLastBulletPoint("done");
-        loadingWasSuccessFul = true;
-    };
+    validJsonFile() {
+        this.ontologyMenu.append_message_toLastBulletPoint("done");
+        this.loadingWasSuccessFul = true;
+    }
 
-    /** --- HELPER FUNCTIONS **/
-    function identifyParameter(url) {
-        var numParameters = (url.match(/#/g) || []).length;
+    /**
+     * --- HELPER FUNCTIONS *
+     * @param {string} url
+     */
+    #identifyParameter(url) {
+        const numParameters = (url.match(/#/g) || []).length;
         // create parameters array
-        var paramArray = [];
+        /**
+         * @type {string[]}
+         */
+        let paramArray = [];
         if (numParameters > 0) {
-            var tokens = url.split("#");
+            const tokens = url.split("#");
             // skip the first token since it is the address of the server
-            for (var i = 1; i < tokens.length; i++) {
+            for (let i = 1; i < tokens.length; i++) {
                 if (tokens[i].length === 0) {
                     // this token belongs actually to the last paramArray
                     paramArray[paramArray.length - 1] = paramArray[paramArray.length - 1] + "#";
@@ -672,51 +698,63 @@ export default function (graph) {
         return paramArray;
     }
 
-
-    function loadGraphOptions(parameterArray) {
-        var optString = "opts=";
+    /**
+     * @param {string[]} parameterArray
+     */
+    #loadGraphOptions(parameterArray) {
+        const optString = "opts=";
+        const _this = this
 
         function loadDefaultConfig() {
-            graph.options().setOptionsFromURL(graph.options().defaultConfig(), false);
+            _this.graph.options().setOptionsFromURL(_this.graph.options().defaultConfig(), false);
         }
 
+        /**
+         * @param {string[]} opts
+         */
         function loadCustomConfig(opts) {
-            var changeEditingFlag = false;
-            var defObj = graph.options().defaultConfig();
-            for (var i = 0; i < opts.length; i++) {
-                var keyVal = opts[i].split('=');
+            let changeEditingFlag = false;
+            const defObj = _this.graph.options().defaultConfig();
+            for (const i = 0; i < opts.length; i++) {
+                const keyVal = opts[i].split('=');
                 if (keyVal[0] === "editorMode") {
                     changeEditingFlag = true;
                 }
                 defObj[keyVal[0]] = keyVal[1];
             }
-            graph.options().setOptionsFromURL(defObj, changeEditingFlag);
+            _this.graph.options().setOptionsFromURL(defObj, changeEditingFlag);
         }
 
+        /**
+         * @param {string[]} paramArray
+         */
         function identifyOptions(paramArray) {
             if (paramArray[0].indexOf(optString) >= 0) {
                 // parse the parameters;
-                var parameterLength = paramArray[0].length;
-                var givenOptionsStr = paramArray[0].substr(5, parameterLength - 6);
-                var optionsArray = givenOptionsStr.split(';');
+                const parameterLength = paramArray[0].length;
+                const givenOptionsStr = paramArray[0].substr(5, parameterLength - 6);
+                const optionsArray = givenOptionsStr.split(';');
                 loadCustomConfig(optionsArray);
             } else {
-                ontologyIdentifierFromURL = paramArray[0];
+                _this.ontologyIdentifierFromURL = paramArray[0];
                 loadDefaultConfig();
             }
         }
 
+        /**
+         * @param {string[]} paramArray
+         */
         function identifyOptionsAndOntology(paramArray) {
             if (paramArray[0].indexOf(optString) >= 0) {
                 // parse the parameters;
-                var parameterLength = paramArray[0].length;
-                var givenOptionsStr = paramArray[0].substr(5, parameterLength - 6);
-                var optionsArray = givenOptionsStr.split(';');
+                const parameterLength = paramArray[0].length;
+                const givenOptionsStr = paramArray[0].substr(5, parameterLength - 6);
+                const optionsArray = givenOptionsStr.split(';');
                 loadCustomConfig(optionsArray);
             } else {
                 loadDefaultConfig();
             }
-            ontologyIdentifierFromURL = paramArray[1];
+            _this.ontologyIdentifierFromURL = paramArray[1];
         }
 
         switch (parameterArray.length) {
@@ -732,26 +770,28 @@ export default function (graph) {
             default:
                 console.log("To many input parameters , loading default config");
                 loadDefaultConfig();
-                ontologyIdentifierFromURL = "ERROR_TO_MANY_INPUT_PARAMETERS";
+                this.ontologyIdentifierFromURL = "ERROR_TO_MANY_INPUT_PARAMETERS";
         }
     }
 
-    function identifyOntologyLoadingMethod(url) {
-        var iriKey = "iri=";
-        var urlKey = "url=";
-        var fileKey = "file=";
+    /**
+     * @param {string} url
+     */
+    #identifyOntologyLoadingMethod(url) {
+        const iriKey = "iri=";
+        const urlKey = "url=";
+        const fileKey = "file=";
 
-        var method = -1;
+        let method = -1;
         if (url.substr(0, fileKey.length) === fileKey) {
-            method = FILE_UPLOAD;
+            method = this.FILE_UPLOAD;
         } else if (url.substr(0, urlKey.length) === urlKey) {
-            method = JSON_URL;
+            method = this.JSON_URL;
         } else if (url.substr(0, iriKey.length) === iriKey) {
-            method = IRI_URL;
+            method = this.IRI_URL;
         } else {
-            method = PREDEFINED;
+            method = this.PREDEFINED;
         }
         return method;
     }
-    return loadingModule;
-};
+}

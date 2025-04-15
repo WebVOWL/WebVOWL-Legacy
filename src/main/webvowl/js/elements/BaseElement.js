@@ -151,10 +151,9 @@ export class BaseElement {
         this.textBlock = undefined
     }
 
-    // NOTE: Disabled to save memory while this method is not used
-    // #applyFixedLocationAttributes() {
-    //     this.fixed = this.locked || this.frozen || node.pinned;
-    // }
+    #applyFixedLocationAttributes() {
+        this.fixed = this.locked || this.frozen || this.pinned;
+    }
 
     redrawElement() {
         throw new Error("Method redrawElement() must be implemented")
@@ -189,7 +188,7 @@ export class BaseElement {
     /**
      * @param {boolean} pulseAnimation
      */
-    drawHalo(pulseAnimation) {
+    drawHalo(pulseAnimation = false) {
         throw new Error("Method drawHalo() must be implemented")
     }
 
@@ -199,7 +198,7 @@ export class BaseElement {
 
     set locked(p) {
         this._locked = p;
-        // this.#applyFixedLocationAttributes();
+        this.#applyFixedLocationAttributes();
     }
 
     get frozen() {
@@ -208,7 +207,7 @@ export class BaseElement {
 
     set frozen(p) {
         this._frozen = p;
-        // this.#applyFixedLocationAttributes();
+        this.#applyFixedLocationAttributes();
     }
 
     get halo() {
@@ -217,7 +216,7 @@ export class BaseElement {
 
     set halo(p) {
         this._halo = p;
-        // this.#applyFixedLocationAttributes();
+        this.#applyFixedLocationAttributes();
     }
 
     get pinned() {
@@ -226,7 +225,7 @@ export class BaseElement {
 
     set pinned(p) {
         this._pinned = p;
-        // this.#applyFixedLocationAttributes();
+        this.#applyFixedLocationAttributes();
     }
 
     /**

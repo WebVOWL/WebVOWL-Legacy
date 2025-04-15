@@ -166,7 +166,7 @@ export default function () {
 
             d3.select("#loading-info").classed("hidden", !wasMessageToShow); // show it again
             // check if it should be visible
-            var should_show = graph.options().loadingModule().getMessageVisibilityStatus();
+            var should_show = graph.options().loadingModule().visibilityStatus;
             if (should_show === false) {
                 d3.select("#loading-info").classed("hidden", true); // hide it
             }

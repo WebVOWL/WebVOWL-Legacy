@@ -23,7 +23,7 @@ export class BaseNode extends BaseElement {
          */
         this.disjointUnion = undefined
         /**
-         * @type {string[] | undefined}
+         * @type {BaseNode[] | undefined}
          */
         this.disjointWith = undefined
         /**
@@ -266,9 +266,13 @@ export class BaseNode extends BaseElement {
                         this.iri = this.backupFullIri;
                     } else {
                         // throw warning
-                        this.graph.options().warningModule().showWarning("Already seen this class",
+                        this.graph.options().warningModule().showWarning(
+                            "Already seen this class",
                             "Input IRI: " + this.backupFullIri + " for element: " + this.labelForCurrentLanguage() + " already been set",
-                            "Restoring previous IRI for Element : " + this.iri, 2, false, sanityCheckResult);
+                            "Restoring previous IRI for Element : " + this.iri,
+                            2,
+                            this
+                        );
                     }
                 }
                 if (this.graph.isADraggerActive() === false) {

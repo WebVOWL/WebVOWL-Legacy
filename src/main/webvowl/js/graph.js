@@ -436,7 +436,7 @@ export default function (graphContainerSelector) {
 
     function hiddenRecalculatePositions() {
         finishedLoadingSequence = false;
-        if (graph.options().loadingModule().successfullyLoadedOntology() === false) {
+        if (!graph.options().loadingModule().loadingWasSuccessFul) {
             force.stop();
             d3.select("#progressBarValue").node().innerHTML = "";
             graph.updateProgressBarMode();
@@ -492,7 +492,7 @@ export default function (graphContainerSelector) {
                 }
                 graph.showEditorHintIfNeeded();
 
-                if (graph.options().loadingModule().missingImportsWarning() === false) {
+                if (!graph.options().loadingModule().missingImportsWarning) {
                     graph.options().loadingModule().hideLoadingIndicator();
                     graph.options().ontologyMenu().append_bulletPoint("Successfully loaded ontology");
                     graph.options().loadingModule().setSuccessful();
@@ -1178,7 +1178,7 @@ export default function (graphContainerSelector) {
         redrawGraph();
         graph.update(true);
 
-        if (graph.options().loadingModule().successfullyLoadedOntology() === false) {
+        if (!graph.options().loadingModule().loadingWasSuccessFul) {
             graph.options().loadingModule().setErrorMode();
         }
 
@@ -1187,7 +1187,7 @@ export default function (graphContainerSelector) {
     // Updates only the style of the graph.
     graph.updateStyle = function () {
         refreshGraphStyle();
-        if (graph.options().loadingModule().successfullyLoadedOntology() === false) {
+        if (!graph.options().loadingModule().loadingWasSuccessFul) {
             force.stop();
         } else {
             force.start();
@@ -1294,7 +1294,7 @@ export default function (graphContainerSelector) {
      * @returns
      */
     graph.update = function (init, data = currentData) {
-        var validOntology = graph.options().loadingModule().successfullyLoadedOntology();
+        var validOntology = graph.options().loadingModule().loadingWasSuccessFul;
         if (validOntology === false && init === true) {
             graph.options().loadingModule().collapseDetails();
             return;
@@ -1469,7 +1469,7 @@ export default function (graphContainerSelector) {
     graph.updateProgressBarMode = function () {
         var loadingModule = graph.options().loadingModule();
 
-        var state = loadingModule.getProgressBarMode();
+        var state = loadingModule.progressBarMode;
         switch (state) {
             case 0:
                 loadingModule.setErrorMode();
@@ -1558,7 +1558,7 @@ export default function (graphContainerSelector) {
 
         // loading handler
         updateRenderingDuringSimulation = true;
-        var validOntology = graph.options().loadingModule().successfullyLoadedOntology();
+        var validOntology = graph.options().loadingModule().loadingWasSuccessFul;
         if (graphContainer && validOntology === true) {
             updateRenderingDuringSimulation = false;
             graph.options().ontologyMenu().append_bulletPoint("Generating visualization ... ");
@@ -2903,7 +2903,7 @@ export default function (graphContainerSelector) {
     };
 
     function createLowerCasePrototypeMap(prototypeMap) {
-        return d3.map(prototypeMap.values(), function (Prototype) {
+        return d3.map(prototypeMap.values(), function (Prototype) { // FIXME: Check Map docs
             return new Prototype().type.toLowerCase();
         });
     }
@@ -2985,45 +2985,68 @@ export default function (graphContainerSelector) {
 
     graph.genericPropertySanityCheck = function (domain, range, typeString, header, action) {
         if (domain === range && typeString === "rdfs:subClassOf") {
-            graph.options().warningModule().showWarning(header,
+            graph.options().warningModule().showWarning(
+                header,
                 "rdfs:subClassOf can not be created as loops (domain == range)",
-                action, 1, false);
+                action,
+                1,
+                domain
+            );
             return false;
         }
         if (domain === range && typeString === "owl:disjointWith") {
-            graph.options().warningModule().showWarning(header,
+            graph.options().warningModule().showWarning(
+                header,
                 "owl:disjointWith  can not be created as loops (domain == range)",
-                action, 1, false);
+                action,
+                1,
+                domain
+            );
             return false;
         }
         // allProps[i].type==="owl:allValuesFrom"  ||
         // allProps[i].type==="owl:someValuesFrom"
         if (domain.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning(header,
+            graph.options().warningModule().showWarning(
+                header,
                 "owl:allValuesFrom can not originate from owl:Thing",
-                action, 1, false);
+                action,
+                1,
+                domain
+            );
             return false;
         }
         if (domain.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning(header,
+            graph.options().warningModule().showWarning(
+                header,
                 "owl:someValuesFrom can not originate from owl:Thing",
-                action, 1, false);
+                action,
+                1,
+                domain
+            );
             return false;
         }
 
         if (range.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning(header,
+            graph.options().warningModule().showWarning(
+                header,
                 "owl:allValuesFrom can not be connected to owl:Thing",
-                action, 1, false);
+                action,
+                1,
+                range
+            );
             return false;
         }
         if (range.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning(header,
+            graph.options().warningModule().showWarning(
+                header,
                 "owl:someValuesFrom can not be connected to owl:Thing",
-                action, 1, false);
+                action,
+                1,
+                range
+            );
             return false;
         }
-
         return true; // we can Change the domain or range
     };
 
@@ -3061,21 +3084,27 @@ export default function (graphContainerSelector) {
                 if (allProps[i].range === classElement || allProps[i].domain === classElement) {
                     // check for the type of that property
                     if (allProps[i].type === "owl:someValuesFrom") {
-                        graph.options().warningModule().showWarning("Can not change class type",
+                        graph.options().warningModule().showWarning(
+                            "Can not change class type",
                             "The element has a property that is of type owl:someValuesFrom",
-                            "Element type not changed!", 1, true);
+                            "Element type not changed!",
+                            1,
+                            classElement
+                        );
                         return false;
                     }
                     if (allProps[i].type === "owl:allValuesFrom") {
-                        graph.options().warningModule().showWarning("Can not change class type",
+                        graph.options().warningModule().showWarning(
+                            "Can not change class type",
                             "The element has a property that is of type owl:allValuesFrom",
-                            "Element type not changed!", 1, true);
+                            "Element type not changed!",
+                            1,
+                            classElement
+                        );
                         return false;
                     }
                 }
             }
-
-
         }
         return true;
     };
@@ -3088,15 +3117,23 @@ export default function (graphContainerSelector) {
             for (i = 0; i < allProps.length; i++) {
                 if (allProps[i] === property) continue;
                 if (allProps[i].domain === domain && allProps[i].range === range && allProps[i].type === property.type) {
-                    graph.options().warningModule().showWarning("Warning",
+                    graph.options().warningModule().showWarning(
+                        "Warning",
                         "This triple already exist!",
-                        "Element not created!", 1, false);
+                        "Element not created!",
+                        1,
+                        undefined
+                    );
                     return false;
                 }
                 if (allProps[i].domain === range && allProps[i].range === domain && allProps[i].type === property.type) {
-                    graph.options().warningModule().showWarning("Warning",
+                    graph.options().warningModule().showWarning(
+                        "Warning",
                         "Inverse assignment already exist! ",
-                        "Element not created!", 1, false);
+                        "Element not created!",
+                        1,
+                        undefined
+                    );
                     return false;
                 }
             }
@@ -3111,75 +3148,108 @@ export default function (graphContainerSelector) {
     //     console.log("checking for duplicates");
     //     var b1= domain.isPropertyAssignedToThisElement(property);
     //     var b2= range.isPropertyAssignedToThisElement(property);
-    //
+
     //     console.log("test domain results in "+ b1);
     //     console.log("test range results in "+ b1);
-    //
+
     //     if (b1  && b2 ){
-    //         graph.options().warningModule().showWarning("Warning",
+    //         graph.options().warningModule().showWarning(
+    //             "Warning",
     //             "This triple already exist!",
-    //             "Element not created!",1,false);
+    //             "Element not created!",
+    //             1,
+    //             undefined
+    //         );
     //         return false;
     //     }
     //     return true;
     // };
 
     graph.sanityCheckProperty = function (domain, range, typeString) {
-
         // check for duplicate triple in the element;
-
-
         if (typeString === "owl:objectProperty" && graph.options().objectPropertyFilter().enabled === true) {
-            graph.options().warningModule().showWarning("Warning",
+            graph.options().warningModule().showWarning(
+                "Warning",
                 "Object properties are filtered out in the visualization!",
-                "Element not created!", 1, false);
+                "Element not created!",
+                1,
+                undefined
+            );
             return false;
         }
 
         if (typeString === "owl:disjointWith" && graph.options().disjointPropertyFilter().enabled === true) {
-            graph.options().warningModule().showWarning("Warning",
+            graph.options().warningModule().showWarning(
+                "Warning",
                 "owl:disjointWith properties are filtered out in the visualization!",
-                "Element not created!", 1, false);
+                "Element not created!",
+                1,
+                undefined
+            );
             return false;
         }
 
 
         if (domain === range && typeString === "rdfs:subClassOf") {
-            graph.options().warningModule().showWarning("Warning",
+            graph.options().warningModule().showWarning(
+                "Warning",
                 "rdfs:subClassOf can not be created as loops (domain == range)",
-                "Element not created!", 1, false);
+                "Element not created!",
+                1,
+                domain
+            );
             return false;
         }
         if (domain === range && typeString === "owl:disjointWith") {
-            graph.options().warningModule().showWarning("Warning",
+            graph.options().warningModule().showWarning(
+                "Warning",
                 "owl:disjointWith  can not be created as loops (domain == range)",
-                "Element not created!", 1, false);
+                "Element not created!",
+                1,
+                domain
+            );
             return false;
         }
 
         if (domain.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning("Warning",
+            graph.options().warningModule().showWarning(
+                "Warning",
                 "owl:someValuesFrom can not originate from owl:Thing",
-                "Element not created!", 1, false);
+                "Element not created!",
+                1,
+                domain
+            );
             return false;
         }
         if (domain.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning("Warning",
+            graph.options().warningModule().showWarning(
+                "Warning",
                 "owl:allValuesFrom can not originate from owl:Thing",
-                "Element not created!", 1, false);
+                "Element not created!",
+                1,
+                domain
+            );
             return false;
         }
 
         if (range.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning("Warning",
+            graph.options().warningModule().showWarning(
+                "Warning",
                 "owl:allValuesFrom can not be connected to owl:Thing",
-                "Element not created!", 1, false);
+                "Element not created!",
+                1,
+                range
+            );
             return false;
         }
         if (range.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning("Warning",
+            graph.options().warningModule().showWarning(
+                "Warning",
                 "owl:someValuesFrom can not be connected to owl:Thing",
-                "Element not created!", 1, false);
+                "Element not created!",
+                1,
+                range
+            );
             return false;
         }
         return true; // we can create a property
@@ -3274,9 +3344,13 @@ export default function (graphContainerSelector) {
         clearTimeout(nodeFreezer);
         // tells user when element is filtered out
         if (graph.options().datatypeFilter().enabled === true) {
-            graph.options().warningModule().showWarning("Warning",
+            graph.options().warningModule().showWarning(
+                "Warning",
                 "Datatype properties are filtered out in the visualization!",
-                "Element not created!", 1, false);
+                "Element not created!",
+                1,
+                undefined
+            );
             return;
         }
 
@@ -3418,7 +3492,10 @@ export default function (graphContainerSelector) {
             graph.options().warningModule().responseWarning(
                 "Removing elements",
                 text,
-                "Awaiting response!", graph.removeNodesViaResponse, [nodesToRemove, propsToRemove], false);
+                "Awaiting response!",
+                graph.removeNodesViaResponse,
+                [nodesToRemove, propsToRemove]
+            );
 
 
             //

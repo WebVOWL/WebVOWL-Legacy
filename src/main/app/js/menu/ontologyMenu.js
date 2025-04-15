@@ -374,7 +374,7 @@ export default function (graph) {
             if (loadingSuccessful) {
                 clearTimeout(loadingStatusTimer);
                 stopTimer = true;
-                loadingModule.setJSONText(request.responseText);
+                loadingModule.jsonText = request.responseText;
                 request = undefined // Nuke reference to save memory
                 getLoadingStatusOnceCallBacked(callbackFromIRI_Success, [ontoName, localThreadId]);
             }
@@ -437,7 +437,7 @@ export default function (graph) {
             if (loadingSuccessful) {
                 clearTimeout(loadingStatusTimer);
                 stopTimer = true;
-                loadingModule.setJSONText(request.responseText);
+                loadingModule.jsonText = request.responseText;
                 request = undefined // Nuke reference to save memory
                 getLoadingStatusOnceCallBacked(callbackFromJSON_Success, [ontoName, local_conversionId]);
             }
@@ -529,7 +529,7 @@ export default function (graph) {
             return;
         }
         if (xhr.status === 200) {
-            loadingModule.setJSONText(xhr.responseText)
+            loadingModule.jsonText = xhr.responseText
             xhr = undefined // Nuke reference to save memory
             loadingModule.loadOntologyContent(loadingModule.loadFromOWL2VOWL(filename));
             ontologyMenu.conversionFinished();

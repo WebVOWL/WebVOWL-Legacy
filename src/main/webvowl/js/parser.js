@@ -1,4 +1,7 @@
+import { BaseElement } from './elements/BaseElement';
+import { BaseNode } from './elements/nodes/BaseNode';
 import nodePrototypeMapFactory from './elements/nodes/nodeMap';
+import { BaseProperty } from './elements/properties/BaseProperty';
 import OwlDisjointWith from './elements/properties/implementations/OwlDisjointWith';
 import propertyPrototypeMapFactory from './elements/properties/propertyMap';
 import attributeParserFactory from './parsing/attributeParser';
@@ -8,38 +11,41 @@ const equivalentPropertyMerger = equivalentPropertyMergerFactory();
 const nodePrototypeMap = nodePrototypeMapFactory();
 const propertyPrototypeMap = propertyPrototypeMapFactory();
 
-/**
- * Encapsulates the parsing and preparation logic of the input data.
- * @param graph the graph object that will be passed to the elements
- * @returns {{}}
- */
-export default function (graph) {
-    var parser = {},
-        nodes,
-        properties,
-        classMap,
-        settingsData,
-        settingsImported = false,
-        settingsImportGraphZoomAndTranslation = false,
-        dictionary = [],
-        propertyMap;
 
-    parser.getDictionary = function () {
+export class Parser {
+    /**
+     * Encapsulates the parsing and preparation logic of the input data.
+     * @param {any} graph the graph object that will be passed to the elements
+     */
+    constructor(graph) {
+        this.graph = graph
+        this.nodes = undefined
+        this.properties = undefined
+        this.classMap = undefined
+        this.settingsData = undefined
+        this.settingsImported = false
+        this.settingsImportGraphZoomAndTranslation = false
+        this.dictionary = []
+        this.propertyMap = undefined
+    }
+
+    getDictionary() {
         return dictionary;
-    };
+    }
 
-    parser.setDictionary = function (d) {
+    setDictionary(d) {
         dictionary = d;
-    };
+    }
 
-    parser.settingsImported = function () {
+    settingsImported() {
         return settingsImported;
-    };
-    parser.settingsImportGraphZoomAndTranslation = function () {
-        return settingsImportGraphZoomAndTranslation;
-    };
+    }
 
-    parser.parseSettings = function () {
+    settingsImportGraphZoomAndTranslation() {
+        return settingsImportGraphZoomAndTranslation;
+    }
+
+    parseSettings() {
         settingsImported = true;
         settingsImportGraphZoomAndTranslation = false;
 
@@ -50,30 +56,30 @@ export default function (graph) {
         /** global settings **********************************************************/
         if (settingsData.global) {
             if (settingsData.global.zoom) {
-                var zoomFactor = settingsData.global.zoom;
+                const zoomFactor = settingsData.global.zoom;
                 graph.setZoom(zoomFactor);
                 settingsImportGraphZoomAndTranslation = true;
             }
 
             if (settingsData.global.translation) {
-                var translation = settingsData.global.translation;
+                const translation = settingsData.global.translation;
                 graph.setTranslation(translation);
                 settingsImportGraphZoomAndTranslation = true;
             }
 
             if (settingsData.global.paused) {
-                var paused = settingsData.global.paused;
+                const paused = settingsData.global.paused;
                 graph.options().pauseMenu().setPauseValue(paused);
             }
         }
         /** Gravity Settings  **********************************************************/
         if (settingsData.gravity) {
             if (settingsData.gravity.classDistance) {
-                var classDistance = settingsData.gravity.classDistance;
+                const classDistance = settingsData.gravity.classDistance;
                 graph.options().classDistance(classDistance);
             }
             if (settingsData.gravity.datatypeDistance) {
-                var datatypeDistance = settingsData.gravity.datatypeDistance;
+                const datatypeDistance = settingsData.gravity.datatypeDistance;
                 graph.options().datatypeDistance(datatypeDistance);
             }
             graph.options().gravityMenu().reset(); // reads the options values and sets the gui values
@@ -82,14 +88,14 @@ export default function (graph) {
 
         // shared variable declaration
 
-        var i;
-        var id;
-        var checked;
+        const i;
+        const id;
+        const checked;
         /** Filter Settings **********************************************************/
         if (settingsData.filter) {
             // checkbox settings
             if (settingsData.filter.checkBox) {
-                var filter_cb = settingsData.filter.checkBox;
+                const filter_cb = settingsData.filter.checkBox;
                 for (i = 0; i < filter_cb.length; i++) {
                     id = filter_cb[i].id;
                     checked = filter_cb[i].checked;
@@ -98,7 +104,7 @@ export default function (graph) {
             }
             // node degree filter settings
             if (settingsData.filter.degreeSliderValue) {
-                var degreeSliderValue = settingsData.filter.degreeSliderValue;
+                const degreeSliderValue = settingsData.filter.degreeSliderValue;
                 graph.options().filterMenu().setDegreeSliderValue(degreeSliderValue);
             }
             graph.options().filterMenu().updateSettings();
@@ -108,7 +114,7 @@ export default function (graph) {
         if (settingsData.modes) {
             // checkbox settings
             if (settingsData.modes.checkBox) {
-                var modes_cb = settingsData.modes.checkBox;
+                const modes_cb = settingsData.modes.checkBox;
                 for (i = 0; i < modes_cb.length; i++) {
                     id = modes_cb[i].id;
                     checked = modes_cb[i].checked;
@@ -116,7 +122,7 @@ export default function (graph) {
                 }
             }
             // color switch settings
-            var state = settingsData.modes.colorSwitchState;
+            const state = settingsData.modes.colorSwitchState;
             // state could be undefined
             if (state === true || state === false) {
                 graph.options().modeMenu().setColorSwitchState(state);
@@ -124,14 +130,13 @@ export default function (graph) {
             graph.options().modeMenu().updateSettings();
         }
         graph.updateStyle(); // updates graph representation(setting charges and distances)
-    };
-
+    }
 
     /**
      * Parses the ontology data and preprocesses it (e.g. connecting inverse properties and so on).
      * @param ontologyData the loaded ontology json file
      */
-    parser.parse = function (ontologyData) {
+    parse(ontologyData) {
         if (!ontologyData) {
             nodes = [];
             properties = [];
@@ -145,7 +150,7 @@ export default function (graph) {
         let lowercaseNodePrototypeMap = createLowerCasePrototypeMap(nodePrototypeMap);
         let lowercasePropertyPrototypeMap = createLowerCasePrototypeMap(propertyPrototypeMap);
 
-        var classes = combineClassesOrProperties(ontologyData.class, ontologyData.classAttribute, lowercaseNodePrototypeMap, combineClasses),
+        const classes = combineClassesOrProperties(ontologyData.class, ontologyData.classAttribute, lowercaseNodePrototypeMap, combineClasses),
             datatypes = combineClassesOrProperties(ontologyData.datatype, ontologyData.datatypeAttribute, lowercaseNodePrototypeMap, combineClasses),
             combinedClassesAndDatatypes = classes.concat(datatypes),
             unparsedProperties = ontologyData.property || [],
@@ -163,43 +168,44 @@ export default function (graph) {
         convertTypesToIris(combinedProperties, ontologyData.namespace);
         nodes = createNodeStructure(combinedClassesAndDatatypes, classMap);
         properties = createPropertyStructure(combinedProperties, classMap, propertyMap);
-    };
+    }
 
     /**
-     * @return {Array} the preprocessed nodes
+     * @return the preprocessed nodes
      */
-    parser.nodes = function () {
+    nodes() {
         return nodes;
-    };
+    }
 
     /**
-     * @returns {Array} the preprocessed properties
+     * @returns the preprocessed properties
      */
-    parser.properties = function () {
+    properties() {
         return properties;
-    };
+    }
 
     /**
-     * Parse `jsonText` and ensure the graph data is valid
-     * @param {string} jsonText
+     * Parse `jsonObject` and ensure the graph data is valid
+     * @param {{}} jsonObject
      * @param {string} filename
      * @param {string} alternativeFilename
-     * @returns {boolean} Whether the jsonText is valid graph data
+     * @returns {[{} | undefined, boolean]} Whether `jsonObject` is valid graph data
      */
-    parser.parseOntologyFromText = function (data, filename, alternativeFilename) {
+    parseOntologyFromText(jsonObject, filename, alternativeFilename) {
         let isValidData = false;
         const options = graph.options();
         const loadingModule = options.loadingModule();
 
-        if ((data === undefined && filename === undefined) || (data.length === 0)) {
+        if (!jsonObject && filename === undefined) {
             loadingModule.notValidJsonFile();
             return [undefined, isValidData];
         }
 
         if (!filename) {
             // First look if an ontology title exists, otherwise take the alternative filename
-            var ontologyNames = data.header ? data.header.title : undefined;
-            var ontologyName = languageTools.textInLanguage(ontologyNames);
+            // @ts-ignore
+            const ontologyNames = jsonObject.header ? jsonObject.header.title : undefined;
+            const ontologyName = languageTools.textInLanguage(ontologyNames);
 
             if (ontologyName) {
                 filename = ontologyName;
@@ -209,27 +215,28 @@ export default function (graph) {
         }
 
         // check if we have graph data
-        isValidData = data.class !== undefined && data.class.length > 0;
+        // @ts-ignore
+        isValidData = jsonObject.class !== undefined && jsonObject.class.length > 0;
 
         if (isValidData) {
             const ontologyMenu = options.ontologyMenu();
             const exportMenu = options.exportMenu();
-            options.data(data);
+            options.data(jsonObject);
             loadingModule.validJsonFile();
-            if (ontologyMenu.shouldCacheOntology(jsonText)) {
-                ontologyMenu.setCachedOntology(filename, jsonText);
-                exportMenu.setJsonText(jsonText);
+            if (ontologyMenu.shouldCacheOntology(jsonObject)) {
+                ontologyMenu.setCachedOntology(filename, jsonObject);
+                exportMenu.setJsonText(jsonObject);
             }
             exportMenu.setFilename(filename);
         }
-        return [data, isValidData];
+        return [jsonObject, isValidData];
     }
 
     /**
      * Combines the passed objects with its attributes and prototypes. This also applies
      * attributes defined in the base of the prototype.
      */
-    function combineClassesOrProperties(baseObjects, attributes, prototypeMap, callable) {
+    #combineClassesOrProperties(baseObjects, attributes, prototypeMap, callable) {
         let combinations = [];
 
         if (baseObjects) {
@@ -270,7 +277,7 @@ export default function (graph) {
         return combinations;
     }
 
-    function combineClasses(element, Prototype) {
+    #combineClasses(element, Prototype) {
         let node = new Prototype(graph);
         node.annotations = element.annotations;
         node.baseIri = element.baseIri;
@@ -304,7 +311,7 @@ export default function (graph) {
         return node;
     }
 
-    function combineProperties(element, Prototype) {
+    #combineProperties(element, Prototype) {
         let property = new Prototype(graph);
         property.annotations = element.annotations;
         property.baseIri = element.baseIri;
@@ -332,20 +339,24 @@ export default function (graph) {
         return property;
     }
 
-    function createLowerCasePrototypeMap(prototypeMap) {
-        return d3.map(prototypeMap.values(), function (Prototype) {
+    #createLowerCasePrototypeMap(prototypeMap) {
+        return d3.map(prototypeMap.values(), function (Prototype) { // FIXME: Check Map docs
             return new Prototype().type.toLowerCase();
         });
     }
 
-    function mergeRangesOfEquivalentProperties(properties, nodes) {
+    /**
+     * @param {BaseProperty[]} properties
+     * @param {BaseNode[]} nodes
+     */
+    #mergeRangesOfEquivalentProperties(properties, nodes) {
         // pass clones of arrays into the merger to keep the current functionality of this module
-        var newNodes = equivalentPropertyMerger.merge(properties.slice(), nodes.slice(), propertyMap, classMap, graph);
+        const newNodes = equivalentPropertyMerger.merge(properties.slice(), nodes.slice(), this.propertyMap, this.classMap, this.graph);
 
         // replace all the existing nodes and map the nodes again
         nodes.length = 0;
         Array.prototype.push.apply(nodes, newNodes);
-        classMap = mapElements(nodes);
+        this.classMap = this.#mapElements(nodes);
     }
 
     /**
@@ -355,41 +366,40 @@ export default function (graph) {
      * object instead of the ID so we swap the ID's with the correct object reference and can delete it from drawing
      * because it is not necessary.
      */
-    function createNodeStructure(rawNodes, classMap) {
-        var nodes = [];
+    #createNodeStructure(rawNodes, classMap) {
+        let nodes = [];
 
         // Set the default values
-        rawNodes.forEach(function (node) {
+        rawNodes.forEach(function (node) { // FIXME: Should be removed
             node.visible = true;
         });
 
-        rawNodes.forEach(function (node) {
+        for (const node of rawNodes) {
             // Merge and connect the equivalent nodes
-            processEquivalentIds(node, classMap);
+            this.#processEquivalentIds(node, classMap);
             attributeParser.parseClassAttributes(node);
-        });
+        }
 
         // Collect all nodes that should be displayed
-        rawNodes.forEach(function (node) {
+        for (const node of rawNodes) {
             if (node.visible) {
                 nodes.push(node);
             }
-        });
-
+        };
         return nodes;
     }
 
     /**
      * Sets the disjoint attribute of the nodes if a disjoint label is found.
-     * @param property
+     * @param {BaseProperty} property
      */
-    function processDisjoints(property) {
+    #processDisjoints(property) {
         if (property instanceof OwlDisjointWith === false) {
             return;
         }
 
-        var domain = property.domain,
-            range = property.range;
+        const domain = property.domain;
+        const range = property.range;
 
         // Check the domain.
         if (!domain.disjointWith) {
@@ -414,49 +424,34 @@ export default function (graph) {
      * @param classMap a map of all classes
      * @param propertyMap the properties in a map
      */
-    function createPropertyStructure(rawProperties, classMap, propertyMap) {
-        var properties = [];
+    #createPropertyStructure(rawProperties, classMap, propertyMap) {
+        let properties = [];
         // Set default values
-        rawProperties.forEach(function (property) {
+        rawProperties.forEach(function (property) { // FIXME: Should be removed
             property.visible = true;
         });
 
         // Connect properties
-        rawProperties.forEach(function (property) {
-            var domain,
-                range,
-                domainObject,
-                rangeObject,
-                inverse;
-
+        for (const property of rawProperties) {
             /* Skip properties that have no information about their domain and range, like
              inverse properties with optional inverse and optional domain and range attributes */
             if ((property.domain && property.range) || property.inverse) {
-
-                var inversePropertyId = findId(property.inverse);
-                // Look if an inverse property exists
-                if (inversePropertyId) {
-                    inverse = propertyMap[inversePropertyId];
-                    if (!inverse) {
-                        console.warn("No inverse property was found for id: " + inversePropertyId);
-                        property.inverse = undefined;
-                    }
+                let domainObject;
+                let rangeObject;
+                const inversePropertyId = this.#findId(property.inverse);
+                const inverse = propertyMap[inversePropertyId];
+                if (!inverse) {
+                    console.warn("No inverse property was found for id: " + inversePropertyId);
+                    property.inverse = undefined;
                 }
-
                 // Either domain and range are set on this property or at the inverse
                 if (typeof property.domain !== "undefined" && typeof property.range !== "undefined") {
-                    domain = findId(property.domain);
-                    range = findId(property.range);
-
-                    domainObject = classMap[domain];
-                    rangeObject = classMap[range];
+                    domainObject = classMap[this.#findId(property.domain)];
+                    rangeObject = classMap[this.#findId(property.range)];
                 } else if (inverse) {
                     // Domain and range need to be switched
-                    domain = findId(inverse.range);
-                    range = findId(inverse.domain);
-
-                    domainObject = classMap[domain];
-                    rangeObject = classMap[range];
+                    domainObject = classMap[this.#findId(inverse.range)];
+                    rangeObject = classMap[this.#findId(inverse.domain)];
                 } else {
                     console.warn("Domain and range not found for property: " + property.id);
                 }
@@ -475,42 +470,42 @@ export default function (graph) {
                 }
             }
             // Reference sub- and superproperties
-            referenceSubOrSuperProperties(property.subproperties);
-            referenceSubOrSuperProperties(property.superproperties);
-        });
+            this.#referenceSubOrSuperProperties(property.subproperties);
+            this.#referenceSubOrSuperProperties(property.superproperties);
+        }
 
         // Merge equivalent properties and process disjoints.
-        rawProperties.forEach(function (property) {
-            processEquivalentIds(property, propertyMap);
-            processDisjoints(property);
+        for (const property of rawProperties) {
+            this.#processEquivalentIds(property, propertyMap);
+            this.#processDisjoints(property);
             attributeParser.parsePropertyAttributes(property);
-        });
+        }
 
         // Add additional information to the properties
-        rawProperties.forEach(function (property) {
+        for (const property of rawProperties) {
             // Properties of merged classes should point to/from the visible equivalent class
-            var propertyWasRerouted = false;
+            let propertyWasRerouted = false;
             if (property.domain === undefined) {
                 console.warn("No Domain was found for id:" + property.id);
-                return;
+                return [];
             }
-
-            if (wasNodeMerged(property.domain)) {
+            if (this.#wasNodeMerged(property.domain)) {
                 property.domain = property.domain.equivalentBase;
                 propertyWasRerouted = true;
             }
+
             if (property.range === undefined) {
                 console.warn("No range was found for id:" + property.id);
-                return;
+                return [];
             }
-            if (wasNodeMerged(property.range)) {
+            if (this.#wasNodeMerged(property.range)) {
                 property.range = property.range.equivalentBase;
                 propertyWasRerouted = true;
             }
 
             if (propertyWasRerouted) {
                 // But there should not be two equal properties between the same domain and range.
-                var equalProperty = getOtherEqualProperty(rawProperties, property);
+                const equalProperty = this.#getOtherEqualProperty(rawProperties, property);
                 if (equalProperty) {
                     property.visible = false;
                     if (equalProperty.redundantProperties instanceof Array) {
@@ -530,20 +525,17 @@ export default function (graph) {
             if (property.visible) {
                 properties.push(property);
             }
-        });
+        };
         return properties;
     }
 
-    function referenceSubOrSuperProperties(subOrSuperPropertiesArray) {
-        var i, l;
-
+    #referenceSubOrSuperProperties(subOrSuperPropertiesArray) {
         if (!subOrSuperPropertiesArray) {
             return;
         }
-
-        for (i = 0, l = subOrSuperPropertiesArray.length; i < l; ++i) {
-            var subOrSuperPropertyId = findId(subOrSuperPropertiesArray[i]);
-            var subOrSuperProperty = propertyMap[subOrSuperPropertyId];
+        for (let i = 0; i < subOrSuperPropertiesArray.length; ++i) {
+            const subOrSuperPropertyId = this.#findId(subOrSuperPropertiesArray[i]);
+            const subOrSuperProperty = this.propertyMap[subOrSuperPropertyId];
 
             if (subOrSuperProperty) {
                 // Replace id with object
@@ -554,21 +546,17 @@ export default function (graph) {
         }
     }
 
-    function wasNodeMerged(node) {
+    #wasNodeMerged(node) {
         return !node.visible && node.equivalentBase;
     }
 
-    function getOtherEqualProperty(properties, referenceProperty) {
-        var i, l, property;
-
-        for (i = 0, l = properties.length; i < l; i++) {
-            property = properties[i];
-
+    #getOtherEqualProperty(properties, referenceProperty) {
+        for (const property of properties) {
             if (referenceProperty === property) {
                 continue;
             }
-            if (referenceProperty.domain !== property.domain ||
-                referenceProperty.range !== property.range) {
+            if (referenceProperty.domain !== property.domain
+                || referenceProperty.range !== property.range) {
                 continue;
             }
 
@@ -582,7 +570,6 @@ export default function (graph) {
                 return property;
             }
         }
-
         return undefined;
     }
 
@@ -591,29 +578,35 @@ export default function (graph) {
      * @param classes unprocessed classes
      * @param properties unprocessed properties
      */
-    function addSetOperatorProperties(classes, properties) {
+    #addSetOperatorProperties(classes, properties) {
+        /**
+         * @param {string} domainId
+         * @param {string[]} rangeIds
+         * @param {string} operatorType
+         */
         function addProperties(domainId, rangeIds, operatorType) {
             if (!rangeIds) {
                 return;
             }
 
-            rangeIds.forEach(function (rangeId, index) {
-                var property = {
-                    id: "GENERATED-" + operatorType + "-" + domainId + "-" + rangeId + "-" + index,
+            for (let i = 0; i < rangeIds.length; i++) {
+                const rangeId = rangeIds[i];
+                const property = {
+                    id: "GENERATED-" + operatorType + "-" + domainId + "-" + rangeId + "-" + i,
                     type: "setOperatorProperty",
                     domain: domainId,
                     range: rangeId
                 };
                 properties.push(property);
-            });
+            }
         }
 
-        classes.forEach(function (cls) {
+        for (const cls of classes) {
             addProperties(cls.id, cls.complement, "COMPLEMENT");
             addProperties(cls.id, cls.intersection, "INTERSECTION");
             addProperties(cls.id, cls.union, "UNION");
             addProperties(cls.id, cls.disjointUnion, "DISJOINTUNION");
-        });
+        }
     }
 
     /**
@@ -621,17 +614,18 @@ export default function (graph) {
      * and tags them as processed.
      * @param element a node or a property
      * @param elementMap a map where nodes/properties can be looked up
+     * @note This method mutates `element`
      */
-    function processEquivalentIds(element, elementMap) {
-        var eqIds = element.equivalents;
+    #processEquivalentIds(element, elementMap) {
+        const eqIds = element.equivalents;
         if (!eqIds || element.equivalentBase) {
             return;
         }
 
         // Replace ids with the corresponding objects
-        for (var i = 0, l = eqIds.length; i < l; ++i) {
-            var eqId = findId(eqIds[i]);
-            var eqObject = elementMap[eqId];
+        for (let i = 0; i < eqIds.length; ++i) {
+            const eqId = this.#findId(eqIds[i]);
+            const eqObject = elementMap[eqId];
 
             if (eqObject) {
                 // Cross reference both objects
@@ -652,23 +646,22 @@ export default function (graph) {
      * @param elements classes or properties
      * @param namespaces an array of namespaces
      */
-    function convertTypesToIris(elements, namespaces) {
-        elements.forEach(function (element) {
+    #convertTypesToIris(elements, namespaces) {
+        for (const element of elements) {
             if (typeof element.iri === "string") {
-                element.iri = replaceNamespace(element.iri, namespaces);
+                element.iri = this.#replaceNamespace(element.iri, namespaces);
             }
-        });
+        }
     }
 
     /**
      * Creates a map by mapping the array with the passed function.
      * @param array the array
-     * @returns {{}}
      */
-    function mapElements(array) {
-        var map = {};
-        for (var i = 0, length = array.length; i < length; i++) {
-            var element = array[i];
+    #mapElements(array) {
+        const map = {};
+        for (const i = 0, length = array.length; i < length; i++) {
+            const element = array[i];
             map[element.id] = element;
         }
         return map;
@@ -677,16 +670,15 @@ export default function (graph) {
     /**
      * Adds the attributes of the additional object to the base object, but doesn't
      * overwrite existing ones.
-     *
-     * @param base the base object
-     * @param addition the object with additional data
+     * @param {{ [x: string]: any; }} base the base object
+     * @param {{ [x: string]: any; }} addition the object with additional data
      * @returns the combination is also returned
      */
-    function addAdditionalAttributes(base, addition) {
+    #addAdditionalAttributes(base, addition) {
         // Check for an undefined value
         addition = addition || {};
 
-        for (var addAttribute in addition) {
+        for (const addAttribute in addition) {
             // Add the attribute if it doesn't exist
             if (!(addAttribute in base) && addition.hasOwnProperty(addAttribute)) {
                 base[addAttribute] = addition[addAttribute];
@@ -697,34 +689,32 @@ export default function (graph) {
 
     /**
      * Replaces the namespace (and the separator) if one exists and returns the new value.
-     * @param address the address with a namespace in it
-     * @param namespaces an array of namespaces
+     * @param {string} address the address with a namespace in it
+     * @param {any[]} namespaces an array of namespaces
      * @returns {string} the processed address with the (possibly) replaced namespace
      */
-    function replaceNamespace(address, namespaces) {
-        var separatorIndex = address.indexOf(":");
+    #replaceNamespace(address, namespaces) {
+        const separatorIndex = address.indexOf(":");
         if (separatorIndex === -1) {
             return address;
         }
-        var namespaceName = address.substring(0, separatorIndex);
+        const namespaceName = address.substring(0, separatorIndex);
 
-        for (var i = 0, length = namespaces.length; i < length; ++i) {
-            var namespace = namespaces[i];
+        for (const namespace of namespaces) {
             if (namespaceName === namespace.name) {
                 return namespace.iri + address.substring(separatorIndex + 1);
             }
         }
-
         return address;
     }
 
     /**
      * Looks whether the passed object is already the id or if it was replaced
      * with the object that belongs to the id.
-     * @param object an id, a class or a property
-     * @returns {string} the id of the passed object or undefined
+     * @param {string | BaseElement} object an id, a class or a property
+     * @returns {string | undefined} the id of the passed object or undefined
      */
-    function findId(object) {
+    #findId(object) {
         if (!object) {
             return undefined;
         } else if (typeof object === "string") {
@@ -736,6 +726,4 @@ export default function (graph) {
             return undefined;
         }
     }
-
-    return parser;
-};
+}
