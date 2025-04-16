@@ -1,133 +1,159 @@
-export default function (graph) {
-    var configMenu = {},
-        checkboxes = [];
+import d3 from "d3";
 
+export default class ConfigMenu {
+    /**
+     * @param {any} graph
+     */
+    constructor(graph) {
+        this.graph = graph;
+        /**
+         * @type {import("d3-selection").Selection<HTMLInputElement, any, HTMLElement, any>[]}
+         */
+        this.checkboxes = [];
+    }
 
-    configMenu.setup = function () {
-        var menuEntry = d3.select("#m_modes");
-        menuEntry.on("mouseover", function () {
-            var searchMenu = graph.options().searchMenu();
+    setup() {
+        const menuEntry = d3.select("#m_modes");
+        menuEntry.on("mouseover", () => {
+            const searchMenu = this.graph.options().searchMenu();
             searchMenu.hideSearchEntries();
         });
 
-        addCheckBox("showZoomSlider", "Zoom controls", "#zoomSliderOption", graph.options().zoomSlider().showSlider, 0);
-        addLabelWidthSlider("#maxLabelWidthSliderOption", "maxLabelWidth", "Max label width", graph.options().maxLabelWidth);
-    };
+        this.addCheckBox("showZoomSlider", "Zoom controls", "#zoomSliderOption", this.graph.options().zoomSlider().showSlider, 0);
+        this.addLabelWidthSlider("#maxLabelWidthSliderOption", "maxLabelWidth", "Max label width", this.graph.options().maxLabelWidth);
+    }
 
-
-    function addLabelWidthSlider(selector, identifier, label, onChangeFunction) {
-        var sliderContainer,
-            sliderValueLabel;
-
-        sliderContainer = d3.select(selector)
+    /**
+     * @param {string} selector
+     * @param {string} identifier
+     * @param {string | number | boolean | import("d3-selection").ValueFn<HTMLLabelElement, any, string | number | boolean>} label
+     * @param {(arg0?: number) => any} onChangeFunction
+     */
+    addLabelWidthSlider(selector, identifier, label, onChangeFunction) {
+        const sliderContainer = d3.select(selector)
             .append("div")
             .classed("distanceSliderContainer", true);
 
-        var slider = sliderContainer.append("input")
-            .attr("id", identifier + "Slider")
+        const slider = sliderContainer.append("input")
+            .attr("id", `${identifier}Slider`)
             .attr("type", "range")
             .attr("min", 20)
             .attr("max", 600)
             .attr("value", onChangeFunction())
             .attr("step", 10);
+
         sliderContainer.append("label")
             .classed("description", true)
-            .attr("for", identifier + "Slider")
-            .attr("id", identifier + "DescriptionLabel")
+            .attr("for", `${identifier}Slider`)
+            .attr("id", `${identifier}DescriptionLabel`)
             .text(label);
-        sliderValueLabel = sliderContainer.append("label")
+
+        const sliderValueLabel = sliderContainer.append("label")
             .classed("value", true)
-            .attr("for", identifier + "Slider")
-            .attr("id", identifier + "valueLabel")
+            .attr("for", `${identifier}Slider`)
+            .attr("id", `${identifier}valueLabel`)
             .text(onChangeFunction());
 
-        slider.on("input", function () {
-            var value = slider.property("value");
+        slider.on("input", () => {
+            const value = slider.property("value");
             onChangeFunction(value);
             sliderValueLabel.text(value);
-            if (graph.options().dynamicLabelWidth() === true)
-                graph.animateDynamicLabelWidth();
+            if (this.graph.options().dynamicLabelWidth() === true) {
+                this.graph.animateDynamicLabelWidth();
+            }
         });
 
-        // add wheel event to the slider
-        slider.on("wheel", function () {
+        slider.on("wheel", () => {
             if (slider.node().disabled === true) return;
-            var wheelEvent = d3.event;
-            var offset;
+            // @ts-ignore
+            const wheelEvent = d3.event;
+            let offset = 0;
             if (wheelEvent.deltaY < 0) offset = 10;
             if (wheelEvent.deltaY > 0) offset = -10;
-            var oldVal = parseInt(slider.property("value"));
-            var newSliderValue = oldVal + offset;
+            const oldVal = parseInt(slider.property("value"));
+            const newSliderValue = oldVal + offset;
             if (newSliderValue !== oldVal) {
                 slider.property("value", newSliderValue);
                 onChangeFunction(newSliderValue);
-                slider.on("input")(); // << set text and update the graphStyles
+                // @ts-ignore
+                slider.on("input")();
             }
+            // @ts-ignore
             d3.event.preventDefault();
         });
     }
 
-    function addCheckBox(identifier, modeName, selector, onChangeFunc, updateLvl) {
-        var configOptionContainer = d3.select(selector)
+    /**
+     * @param {string} identifier
+     * @param {string | number | boolean | import("d3-selection").ValueFn<HTMLLabelElement, any, string | number | boolean>} modeName
+     * @param {string} selector
+     * @param {(arg0: undefined) => void} onChangeFunc
+     * @param {number} updateLvl
+     */
+    addCheckBox(identifier, modeName, selector, onChangeFunc, updateLvl) {
+        const configOptionContainer = d3.select(selector)
             .append("div")
             .classed("checkboxContainer", true);
-        var configCheckbox = configOptionContainer.append("input")
+
+        const configCheckbox = configOptionContainer.append("input")
             .classed("moduleCheckbox", true)
-            .attr("id", identifier + "ConfigCheckbox")
+            .attr("id", `${identifier}ConfigCheckbox`)
             .attr("type", "checkbox")
             .property("checked", onChangeFunc());
 
-
-        configCheckbox.on("click", function (silent) {
-            var isEnabled = configCheckbox.property("checked");
+        configCheckbox.on("click", (silent) => {
+            const isEnabled = configCheckbox.property("checked");
             onChangeFunc(isEnabled);
             if (silent !== true) {
-                // updating graph when silent is false or the parameter is not given.
                 if (updateLvl === 1) {
-                    graph.lazyRefresh();
-                    //graph.redrawWithoutForce
+                    this.graph.lazyRefresh();
                 }
                 if (updateLvl === 2) {
-                    graph.update();
+                    this.graph.update();
                 }
-
                 if (updateLvl === 3) {
-                    graph.updateDraggerElements();
+                    this.graph.updateDraggerElements();
                 }
             }
-
         });
-        checkboxes.push(configCheckbox);
+
+        this.checkboxes.push(configCheckbox);
+
         configOptionContainer.append("label")
-            .attr("for", identifier + "ConfigCheckbox")
+            .attr("for", `${identifier}ConfigCheckbox`)
             .text(modeName);
     }
 
-    configMenu.setCheckBoxValue = function (identifier, value) {
-        for (var i = 0; i < checkboxes.length; i++) {
-            var cbdId = checkboxes[i].attr("id");
+    /**
+     * @param {string} identifier
+     * @param {any} value
+     */
+    setCheckBoxValue(identifier, value) {
+        for (const checkbox of this.checkboxes) {
+            const cbdId = checkbox.attr("id");
             if (cbdId === identifier) {
-                checkboxes[i].property("checked", value);
+                checkbox.property("checked", value);
                 break;
             }
         }
-    };
+    }
 
-    configMenu.getCheckBoxValue = function (id) {
-        for (var i = 0; i < checkboxes.length; i++) {
-            var cbdId = checkboxes[i].attr("id");
+    /**
+     * @param {string} id
+     */
+    getCheckBoxValue(id) {
+        for (const checkbox of this.checkboxes) {
+            const cbdId = checkbox.attr("id");
             if (cbdId === id) {
-                return checkboxes[i].property("checked");
+                return checkbox.property("checked");
             }
         }
-    };
+    }
 
-    configMenu.updateSettings = function () {
-        var silent = true;
-        checkboxes.forEach(function (checkbox) {
-            checkbox.on("click")(silent);
+    updateSettings() {
+        const silent = true;
+        this.checkboxes.forEach((checkbox) => {
+            checkbox.on("click").call(checkbox.node(), silent);
         });
-    };
-
-    return configMenu;
-};
+    }
+}

@@ -1,67 +1,75 @@
+import d3 from "d3";
+
 /**
  * Contains the logic for the pause and resume button.
  *
  * @param graph the associated webvowl graph
  * @returns {{}}
  */
-export default function ( graph ){
-  
-  var pauseMenu = {},
-    pauseButton;
-  
+export default class PauseMenu {
+
+  /**
+   * @param {any} graph
+   */
+  constructor(graph) {
+    this.graph = graph;
+
+    this.pauseButton = undefined;
+  }
   
   /**
    * Adds the pause button to the website.
    */
-  pauseMenu.setup = function (){
+  setup(){
+    const _this = this;
     var menuEntry = d3.select("#pauseOption");
     menuEntry.on("mouseover", function (){
-      var searchMenu = graph.options().searchMenu();
+      var searchMenu = _this.graph.options().searchMenu();
       searchMenu.hideSearchEntries();
     });
-    pauseButton = d3.select("#pause-button")
+    this.pauseButton = d3.select("#pause-button")
       .datum({ paused: false })
       .on("click", function ( d ){
-        graph.paused(!d.paused);
+        _this.graph.paused(!d.paused);
         d.paused = !d.paused;
-        updatePauseButton();
-        pauseButton.classed("highlighted", d.paused);
+        _this.updatePauseButton();
+        _this.pauseButton.classed("highlighted", d.paused);
       });
     // Set these properties the first time manually
-    updatePauseButton();
+    this.updatePauseButton();
   };
   
-  pauseMenu.setPauseValue = function ( value ){
-    pauseButton.datum().paused = value;
-    graph.paused(value);
-    pauseButton.classed("highlighted", value);
-    updatePauseButton();
+  /**
+   * @param {any} value
+   */
+  setPauseValue( value ){
+    this.pauseButton.datum().paused = value;
+    this.graph.paused(value);
+    this.pauseButton.classed("highlighted", value);
+    this.updatePauseButton();
   };
   
-  function updatePauseButton(){
-    updatePauseButtonClass();
-    updatePauseButtonText();
+  updatePauseButton(){
+    this.updatePauseButtonClass();
+    this.updatePauseButtonText();
   }
   
-  function updatePauseButtonClass(){
-    pauseButton.classed("paused", function ( d ){
+  updatePauseButtonClass(){
+    this.pauseButton.classed("paused", function ( d ){
       return d.paused;
     });
   }
   
-  function updatePauseButtonText(){
-    if ( pauseButton.datum().paused ) {
-      pauseButton.text("Resume");
+  updatePauseButtonText(){
+    if ( this.pauseButton.datum().paused ) {
+      this.pauseButton.text("Resume");
     } else {
-      pauseButton.text("Pause");
+      this.pauseButton.text("Pause");
     }
   }
   
-  pauseMenu.reset = function (){
+  reset(){
     // resuming
-    pauseMenu.setPauseValue(false);
+    this.setPauseValue(false);
   };
-  
-  
-  return pauseMenu;
 };

@@ -1,48 +1,42 @@
+import d3 from "d3";
+import ExportTTLModule from "./exportTTLModule";
+
 /**
  * Contains the logic for the export button.
- * @returns {{}}
  */
-export default function (graph) {
-
-    var exportMenu = {},
-        exportSvgButton,
-        exportFilename,
-        exportJsonButton,
-        exportTurtleButton,
-        exportTexButton,
-        copyButton,
-        exportableJsonText;
-
-    var exportTTLModule = require("./exportTTLModule")(graph);
-
+export default class ExportMenu {
     /**
-     * Adds the export button to the website.
+     * @param {any} graph
      */
-    exportMenu.setup = function () {
-        exportSvgButton = d3.select("#exportSvg")
-            .on("click", exportSvg);
-        exportJsonButton = d3.select("#exportJson")
-            .on("click", exportJson);
+    constructor(graph) {
+        this.graph = graph;
+        this.exportSvgButton = null;
+        this.exportFilename = null;
+        this.exportJsonButton = null;
+        this.exportTurtleButton = null;
+        this.exportTexButton = null;
+        this.copyButton = null;
+        this.exportableJsonText = null;
+        this.exportTTLModule = new ExportTTLModule(graph);
+    }
 
-        copyButton = d3.select("#copyBt")
-            .on("click", copyUrl);
+    setup() {
+        this.exportSvgButton = d3.select("#exportSvg").on("click", () => this.exportSvg());
+        this.exportJsonButton = d3.select("#exportJson").on("click", () => this.exportJson());
+        this.copyButton = d3.select("#copyBt").on("click", () => this.copyUrl());
+        this.exportTexButton = d3.select("#exportTex").on("click", () => this.exportTex());
+        this.exportTurtleButton = d3.select("#exportTurtle").on("click", () => this.exportTurtle());
 
-        exportTexButton = d3.select("#exportTex")
-            .on("click", exportTex);
-
-        exportTurtleButton = d3.select("#exportTurtle")
-            .on("click", exportTurtle);
-
-        var menuEntry = d3.select("#m_export");
-        menuEntry.on("mouseover", function () {
-            var searchMenu = graph.options().searchMenu();
+        const menuEntry = d3.select("#m_export");
+        menuEntry.on("mouseover", () => {
+            const searchMenu = this.graph.options().searchMenu();
             searchMenu.hideSearchEntries();
-            exportMenu.exportAsUrl();
+            this.exportAsUrl();
         });
-    };
-    function exportTurtle() {
-        var success = exportTTLModule.requestExport();
-        var result = exportTTLModule.resultingTTL_Content();
+    }
+    exportTurtle() {
+        var success = this.exportTTLModule.requestExport();
+        var result = this.exportTTLModule.resultingTTLContent;
         var ontoTitle = "NewOntology";
         console.log("Exporter was successful: " + success);
         if (success) {
@@ -61,37 +55,51 @@ export default function (graph) {
             // // write the data
             var dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(result);
 
-            exportTurtleButton.attr("href", dataURI)
+            this.exportTurtleButton.attr("href", dataURI)
                 .attr("download", ontoTitle + ".ttl");
 
             // okay restore old href?
             //  exportTurtleButton.attr("href", oldHref);
         } else {
             console.log("ShowWarning!");
-            graph.options().warningModule().showExporterWarning();
+            this.graph.options().warningModule().showExporterWarning();
             console.log("Stay on the page! " + window.location.href);
-            exportTurtleButton.attr("href", window.location.href);
+            this.exportTurtleButton.attr("href", window.location.href);
+            // @ts-ignore
             d3.event.preventDefault(); // prevent the href to be called ( reloads the page otherwise )
         }
     }
 
-    exportMenu.setFilename = function (filename) {
-        exportFilename = filename || "export";
+    /**
+     * @param {string} filename
+     */
+    setFilename(filename) {
+        this.exportFilename = filename || "export";
     };
 
-    exportMenu.setJsonText = function (jsonText) {
-        exportableJsonText = jsonText;
+    /**
+     * @param {any} jsonText
+     */
+    setJsonText(jsonText) {
+        this.exportableJsonText = jsonText;
     };
 
-    function copyUrl() {
+    copyUrl() {
+        // @ts-ignore
         d3.select("#exportedUrl").node().focus();
+        // @ts-ignore
         d3.select("#exportedUrl").node().select();
         document.execCommand("copy");
-        graph.options().navigationMenu().hideAllMenus();
+        this.graph.options().navigationMenu().hideAllMenus();
+        // @ts-ignore
         d3.event.preventDefault(); // prevent the href to be called ( reloads the page otherwise )
     }
 
-    function prepareOptionString(defOpts, currOpts) {
+    /**
+     * @param {{ [x: string]: any; hasOwnProperty: (arg0: string) => any; }} defOpts
+     * @param {{ [x: string]: any; }} currOpts
+     */
+    prepareOptionString(defOpts, currOpts) {
         var setOptions = 0;
         var optsString = "opts=";
 
@@ -113,42 +121,42 @@ export default function (graph) {
         return optsString;
     }
 
-    exportMenu.exportAsUrl = function () {
+    exportAsUrl() {
         var currObj = {};
-        currObj.sidebar = graph.options().sidebar().getSidebarVisibility();
+        currObj.sidebar = this.graph.options().sidebar().getSidebarVisibility();
 
         // identify default value given by ontology;
-        var defOntValue = graph.options().filterMenu().getDefaultDegreeValue();
-        var currentValue = graph.options().filterMenu().getDegreeSliderValue();
+        var defOntValue = this.graph.options().filterMenu().getDefaultDegreeValue();
+        var currentValue = this.graph.options().filterMenu().getDegreeSliderValue();
         if (parseInt(defOntValue) === parseInt(currentValue)) {
             currObj.doc = -1;
         } else {
             currObj.doc = currentValue;
         }
 
-        currObj.cd = graph.options().classDistance();
-        currObj.dd = graph.options().datatypeDistance();
-        if (graph.editorMode() === true) {
+        currObj.cd = this.graph.options().classDistance();
+        currObj.dd = this.graph.options().datatypeDistance();
+        if (this.graph.editorMode() === true) {
             currObj.editorMode = "true";
         } else {
             currObj.editorMode = "false";
         }
-        currObj.filter_datatypes = String(graph.options().filterMenu().getCheckBoxValue("datatypeFilterCheckbox"));
-        currObj.filter_sco = String(graph.options().filterMenu().getCheckBoxValue("subclassFilterCheckbox"));
-        currObj.filter_disjoint = String(graph.options().filterMenu().getCheckBoxValue("disjointFilterCheckbox"));
-        currObj.filter_setOperator = String(graph.options().filterMenu().getCheckBoxValue("setoperatorFilterCheckbox"));
-        currObj.filter_objectProperties = String(graph.options().filterMenu().getCheckBoxValue("objectPropertyFilterCheckbox"));
-        currObj.mode_dynamic = String(graph.options().dynamicLabelWidth());
-        currObj.mode_scaling = String(graph.options().modeMenu().getCheckBoxValue("nodescalingModuleCheckbox"));
-        currObj.mode_compact = String(graph.options().modeMenu().getCheckBoxValue("compactnotationModuleCheckbox"));
-        currObj.mode_colorExt = String(graph.options().modeMenu().getCheckBoxValue("colorexternalsModuleCheckbox"));
-        currObj.mode_multiColor = String(graph.options().modeMenu().colorModeState());
-        currObj.mode_pnp = String(graph.options().modeMenu().getCheckBoxValue("pickandpinModuleCheckbox"));
-        currObj.debugFeatures = String(!graph.options().getHideDebugFeatures());
+        currObj.filter_datatypes = String(this.graph.options().filterMenu().getCheckBoxValue("datatypeFilterCheckbox"));
+        currObj.filter_sco = String(this.graph.options().filterMenu().getCheckBoxValue("subclassFilterCheckbox"));
+        currObj.filter_disjoint = String(this.graph.options().filterMenu().getCheckBoxValue("disjointFilterCheckbox"));
+        currObj.filter_setOperator = String(this.graph.options().filterMenu().getCheckBoxValue("setoperatorFilterCheckbox"));
+        currObj.filter_objectProperties = String(this.graph.options().filterMenu().getCheckBoxValue("objectPropertyFilterCheckbox"));
+        currObj.mode_dynamic = String(this.graph.options().dynamicLabelWidth());
+        currObj.mode_scaling = String(this.graph.options().modeMenu().getCheckBoxValue("nodescalingModuleCheckbox"));
+        currObj.mode_compact = String(this.graph.options().modeMenu().getCheckBoxValue("compactnotationModuleCheckbox"));
+        currObj.mode_colorExt = String(this.graph.options().modeMenu().getCheckBoxValue("colorexternalsModuleCheckbox"));
+        currObj.mode_multiColor = String(this.graph.options().modeMenu().colorModeState());
+        currObj.mode_pnp = String(this.graph.options().modeMenu().getCheckBoxValue("pickandpinModuleCheckbox"));
+        currObj.debugFeatures = String(!this.graph.options().getHideDebugFeatures());
         currObj.rect = 0;
 
-        var defObj = graph.options().initialConfig();
-        var optsString = prepareOptionString(defObj, currObj);
+        var defObj = this.graph.options().initialConfig();
+        var optsString = this.prepareOptionString(defObj, currObj);
         var urlString = String(location);
         var htmlElement;
         // when everything is default then there is nothing to write
@@ -162,13 +170,17 @@ export default function (graph) {
             var lPos = hashCode.lastIndexOf("#");
             if (lPos === -1) {
                 htmlElement = d3.select("#exportedUrl").node();
+                // @ts-ignore
                 htmlElement.value = String(location);
+                // @ts-ignore
                 htmlElement.title = String(location);
                 return;  // nothing to change in the location String
             }
             var newURL = hashCode.slice(lPos, hashCode.length);
             htmlElement = d3.select("#exportedUrl").node();
+            // @ts-ignore
             htmlElement.value = urlString + newURL;
+            // @ts-ignore
             htmlElement.title = urlString + newURL;
             return;
         }
@@ -198,46 +210,53 @@ export default function (graph) {
         }
         // building up parameter list;
         htmlElement = d3.select("#exportedUrl").node();
+        // @ts-ignore
         htmlElement.value = newUrlString;
+        // @ts-ignore
         htmlElement.title = newUrlString;
 
     };
 
-    function exportSvg() {
-        graph.options().navigationMenu().hideAllMenus();
+    exportSvg() {
+        this.graph.options().navigationMenu().hideAllMenus();
         // Get the d3js SVG element
-        var graphSvg = d3.select(graph.options().graphContainerSelector()).select("svg"),
+        var graphSvg = d3.select(this.graph.options().graphContainerSelector()).select("svg"),
             graphSvgCode,
             escapedGraphSvgCode,
             dataURI;
 
         // inline the styles, so that the exported svg code contains the css rules
-        inlineVowlStyles();
-        hideNonExportableElements();
+        this.inlineVowlStyles();
+        this.hideNonExportableElements();
 
         graphSvgCode = graphSvg.attr("version", 1.1)
             .attr("xmlns", "http://www.w3.org/2000/svg")
+            // @ts-ignore
             .node().parentNode.innerHTML;
 
         // Insert the reference to VOWL
+        // @ts-ignore
         graphSvgCode = "<!-- Created with WebVOWL (version " + webvowl.version + ")" +
             ", http://vowl.visualdataweb.org -->\n" + graphSvgCode;
 
-        escapedGraphSvgCode = escapeUnicodeCharacters(graphSvgCode);
+        escapedGraphSvgCode = this.escapeUnicodeCharacters(graphSvgCode);
         //btoa(); Creates a base-64 encoded ASCII string from a "string" of binary data.
         dataURI = "data:image/svg+xml;base64," + btoa(escapedGraphSvgCode);
 
 
-        exportSvgButton.attr("href", dataURI)
-            .attr("download", exportFilename + ".svg");
+        this.exportSvgButton.attr("href", dataURI)
+            .attr("download", this.exportFilename + ".svg");
 
         // remove graphic styles for interaction to go back to normal
-        removeVowlInlineStyles();
-        showNonExportableElements();
-        graph.lazyRefresh();
+        this.removeVowlInlineStyles();
+        this.showNonExportableElements();
+        this.graph.lazyRefresh();
     }
 
-    function escapeUnicodeCharacters(text) {
+    /**
+     * @param {string} text
+     */
+    escapeUnicodeCharacters(text) {
         var textSnippets = [],
             i, textLength = text.length,
             character,
@@ -257,67 +276,79 @@ export default function (graph) {
         return textSnippets.join("");
     }
 
-    function inlineVowlStyles() {
-        setStyleSensitively(".text", [{ name: "font-family", value: "Helvetica, Arial, sans-serif" }, {
+    inlineVowlStyles() {
+        this.setStyleSensitively(".text", [{ name: "font-family", value: "Helvetica, Arial, sans-serif" }, {
             name: "font-size",
             value: "12px"
         }]);
-        setStyleSensitively(".subtext", [{ name: "font-size", value: "9px" }]);
-        setStyleSensitively(".text.instance-count", [{ name: "fill", value: "#666" }]);
-        setStyleSensitively(".external + text .instance-count", [{ name: "fill", value: "#aaa" }]);
-        setStyleSensitively(".cardinality", [{ name: "font-size", value: "10px" }]);
-        setStyleSensitively(".text, .embedded", [{ name: "pointer-events", value: "none" }]);
-        setStyleSensitively(".class, .object, .disjoint, .objectproperty, .disjointwith, .equivalentproperty, .transitiveproperty, .functionalproperty, .inversefunctionalproperty, .symmetricproperty, .allvaluesfromproperty, .somevaluesfromproperty", [{
+        this.setStyleSensitively(".subtext", [{ name: "font-size", value: "9px" }]);
+        this.setStyleSensitively(".text.instance-count", [{ name: "fill", value: "#666" }]);
+        this.setStyleSensitively(".external + text .instance-count", [{ name: "fill", value: "#aaa" }]);
+        this.setStyleSensitively(".cardinality", [{ name: "font-size", value: "10px" }]);
+        this.setStyleSensitively(".text, .embedded", [{ name: "pointer-events", value: "none" }]);
+        this.setStyleSensitively(".class, .object, .disjoint, .objectproperty, .disjointwith, .equivalentproperty, .transitiveproperty, .functionalproperty, .inversefunctionalproperty, .symmetricproperty, .allvaluesfromproperty, .somevaluesfromproperty", [{
             name: "fill",
             value: "#acf"
         }]);
-        setStyleSensitively(".label .datatype, .datatypeproperty", [{ name: "fill", value: "#9c6" }]);
-        setStyleSensitively(".rdf, .rdfproperty", [{ name: "fill", value: "#c9c" }]);
-        setStyleSensitively(".literal, .node .datatype", [{ name: "fill", value: "#fc3" }]);
-        setStyleSensitively(".deprecated, .deprecatedproperty", [{ name: "fill", value: "#ccc" }]);
-        setStyleSensitively(".external, .externalproperty", [{ name: "fill", value: "#36c" }]);
-        setStyleSensitively("path, .nofill", [{ name: "fill", value: "none" }]);
-        setStyleSensitively("marker path", [{ name: "fill", value: "#000" }]);
-        setStyleSensitively(".class, path, line, .fineline", [{ name: "stroke", value: "#000" }]);
-        setStyleSensitively(".white, .subclass, .subclassproperty, .external + text", [{ name: "fill", value: "#fff" }]);
-        setStyleSensitively(".class.hovered, .property.hovered, .cardinality.hovered, .cardinality.focused, circle.pin, .filled.hovered, .filled.focused", [{
+        this.setStyleSensitively(".label .datatype, .datatypeproperty", [{ name: "fill", value: "#9c6" }]);
+        this.setStyleSensitively(".rdf, .rdfproperty", [{ name: "fill", value: "#c9c" }]);
+        this.setStyleSensitively(".literal, .node .datatype", [{ name: "fill", value: "#fc3" }]);
+        this.setStyleSensitively(".deprecated, .deprecatedproperty", [{ name: "fill", value: "#ccc" }]);
+        this.setStyleSensitively(".external, .externalproperty", [{ name: "fill", value: "#36c" }]);
+        this.setStyleSensitively("path, .nofill", [{ name: "fill", value: "none" }]);
+        this.setStyleSensitively("marker path", [{ name: "fill", value: "#000" }]);
+        this.setStyleSensitively(".class, path, line, .fineline", [{ name: "stroke", value: "#000" }]);
+        this.setStyleSensitively(".white, .subclass, .subclassproperty, .external + text", [{ name: "fill", value: "#fff" }]);
+        this.setStyleSensitively(".class.hovered, .property.hovered, .cardinality.hovered, .cardinality.focused, circle.pin, .filled.hovered, .filled.focused", [{
             name: "fill",
             value: "#f00"
         }, { name: "cursor", value: "pointer" }]);
-        setStyleSensitively(".focused, path.hovered", [{ name: "stroke", value: "#f00" }]);
-        setStyleSensitively(".indirect-highlighting, .feature:hover", [{ name: "fill", value: "#f90" }]);
-        setStyleSensitively(".values-from", [{ name: "stroke", value: "#69c" }]);
-        setStyleSensitively(".symbol, .values-from.filled", [{ name: "fill", value: "#69c" }]);
-        setStyleSensitively(".class, path, line", [{ name: "stroke-width", value: "2" }]);
-        setStyleSensitively(".fineline", [{ name: "stroke-width", value: "1" }]);
-        setStyleSensitively(".dashed, .anonymous", [{ name: "stroke-dasharray", value: "8" }]);
-        setStyleSensitively(".dotted", [{ name: "stroke-dasharray", value: "3" }]);
-        setStyleSensitively("rect.focused, circle.focused", [{ name: "stroke-width", value: "4px" }]);
-        setStyleSensitively(".nostroke", [{ name: "stroke", value: "none" }]);
-        setStyleSensitively("marker path", [{ name: "stroke-dasharray", value: "100" }]);
+        this.setStyleSensitively(".focused, path.hovered", [{ name: "stroke", value: "#f00" }]);
+        this.setStyleSensitively(".indirect-highlighting, .feature:hover", [{ name: "fill", value: "#f90" }]);
+        this.setStyleSensitively(".values-from", [{ name: "stroke", value: "#69c" }]);
+        this.setStyleSensitively(".symbol, .values-from.filled", [{ name: "fill", value: "#69c" }]);
+        this.setStyleSensitively(".class, path, line", [{ name: "stroke-width", value: "2" }]);
+        this.setStyleSensitively(".fineline", [{ name: "stroke-width", value: "1" }]);
+        this.setStyleSensitively(".dashed, .anonymous", [{ name: "stroke-dasharray", value: "8" }]);
+        this.setStyleSensitively(".dotted", [{ name: "stroke-dasharray", value: "3" }]);
+        this.setStyleSensitively("rect.focused, circle.focused", [{ name: "stroke-width", value: "4px" }]);
+        this.setStyleSensitively(".nostroke", [{ name: "stroke", value: "none" }]);
+        this.setStyleSensitively("marker path", [{ name: "stroke-dasharray", value: "100" }]);
     }
 
-    function setStyleSensitively(selector, styles) {
+    /**
+     * @param {string} selector
+     * @param {any[]} styles
+     */
+    setStyleSensitively(selector, styles) {
         var elements = d3.selectAll(selector);
         if (elements.empty()) {
             return;
         }
 
+        const _this = this; 
         styles.forEach(function (style) {
             elements.each(function () {
                 var element = d3.select(this);
-                if (!shouldntChangeInlineCss(element, style.name)) {
+                if (!_this.shouldntChangeInlineCss(element, style.name)) {
                     element.style(style.name, style.value);
                 }
             });
         });
     }
 
-    function shouldntChangeInlineCss(element, style) {
-        return style === "fill" && hasBackgroundColorSet(element);
+    /**
+     * @param {any} element
+     * @param {string} style
+     */
+    shouldntChangeInlineCss(element, style) {
+        return style === "fill" && this.hasBackgroundColorSet(element);
     }
 
-    function hasBackgroundColorSet(element) {
+    /**
+     * @param {{ datum: () => any; }} element
+     */
+    hasBackgroundColorSet(element) {
         var data = element.datum();
         if (data === undefined) {
             return false;
@@ -328,19 +359,21 @@ export default function (graph) {
     /**
      * For example the pin of the pick&pin module should be invisible in the exported graphic.
      */
-    function hideNonExportableElements() {
+    hideNonExportableElements() {
         d3.selectAll(".hidden-in-export").style("display", "none");
     }
 
-    function removeVowlInlineStyles() {
+    removeVowlInlineStyles() {
+        const _this = this;
         d3.selectAll(".text, .subtext, .text.instance-count, .external + text .instance-count, .cardinality, .text, .embedded, .class, .object, .disjoint, .objectproperty, .disjointwith, .equivalentproperty, .transitiveproperty, .functionalproperty, .inversefunctionalproperty, .symmetricproperty, .allvaluesfromproperty, .somevaluesfromproperty, .label .datatype, .datatypeproperty, .rdf, .rdfproperty, .literal, .node .datatype, .deprecated, .deprecatedproperty, .external, .externalproperty, path, .nofill, .symbol, .values-from.filled, marker path, .class, path, line, .fineline, .white, .subclass, .subclassproperty, .external + text, .class.hovered, .property.hovered, .cardinality.hovered, .cardinality.focused, circle.pin, .filled.hovered, .filled.focused, .focused, path.hovered, .indirect-highlighting, .feature:hover, .values-from, .class, path, line, .fineline, .dashed, .anonymous, .dotted, rect.focused, circle.focused, .nostroke, marker path")
             .each(function () {
                 var element = d3.select(this);
 
+                // @ts-ignore
                 var inlineStyles = element.node().style;
                 for (var styleName in inlineStyles) {
                     if (inlineStyles.hasOwnProperty(styleName)) {
-                        if (shouldntChangeInlineCss(element, styleName)) {
+                        if (_this.shouldntChangeInlineCss(element, styleName)) {
                             continue;
                         }
                         element.style(styleName, null);
@@ -356,6 +389,7 @@ export default function (graph) {
 
         // repair svg icons in the menu;
         var scrollContainer = d3.select("#menuElementContainer").node();
+        // @ts-ignore
         var controlElements = scrollContainer.children;
         var numEntries = controlElements.length;
 
@@ -370,20 +404,20 @@ export default function (graph) {
 
     }
 
-    function showNonExportableElements() {
+    showNonExportableElements() {
         d3.selectAll(".hidden-in-export").style("display", null);
     }
 
-    exportMenu.createJSON_exportObject = function () {
+    createJSON_exportObject() {
         var i, j, k; // an index variable for the for-loops
 
         /** get data for exporter **/
-        if (!graph.options().data()) { return {}; } // return an empty json object
+        if (!this.graph.options().data()) { return {}; } // return an empty json object
         // extract onotology information;
-        var unfilteredData = graph.getUnfilteredData();
-        var ontologyComment = graph.options().data()._comment;
-        var metaObj = graph.options().getGeneralMetaObject();
-        var header = graph.options().data().header;
+        var unfilteredData = this.graph.getUnfilteredData();
+        var ontologyComment = this.graph.options().data()._comment;
+        var metaObj = this.graph.options().getGeneralMetaObject();
+        var header = this.graph.options().data().header;
 
         if (metaObj.iri && metaObj.iri !== header.iri) {
             header.iri = metaObj.iri;
@@ -403,10 +437,14 @@ export default function (graph) {
 
 
         var exportText = {};
+        // @ts-ignore
         exportText._comment = ontologyComment;
         exportText.header = header;
-        exportText.namespace = graph.options().data().namespace;
+        exportText.namespace = this.graph.options().data().namespace;
         if (exportText.namespace === undefined) {
+            /**
+             * @type {any[]}
+             */
             exportText.namespace = []; // just an empty namespace array
         }
         // we do have now the unfiltered data which needs to be transfered to class/classAttribute and property/propertyAttribute
@@ -623,11 +661,12 @@ export default function (graph) {
         exportText.propertyAttribute = propertyAttributeObjects;
 
 
-        var nodeElements = graph.graphNodeElements();  // get visible nodes
-        var propElements = graph.graphLabelElements(); // get visible labels
+        var nodeElements = this.graph.graphNodeElements();  // get visible nodes
+        var propElements = this.graph.graphLabelElements(); // get visible labels
         // var jsonObj = JSON.parse(exportableJsonText);	   // reparse the original input json
 
         /** modify comment **/
+        // @ts-ignore
         var comment = exportText._comment;
         var additionalString = " [Additional Information added by WebVOWL Exporter Version: " + "@@WEBVOWL_VERSION" + "]";
         // adding new string to comment only if it does not exist
@@ -640,25 +679,31 @@ export default function (graph) {
         /**  remove previously stored variables **/
         for (i = 0; i < classAttribute.length; i++) {
             var classObj_del = classAttribute[i];
+            // @ts-ignore
             delete classObj_del.pos;
+            // @ts-ignore
             delete classObj_del.pinned;
         }
         var propertyObj;
         for (i = 0; i < propAttribute.length; i++) {
             propertyObj = propAttribute[i];
+            // @ts-ignore
             delete propertyObj.pos;
+            // @ts-ignore
             delete propertyObj.pinned;
         }
         /**  add new variables to jsonObj  **/
         // class attribute variables
-        nodeElements.each(function (node) {
+        nodeElements.each(function (/** @type {{ id: any; x: number; y: number; pinned: any; }} */ node) {
             var nodeId = node.id;
             for (i = 0; i < classAttribute.length; i++) {
                 var classObj = classAttribute[i];
                 if (classObj.id === nodeId) {
                     // store relative positions
+                    // @ts-ignore
                     classObj.pos = [parseFloat(node.x.toFixed(2)), parseFloat(node.y.toFixed(2))];
                     if (node.pinned)
+                        // @ts-ignore
                         classObj.pinned = true;
                     break;
                 }
@@ -670,8 +715,10 @@ export default function (graph) {
             for (i = 0; i < propAttribute.length; i++) {
                 propertyObj = propAttribute[i];
                 if (propertyObj.id === correspondingProp.id) {
+                    // @ts-ignore
                     propertyObj.pos = [parseFloat(propElements[j].x.toFixed(2)), parseFloat(propElements[j].y.toFixed(2))];
                     if (propElements[j].pinned)
+                        // @ts-ignore
                         propertyObj.pinned = true;
                     break;
                 }
@@ -681,9 +728,9 @@ export default function (graph) {
         exportText.settings = {};
 
         // Global Settings
-        var zoom = graph.scaleFactor();
-        var paused = graph.paused();
-        var translation = [parseFloat(graph.translation()[0].toFixed(2)), parseFloat(graph.translation()[1].toFixed(2))];
+        var zoom = this.graph.scaleFactor();
+        var paused = this.graph.paused();
+        var translation = [parseFloat(this.graph.translation()[0].toFixed(2)), parseFloat(this.graph.translation()[1].toFixed(2))];
         exportText.settings.global = {};
         exportText.settings.global.zoom = zoom.toFixed(2);
         exportText.settings.global.translation = translation;
@@ -695,21 +742,23 @@ export default function (graph) {
         var cb_obj;
 
         // Gravity Settings
-        var classDistance = graph.options().classDistance();
-        var datatypeDistance = graph.options().datatypeDistance();
+        var classDistance = this.graph.options().classDistance();
+        var datatypeDistance = this.graph.options().datatypeDistance();
         exportText.settings.gravity = {};
         exportText.settings.gravity.classDistance = classDistance;
         exportText.settings.gravity.datatypeDistance = datatypeDistance;
 
         // Filter Settings
-        var fMenu = graph.options().filterMenu();
+        var fMenu = this.graph.options().filterMenu();
         var fContainer = fMenu.getCheckBoxContainer();
         var cbCont = [];
         for (i = 0; i < fContainer.length; i++) {
             cb_text = fContainer[i].checkbox.attr("id");
             isEnabled = fContainer[i].checkbox.property("checked");
             cb_obj = {};
+            // @ts-ignore
             cb_obj.id = cb_text;
+            // @ts-ignore
             cb_obj.checked = isEnabled;
             cbCont.push(cb_obj);
         }
@@ -719,14 +768,16 @@ export default function (graph) {
         exportText.settings.filter.degreeSliderValue = degreeSliderVal;
 
         // Modes Settings
-        var mMenu = graph.options().modeMenu();
+        var mMenu = this.graph.options().modeMenu();
         var mContainer = mMenu.getCheckBoxContainer();
         var cb_modes = [];
         for (i = 0; i < mContainer.length; i++) {
             cb_text = mContainer[i].attr("id");
             isEnabled = mContainer[i].property("checked");
             cb_obj = {};
+            // @ts-ignore
             cb_obj.id = cb_text;
+            // @ts-ignore
             cb_obj.checked = isEnabled;
             cb_modes.push(cb_obj);
         }
@@ -741,6 +792,7 @@ export default function (graph) {
         exportObj._comment = exportText._comment;
         exportObj.header = exportText.header;
         exportObj.namespace = exportText.namespace;
+        // @ts-ignore
         exportObj.metrics = exportText.metrics;
         exportObj.settings = exportText.settings;
         exportObj.class = exportText.class;
@@ -751,52 +803,35 @@ export default function (graph) {
         return exportObj;
     };
 
-    function exportJson() {
-        graph.options().navigationMenu().hideAllMenus();
+    exportJson() {
+        this.graph.options().navigationMenu().hideAllMenus();
         /**  check if there is data **/
-        if (!exportableJsonText) {
+        if (!this.exportableJsonText) {
             alert("No graph data available.");
             // Stop the redirection to the path of the href attribute
+            // @ts-ignore
             d3.event.preventDefault();
             return;
         }
 
-        var exportObj = exportMenu.createJSON_exportObject();
+        var exportObj = this.createJSON_exportObject();
 
         // make a string again;
         var exportText = JSON.stringify(exportObj, null, '  ');
         // write the data
         var dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(exportText);
-        var jsonExportFileName = exportFilename;
+        var jsonExportFileName = this.exportFilename;
 
         if (!jsonExportFileName.endsWith(".json"))
             jsonExportFileName += ".json";
-        exportJsonButton.attr("href", dataURI)
+        this.exportJsonButton.attr("href", dataURI)
             .attr("download", jsonExportFileName);
     }
 
-    var curveFunction = d3.svg.line()
-        .x(function (d) {
-            return d.x;
-        })
-        .y(function (d) {
-            return d.y;
-        })
-        .interpolate("cardinal");
-    var loopFunction = d3.svg.line()
-        .x(function (d) {
-            return d.x;
-        })
-        .y(function (d) {
-            return d.y;
-        })
-        .interpolate("cardinal")
-        .tension(-1);
-
-    function exportTex() {
-        var zoom = graph.scaleFactor();
-        var grTranslate = graph.translation();
-        var bbox = graph.getBoundingBoxForTex();
+    exportTex() {
+        var zoom = this.graph.scaleFactor();
+        var grTranslate = this.graph.translation();
+        var bbox = this.graph.getBoundingBoxForTex();
         var comment = " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
         comment += " %        Generated with the experimental alpha version of the TeX exporter of WebVOWL (version 1.1.3) %%% \n";
         comment += " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n";
@@ -920,11 +955,12 @@ export default function (graph) {
         // get bbox coordinates;
 
 
-        graph.options().navigationMenu().hideAllMenus();
+        this.graph.options().navigationMenu().hideAllMenus();
         /**  check if there is data **/
-        if (!exportableJsonText) {
+        if (!this.exportableJsonText) {
             alert("No graph data available.");
             // Stop the redirection to the path of the href attribute
+            // @ts-ignore
             d3.event.preventDefault();
             return;
         }
@@ -932,9 +968,9 @@ export default function (graph) {
         var i = 0, identifier;
 
         /** get data for exporter **/
-        var nodeElements = graph.graphNodeElements();  // get visible nodes
-        var propElements = graph.graphLabelElements(); // get visible labels
-        var links = graph.graphLinkElements();
+        var nodeElements = this.graph.graphNodeElements();  // get visible nodes
+        var propElements = this.graph.graphLabelElements(); // get visible labels
+        var links = this.graph.graphLinkElements();
 
         // export only nodes;
         // draw Links;
@@ -982,9 +1018,9 @@ export default function (graph) {
 
             if (link.layers === 1 && !link.loops) {
 
-                linkDomainIntersection = graph.math().calculateIntersection(link.range, link.domain, 1);
-                linkRangeIntersection = graph.math().calculateIntersection(link.domain, link.range, 1);
-                center = graph.math().calculateCenter(linkDomainIntersection, linkRangeIntersection);
+                linkDomainIntersection = this.graph.math().calculateIntersection(link.range, link.domain, 1);
+                linkRangeIntersection = this.graph.math().calculateIntersection(link.domain, link.range, 1);
+                center = this.graph.math().calculateCenter(linkDomainIntersection, linkRangeIntersection);
                 dx = linkDomainIntersection.x;
                 dy = -linkDomainIntersection.y;
                 px = center.x;
@@ -1013,14 +1049,14 @@ export default function (graph) {
             else {
                 if (link.isLoop()) {
                     isLoop = ", tension=3";
-                    controlPoints = graph.math().calculateLoopPoints(link);
+                    controlPoints = this.graph.math().calculateLoopPoints(link);
                     pathStart = controlPoints[0];
                     curvePoint = controlPoints[1];
                     pathEnd = controlPoints[2];
                 } else {
                     curvePoint = link.label;
-                    pathStart = graph.math().calculateIntersection(curvePoint, link.domain, 1);
-                    pathEnd = graph.math().calculateIntersection(curvePoint, link.range, 1);
+                    pathStart = this.graph.math().calculateIntersection(curvePoint, link.domain, 1);
+                    pathEnd = this.graph.math().calculateIntersection(curvePoint, link.range, 1);
                 }
                 dx = pathStart.x;
                 dy = -pathStart.y;
@@ -1139,7 +1175,7 @@ export default function (graph) {
         }
 
 
-        nodeElements.each(function (node) {
+        nodeElements.each(function (/** @type {{ x: any; y: number; labelForCurrentLanguage: () => any; type: string; textBlock: { textBlock: { style: (arg0: string) => any; node: () => { (): any; new (): any; children: any; }; }; }; individuals: string | any[]; attributes: string | string[]; labelWidth: any; smallestRadius: number; backgroundColor: any; }} */ node) {
 
             px = node.x;
             py = -node.y;
@@ -1219,6 +1255,7 @@ export default function (graph) {
             var leftPos = px - 7;
             var rightPos = px + 7;
             var txtOffset = py + 20;
+            // @ts-ignore
             if (node.type !== "owl:unionOf" || node.type !== "owl:disjointUnionOf") {
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
             }
@@ -1348,7 +1385,7 @@ export default function (graph) {
                 texString += "\\node[disjointWith , text=black] at (" + leftPos + "pt, " + p_py + "pt)   (SymbolNode" + i + ") {};\n";
                 texString += "\\node[disjointWith , text=black] at (" + rightPos + "pt, " + p_py + "pt)   (SymbolNode" + i + ") {};\n";
                 texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + p_px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {";
-                if (graph.options().compactNotation() === false) {
+                if (this.graph.options().compactNotation() === false) {
                     texString += "(disjoint)";
                 }
                 texString += "};\n";
@@ -1433,7 +1470,7 @@ export default function (graph) {
 
         //   console.log("Tex Output\n"+ texString);
         var dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(texString);
-        exportTexButton.attr("href", dataURI)
-            .attr("download", exportFilename + ".tex");
+        this.exportTexButton.attr("href", dataURI)
+            .attr("download", this.exportFilename + ".tex");
     }
 };
