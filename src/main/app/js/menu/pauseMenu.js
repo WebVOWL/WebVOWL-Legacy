@@ -20,7 +20,7 @@ export default class PauseMenu {
   /**
    * Adds the pause button to the website.
    */
-  setup(){
+  setup() {
     const _this = this;
     var menuEntry = d3.select("#pauseOption");
     menuEntry.on("mouseover", function (){
@@ -42,25 +42,25 @@ export default class PauseMenu {
   /**
    * @param {any} value
    */
-  setPauseValue( value ){
+  setPauseValue( value ) {
     this.pauseButton.datum().paused = value;
     this.graph.paused(value);
     this.pauseButton.classed("highlighted", value);
     this.updatePauseButton();
   };
   
-  updatePauseButton(){
+  updatePauseButton() {
     this.updatePauseButtonClass();
     this.updatePauseButtonText();
   }
   
-  updatePauseButtonClass(){
+  updatePauseButtonClass() {
     this.pauseButton.classed("paused", function ( d ){
       return d.paused;
     });
   }
   
-  updatePauseButtonText(){
+  updatePauseButtonText() {
     if ( this.pauseButton.datum().paused ) {
       this.pauseButton.text("Resume");
     } else {
@@ -68,7 +68,7 @@ export default class PauseMenu {
     }
   }
   
-  reset(){
+  reset() {
     // resuming
     this.setPauseValue(false);
   };

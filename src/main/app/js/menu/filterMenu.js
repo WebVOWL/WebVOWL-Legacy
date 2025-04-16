@@ -43,6 +43,7 @@ export default class FilterMenu {
   getDegreeSliderValue() {
     return this.degreeSlider.property("value");
   };
+
   /**
    * Connects the website with graph filters.
    * @param {any} datatypeFilter filter for all datatypes
@@ -271,7 +272,6 @@ export default class FilterMenu {
       this.menuControl.classed("filterMenuButtonHighlight", enable);
     }
   };
-
 
   /**
    * setting manually the values of the filter

@@ -6,7 +6,7 @@ import d3 from "d3";
  * @param graph the associated webvowl graph
  * @returns {{}}
  */
-export default class GravityMenu{
+export default class GravityMenu {
 
   /**
    * @param {any} graph

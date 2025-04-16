@@ -1,6 +1,5 @@
 import d3 from "d3";
 
-
 export default class {
 
     /**
@@ -88,6 +87,7 @@ export default class {
             this.currentLoadedOntologyName = ontoName;
         }
     };
+
     /**
      * Only cache ontology if it is less than 50 MB
      * @param {string} text
@@ -221,7 +221,6 @@ export default class {
         d3.select("#currentLoadingStep").node().innerHTML = msg;
         this.loadingModule.scrollDownDetails();
     }
-
 
     setupConverterButtons() {
         const _this = this;
@@ -466,8 +465,8 @@ export default class {
         };
         this.timedLoadingStatusLogger();
         xhr.send(formData);
-
     };
+
     /**
      * @param {any[]} parameter
      */
@@ -555,7 +554,6 @@ export default class {
         this.graph.handleOnLoadingError();
         this.conversionFinished();
     }
-
 
     /**
      * @param {any[]} parameter

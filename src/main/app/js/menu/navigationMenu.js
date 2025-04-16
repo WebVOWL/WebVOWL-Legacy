@@ -51,7 +51,6 @@ export default class NavigationMenu {
       return;
     }
     this.t_scrollRight = requestAnimationFrame(this.timed_scrollRight);
-
   }
 
   timed_scrollLeft() {
@@ -275,7 +274,6 @@ export default class NavigationMenu {
     } else {
       this.rightButton.classed("hidden", false);
     }
-
   };
 
   setup() {

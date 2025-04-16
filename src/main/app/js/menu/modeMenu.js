@@ -40,13 +40,10 @@ export default class ModeMenu {
     setDynamicLabelWidth(val) {
         this.dynamicLabelWidthCheckBox.property("checked", val);
     };
+
     // getter for checkboxes
     getCheckBoxContainer() {
         return this.checkboxes;
-    };
-    // getter for the color switch [needed? ]
-    colorModeSwitch() {
-        return this.colorModeSwitch;
     };
 
     /**
@@ -288,6 +285,7 @@ export default class ModeMenu {
             }
         }
     };
+
     /**
      * @param {any} id
      */
@@ -339,6 +337,7 @@ export default class ModeMenu {
         this.colorModeSwitch.on("click")(silent);
     };
 };
+
 /**
  * @param {any} _button
  * @param {{ enabled: any; }} _colorExternalsMode

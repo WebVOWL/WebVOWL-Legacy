@@ -6,7 +6,7 @@ import d3 from "d3";
  * @param graph the associated webvowl graph
  * @returns {{}}
  */
-export default class ResetMenu{
+export default class ResetMenu {
 
   /**
    * @param {{ graphOptions: () => any; }} graph
@@ -36,7 +36,7 @@ export default class ResetMenu{
     });
   };
   
-  resetGraph(){
+  resetGraph() {
     // @ts-ignore
     this.graph.resetSearchHighlight();
     // @ts-ignore
