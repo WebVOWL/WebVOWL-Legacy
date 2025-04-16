@@ -1,149 +1,193 @@
-export default function ( graph ){
-  var debugMenu = {},
-    checkboxes = [];
-  
-  
-  var hoverFlag = false;
-  var specialCbx;
-  debugMenu.setup = function (){
-    var menuEntry = d3.select("#debugMenuHref");
-    
-    menuEntry.on("mouseover", function (){
-      if ( hoverFlag === false ) {
-        var searchMenu = graph.options().searchMenu();
+import d3 from "d3";
+
+export class DebugMenu {
+  /**
+   * @param {any} graph
+   */
+  constructor(graph) {
+    this.graph = graph;
+    /**
+     * @type {any[]}
+     */
+    this.checkboxes = [];
+    this.hoverFlag = false;
+    /**
+     * @type {any}
+     */
+    this.specialCbx = null;
+  }
+
+  setup() {
+    const menuEntry = d3.select("#debugMenuHref");
+
+    menuEntry.on("mouseover", () => {
+      if (this.hoverFlag === false) {
+        const searchMenu = this.graph.options().searchMenu();
         searchMenu.hideSearchEntries();
-        specialCbx.on("click")(true);
-        if ( graph.editorMode() === false ) {
+        this.specialCbx.node().click();
+        if (this.graph.editorMode() === false) {
           d3.select("#useAccuracyHelper").style("color", "#979797");
           d3.select("#useAccuracyHelper").style("pointer-events", "none");
-          
-          // regardless the state on which useAccuracyHelper is , we are not in editing mode -> disable it
+
           d3.select("#showDraggerObject").style("color", "#979797");
           d3.select("#showDraggerObject").style("pointer-events", "none");
         } else {
           d3.select("#useAccuracyHelper").style("color", "#2980b9");
           d3.select("#useAccuracyHelper").style("pointer-events", "auto");
         }
-        hoverFlag = true;
+        this.hoverFlag = true;
       }
     });
-    menuEntry.on("mouseout", function (){
-      hoverFlag = false;
+
+    menuEntry.on("mouseout", () => {
+      this.hoverFlag = false;
     });
-    
-    
-    specialCbx = addCheckBox("useAccuracyHelper", "Use accuracy helper", "#useAccuracyHelper", graph.options().useAccuracyHelper,
-      function ( enabled, silent ){
-        if ( !enabled ) {
+
+    this.specialCbx = this.addCheckBox(
+      "useAccuracyHelper",
+      "Use accuracy helper",
+      "#useAccuracyHelper",
+      this.graph.options().useAccuracyHelper,
+      (/** @type {any} */ enabled, /** @type {boolean} */ silent) => {
+        if (!enabled) {
           d3.select("#showDraggerObject").style("color", "#979797");
           d3.select("#showDraggerObject").style("pointer-events", "none");
-          d3.select("#showDraggerObjectConfigCheckbox").node().checked = false;
+          // @ts-ignore
+          (d3.select("#showDraggerObjectConfigCheckbox").node()).checked = false;
         } else {
           d3.select("#showDraggerObject").style("color", "#2980b9");
           d3.select("#showDraggerObject").style("pointer-events", "auto");
         }
-        
-        if ( silent === true ) return;
-        graph.lazyRefresh();
-        graph.updateDraggerElements();
+
+        if (silent === true) return;
+        this.graph.lazyRefresh();
+        this.graph.updateDraggerElements();
       }
     );
-    addCheckBox("showDraggerObject", "Show accuracy helper", "#showDraggerObject", graph.options().showDraggerObject,
-      function ( enabled, silent ){
-        if ( silent === true ) return;
-        graph.lazyRefresh();
-        graph.updateDraggerElements();
-      });
-    addCheckBox("showFPS_Statistics", "Show rendering statistics", "#showFPS_Statistics", graph.options().showRenderingStatistic,
-      function ( enabled, silent ){
-        
-        if ( graph.options().getHideDebugFeatures() === false ) {
+
+    this.addCheckBox(
+      "showDraggerObject",
+      "Show accuracy helper",
+      "#showDraggerObject",
+      this.graph.options().showDraggerObject,
+      (/** @type {any} */ _enabled, /** @type {boolean} */ silent) => {
+        if (silent === true) return;
+        this.graph.lazyRefresh();
+        this.graph.updateDraggerElements();
+      }
+    );
+
+    this.addCheckBox(
+      "showFPS_Statistics",
+      "Show rendering statistics",
+      "#showFPS_Statistics",
+      this.graph.options().showRenderingStatistic,
+      (/** @type {any} */ enabled, /** @type {any} */ _silent) => {
+        if (this.graph.options().getHideDebugFeatures() === false) {
           d3.select("#FPS_Statistics").classed("hidden", !enabled);
         } else {
           d3.select("#FPS_Statistics").classed("hidden", true);
         }
-        
-        
-      });
-    addCheckBox("showModeOfOperation", "Show input modality", "#showModeOfOperation", graph.options().showInputModality,
-      function ( enabled ){
-        if ( graph.options().getHideDebugFeatures() === false ) {
+      }
+    );
+
+    this.addCheckBox(
+      "showModeOfOperation",
+      "Show input modality",
+      "#showModeOfOperation",
+      this.graph.options().showInputModality,
+      (/** @type {any} */ enabled) => {
+        if (this.graph.options().getHideDebugFeatures() === false) {
           d3.select("#modeOfOperationString").classed("hidden", !enabled);
         } else {
           d3.select("#modeOfOperationString").classed("hidden", true);
         }
-      });
-    
-    
-  };
-  
-  
-  function addCheckBox( identifier, modeName, selector, onChangeFunc, _callbackFunction ){
-    var configOptionContainer = d3.select(selector)
+      }
+    );
+  }
+
+  /**
+   * @param {string} identifier
+   * @param {string | number | boolean | import("d3-selection").ValueFn<HTMLLabelElement, any, string | number | boolean>} modeName
+   * @param {string} selector
+   * @param {(arg0: undefined) => void} onChangeFunc
+   * @param {{ (enabled: any, silent: boolean): void; (_enabled: any, silent: boolean): void; (enabled: any, _silent: any): void; (enabled: any): void; (arg0: any, arg1: any): void; }} callbackFunction
+   */
+  addCheckBox(identifier, modeName, selector, onChangeFunc, callbackFunction) {
+    const configOptionContainer = d3
+      .select(selector)
       .append("div")
       .classed("checkboxContainer", true);
-    var configCheckbox = configOptionContainer.append("input")
+
+    const configCheckbox = configOptionContainer
+      .append("input")
       .classed("moduleCheckbox", true)
       .attr("id", identifier + "ConfigCheckbox")
       .attr("type", "checkbox")
       .property("checked", onChangeFunc());
-    
-    
-    configCheckbox.on("click", function ( silent ){
-      var isEnabled = configCheckbox.property("checked");
+
+    configCheckbox.on("click", (silent) => {
+      const isEnabled = configCheckbox.property("checked");
       onChangeFunc(isEnabled);
-      _callbackFunction(isEnabled, silent);
-      
+      callbackFunction(isEnabled, silent);
     });
-    checkboxes.push(configCheckbox);
-    configOptionContainer.append("label")
+
+    this.checkboxes.push(configCheckbox);
+
+    configOptionContainer
+      .append("label")
       .attr("for", identifier + "ConfigCheckbox")
       .text(modeName);
-    
+
     return configCheckbox;
   }
-  
-  debugMenu.setCheckBoxValue = function ( identifier, value ){
-    for ( var i = 0; i < checkboxes.length; i++ ) {
-      var cbdId = checkboxes[i].attr("id");
-      if ( cbdId === identifier ) {
-        checkboxes[i].property("checked", value);
+
+  /**
+   * @param {string} identifier
+   * @param {any} value
+   */
+  setCheckBoxValue(identifier, value) {
+    for (const checkbox of this.checkboxes) {
+      const cbdId = checkbox.attr("id");
+      if (cbdId === identifier) {
+        checkbox.property("checked", value);
         break;
       }
     }
-  };
-  
-  debugMenu.getCheckBoxValue = function ( id ){
-    for ( var i = 0; i < checkboxes.length; i++ ) {
-      var cbdId = checkboxes[i].attr("id");
-      if ( cbdId === id ) {
-        return checkboxes[i].property("checked");
+  }
+
+  /**
+   * @param {any} id
+   */
+  getCheckBoxValue(id) {
+    for (const checkbox of this.checkboxes) {
+      const cbdId = checkbox.attr("id");
+      if (cbdId === id) {
+        return checkbox.property("checked");
       }
     }
-  };
-  
-  debugMenu.updateSettings = function (){
-    d3.selectAll(".debugOption").classed("hidden", graph.options().getHideDebugFeatures());
-    
-    var silent = true;
-    checkboxes.forEach(function ( checkbox ){
+  }
+
+  updateSettings() {
+    d3.selectAll(".debugOption").classed(
+      "hidden",
+      this.graph.options().getHideDebugFeatures()
+    );
+
+    const silent = true;
+    this.checkboxes.forEach((checkbox) => {
       checkbox.on("click")(silent);
     });
-    if ( graph.editorMode() === false ) {
-      
+
+    if (this.graph.editorMode() === false) {
       d3.select("#useAccuracyHelper").style("color", "#979797");
       d3.select("#useAccuracyHelper").style("pointer-events", "none");
-      
-      // regardless the state on which useAccuracyHelper is , we are not in editing mode -> disable it
+
       d3.select("#showDraggerObject").style("color", "#979797");
       d3.select("#showDraggerObject").style("pointer-events", "none");
     } else {
-      
       d3.select("#useAccuracyHelper").style("color", "#2980b9");
       d3.select("#useAccuracyHelper").style("pointer-events", "auto");
     }
-    
-  };
-  
-  return debugMenu;
-};
+  }
+}

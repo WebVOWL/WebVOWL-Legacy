@@ -7,6 +7,7 @@
   "author": "Vincent Link",
   "license": "MIT",
   "dependencies": {
-    "css": "^2.1.0"
+    "css": "^2.1.0",
+    "VowlCssToD3RuleConverter": "file:"
   }
 }

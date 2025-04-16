@@ -1,114 +1,128 @@
+import d3 from "d3";
+
 /** The zoom Slider **/
-export default function (graph) {
-  var zoomSlider = {};
-  var minMag = graph.options().minMagnification(),
-    maxMag = graph.options().maxMagnification(),
-    defZoom,
-    t_zoomOut,
-    t_zoomIn,
-    zoomValue,
-    showSlider = true,
-    w = graph.options().width(),
-    h = graph.options().height(),
-    slider;
+export default class ZoomSlider {
 
-  defZoom = Math.min(w, h) / 1000;
+  /**
+   * @param {any} graph
+   */
+  constructor(graph) {
+    this.graph = graph;
 
-  function clearAllTimers() {
-    cancelAnimationFrame(t_zoomOut);
-    cancelAnimationFrame(t_zoomIn);
+    this.minMag = graph.options().minMagnification();
+    this.maxMag = graph.options().maxMagnification();
+    this.t_zoomOut = undefined;
+    this.t_zoomIn = undefined;
+    this.zoomValue = undefined;
+    // @ts-ignore
+    this.showSlider = true;
+    this.w = graph.options().width();
+    this.h = graph.options().height();
+    this.slider = undefined;
+    this.defZoom = Math.min(this.w, this.h) / 1000;
   }
 
-  function timed_zoomOut() {
-    zoomValue = 0.98 * zoomValue;
+  clearAllTimers() {
+    cancelAnimationFrame(this.t_zoomOut);
+    cancelAnimationFrame(this.t_zoomIn);
+  }
+
+  timed_zoomOut() {
+    this.zoomValue = 0.98 * this.zoomValue;
     // fail saves
-    if (zoomValue < minMag) {
-      zoomValue = minMag;
+    if (this.zoomValue < this.minMag) {
+      this.zoomValue = this.minMag;
     }
-    graph.setSliderZoom(zoomValue);
-    t_zoomOut = requestAnimationFrame(timed_zoomOut);
+    this.graph.setSliderZoom(this.zoomValue);
+    this.t_zoomOut = requestAnimationFrame(this.timed_zoomOut);
   }
 
-  function timed_zoomIn() {
-    zoomValue = 1.02 * zoomValue;
+  timed_zoomIn() {
+    this.zoomValue = 1.02 * this.zoomValue;
     // fail saves
-    if (zoomValue > maxMag) {
-      zoomValue = maxMag;
+    if (this.zoomValue > this.maxMag) {
+      this.zoomValue = this.maxMag;
     }
-    graph.setSliderZoom(zoomValue);
-    t_zoomIn = requestAnimationFrame(timed_zoomIn);
+    this.graph.setSliderZoom(this.zoomValue);
+    this.t_zoomIn = requestAnimationFrame(this.timed_zoomIn);
   }
 
-  zoomSlider.setup = function () {
-    slider = d3.select("#zoomSliderParagraph").append("input")
+  setup() {
+    const _this = this;
+    this.slider = d3.select("#zoomSliderParagraph").append("input")
       .datum({})
       .attr("id", "zoomSliderElement")
       .attr("type", "range")
-      .attr("value", defZoom)
-      .attr("min", minMag)
-      .attr("max", maxMag)
-      .attr("step", (maxMag - minMag) / 40)
+      .attr("value", this.defZoom)
+      .attr("min", this.minMag)
+      .attr("max", this.maxMag)
+      .attr("step", (this.maxMag - this.minMag) / 40)
       .attr("title", "zoom factor")
       .on("input", function () {
-        zoomSlider.zooming();
+        _this.zooming();
       });
 
     d3.select("#zoomOutButton").on("mousedown", function () {
-      graph.options().navigationMenu().hideAllMenus();
-      zoomValue = graph.scaleFactor();
-      t_zoomOut = requestAnimationFrame(timed_zoomOut);
+      _this.graph.options().navigationMenu().hideAllMenus();
+      _this.zoomValue = _this.graph.scaleFactor();
+      _this.t_zoomOut = requestAnimationFrame(_this.timed_zoomOut);
     })
       .on("touchstart", function () {
-        graph.options().navigationMenu().hideAllMenus();
-        zoomValue = graph.scaleFactor();
-        t_zoomOut = requestAnimationFrame(timed_zoomOut);
+        _this.graph.options().navigationMenu().hideAllMenus();
+        _this.zoomValue = _this.graph.scaleFactor();
+        _this.t_zoomOut = requestAnimationFrame(_this.timed_zoomOut);
       })
-      .on("mouseup", clearAllTimers)
-      .on("touchend", clearAllTimers)
-      .on("touchcancel", clearAllTimers)
+      .on("mouseup", this.clearAllTimers)
+      .on("touchend", this.clearAllTimers)
+      .on("touchcancel", this.clearAllTimers)
       .attr("title", "zoom out");
 
     d3.select("#zoomInButton").on("mousedown", function () {
-      graph.options().navigationMenu().hideAllMenus();
-      zoomValue = graph.scaleFactor();
-      t_zoomIn = requestAnimationFrame(timed_zoomIn);
+      _this.graph.options().navigationMenu().hideAllMenus();
+      _this.zoomValue = _this.graph.scaleFactor();
+      _this.t_zoomIn = requestAnimationFrame(_this.timed_zoomIn);
     })
       .on("touchstart", function () {
-        graph.options().navigationMenu().hideAllMenus();
-        zoomValue = graph.scaleFactor();
-        t_zoomIn = requestAnimationFrame(timed_zoomIn);
+        _this.graph.options().navigationMenu().hideAllMenus();
+        _this.zoomValue = _this.graph.scaleFactor();
+        _this.t_zoomIn = requestAnimationFrame(_this.timed_zoomIn);
       })
-      .on("mouseup", clearAllTimers)
-      .on("touchend", clearAllTimers)
-      .on("touchcancel", clearAllTimers)
+      .on("mouseup", this.clearAllTimers)
+      .on("touchend", this.clearAllTimers)
+      .on("touchcancel", this.clearAllTimers)
       .attr("title", "zoom in");
 
     d3.select("#centerGraphButton").on("click", function () {
-      graph.options().navigationMenu().hideAllMenus();
-      graph.forceRelocationEvent();
+      _this.graph.options().navigationMenu().hideAllMenus();
+      _this.graph.forceRelocationEvent();
     }).attr("title", "center graph");
 
   };
 
-  zoomSlider.showSlider = function (val) {
-    if (!arguments.length) return showSlider;
+  /**
+   * @param {any} val
+   */
+  // @ts-ignore
+  showSlider(val) {
+    if (!arguments.length) return this.showSlider;
     d3.select("#zoomSlider").classed("hidden", !val);
-    showSlider = val;
+    this.showSlider = val;
   };
 
-  zoomSlider.zooming = function () {
-    graph.options().navigationMenu().hideAllMenus();
-    var zoomValue = slider.property("value");
-    slider.attr("value", zoomValue);
-    graph.setSliderZoom(zoomValue);
+  zooming() {
+    this.graph.options().navigationMenu().hideAllMenus();
+    var zoomValue = this.slider.property("value");
+    this.slider.attr("value", zoomValue);
+    this.graph.setSliderZoom(zoomValue);
   };
 
-  zoomSlider.updateZoomSliderValue = function (val) {
-    if (slider) {
-      slider.attr("value", val);
-      slider.property("value", val);
+  /**
+   * @param {any} val
+   */
+  updateZoomSliderValue(val) {
+    if (this.slider) {
+      this.slider.attr("value", val);
+      this.slider.property("value", val);
     }
   };
-
-  return zoomSlider;
 };

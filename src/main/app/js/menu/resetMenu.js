@@ -1,48 +1,59 @@
+import d3 from "d3";
+
 /**
  * Contains the logic for the reset button.
  *
  * @param graph the associated webvowl graph
  * @returns {{}}
  */
-export default function ( graph ){
-  
-  var resetMenu = {},
-    options = graph.graphOptions(),
-    resettableModules,
-    untouchedOptions = webvowl.options();
-  
+export default class ResetMenu {
+
+  /**
+   * @param {{ graphOptions: () => any; }} graph
+   */
+  constructor(graph){
+    this.graph = graph;
+
+    this.resetMenu = {};
+    this.options = graph.graphOptions();
+    this.resettableModules = undefined;
+    // @ts-ignore
+    this.untouchedOptions = webvowl.options();
+  }
   
   /**
    * Adds the reset button to the website.
-   * @param _resettableModules modules that can be resetted
+   * @param {any} _resettableModules modules that can be resetted
    */
-  resetMenu.setup = function ( _resettableModules ){
-    resettableModules = _resettableModules;
-    d3.select("#reset-button").on("click", resetGraph);
+  setup( _resettableModules ){
+    this.resettableModules = _resettableModules;
+    d3.select("#reset-button").on("click", this.resetGraph);
     var menuEntry = d3.select("#resetOption");
     menuEntry.on("mouseover", function (){
+      // @ts-ignore
       var searchMenu = graph.options().searchMenu();
       searchMenu.hideSearchEntries();
     });
   };
   
-  function resetGraph(){
-    graph.resetSearchHighlight();
-    graph.options().searchMenu().clearText();
-    options.classDistance(untouchedOptions.classDistance());
-    options.datatypeDistance(untouchedOptions.datatypeDistance());
-    options.charge(untouchedOptions.charge());
-    options.gravity(untouchedOptions.gravity());
-    options.linkStrength(untouchedOptions.linkStrength());
-    graph.reset();
+  resetGraph() {
+    // @ts-ignore
+    this.graph.resetSearchHighlight();
+    // @ts-ignore
+    this.graph.options().searchMenu().clearText();
+    this.options.classDistance(this.untouchedOptions.classDistance());
+    this.options.datatypeDistance(this.untouchedOptions.datatypeDistance());
+    this.options.charge(this.untouchedOptions.charge());
+    this.options.gravity(this.untouchedOptions.gravity());
+    this.options.linkStrength(this.untouchedOptions.linkStrength());
+    // @ts-ignore
+    this.graph.reset();
     
-    resettableModules.forEach(function ( module ){
+    this.resettableModules.forEach(function ( /** @type {{ reset: () => void; }} */ module ){
       module.reset();
     });
     
-    graph.updateStyle();
+    // @ts-ignore
+    this.graph.updateStyle();
   }
-  
-  
-  return resetMenu;
 };

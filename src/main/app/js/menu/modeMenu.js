@@ -1,58 +1,83 @@
+import d3 from "d3";
+
 /**
  * Contains the logic for connecting the modes with the website.
  *
  * @param graph the graph that belongs to these controls
  * @returns {{}}
  */
-export default function (graph) {
+export default class ModeMenu {
 
-    var SAME_COLOR_MODE = { text: "Multicolor", type: "same" };
-    var GRADIENT_COLOR_MODE = { text: "Multicolor", type: "gradient" };
+    /**
+     * @param {any} graph
+     */
+    constructor(graph) {
+        this.graph = graph;
 
-    var modeMenu = {},
-        checkboxes = [],
-        colorModeSwitch;
-
-    var dynamicLabelWidthCheckBox;
+        this.SAME_COLOR_MODE = { text: "Multicolor", type: "same" };
+        this.GRADIENT_COLOR_MODE = { text: "Multicolor", type: "gradient" };
+        /**
+         * @type {{ property: (arg0: string) => any; }[]}
+         */
+        this.checkboxes = [];
+        this.colorModeSwitch = undefined;
+    
+        this.dynamicLabelWidthCheckBox = undefined;
+    }
+    
     // getter and setter for the state of color modes
-    modeMenu.colorModeState = function (s) {
-        if (!arguments.length) return colorModeSwitch.datum().active;
-        colorModeSwitch.datum().active = s;
-        return modeMenu;
+    colorModeState(/** @type {any} */ s) {
+        // @ts-ignore
+        if (!arguments.length) return this.colorModeSwitch.datum().active;
+        // @ts-ignore
+        this.colorModeSwitch.datum().active = s;
+        return this;
     };
 
-
-    modeMenu.setDynamicLabelWidth = function (val) {
-        dynamicLabelWidthCheckBox.property("checked", val);
+    /**
+     * @param {any} val
+     */
+    setDynamicLabelWidth(val) {
+        this.dynamicLabelWidthCheckBox.property("checked", val);
     };
+
     // getter for checkboxes
-    modeMenu.getCheckBoxContainer = function () {
-        return checkboxes;
-    };
-    // getter for the color switch [needed? ]
-    modeMenu.colorModeSwitch = function () {
-        return colorModeSwitch;
+    getCheckBoxContainer() {
+        return this.checkboxes;
     };
 
     /**
      * Connects the website with the available graph modes.
+     * @param {any} pickAndPin
+     * @param {any} nodeScaling
+     * @param {any} compactNotation
+     * @param {any} colorExternals
      */
-    modeMenu.setup = function (pickAndPin, nodeScaling, compactNotation, colorExternals) {
+    setup(pickAndPin, nodeScaling, compactNotation, colorExternals) {
+        const _this = this;
         var menuEntry = d3.select("#m_modes");
         menuEntry.on("mouseover", function () {
-            var searchMenu = graph.options().searchMenu();
+            var searchMenu = _this.graph.options().searchMenu();
             searchMenu.hideSearchEntries();
         });
-        addCheckBoxD("labelWidth", "Dynamic label width", "#dynamicLabelWidth", graph.options().dynamicLabelWidth, 1);
-        addCheckBox("editorMode", "Editing ", "#editMode", graph.editorMode);
-        addModeItem(pickAndPin, "pickandpin", "Pick & pin", "#pickAndPinOption", false);
-        addModeItem(nodeScaling, "nodescaling", "Node scaling", "#nodeScalingOption", true);
-        addModeItem(compactNotation, "compactnotation", "Compact notation", "#compactNotationOption", true);
-        var container = addModeItem(colorExternals, "colorexternals", "Color externals", "#colorExternalsOption", true);
-        colorModeSwitch = addExternalModeSelection(container, colorExternals);
+        this.addCheckBoxD("labelWidth", "Dynamic label width", "#dynamicLabelWidth", this.graph.options().dynamicLabelWidth, 1);
+        this.addCheckBox("editorMode", "Editing ", "#editMode", this.graph.editorMode);
+        this.addModeItem(pickAndPin, "pickandpin", "Pick & pin", "#pickAndPinOption", false);
+        this.addModeItem(nodeScaling, "nodescaling", "Node scaling", "#nodeScalingOption", true);
+        this.addModeItem(compactNotation, "compactnotation", "Compact notation", "#compactNotationOption", true);
+        var container = this.addModeItem(colorExternals, "colorexternals", "Color externals", "#colorExternalsOption", true);
+        this.colorModeSwitch = this.addExternalModeSelection(container, colorExternals);
     };
 
-    function addCheckBoxD(identifier, modeName, selector, onChangeFunc, updateLvl) {
+    /**
+     * @param {string} identifier
+     * @param {string | number | boolean | d3.ValueFn<HTMLLabelElement, any, string | number | boolean>} modeName
+     * @param {any} selector
+     * @param {(arg0: undefined) => void} onChangeFunc
+     * @param {number} updateLvl
+     */
+    addCheckBoxD(identifier, modeName, selector, onChangeFunc, updateLvl) {
+        const _this = this;
         var moduleOptionContainer = d3.select(selector)
             .append("div")
             .classed("checkboxContainer", true);
@@ -66,12 +91,13 @@ export default function (graph) {
         moduleCheckbox.on("click", function (d) {
             var isEnabled = moduleCheckbox.property("checked");
             onChangeFunc(isEnabled);
+            // @ts-ignore
             d3.select("#maxLabelWidthSlider").node().disabled = !isEnabled;
             d3.select("#maxLabelWidthvalueLabel").classed("disabledLabelForSlider", !isEnabled);
             d3.select("#maxLabelWidthDescriptionLabel").classed("disabledLabelForSlider", !isEnabled);
 
             if (updateLvl > 0) {
-                graph.animateDynamicLabelWidth();
+                _this.graph.animateDynamicLabelWidth();
                 // graph.lazyRefresh();
             }
         });
@@ -83,10 +109,17 @@ export default function (graph) {
                 .attr("style", "font-size:10px;padding-top:3px")
                 .text("(experimental)");
         }
-        dynamicLabelWidthCheckBox = moduleCheckbox;
+        this.dynamicLabelWidthCheckBox = moduleCheckbox;
     }
 
-    function addCheckBox(identifier, modeName, selector, onChangeFunc) {
+    /**
+     * @param {string} identifier
+     * @param {string | number | boolean | d3.ValueFn<HTMLLabelElement, any, string | number | boolean>} modeName
+     * @param {string} selector
+     * @param {(arg0: undefined) => void} onChangeFunc
+     */
+    addCheckBox(identifier, modeName, selector, onChangeFunc) {
+        const _this = this;
         var moduleOptionContainer = d3.select(selector)
             .append("div")
             .classed("checkboxContainer", true);
@@ -101,7 +134,7 @@ export default function (graph) {
             var isEnabled = moduleCheckbox.property("checked");
             onChangeFunc(isEnabled);
             if (isEnabled === true)
-                graph.showEditorHintIfNeeded();
+                _this.graph.showEditorHintIfNeeded();
         });
         moduleOptionContainer.append("label")
             .attr("for", identifier + "ModuleCheckbox")
@@ -113,9 +146,20 @@ export default function (graph) {
         }
     }
 
-    function addModeItem(module, identifier, modeName, selector, updateGraphOnClick) {
-        var moduleOptionContainer,
-            moduleCheckbox;
+    /**
+     * @param {{ enabled: any; }} module
+     * @param {string} identifier
+     * @param {string | number | boolean | d3.ValueFn<HTMLLabelElement, { module: any; defaultState: any; }, string | number | boolean>} modeName
+     * @param {string} selector
+     * @param {boolean} updateGraphOnClick
+     */
+    addModeItem(module, identifier, modeName, selector, updateGraphOnClick) {
+        const _this = this;
+        var moduleOptionContainer;
+        /**
+         * @type {d3.Selection<HTMLInputElement, { module: { enabled: any; }; defaultState: any; }, HTMLElement, any>}
+         */
+        var moduleCheckbox;
 
         moduleOptionContainer = d3.select(selector)
             .append("div")
@@ -129,14 +173,15 @@ export default function (graph) {
             .property("checked", module.enabled);
 
         // Store for easier resetting all modes
-        checkboxes.push(moduleCheckbox);
+        this.checkboxes.push(moduleCheckbox);
 
         moduleCheckbox.on("click", function (d, silent) {
             d.module.enabled = moduleCheckbox.property("checked");
+            // @ts-ignore
             if (updateGraphOnClick && silent !== true) {
-                graph.executeColorExternalsModule();
-                graph.executeCompactNotationModule();
-                graph.lazyRefresh();
+                _this.graph.executeColorExternalsModule();
+                _this.graph.executeCompactNotationModule();
+                _this.graph.lazyRefresh();
             }
         });
 
@@ -147,26 +192,35 @@ export default function (graph) {
         return moduleOptionContainer;
     }
 
-    function addExternalModeSelection(container, colorExternalsMode) {
+    /**
+     * @param {any} container
+     * @param {{ enabled: any; }} colorExternalsMode
+     */
+    addExternalModeSelection(container, colorExternalsMode) {
+        const _this = this;
         var button = container.append("button").datum({ active: false }).classed("color-mode-switch", true);
-        applyColorModeSwitchState(button, colorExternalsMode);
+        this.applyColorModeSwitchState(button, colorExternalsMode);
 
-        button.on("click", function (silent) {
+        button.on("click", function (/** @type {boolean} */ silent) {
             var data = button.datum();
             data.active = !data.active;
             applyColorModeSwitchState(button, colorExternalsMode);
             if (colorExternalsMode.enabled && silent !== true) {
-                graph.executeColorExternalsModule();
-                graph.lazyRefresh();
+                _this.graph.executeColorExternalsModule();
+                _this.graph.lazyRefresh();
             }
         });
 
         return button;
     }
 
-    function applyColorModeSwitchState(element, colorExternalsMode) {
+    /**
+     * @param {any} element
+     * @param {any} colorExternalsMode
+     */
+    applyColorModeSwitchState(element, colorExternalsMode) {
         var isActive = element.datum().active;
-        var activeColorMode = getColorModeByState(isActive);
+        var activeColorMode = this.getColorModeByState(isActive);
 
         element.classed("active", isActive)
             .text(activeColorMode.text);
@@ -176,80 +230,119 @@ export default function (graph) {
         }
     }
 
-    function getColorModeByState(isActive) {
-        return isActive ? GRADIENT_COLOR_MODE : SAME_COLOR_MODE;
+    /**
+     * @param {any} isActive
+     */
+    getColorModeByState(isActive) {
+        return isActive ? this.GRADIENT_COLOR_MODE : this.SAME_COLOR_MODE;
     }
 
     /**
      * Resets the modes to their default.
      */
-    modeMenu.reset = function () {
-        checkboxes.forEach(function (checkbox) {
+    reset() {
+        this.checkboxes.forEach(function (checkbox) {
+            // @ts-ignore
             var defaultState = checkbox.datum().defaultState,
                 isChecked = checkbox.property("checked");
 
             if (isChecked !== defaultState) {
+                // @ts-ignore
                 checkbox.property("checked", defaultState);
                 // Call onclick event handlers programmatically
+                // @ts-ignore
                 checkbox.on("click")(checkbox.datum());
             }
 
             // Reset the module that is connected with the checkbox
+            // @ts-ignore
             checkbox.datum().module.reset();
         });
 
         // set the switch to active and simulate disabling
-        colorModeSwitch.datum().active = true;
-        colorModeSwitch.on("click")();
+        // @ts-ignore
+        this.colorModeSwitch.datum().active = true;
+        // @ts-ignore
+        this.colorModeSwitch.on("click")();
     };
 
-    /** importer functions **/
     // setting manually the values of the filter
     // no update of the gui settings, these are updated in updateSettings
-    modeMenu.setCheckBoxValue = function (id, checked) {
-        for (var i = 0; i < checkboxes.length; i++) {
-            var cbdId = checkboxes[i].attr("id");
+    /**
+     * importer functions *
+     * @param {any} id
+     * @param {any} checked
+     */
+    setCheckBoxValue(id, checked) {
+        for (var i = 0; i < this.checkboxes.length; i++) {
+            // @ts-ignore
+            var cbdId = this.checkboxes[i].attr("id");
 
             if (cbdId === id) {
-                checkboxes[i].property("checked", checked);
+                // @ts-ignore
+                this.checkboxes[i].property("checked", checked);
                 break;
             }
         }
     };
-    modeMenu.getCheckBoxValue = function (id) {
-        for (var i = 0; i < checkboxes.length; i++) {
-            var cbdId = checkboxes[i].attr("id");
+
+    /**
+     * @param {any} id
+     */
+    getCheckBoxValue(id) {
+        for (var i = 0; i < this.checkboxes.length; i++) {
+            // @ts-ignore
+            var cbdId = this.checkboxes[i].attr("id");
             if (cbdId === id) {
-                return checkboxes[i].property("checked");
+                return this.checkboxes[i].property("checked");
             }
         }
     };
 
-    modeMenu.setColorSwitchState = function (state) {
+    /**
+     * @param {any} state
+     */
+    setColorSwitchState(state) {
         // need the !state because we simulate later a click
-        modeMenu.colorModeState(!state);
+        this.colorModeState(!state);
     };
-    modeMenu.setColorSwitchStateUsingURL = function (state) {
+
+    /**
+     * @param {any} state
+     */
+    setColorSwitchStateUsingURL(state) {
         // need the !state because we simulate later a click
-        modeMenu.colorModeState(!state);
-        colorModeSwitch.on("click")(true);
+        this.colorModeState(!state);
+        // @ts-ignore
+        this.colorModeSwitch.on("click")(true);
     };
 
 
-    modeMenu.updateSettingsUsingURL = function () {
+    updateSettingsUsingURL() {
         var silent = true;
-        checkboxes.forEach(function (checkbox) {
+        this.checkboxes.forEach(function (checkbox) {
+            // @ts-ignore
             checkbox.on("click")(checkbox.datum(), silent);
         });
     };
 
-    modeMenu.updateSettings = function () {
+    updateSettings() {
         var silent = true;
-        checkboxes.forEach(function (checkbox) {
+        this.checkboxes.forEach(function (checkbox) {
+            // @ts-ignore
             checkbox.on("click")(checkbox.datum(), silent);
         });
         // this simulates onclick and inverts its state
-        colorModeSwitch.on("click")(silent);
+        // @ts-ignore
+        this.colorModeSwitch.on("click")(silent);
     };
-    return modeMenu;
 };
+
+/**
+ * @param {any} _button
+ * @param {{ enabled: any; }} _colorExternalsMode
+ */
+function applyColorModeSwitchState(_button, _colorExternalsMode) {
+    throw new Error("Function not implemented.");
+}
+
