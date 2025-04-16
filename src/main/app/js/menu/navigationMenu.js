@@ -213,7 +213,7 @@ export default class NavigationMenu {
             this.currentlyVisibleMenu = d3.select("#" + m_element);
             this.currentlyVisibleMenu.style("display", "block");
             if (m_element === "m_export")
-                this.graph.options().exportMenu().exportAsUrl();
+                this.graph.options.exportMenu().exportAsUrl();
             this.updateMenuPosition();
         }
     }

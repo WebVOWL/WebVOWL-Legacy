@@ -17,7 +17,7 @@ export class RdfsSubClassOf extends BaseProperty {
      * @param {d3.Selection<any, any, null, undefined>} labelGroup
      */
     draw(labelGroup) {
-        this.labelVisible = !this.graph.options().compactNotation();
+        this.labelVisible = !this.graph.options.compactNotation();
         return super.draw(labelGroup);
     }
 

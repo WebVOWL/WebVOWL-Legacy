@@ -47,57 +47,57 @@ export class EditSidebar {
 
         d3.select("#titleEditor")
             .on("change", function () {
-                this.graph.options().addOrUpdateGeneralObjectEntry("title", d3.select("#titleEditor").node().value);
+                this.graph.options.addOrUpdateGeneralObjectEntry("title", d3.select("#titleEditor").node().value);
             })
             .on("keydown", function () {
                 d3.event.stopPropagation();
                 if (d3.event.keyCode === 13) {
                     d3.event.preventDefault();
-                    this.graph.options().addOrUpdateGeneralObjectEntry("title", d3.select("#titleEditor").node().value);
+                    this.graph.options.addOrUpdateGeneralObjectEntry("title", d3.select("#titleEditor").node().value);
                 }
             });
         d3.select("#iriEditor")
             .on("change", function () {
-                if (this.graph.options().addOrUpdateGeneralObjectEntry("iri", d3.select("#iriEditor").node().value) === false) {
+                if (this.graph.options.addOrUpdateGeneralObjectEntry("iri", d3.select("#iriEditor").node().value) === false) {
                     // restore value
-                    d3.select("#iriEditor").node().value = this.graph.options().getGeneralMetaObjectProperty('iri');
+                    d3.select("#iriEditor").node().value = this.graph.options.getGeneralMetaObjectProperty('iri');
                 }
             })
             .on("keydown", function () {
                 d3.event.stopPropagation();
                 if (d3.event.keyCode === 13) {
                     d3.event.preventDefault();
-                    if (this.graph.options().addOrUpdateGeneralObjectEntry("iri", d3.select("#iriEditor").node().value) === false) {
+                    if (this.graph.options.addOrUpdateGeneralObjectEntry("iri", d3.select("#iriEditor").node().value) === false) {
                         // restore value
-                        d3.select("#iriEditor").node().value = this.graph.options().getGeneralMetaObjectProperty('iri');
+                        d3.select("#iriEditor").node().value = this.graph.options.getGeneralMetaObjectProperty('iri');
                     }
                 }
             });
         d3.select("#versionEditor")
             .on("change", function () {
-                this.graph.options().addOrUpdateGeneralObjectEntry("version", d3.select("#versionEditor").node().value);
+                this.graph.options.addOrUpdateGeneralObjectEntry("version", d3.select("#versionEditor").node().value);
             })
             .on("keydown", function () {
                 d3.event.stopPropagation();
                 if (d3.event.keyCode === 13) {
                     d3.event.preventDefault();
-                    this.graph.options().addOrUpdateGeneralObjectEntry("version", d3.select("#versionEditor").node().value);
+                    this.graph.options.addOrUpdateGeneralObjectEntry("version", d3.select("#versionEditor").node().value);
                 }
             });
         d3.select("#authorsEditor")
             .on("change", function () {
-                this.graph.options().addOrUpdateGeneralObjectEntry("author", d3.select("#authorsEditor").node().value);
+                this.graph.options.addOrUpdateGeneralObjectEntry("author", d3.select("#authorsEditor").node().value);
             })
             .on("keydown", function () {
                 d3.event.stopPropagation();
                 if (d3.event.keyCode === 13) {
                     d3.event.preventDefault();
-                    this.graph.options().addOrUpdateGeneralObjectEntry("author", d3.select("#authorsEditor").node().value);
+                    this.graph.options.addOrUpdateGeneralObjectEntry("author", d3.select("#authorsEditor").node().value);
                 }
             });
         d3.select("#descriptionEditor")
             .on("change", function () {
-                this.graph.options().addOrUpdateGeneralObjectEntry("description", d3.select("#descriptionEditor").node().value);
+                this.graph.options.addOrUpdateGeneralObjectEntry("description", d3.select("#descriptionEditor").node().value);
             });
         this.updateElementWidth();
     }
@@ -119,7 +119,7 @@ export class EditSidebar {
     //  * @param {string} url
     //  */
     // checkForExistingURL(url) {
-    //     for (const property of this.graph.getUnfilteredData().properties) {
+    //     for (const property of this.graph.UnfilteredData.properties) {
     //         if (property.iri === url) {
     //             return true
     //         }
@@ -137,7 +137,7 @@ export class EditSidebar {
         if (element.type === "rdfs:subClassOf" || element.type === "owl:disjointWith") {
             console.log("ignore this for now, already handled in the type and domain range changer");
         } else {
-            for (const property of this.graph.getUnfilteredData().properties) {
+            for (const property of this.graph.UnfilteredData.properties) {
                 if (property === element) {
                     continue
                 }
@@ -303,7 +303,7 @@ export class EditSidebar {
         const preferredLanguage = this.graph && this.graph.language ? this.graph.language() : null;
 
         // get it from graph.options
-        const generalMetaObj = this.graph.options().getGeneralMetaObject();
+        const generalMetaObj = this.graph.options.getGeneralMetaObject();
         if (generalMetaObj.hasOwnProperty("title")) {
             // title has language to it -.-
             if (typeof generalMetaObj.title === "object") {
@@ -390,7 +390,7 @@ export class EditSidebar {
             if (ElementTools.isProperty(element) === true) {
                 const sanityCheckResult = this.checkProperIriChange(element, url);
                 if (sanityCheckResult !== false) {
-                    this.graph.options().warningModule().showWarning(
+                    this.graph.options.warningModule().showWarning(
                         "Already seen this property",
                         "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                         "Continuing with duplicate property!",
@@ -405,7 +405,7 @@ export class EditSidebar {
             if (ElementTools.isNode(element) === true) {
                 const sanityCheckResult = this.graph.checkIfIriClassAlreadyExist(url);
                 if (sanityCheckResult !== false) {
-                    this.graph.options().warningModule().showWarning(
+                    this.graph.options.warningModule().showWarning(
                         "Already seen this Class",
                         "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                         "Restoring previous IRI for Element : " + element.iri,
@@ -613,7 +613,7 @@ export class EditSidebar {
             return;
         }
         const prefixListContainer = d3.select("#prefixURL_Container");
-        const prefixElements = this.graph.options().prefixList();
+        const prefixElements = this.graph.options.prefixList();
 
         /**
          * @param {any} sender
@@ -788,7 +788,7 @@ export class EditSidebar {
         d3.select("#addPrefixButton").node().innerHTML = "Add Prefix";
         const selector = item.id.split("_")[1];
         d3.select("#prefixContainerFor_" + selector).remove();
-        this.graph.options().removePrefix(selector);
+        this.graph.options.removePrefix(selector);
         this.prefix_editMode = false; // <<TODO make some sanity checks
     }
 
@@ -829,7 +829,7 @@ export class EditSidebar {
         if (stl === "save") {
             const newPrefixURL = d3.select("#prefixURLFor_" + selector).node().value;
             const newPrefix = d3.select("#prefixInputFor_" + selector).node().value;
-            if (this.graph.options().updatePrefix(this.oldPrefix, newPrefix, this.oldPrefixURL, newPrefixURL) === true) {
+            if (this.graph.options.updatePrefix(this.oldPrefix, newPrefix, this.oldPrefixURL, newPrefixURL) === true) {
                 d3.select("#prefixInputFor_" + newPrefix).node().disabled = true;
                 d3.select("#prefixURLFor_" + newPrefix).node().disabled = true;
                 d3.select("#addPrefixButton").node().innerHTML = "Add Prefix";
@@ -894,8 +894,8 @@ export class EditSidebar {
      */
     #defaultIriValue(element) {
         // get the iri of that element;
-        if (this.graph.options().getGeneralMetaObject().iri) {
-            const str2Compare = this.graph.options().getGeneralMetaObject().iri + element.id;
+        if (this.graph.options.getGeneralMetaObject().iri) {
+            const str2Compare = this.graph.options.getGeneralMetaObject().iri + element.id;
             return element.iri === str2Compare;
         }
         return false;
@@ -906,7 +906,7 @@ export class EditSidebar {
      */
     #getURLFROMPrefixedVersion(element) {
         let url = d3.select("#element_iriEditor").node().value;
-        const base = this.graph.options().getGeneralMetaObjectProperty("iri");
+        const base = this.graph.options.getGeneralMetaObjectProperty("iri");
         if (PrefixTools.validURL(url) === false) {
             // make better usability
             // try to split element;
@@ -921,10 +921,10 @@ export class EditSidebar {
                 const pr = tokens[0];
                 const name = tokens[1];
                 if (pr.length > 0) {
-                    const basePref = this.graph.options().prefixList()[pr];
+                    const basePref = this.graph.options.prefixList()[pr];
                     if (basePref === undefined) {
                         console.log("ERROR __________________");
-                        this.graph.options().warningModule().showWarning(
+                        this.graph.options.warningModule().showWarning(
                             "Invalid Element IRI",
                             "Could not resolve prefix '" + basePref + "'",
                             "Restoring previous IRI for Element" + element.iri,
@@ -936,7 +936,7 @@ export class EditSidebar {
                     }
                     // check if url is not empty
                     if (name.length === 0) {
-                        this.graph.options().warningModule().showWarning(
+                        this.graph.options.warningModule().showWarning(
                             "Invalid Element IRI",
                             "Input IRI is EMPTY",
                             "Restoring previous IRI for Element" + element.iri,
@@ -971,13 +971,13 @@ export class EditSidebar {
      */
     #changeIriForElement(element) {
         const url = this.#getURLFROMPrefixedVersion(element);
-        const base = this.graph.options().getGeneralMetaObjectProperty("iri");
+        const base = this.graph.options.getGeneralMetaObjectProperty("iri");
         if (ElementTools.isNode(element)) {
             const sanityCheckResult = graph.checkIfIriClassAlreadyExist(url);
             if (sanityCheckResult === false) {
                 element.iri = url;
             } else {
-                this.graph.options().warningModule().showWarning(
+                this.graph.options.warningModule().showWarning(
                     "Already seen this class",
                     "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                     "Restoring previous IRI for Element : " + element.iri,
@@ -991,7 +991,7 @@ export class EditSidebar {
         if (ElementTools.isProperty(element) === true) {
             const sanityCheckResult = this.checkProperIriChange(element, url);
             if (sanityCheckResult !== false) {
-                this.graph.options().warningModule().showWarning(
+                this.graph.options.warningModule().showWarning(
                     "Already seen this property",
                     "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                     "Restoring previous IRI for Element : " + element.iri,
@@ -1007,14 +1007,14 @@ export class EditSidebar {
         // method `checkForExistingURL` in this class if this code is ever used
         // if (element.existingPropertyIRI(url) === true) {
         //     console.log("I Have seen this Particular URL already " + url);
-        //     this.graph.options().warningModule().showWarning(
+        //     this.graph.options.warningModule().showWarning(
         //         "Already Seen This one ",
         //         "Input IRI For Element" + element.labelForCurrentLanguage() + " already been set  ",
         //         "Restoring previous IRI for Element" + element.iri,
         //         1,
         //         element
         //     );
-        //     d3.select("#element_iriEditor").node().value = this.graph.options().PrefixTools().getPrefixRepresentationForFullURI(element.iri);
+        //     d3.select("#element_iriEditor").node().value = this.graph.options.PrefixTools().getPrefixRepresentationForFullURI(element.iri);
         //     this.updateSelectionInformation(element);
         //     return;
         // }
@@ -1036,10 +1036,10 @@ export class EditSidebar {
         }
 
         if (element.focused) {
-            this.graph.options().focuserModule().handle(element, true); // unfocus
-            this.graph.options().focuserModule().handle(element, true); // focus
+            this.graph.options.focuserModule().handle(element, true); // unfocus
+            this.graph.options.focuserModule().handle(element, true); // focus
         }
-        // graph.options().focuserModule().handle(undefined);
+        // graph.options.focuserModule().handle(undefined);
         d3.select("#element_iriEditor").node().value = PrefixTools.getPrefixRepresentationForFullURI(url, this.graph);
         this.updateSelectionInformation(element);
     }

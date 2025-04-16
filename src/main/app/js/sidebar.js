@@ -534,8 +534,8 @@ export class SideBar {
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-name", "warn_ExpandRightBarAnimation");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-duration", "0.5s");
             }
-            this.graph.options().width(window.innerWidth - (window.innerWidth * 0.22));
-            this.graph.options().navigationMenu().updateScrollButtonVisibility();
+            this.graph.options.width(window.innerWidth - (window.innerWidth * 0.22));
+            this.graph.options.navigationMenu().updateScrollButtonVisibility();
         } else {
             this.visibleSidebar = false;
             this.detailArea.classed("hidden", true);
@@ -563,9 +563,9 @@ export class SideBar {
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-name", "warn_CollapseRightBarAnimation");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-duration", "0.5s");
             }
-            this.graph.options().width(window.innerWidth);
+            this.graph.options.width(window.innerWidth);
             this.graph.updateCanvasContainerSize();
-            this.graph.options().navigationMenu().updateScrollButtonVisibility();
+            this.graph.options.navigationMenu().updateScrollButtonVisibility();
         }
     }
 
@@ -588,7 +588,7 @@ export class SideBar {
         this.graphArea.node().addEventListener("animationend", () => {
             this.detailArea.classed("hidden", !this.visibleSidebar);
             this.graph.updateCanvasContainerSize();
-            this.graph.options().navigationMenu().updateScrollButtonVisibility();
+            this.graph.options.navigationMenu().updateScrollButtonVisibility();
         });
     }
 
@@ -597,7 +597,7 @@ export class SideBar {
         this.initSideBarAnimation();
 
         this.collapseButton.on("click", () => {
-            this.graph.options().navigationMenu().hideAllMenus();
+            this.graph.options.navigationMenu().hideAllMenus();
             const isVisible = this.getSidebarVisibility()
             this.#showSidebar(!isVisible)
         });
@@ -608,18 +608,18 @@ export class SideBar {
         d3.select("#generalDetails").classed("hidden", editMode);
         d3.select("#generalDetailsEdit").classed("hidden", !editMode);
 
-        // store the meta information in graph.options()
+        // store the meta information in graph.options
 
         // todo: update edit meta info
-        this.graph.options().editSidebar().updateGeneralOntologyInfo();
+        this.graph.options.editSidebar().updateGeneralOntologyInfo();
 
         // todo: update showed meta info;
-        this.graph.options().sidebar().updateGeneralOntologyInfo();
+        this.graph.options.sidebar().updateGeneralOntologyInfo();
     }
 
     updateGeneralOntologyInfo() {
         // get it from graph.options
-        const generalMetaObj = this.graph.options().getGeneralMetaObject();
+        const generalMetaObj = this.graph.options.getGeneralMetaObject();
         const preferredLanguage = this.graph && this.graph.language ? this.graph.language() : null;
         if (generalMetaObj.hasOwnProperty("title")) {
             // title has language to it -.-

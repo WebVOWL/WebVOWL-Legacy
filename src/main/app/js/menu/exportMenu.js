@@ -27,7 +27,7 @@ export default class ExportMenu {
 
         const menuEntry = d3.select("#m_export");
         menuEntry.on("mouseover", () => {
-            const searchMenu = this.graph.options().searchMenu();
+            const searchMenu = this.graph.options.searchMenu();
             searchMenu.hideSearchEntries();
             this.exportAsUrl();
         });
@@ -39,7 +39,7 @@ export default class ExportMenu {
         console.log("Exporter was successful: " + success);
         if (success) {
             // console.log("The result is : " + result);
-            // var ontoTitle=graph.options().getGeneralMetaObjectProperty('title');
+            // var ontoTitle=graph.options.getGeneralMetaObjectProperty('title');
             // if (ontoTitle===undefined || ontoTitle.length===0)
             // 	ontoTitle="NewOntology";
             // else{
@@ -60,7 +60,7 @@ export default class ExportMenu {
             //  exportTurtleButton.attr("href", oldHref);
         } else {
             console.log("ShowWarning!");
-            this.graph.options().warningModule().showExporterWarning();
+            this.graph.options.warningModule().showExporterWarning();
             console.log("Stay on the page! " + window.location.href);
             this.exportTurtleButton.attr("href", window.location.href);
             // @ts-ignore
@@ -88,7 +88,7 @@ export default class ExportMenu {
         // @ts-ignore
         d3.select("#exportedUrl").node().select();
         document.execCommand("copy");
-        this.graph.options().navigationMenu().hideAllMenus();
+        this.graph.options.navigationMenu().hideAllMenus();
         // @ts-ignore
         d3.event.preventDefault(); // prevent the href to be called ( reloads the page otherwise )
     }
@@ -121,39 +121,39 @@ export default class ExportMenu {
 
     exportAsUrl() {
         var currObj = {};
-        currObj.sidebar = this.graph.options().sidebar().getSidebarVisibility();
+        currObj.sidebar = this.graph.options.sidebar().getSidebarVisibility();
 
         // identify default value given by ontology;
-        var defOntValue = this.graph.options().filterMenu().getDefaultDegreeValue();
-        var currentValue = this.graph.options().filterMenu().getDegreeSliderValue();
+        var defOntValue = this.graph.options.filterMenu().getDefaultDegreeValue();
+        var currentValue = this.graph.options.filterMenu().getDegreeSliderValue();
         if (parseInt(defOntValue) === parseInt(currentValue)) {
             currObj.doc = -1;
         } else {
             currObj.doc = currentValue;
         }
 
-        currObj.cd = this.graph.options().classDistance();
-        currObj.dd = this.graph.options().datatypeDistance();
+        currObj.cd = this.graph.options.classDistance();
+        currObj.dd = this.graph.options.datatypeDistance();
         if (this.graph.editorMode() === true) {
             currObj.editorMode = "true";
         } else {
             currObj.editorMode = "false";
         }
-        currObj.filter_datatypes = String(this.graph.options().filterMenu().getCheckBoxValue("datatypeFilterCheckbox"));
-        currObj.filter_sco = String(this.graph.options().filterMenu().getCheckBoxValue("subclassFilterCheckbox"));
-        currObj.filter_disjoint = String(this.graph.options().filterMenu().getCheckBoxValue("disjointFilterCheckbox"));
-        currObj.filter_setOperator = String(this.graph.options().filterMenu().getCheckBoxValue("setoperatorFilterCheckbox"));
-        currObj.filter_objectProperties = String(this.graph.options().filterMenu().getCheckBoxValue("objectPropertyFilterCheckbox"));
-        currObj.mode_dynamic = String(this.graph.options().dynamicLabelWidth());
-        currObj.mode_scaling = String(this.graph.options().modeMenu().getCheckBoxValue("nodescalingModuleCheckbox"));
-        currObj.mode_compact = String(this.graph.options().modeMenu().getCheckBoxValue("compactnotationModuleCheckbox"));
-        currObj.mode_colorExt = String(this.graph.options().modeMenu().getCheckBoxValue("colorexternalsModuleCheckbox"));
-        currObj.mode_multiColor = String(this.graph.options().modeMenu().colorModeState());
-        currObj.mode_pnp = String(this.graph.options().modeMenu().getCheckBoxValue("pickandpinModuleCheckbox"));
-        currObj.debugFeatures = String(!this.graph.options().getHideDebugFeatures());
+        currObj.filter_datatypes = String(this.graph.options.filterMenu().getCheckBoxValue("datatypeFilterCheckbox"));
+        currObj.filter_sco = String(this.graph.options.filterMenu().getCheckBoxValue("subclassFilterCheckbox"));
+        currObj.filter_disjoint = String(this.graph.options.filterMenu().getCheckBoxValue("disjointFilterCheckbox"));
+        currObj.filter_setOperator = String(this.graph.options.filterMenu().getCheckBoxValue("setoperatorFilterCheckbox"));
+        currObj.filter_objectProperties = String(this.graph.options.filterMenu().getCheckBoxValue("objectPropertyFilterCheckbox"));
+        currObj.mode_dynamic = String(this.graph.options.dynamicLabelWidth());
+        currObj.mode_scaling = String(this.graph.options.modeMenu().getCheckBoxValue("nodescalingModuleCheckbox"));
+        currObj.mode_compact = String(this.graph.options.modeMenu().getCheckBoxValue("compactnotationModuleCheckbox"));
+        currObj.mode_colorExt = String(this.graph.options.modeMenu().getCheckBoxValue("colorexternalsModuleCheckbox"));
+        currObj.mode_multiColor = String(this.graph.options.modeMenu().colorModeState());
+        currObj.mode_pnp = String(this.graph.options.modeMenu().getCheckBoxValue("pickandpinModuleCheckbox"));
+        currObj.debugFeatures = String(!this.graph.options.getHideDebugFeatures());
         currObj.rect = 0;
 
-        var defObj = this.graph.options().initialConfig();
+        var defObj = this.graph.options.initialConfig();
         var optsString = this.prepareOptionString(defObj, currObj);
         var urlString = String(location);
         var htmlElement;
@@ -216,9 +216,9 @@ export default class ExportMenu {
     };
 
     exportSvg() {
-        this.graph.options().navigationMenu().hideAllMenus();
+        this.graph.options.navigationMenu().hideAllMenus();
         // Get the d3js SVG element
-        var graphSvg = d3.select(this.graph.options().graphContainerSelector()).select("svg"),
+        var graphSvg = d3.select(this.graph.options.graphContainerSelector()).select("svg"),
             graphSvgCode,
             escapedGraphSvgCode,
             dataURI;
@@ -410,12 +410,12 @@ export default class ExportMenu {
         var i, j, k; // an index variable for the for-loops
 
         /** get data for exporter **/
-        if (!this.graph.options().data()) { return {}; } // return an empty json object
+        if (!this.graph.options.data()) { return {}; } // return an empty json object
         // extract onotology information;
-        var unfilteredData = this.graph.getUnfilteredData();
-        var ontologyComment = this.graph.options().data()._comment;
-        var metaObj = this.graph.options().getGeneralMetaObject();
-        var header = this.graph.options().data().header;
+        var unfilteredData = this.graph.UnfilteredData;
+        var ontologyComment = this.graph.options.data()._comment;
+        var metaObj = this.graph.options.getGeneralMetaObject();
+        var header = this.graph.options.data().header;
 
         if (metaObj.iri && metaObj.iri !== header.iri) {
             header.iri = metaObj.iri;
@@ -438,7 +438,7 @@ export default class ExportMenu {
         // @ts-ignore
         exportText._comment = ontologyComment;
         exportText.header = header;
-        exportText.namespace = this.graph.options().data().namespace;
+        exportText.namespace = this.graph.options.data().namespace;
         if (exportText.namespace === undefined) {
             /**
              * @type {any[]}
@@ -740,14 +740,14 @@ export default class ExportMenu {
         var cb_obj;
 
         // Gravity Settings
-        var classDistance = this.graph.options().classDistance();
-        var datatypeDistance = this.graph.options().datatypeDistance();
+        var classDistance = this.graph.options.classDistance();
+        var datatypeDistance = this.graph.options.datatypeDistance();
         exportText.settings.gravity = {};
         exportText.settings.gravity.classDistance = classDistance;
         exportText.settings.gravity.datatypeDistance = datatypeDistance;
 
         // Filter Settings
-        var fMenu = this.graph.options().filterMenu();
+        var fMenu = this.graph.options.filterMenu();
         var fContainer = fMenu.getCheckBoxContainer();
         var cbCont = [];
         for (i = 0; i < fContainer.length; i++) {
@@ -766,7 +766,7 @@ export default class ExportMenu {
         exportText.settings.filter.degreeSliderValue = degreeSliderVal;
 
         // Modes Settings
-        var mMenu = this.graph.options().modeMenu();
+        var mMenu = this.graph.options.modeMenu();
         var mContainer = mMenu.getCheckBoxContainer();
         var cb_modes = [];
         for (i = 0; i < mContainer.length; i++) {
@@ -802,7 +802,7 @@ export default class ExportMenu {
     };
 
     exportJson() {
-        this.graph.options().navigationMenu().hideAllMenus();
+        this.graph.options.navigationMenu().hideAllMenus();
         /**  check if there is data **/
         if (!this.exportableJsonText) {
             alert("No graph data available.");
@@ -953,7 +953,7 @@ export default class ExportMenu {
         // get bbox coordinates;
 
 
-        this.graph.options().navigationMenu().hideAllMenus();
+        this.graph.options.navigationMenu().hideAllMenus();
         /**  check if there is data **/
         if (!this.exportableJsonText) {
             alert("No graph data available.");
@@ -1383,7 +1383,7 @@ export default class ExportMenu {
                 texString += "\\node[disjointWith , text=black] at (" + leftPos + "pt, " + p_py + "pt)   (SymbolNode" + i + ") {};\n";
                 texString += "\\node[disjointWith , text=black] at (" + rightPos + "pt, " + p_py + "pt)   (SymbolNode" + i + ") {};\n";
                 texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + p_px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {";
-                if (this.graph.options().compactNotation() === false) {
+                if (this.graph.options.compactNotation() === false) {
                     texString += "(disjoint)";
                 }
                 texString += "};\n";

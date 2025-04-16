@@ -16,7 +16,7 @@ export class NodeScalingSwitch extends AbstractFilter {
      * @param {BaseProperty[]} untouchedProperties
      */
     filter(untouchedNodes, untouchedProperties) {
-        this.graph.options().scaleNodesByIndividuals(this.enabled);
+        this.graph.options.scaleNodesByIndividuals(this.enabled);
         this.filteredNodes = untouchedNodes;
         this.filteredProperties = untouchedProperties;
     }

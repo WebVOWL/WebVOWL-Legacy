@@ -43,8 +43,8 @@ export class OnologyLoading {
 
     checkForScreenSize() {
         // checks for window size and adjusts the loading indicator
-        const w = this.graph.options().width();
-        const h = this.graph.options().height();
+        const w = this.graph.options.width();
+        const h = this.graph.options.height();
 
         if (w < 270) {
             d3.select("#loading-info").classed("hidden", true);
@@ -631,8 +631,8 @@ export class OnologyLoading {
     #loadOntologyContent(parseResult) {
         const [data, isValidData] = parseResult;
         d3.select("#reloadCachedOntology").classed("hidden", true);
-        this.graph.options().pauseMenu().reset();
-        this.graph.options().navigationMenu().hideAllMenus();
+        this.graph.options.pauseMenu().reset();
+        this.graph.options.navigationMenu().hideAllMenus();
         this.graph.editorMode(); // updates the checkbox
 
         let loadEmptyOntologyForEditing = false;
@@ -645,12 +645,12 @@ export class OnologyLoading {
             // generate message for the user;
             this.emptyGraphContentError();
         } else {
-            this.graph.options().this().setPercentMode();
+            this.graph.options.this().setPercentMode();
             if (loadEmptyOntologyForEditing === true) {
                 this.graph.editorMode(true);
             }
             this.graph.load();
-            this.graph.options().sidebar().updateOntologyInformation(data, this.statistics);
+            this.graph.options.sidebar().updateOntologyInformation(data, this.statistics);
             this.graph.updateZoomSliderValueFromOutside();
             this.adjustSizeCallable();
 
@@ -706,7 +706,7 @@ export class OnologyLoading {
         const _this = this
 
         function loadDefaultConfig() {
-            _this.graph.options().setOptionsFromURL(_this.graph.options().defaultConfig(), false);
+            _this.graph.options.setOptionsFromURL(_this.graph.options.defaultConfig(), false);
         }
 
         /**
@@ -714,7 +714,7 @@ export class OnologyLoading {
          */
         function loadCustomConfig(opts) {
             let changeEditingFlag = false;
-            const defObj = _this.graph.options().defaultConfig();
+            const defObj = _this.graph.options.defaultConfig();
             for (const i = 0; i < opts.length; i++) {
                 const keyVal = opts[i].split('=');
                 if (keyVal[0] === "editorMode") {
@@ -722,7 +722,7 @@ export class OnologyLoading {
                 }
                 defObj[keyVal[0]] = keyVal[1];
             }
-            _this.graph.options().setOptionsFromURL(defObj, changeEditingFlag);
+            _this.graph.options.setOptionsFromURL(defObj, changeEditingFlag);
         }
 
         /**

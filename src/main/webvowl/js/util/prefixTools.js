@@ -4,7 +4,7 @@ export class PrefixTools {
      * @param {any} graph
      */
     static getPrefixRepresentationForFullURI(fullURL, graph) {
-        let currentPrefixModel = graph.options().prefixList();
+        let currentPrefixModel = graph.options.prefixList();
         const splittedURL = this.#splitURLIntoBaseAndResource(fullURL);
 
         // lazy approach: for-loop over prefix model
@@ -39,7 +39,7 @@ export class PrefixTools {
             resource = fullURL.substring(fullURL.lastIndexOf('#') + 1);
             base = fullURL.substring(0, fullURL.length - resource.length);
             // overwrite base if it is ontologyIri;
-            if (base === graph.options().getGeneralMetaObjectProperty('iri')) {
+            if (base === graph.options.getGeneralMetaObjectProperty('iri')) {
                 base = ":";
             }
             splitedURL.base = base;
@@ -48,7 +48,7 @@ export class PrefixTools {
             resource = fullURL.substring(fullURL.lastIndexOf('/') + 1);
             base = fullURL.substring(0, fullURL.length - resource.length);
             // overwrite base if it is ontologyIri;
-            if (base === graph.options().getGeneralMetaObjectProperty('iri')) {
+            if (base === graph.options.getGeneralMetaObjectProperty('iri')) {
                 base = ":";
             }
             splitedURL.base = base;

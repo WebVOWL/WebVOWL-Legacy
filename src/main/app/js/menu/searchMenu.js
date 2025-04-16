@@ -135,7 +135,7 @@ export default class SearchMenu {
                 var valid = PrefixTools.validURL(iri);
                 // validate url:
                 if (valid) {
-                    var ontM = this.graph.options().ontologyMenu();
+                    var ontM = this.graph.options.ontologyMenu();
                     ontM.setIriText(iri);
                     // @ts-ignore
                     this.searchLineEdit.node().value = "";
@@ -252,7 +252,7 @@ export default class SearchMenu {
         for (let i = 0; i < numEntries; i++) {
             const nodeString = searchMatches[i][0]
             const nodeIDs = searchMatches[i][1]
-            let nodeMap = this.graph.getNodeMapForSearch();
+            let nodeMap = this.graph.nodeMap;
 
             // TODO: Figure out how to show nodes in nodeIDs
             // Showing all of them (as is done below) causes nodeString to be repeated nodeIDs.length times

@@ -9,7 +9,7 @@ import { SetOperatorProperty } from '../elements/properties/implementations/SetO
  * Stores the passed properties in links.
  * @returns {Function}
  */
-export class LinkCreator {
+export default class LinkCreator {
     /**
      * Creates links from the passed properties.
      * @param {BaseProperty[]} properties

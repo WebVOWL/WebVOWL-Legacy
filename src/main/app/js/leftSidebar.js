@@ -29,7 +29,7 @@ export class LeftSideBar {
         this.initSideBarAnimation();
 
         this.collapseButton.on("click", () => {
-            this.graph.options().navigationMenu().hideAllMenus()
+            this.graph.options.navigationMenu().hideAllMenus()
             const isVisible = this.getSidebarVisibility()
             this.showSidebar(!isVisible)
             this.backupVisibility = isVisible
@@ -111,9 +111,9 @@ export class LeftSideBar {
         const defaultDatatype = "rdfs:Literal";
         const defaultProperty = "owl:objectProperty";
 
-        const supportedClasses = this.graph.options().supportedClasses();
-        const supportedDatatypes = this.graph.options().supportedDatatypes();
-        const supportedProperties = this.graph.options().supportedProperties();
+        const supportedClasses = this.graph.options.supportedClasses();
+        const supportedDatatypes = this.graph.options.supportedDatatypes();
+        const supportedProperties = this.graph.options.supportedProperties();
 
         for (const supportedClass of supportedClasses) {
             const aClassSelectionContainer = classContainer.append("div");
@@ -217,7 +217,7 @@ export class LeftSideBar {
 
             }
             this.graph.updateCanvasContainerSize();
-            this.graph.options().navigationMenu().updateScrollButtonVisibility();
+            this.graph.options.navigationMenu().updateScrollButtonVisibility();
         });
     }
 
@@ -247,7 +247,7 @@ export class LeftSideBar {
                 collapseButton.node().innerHTML = ">";
             }
             this.graph.updateCanvasContainerSize();
-            this.graph.options().navigationMenu().updateScrollButtonVisibility();
+            this.graph.options.navigationMenu().updateScrollButtonVisibility();
             return;
         }
         d3.select("#leftSideBarCollapseButton").classed("hidden", true);

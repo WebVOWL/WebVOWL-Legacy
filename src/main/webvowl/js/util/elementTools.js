@@ -7,7 +7,7 @@ import { OwlDatatypeProperty } from '../elements/properties/implementations/OwlD
 import { OwlObjectProperty } from '../elements/properties/implementations/OwlObjectProperty';
 import { RdfsSubClassOf } from '../elements/properties/implementations/RdfsSubClassOf';
 
-export class ElementTools {
+export default class ElementTools {
     /**
      * @param {any} element
      */

@@ -48,8 +48,8 @@ export default class ExportTTLModule {
 
     preparePrefixRepresentation() {
         var i;
-        var allNodes = this.graph.getUnfilteredData().nodes;
-        var allProps = this.graph.getUnfilteredData().properties;
+        var allNodes = this.graph.UnfilteredData.nodes;
+        var allProps = this.graph.UnfilteredData.properties;
         for (i = 0; i < allNodes.length; i++) {
             var nodeIRI = this.prefixModule.getPrefixRepresentationForFullURI(allNodes[i].iri);
             if (this.prefixModule.validURL(nodeIRI) === true)
@@ -230,7 +230,7 @@ export default class ExportTTLModule {
         }
 
 
-        var allProps = this.graph.getUnfilteredData().properties;
+        var allProps = this.graph.UnfilteredData.properties;
         var myProperties = [];
         var i;
         for (i = 0; i < allProps.length; i++) {
@@ -448,8 +448,8 @@ export default class ExportTTLModule {
     }
 
     preparePrefixList() {
-        var ontoIri = this.graph.options().getGeneralMetaObjectProperty('iri');
-        var prefixList = this.graph.options().prefixList();
+        var ontoIri = this.graph.options.getGeneralMetaObjectProperty('iri');
+        var prefixList = this.graph.options.prefixList();
         var prefixDef = [];
         prefixDef.push('@prefix : \t\t<' + ontoIri + '> .');
         for (var name in prefixList) {
@@ -465,7 +465,7 @@ export default class ExportTTLModule {
     }
 
     prepareOntologyDef() {
-        var ontoIri = this.graph.options().getGeneralMetaObjectProperty('iri');
+        var ontoIri = this.graph.options.getGeneralMetaObjectProperty('iri');
         var indent = this.getIndent('<' + ontoIri + '>');
         this.resultingTTLContent += '<' + ontoIri + '> rdf:type owl:Ontology ;\r\n' +
             this.getOntologyTitle(indent) +
@@ -497,7 +497,7 @@ export default class ExportTTLModule {
      * @param {string} indent
      */
     getOntologyAuthor(indent) {
-        var languageElement = this.graph.options().getGeneralMetaObjectProperty('author');
+        var languageElement = this.graph.options.getGeneralMetaObjectProperty('author');
         if (languageElement) {
             if (typeof languageElement !== "object") {
                 if (languageElement.length === 0)
@@ -521,7 +521,7 @@ export default class ExportTTLModule {
      * @param {string} indent
      */
     getOntologyVersion(indent) {
-        var languageElement = this.graph.options().getGeneralMetaObjectProperty('version');
+        var languageElement = this.graph.options.getGeneralMetaObjectProperty('version');
         if (languageElement) {
             if (typeof languageElement !== "object") {
                 if (languageElement.length === 0)
@@ -538,7 +538,7 @@ export default class ExportTTLModule {
      * @param {boolean} [endStatement]
      */
     general_languageExtractor(indent, metaObjectDescription, annotationDescription, endStatement) {
-        var languageElement = this.graph.options().getGeneralMetaObjectProperty(metaObjectDescription);
+        var languageElement = this.graph.options.getGeneralMetaObjectProperty(metaObjectDescription);
 
         if (typeof languageElement === 'object') {
 
