@@ -709,7 +709,7 @@ export default function () {
     // settingFlag=false;
     // THIS SHOULD NOT BE SET USING THE OPTIONS ON THE URL
     // if (opts.mode_picnpin) {
-    //     graph.options().filterMenu().setCheckBoxValue("pickandpin ModuleCheckbox", settingFlag);
+    //     graph.options.filterMenu().setCheckBoxValue("pickandpin ModuleCheckbox", settingFlag);
     // }
 
     settingFlag = false;

@@ -97,13 +97,13 @@ export class AbstractDomainRangeDragger extends AbstractDragger {
         this.nodeElement = this.rootNodeLayer.append('path').attr("d", pathData);
         this.nodeElement.classed("classDraggerNode", true);
         // this.draggerObject = this.rootNodeLayer.append("circle"); // REVIEW: Check if it should be before or after (classDragger uses this)
-        if (this.graph.options().useAccuracyHelper()) {
+        if (this.graph.options.useAccuracyHelper()) {
             this.draggerObject = this.rootNodeLayer.append("circle"); // REVIEW: Check if it should be before or after (domainDragger & rangeDragger uses this)
             this.draggerObject.attr("r", 40)
                 .attr("cx", 0)
                 .attr("cy", 0)
                 .classed("superHiddenElement", true);
-            this.draggerObject.classed("superOpacityElement", !this.graph.options().showDraggerObject());
+            this.draggerObject.classed("superOpacityElement", !this.graph.options.showDraggerObject());
         }
     }
 

@@ -3,7 +3,7 @@
  * Contains a collection of mathematical functions with some additional data
  * used for WebVOWL.
  */
-export class MathUtils {
+export default class MathUtils {
     // @ts-ignore
     static loopFunction = d3.svg.line()
         .x(function (d) {

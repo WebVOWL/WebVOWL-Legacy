@@ -257,7 +257,7 @@ export class Warnings {
         const moduleContainer = this._messageContainers[id];
         this._visibleStatus[id] = true;
         d3.select("#blockGraphInteractions").classed("hidden", false);
-        const graphWidth = 0.5 * this.graph.options().width();
+        const graphWidth = 0.5 * this.graph.options.width();
 
         if (header.length > 0) {
             const head = warningContainer.append("div");
@@ -396,7 +396,7 @@ export class Warnings {
         this._visibleStatus[id] = true;
 
         // add new one;
-        const graphWidth = 0.5 * this.graph.options().width();
+        const graphWidth = 0.5 * this.graph.options.width();
 
         if (header.length > 0) {
             const head = warningContainer.append("div");

@@ -67,8 +67,8 @@ export default function () {
 
             d3.select("#dragDropContainer").classed("hidden", false);
             // get svg size
-            var w = graph.options().width();
-            var h = graph.options().height();
+            var w = graph.options.width();
+            var h = graph.options.height();
 
             // get event position; (using clientX and clientY);
             var cx = e.clientX;
@@ -137,12 +137,12 @@ export default function () {
                     if (ev.dataTransfer.items.length === 1) {
                         if (ev.dataTransfer.items[0].kind === 'file') {
                             var file = ev.dataTransfer.items[0].getAsFile();
-                            graph.options().loadingModule().fromFileDrop(file.name, file);
+                            graph.options.loadingModule().fromFileDrop(file.name, file);
                         }
                     }
                     else {
                         //  >> WARNING not multiple file uploaded;
-                        graph.options().warningModule().showMultiFileUploadWarning();
+                        graph.options.warningModule().showMultiFileUploadWarning();
                     }
                 }
             }
@@ -150,8 +150,8 @@ export default function () {
         };
 
         node.node().ondragleave = function (e) {
-            var w = graph.options().width();
-            var h = graph.options().height();
+            var w = graph.options.width();
+            var h = graph.options.height();
 
             // get event position; (using clientX and clientY);
             var cx = e.clientX;
@@ -166,7 +166,7 @@ export default function () {
 
             d3.select("#loading-info").classed("hidden", !wasMessageToShow); // show it again
             // check if it should be visible
-            var should_show = graph.options().loadingModule().visibilityStatus;
+            var should_show = graph.options.loadingModule().visibilityStatus;
             if (should_show === false) {
                 d3.select("#loading-info").classed("hidden", true); // hide it
             }
@@ -282,8 +282,8 @@ export default function () {
             modeOp.style("font-style", "italic");
 
             adjustSize();
-            var w = graph.options().width();
-            var h = graph.options().height();
+            var w = graph.options.width();
+            var h = graph.options.height();
             let defZoom = Math.min(w, h) / 1000;
 
             var hideDebugOptions = true;
@@ -303,12 +303,12 @@ export default function () {
                 }
                 // using ctrl+Shift+d as debug option
                 if (d3.event.ctrlKey && d3.event.shiftKey && d3.event.keyCode === 68) {
-                    graph.options().executeHiddenDebugFeatuers();
+                    graph.options.executeHiddenDebugFeatuers();
                     d3.event.preventDefault();
                 }
             });
             if (d3.select("#maxLabelWidthSliderOption")) {
-                var setValue = !graph.options().dynamicLabelWidth();
+                var setValue = !graph.options.dynamicLabelWidth();
                 d3.select("#maxLabelWidthSlider").node().disabled = setValue;
                 d3.select("#maxLabelWidthvalueLabel").classed("disabledLabelForSlider", setValue);
                 d3.select("#maxLabelWidthDescriptionLabel").classed("disabledLabelForSlider", setValue);
@@ -318,8 +318,8 @@ export default function () {
                 .style("background-color", "#bdbdbd")
                 .style("opacity", "0.5")
                 .style("pointer-events", "auto")
-                .style("width", graph.options().width() + "px")
-                .style("height", graph.options().height() + "px")
+                .style("width", graph.options.width() + "px")
+                .style("height", graph.options.height() + "px")
                 .on("click", function () {
                     d3.event.preventDefault();
                     d3.event.stopPropagation();
@@ -342,11 +342,11 @@ export default function () {
             // connect the reloadCachedVersionButton
             d3.select("#reloadSvgIcon").on("click", function () {
                 if (d3.select("#reloadSvgIcon").node().disabled === true) {
-                    graph.options().ontologyMenu().clearCachedVersion();
+                    graph.options.ontologyMenu().clearCachedVersion();
                     return;
                 }
                 d3.select("#reloadCachedOntology").classed("hidden", true);
-                graph.options().ontologyMenu().reloadCachedOntology();
+                graph.options.ontologyMenu().reloadCachedOntology();
             });
             // add the initialized objects
             webvowl.opts = options;

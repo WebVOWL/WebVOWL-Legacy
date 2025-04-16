@@ -69,7 +69,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
         this.focused = !this.focused;
         this.nodeElement.select("rect").classed("focused", this.focused);
         this.graph.resetSearchHighlight();
-        this.graph.options().searchMenu().clearText();
+        this.graph.options.searchMenu().clearText();
     }
 
     /**
@@ -87,8 +87,8 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
 
         // set the value for this.width
         // update labelWidth Value;
-        if (this.graph.options().dynamicLabelWidth() === true) {
-            this.labelWidth = Math.min(this.getMyWidth(), this.graph.options().maxLabelWidth());
+        if (this.graph.options.dynamicLabelWidth() === true) {
+            this.labelWidth = Math.min(this.getMyWidth(), this.graph.options.maxLabelWidth());
         }
         else {
             this.labelWidth = this.defaultWidth;
@@ -118,7 +118,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
 
     drawPin() {
         this.pinned = true;
-        // if (graph.options().dynamicLabelWidth()===true) this.labelWidth=RectangularElementTools.getMyWidth(this.labelForCurrentLanguage(), this.indicationString());
+        // if (graph.options.dynamicLabelWidth()===true) this.labelWidth=RectangularElementTools.getMyWidth(this.labelForCurrentLanguage(), this.indicationString());
         // else                							this.labelWidth=this.defaultWidth;
         // width=this.labelWidth;
         // console.log("this element label Width is "+this.labelWidth);
@@ -129,8 +129,8 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
             dx,
             dy,
             this.removePin,
-            this.graph.options().showDraggerObject,
-            this.graph.options().useAccuracyHelper()
+            this.graph.options.showDraggerObject,
+            this.graph.options.useAccuracyHelper()
         );
     }
 
@@ -164,7 +164,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
         this.textBlock.remove();
         this.textBlock = new CenteringTextElement(this.nodeElement, this.backgroundColor);
         this.textBlock.addText(this.labelForCurrentLanguage());
-        this.animateDynamicLabelWidth(this.graph.options().dynamicLabelWidth());
+        this.animateDynamicLabelWidth(this.graph.options.dynamicLabelWidth());
         this.shapeElement.select("title").text(this.labelForCurrentLanguage());
     }
 
@@ -176,7 +176,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
         this.removeHalo();
         const _this = this
         if (dynamic === true) {
-            this.labelWidth = Math.min(this.getMyWidth(), this.graph.options().maxLabelWidth());
+            this.labelWidth = Math.min(this.getMyWidth(), this.graph.options.maxLabelWidth());
             this.shapeElement.transition().tween("attr", function () {
             })
                 .ease('linear')

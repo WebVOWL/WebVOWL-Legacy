@@ -66,7 +66,7 @@ export const RectangularElementToolsMixin = (Base) =>
             this.removeHalo();
             const _this = this
             if (dynamic === true) {
-                this.labelWidth = Math.min(this.getMyWidth(), graph.options().maxLabelWidth());
+                this.labelWidth = Math.min(this.getMyWidth(), graph.options.maxLabelWidth());
                 this.shapeElement.transition().tween("attr", function () {
                 })
                     .ease('linear')

@@ -28,7 +28,7 @@ export default class GravityMenu {
     const _this = this;
     var menuEntry = d3.select("#m_gravity");
     menuEntry.on("mouseover", function (){
-      var searchMenu = _this.graph.options().searchMenu();
+      var searchMenu = _this.graph.options.searchMenu();
       searchMenu.hideSearchEntries();
     });
     this.addDistanceSlider("#classSliderOption", "class", "Class distance", this.options.classDistance);

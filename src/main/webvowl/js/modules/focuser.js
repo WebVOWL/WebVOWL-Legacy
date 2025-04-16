@@ -33,7 +33,7 @@ export class Focuser {
         }
 
         if (this.focusedElement && this.focusedElement.focused) {
-            this.graph.options().editSidebar().updateSelectionInformation(this.focusedElement);
+            this.graph.options.editSidebar().updateSelectionInformation(this.focusedElement);
             if (ElementTools.isProperty(selectedElement) === true) {
                 var inversed = false;
                 if (selectedElement.inverse) {
@@ -46,7 +46,7 @@ export class Focuser {
             }
         }
         else {
-            this.graph.options().editSidebar().updateSelectionInformation(undefined);
+            this.graph.options.editSidebar().updateSelectionInformation(undefined);
             this.graph.removeEditElements();
         }
     }

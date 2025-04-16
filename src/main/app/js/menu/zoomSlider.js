@@ -9,15 +9,15 @@ export default class ZoomSlider {
   constructor(graph) {
     this.graph = graph;
 
-    this.minMag = graph.options().minMagnification();
-    this.maxMag = graph.options().maxMagnification();
+    this.minMag = graph.options.minMagnification();
+    this.maxMag = graph.options.maxMagnification();
     this.t_zoomOut = undefined;
     this.t_zoomIn = undefined;
     this.zoomValue = undefined;
     // @ts-ignore
     this.showSlider = true;
-    this.w = graph.options().width();
-    this.h = graph.options().height();
+    this.w = graph.options.width();
+    this.h = graph.options.height();
     this.slider = undefined;
     this.defZoom = Math.min(this.w, this.h) / 1000;
   }
@@ -63,12 +63,12 @@ export default class ZoomSlider {
       });
 
     d3.select("#zoomOutButton").on("mousedown", function () {
-      _this.graph.options().navigationMenu().hideAllMenus();
+      _this.graph.options.navigationMenu().hideAllMenus();
       _this.zoomValue = _this.graph.scaleFactor();
       _this.t_zoomOut = requestAnimationFrame(_this.timed_zoomOut);
     })
       .on("touchstart", function () {
-        _this.graph.options().navigationMenu().hideAllMenus();
+        _this.graph.options.navigationMenu().hideAllMenus();
         _this.zoomValue = _this.graph.scaleFactor();
         _this.t_zoomOut = requestAnimationFrame(_this.timed_zoomOut);
       })
@@ -78,12 +78,12 @@ export default class ZoomSlider {
       .attr("title", "zoom out");
 
     d3.select("#zoomInButton").on("mousedown", function () {
-      _this.graph.options().navigationMenu().hideAllMenus();
+      _this.graph.options.navigationMenu().hideAllMenus();
       _this.zoomValue = _this.graph.scaleFactor();
       _this.t_zoomIn = requestAnimationFrame(_this.timed_zoomIn);
     })
       .on("touchstart", function () {
-        _this.graph.options().navigationMenu().hideAllMenus();
+        _this.graph.options.navigationMenu().hideAllMenus();
         _this.zoomValue = _this.graph.scaleFactor();
         _this.t_zoomIn = requestAnimationFrame(_this.timed_zoomIn);
       })
@@ -93,7 +93,7 @@ export default class ZoomSlider {
       .attr("title", "zoom in");
 
     d3.select("#centerGraphButton").on("click", function () {
-      _this.graph.options().navigationMenu().hideAllMenus();
+      _this.graph.options.navigationMenu().hideAllMenus();
       _this.graph.forceRelocationEvent();
     }).attr("title", "center graph");
 
@@ -110,7 +110,7 @@ export default class ZoomSlider {
   };
 
   zooming() {
-    this.graph.options().navigationMenu().hideAllMenus();
+    this.graph.options.navigationMenu().hideAllMenus();
     var zoomValue = this.slider.property("value");
     this.slider.attr("value", zoomValue);
     this.graph.setSliderZoom(zoomValue);

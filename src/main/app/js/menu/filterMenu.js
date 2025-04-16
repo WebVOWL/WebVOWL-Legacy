@@ -56,7 +56,7 @@ export default class FilterMenu {
   setup(datatypeFilter, objectPropertyFilter, subclassFilter, disjointFilter, setOperatorFilter, nodeDegreeFilter) {
     const _this = this;
     this.menuControl.on("mouseover", function () {
-      var searchMenu = _this.graph.options().searchMenu();
+      var searchMenu = _this.graph.options.searchMenu();
       searchMenu.hideSearchEntries();
     });
     this.menuControl.on("mouseleave", function () {

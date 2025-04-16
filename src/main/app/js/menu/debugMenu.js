@@ -22,7 +22,7 @@ export class DebugMenu {
 
     menuEntry.on("mouseover", () => {
       if (this.hoverFlag === false) {
-        const searchMenu = this.graph.options().searchMenu();
+        const searchMenu = this.graph.options.searchMenu();
         searchMenu.hideSearchEntries();
         this.specialCbx.node().click();
         if (this.graph.editorMode() === false) {
@@ -47,7 +47,7 @@ export class DebugMenu {
       "useAccuracyHelper",
       "Use accuracy helper",
       "#useAccuracyHelper",
-      this.graph.options().useAccuracyHelper,
+      this.graph.options.useAccuracyHelper,
       (/** @type {any} */ enabled, /** @type {boolean} */ silent) => {
         if (!enabled) {
           d3.select("#showDraggerObject").style("color", "#979797");
@@ -69,7 +69,7 @@ export class DebugMenu {
       "showDraggerObject",
       "Show accuracy helper",
       "#showDraggerObject",
-      this.graph.options().showDraggerObject,
+      this.graph.options.showDraggerObject,
       (/** @type {any} */ _enabled, /** @type {boolean} */ silent) => {
         if (silent === true) return;
         this.graph.lazyRefresh();
@@ -81,9 +81,9 @@ export class DebugMenu {
       "showFPS_Statistics",
       "Show rendering statistics",
       "#showFPS_Statistics",
-      this.graph.options().showRenderingStatistic,
+      this.graph.options.showRenderingStatistic,
       (/** @type {any} */ enabled, /** @type {any} */ _silent) => {
-        if (this.graph.options().getHideDebugFeatures() === false) {
+        if (this.graph.options.getHideDebugFeatures() === false) {
           d3.select("#FPS_Statistics").classed("hidden", !enabled);
         } else {
           d3.select("#FPS_Statistics").classed("hidden", true);
@@ -95,9 +95,9 @@ export class DebugMenu {
       "showModeOfOperation",
       "Show input modality",
       "#showModeOfOperation",
-      this.graph.options().showInputModality,
+      this.graph.options.showInputModality,
       (/** @type {any} */ enabled) => {
-        if (this.graph.options().getHideDebugFeatures() === false) {
+        if (this.graph.options.getHideDebugFeatures() === false) {
           d3.select("#modeOfOperationString").classed("hidden", !enabled);
         } else {
           d3.select("#modeOfOperationString").classed("hidden", true);
@@ -171,7 +171,7 @@ export class DebugMenu {
   updateSettings() {
     d3.selectAll(".debugOption").classed(
       "hidden",
-      this.graph.options().getHideDebugFeatures()
+      this.graph.options.getHideDebugFeatures()
     );
 
     const silent = true;

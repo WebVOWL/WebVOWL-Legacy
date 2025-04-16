@@ -1,181 +1,200 @@
 import Deque from 'collections/deque';
-import linkCreatorFactory from './parsing/linkCreator';
-import elementToolsFactory from './util/elementTools';
-import mathFactory from './util/math';
-const math = mathFactory();
-const linkCreator = linkCreatorFactory();
-const elementTools = elementToolsFactory();
+import LinkCreator from './parsing/LinkCreator';
+import ElementTools from './util/ElementTools';
+import MathUtils from './util/MathUtils';
 
 // add some maps for nodes and properties -- used for object generation
 import nodePrototypeMapFactory from './elements/nodes/nodeMap';
 import propertyPrototypeMapFactory from './elements/properties/propertyMap';
 
+import { Parser } from "./parser";
+import { ClassDragger } from './draggers/classDragger';
+import { RangeDragger } from './draggers/rangeDragger';
+import { DomainDragger } from './draggers/domainDragger';
+import { ShadowClone } from './draggers/shadowClone';
+import d3 from 'd3';
+
 const nodePrototypeMap = nodePrototypeMapFactory();
 const propertyPrototypeMap = propertyPrototypeMapFactory();
 
 
-export default function (graphContainerSelector) {
-    var graph = {},
-        CARDINALITY_HDISTANCE = 20,
-        CARDINALITY_VDISTANCE = 10,
-        curveFunction = d3.svg.line()
-            .x(function (d) {
+export default class Graph {
+
+    /**
+     * @param {any} graphContainerSelector
+     */
+    constructor(graphContainerSelector) {
+        this.graphContainerSelector = graphContainerSelector;
+
+        this.CARDINALITY_HDISTANCE = 20;
+        this.CARDINALITY_VDISTANCE = 10;
+        this.curveFunction = d3.svg.line()
+            .x(function (/** @type {{ x: any; }} */ d) {
                 return d.x;
             })
-            .y(function (d) {
+            .y(function (/** @type {{ y: any; }} */ d) {
                 return d.y;
             })
-            .interpolate("cardinal"),
-        options = require("./options")(),
-        parser = require("./parser")(graph),
-        language = "default",
-        paused = false,
+            .interpolate("cardinal");
+        this.options = require("./options")();
+        this.parser = new Parser(graph);
+        this.language = "default";
+        this.paused = false;
         // Container for visual elements
-        graphContainer,
-        nodeContainer,
-        labelContainer,
-        cardinalityContainer,
-        linkContainer,
+        this.graphContainer = undefined;
+        this.nodeContainer = undefined;
+        this.labelContainer = undefined;
+        this.cardinalityContainer = undefined;
+        this.linkContainer = undefined;
         // Visual elements
-        nodeElements,
-        initialLoad = true,
-        updateRenderingDuringSimulation = false,
-        labelGroupElements,
-        linkGroups,
-        linkPathElements,
-        cardinalityElements,
+        this.nodeElements = undefined;
+        this.initialLoad = true;
+        this.updateRenderingDuringSimulation = false;
+        this.labelGroupElements = undefined;
+        this.linkGroups = undefined;
+        this.linkPathElements = undefined;
+        this.cardinalityElements = undefined;
         // Internal data
-        classNodes,
-        labelNodes,
-        links,
-        properties,
-        unfilteredData,
-        currentData,
-        unfilteredDataMap = { nodes: new Map(), properties: new Map() },
+        this.classNodes = undefined;
+        this.labelNodes = undefined;
+        this.links = undefined;
+        this.properties = undefined;
+        this.unfilteredData = undefined;
+        this.currentData = undefined;
+        this.unfilteredDataMap = { nodes: new Map(), properties: new Map() };
         // Graph behaviour
-        force,
-        dragBehaviour,
-        zoomFactor = 1.0,
-        centerGraphViewOnLoad = false,
-        transformAnimation = false,
-        graphTranslation = [0, 0],
-        graphUpdateRequired = false,
-        pulseNodeIds = [],
-        nodeArrayForPulse = [],
-        nodeMap = [],
-        locationId = 0,
-        defaultZoom = 1.0,
-        defaultTargetZoom = 0.8,
-        global_dof = -1,
-        touchDevice = false,
-        last_touch_time,
-        originalD3_dblClickFunction = null,
-        originalD3_touchZoomFunction = null,
+        this.force = undefined;
+        this.dragBehaviour = undefined;
+        this.zoomFactor = 1.0;
+        this.centerGraphViewOnLoad = false;
+        this.transformAnimation = false;
+        this.graphTranslation = [0, 0];
+        this.graphUpdateRequired = false;
+        this.pulseNodeIds = [];
+        this.nodeArrayForPulse = [];
+        this.nodeMap = [];
+        this.locationId = 0;
+        this.defaultZoom = 1.0;
+        this.defaultTargetZoom = 0.8;
+        this.global_dof = -1;
+        this.touchDevice = false;
+        this.last_touch_time = undefined;
+        this.originalD3_dblClickFunction = null;
+        this.originalD3_touchZoomFunction = null;
 
         // editing elements
-        deleteGroupElement,
-        addDataPropertyGroupElement,
-        editContainer,
-        draggerLayer = null,
-        draggerObjectsArray = [],
-        delayedHider,
-        nodeFreezer,
-        hoveredNodeElement = null,
-        currentlySelectedNode = null,
-        hoveredPropertyElement = null,
-        draggingStarted = false,
-        frozenDomainForPropertyDragger,
-        frozenRangeForPropertyDragger,
+        this.deleteGroupElement = undefined;
+        this.addDataPropertyGroupElement = undefined;
+        this.editContainer = undefined;
+        this.draggerLayer = null;
+        this.draggerObjectsArray = [];
+        this.delayedHider = undefined;
+        this.nodeFreezer = undefined;
+        this.hoveredNodeElement = null;
+        this.currentlySelectedNode = null;
+        this.hoveredPropertyElement = null;
+        this.draggingStarted = false;
+        this.frozenDomainForPropertyDragger = undefined;
+        this.frozenRangeForPropertyDragger = undefined;
 
-        eP = 0, // id for new properties
-        eN = 0, // id for new Nodes
-        editMode = true,
-        debugContainer = d3.select("#FPS_Statistics"),
-        finishedLoadingSequence = false,
+        this.eP = 0; // id for new properties
+        this.eN = 0; // id for new Nodes
+        this.editMode = true;
+        this.debugContainer = d3.select("#FPS_Statistics");
+        this.finishedLoadingSequence = false;
 
-        ignoreOtherHoverEvents = false,
-        forceNotZooming = false,
-        now, then, // used for fps computation
-        showFPS = false,
-        seenEditorHint = false,
-        seenFilterWarning = false,
-        showFilterWarning = false,
+        this.ignoreOtherHoverEvents = false;
+        this.forceNotZooming = false;
+        this.now = undefined;
+        this.then = undefined; // used for fps computation
+        this.showFPS = false;
+        this.seenEditorHint = false;
+        this.seenFilterWarning = false;
+        this.showFilterWarning = false;
 
-        keepDetailsCollapsedOnLoading = true,
-        adjustingGraphSize = false,
-        showReloadButtonAfterLayoutOptimization = false,
-        zoom;
-    //var prefixModule=require("./prefixRepresentationModule")(graph);
-    var NodePrototypeMap = createLowerCasePrototypeMap(nodePrototypeMap);
-    var PropertyPrototypeMap = createLowerCasePrototypeMap(propertyPrototypeMap);
-    var classDragger = require("./draggers/classDragger")(graph);
-    var rangeDragger = require("./draggers/rangeDragger")(graph);
-    var domainDragger = require("./draggers/domainDragger")(graph);
-    var shadowClone = require("./draggers/shadowClone")(graph);
+        this.keepDetailsCollapsedOnLoading = true;
+        this.adjustingGraphSize = false;
+        this.showReloadButtonAfterLayoutOptimization = false;
+        this.zoom = undefined;
+        //var prefixModule=require("./prefixRepresentationModule")(graph);
+        this.NodePrototypeMap = createLowerCasePrototypeMap(nodePrototypeMap);
+        this.PropertyPrototypeMap = createLowerCasePrototypeMap(propertyPrototypeMap);
+        this.classDragger = new ClassDragger(graph);
+        this.rangeDragger = new RangeDragger(graph);
+        this.domainDragger = new DomainDragger(graph);
+        this.shadowClone = new ShadowClone(graph);
 
-    graph.math = function () {
-        return math;
-    };
-    graph.parser = function () {
-        return parser;
+        this.cachedJsonOBJ = null;
+
+        this.initializeGraph();
     }
+
     /** --------------------------------------------------------- **/
     /** -- getter and setter definitions                       -- **/
     /** --------------------------------------------------------- **/
-    graph.isEditorMode = function () {
-        return editMode;
-    };
-    graph.getGlobalDOF = function () {
-        return global_dof;
-    };
-    graph.setGlobalDOF = function (val) {
-        global_dof = val;
-    };
+    isEditorMode() {
+        return this.editMode;
+    }
 
-    graph.updateZoomSliderValueFromOutside = function () {
-        graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
-    };
+    updateZoomSliderValueFromOutside() {
+        this.options.zoomSlider().updateZoomSliderValue(this.zoomFactor);
+    }
 
-    graph.setDefaultZoom = function (val) {
-        defaultZoom = val;
-        graph.reset();
-        graph.options().zoomSlider().updateZoomSliderValue(defaultZoom);
-    };
-    graph.setTargetZoom = function (val) {
-        defaultTargetZoom = val;
-    };
-    graph.graphOptions = function () {
-        return options;
-    };
+    /**
+     * @param {any} val
+     */
+    setDefaultZoom(val) {
+        this.defaultZoom = val;
+        this.reset();
+        this.options.zoomSlider().updateZoomSliderValue(this.defaultZoom);
+    }
 
-    graph.scaleFactor = function () {
-        return zoomFactor;
-    };
-    graph.translation = function () {
-        return graphTranslation;
-    };
+    /**
+     * @param {number} val
+     */
+    setTargetZoom(val) {
+        this.defaultTargetZoom = val;
+    }
+    
+    graphOptions() {
+        return this.options;
+    }
+
+    scaleFactor() {
+        return this.zoomFactor;
+    }
+
+    translation() {
+        return this.graphTranslation;
+    }
 
     // Returns the visible nodes
-    graph.graphNodeElements = function () {
-        return nodeElements;
-    };
-    // Returns the visible Label Nodes
-    graph.graphLabelElements = function () {
-        return labelNodes;
-    };
-    graph.graphLinkElements = function () {
-        return links;
-    };
+    graphNodeElements() {
+        return this.nodeElements;
+    }
 
-    graph.setSliderZoom = function (val) {
-        var cx = 0.5 * graph.options().width();
-        var cy = 0.5 * graph.options().height();
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
-        var sP = [cp.x, cp.y, graph.options().height() / zoomFactor];
-        var eP = [cp.x, cp.y, graph.options().height() / val];
+    // Returns the visible Label Nodes
+    graphLabelElements() {
+        return this.labelNodes;
+    }
+
+    graphLinkElements() {
+        return this.links;
+    }
+
+    /**
+     * @param {number} val
+     */
+    setSliderZoom(val) {
+        const _this = this;
+        var cx = 0.5 * this.options.width();
+        var cy = 0.5 * this.options.height();
+        var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, this.zoomFactor);
+        var sP = [cp.x, cp.y, this.options.height() / this.zoomFactor];
+        var eP = [cp.x, cp.y, this.options.height() / val];
         var pos_intp = d3.interpolateZoom(sP, eP);
 
-        graphContainer.attr("transform", transform(sP, cx, cy))
+        this.graphContainer.attr("transform", this.transform(sP, cx, cy))
             .transition()
             .duration(1)
             .attrTween("transform", function () {
@@ -184,38 +203,48 @@ export default function (graphContainerSelector) {
                 };
             })
             .each("end", function () {
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
+                _this.graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
+                _this.zoom.translate(graphTranslation);
+                _this.zoom.scale(zoomFactor);
+                _this.options.zoomSlider().updateZoomSliderValue(zoomFactor);
             });
-    };
-    graph.setZoom = function (value) {
-        zoom.scale(value);
-    };
-    graph.setTranslation = function (translation) {
-        zoom.translate([translation[0], translation[1]]);
-    };
-    graph.options = function () {
-        return options;
-    };
+    }
+
+    /**
+     * @param {any} value
+     */
+    setZoom(value) {
+        this.zoom.scale(value);
+    }
+
+    /**
+     * @param {any[]} translation
+     */
+    setTranslation(translation) {
+        this.zoom.translate([translation[0], translation[1]]);
+    }
+
     // search functionality
-    graph.getUpdateDictionary = function () {
-        return parser.dictionary;
-    };
-    graph.language = function (newLanguage) {
-        if (!arguments.length) return language;
+    getUpdateDictionary() {
+        return this.parser.dictionary;
+    }
+
+    /**
+     * @param {string} newLanguage
+     */
+    language(newLanguage) {
+        if (!arguments.length) return this.language;
 
         // Just update if the language changes
-        if (language !== newLanguage) {
-            language = newLanguage || "default";
-            redrawContent();
-            recalculatePositions();
-            graph.options().searchMenu().requestDictionaryUpdate();
-            graph.resetSearchHighlight();
+        if (this.language !== newLanguage) {
+            this.language = newLanguage || "default";
+            this.redrawContent();
+            this.recalculatePositions();
+            this.options.searchMenu().requestDictionaryUpdate();
+            this.resetSearchHighlight();
         }
-        return graph;
-    };
+        return this;
+    }
 
 
     /** --------------------------------------------------------- **/
@@ -223,181 +252,182 @@ export default function (graphContainerSelector) {
     /** --------------------------------------------------------- **/
 
     // Initializes the graph.
-    function initializeGraph() {
-        options.graphContainerSelector(graphContainerSelector);
+    initializeGraph() {
+        const _this = this;
+        this.options.graphContainerSelector(this.graphContainerSelector);
         var moved = false;
-        force = d3.layout.force()
-            .on("tick", hiddenRecalculatePositions);
+        this.force = d3.layout.force()
+            .on("tick", this.hiddenRecalculatePositions);
 
-        dragBehaviour = d3.behavior.drag()
-            .origin(function (d) {
+        this.dragBehaviour = d3.behavior.drag()
+            .origin(function (/** @type {any} */ d) {
                 return d;
             })
-            .on("dragstart", function (d) {
+            .on("dragstart", function (/** @type {{ type: string; parentNode: () => { (): any; new (): any; locked: boolean; }; locked: boolean; }} */ d) {
                 d3.event.sourceEvent.stopPropagation(); // Prevent panning
                 graph.ignoreOtherHoverEvents(true);
                 if (d.type && d.type === "Class_dragger") {
-                    classDragger.mouseButtonPressed = true;
-                    clearTimeout(delayedHider);
-                    classDragger.selectedViaTouch(true);
+                    _this.classDragger.mouseButtonPressed = true;
+                    clearTimeout(_this.delayedHider);
+                    _this.classDragger.selectedViaTouch(true);
                     d.parentNode().locked = true;
-                    draggingStarted = true;
+                    _this.draggingStarted = true;
                 } else if (d.type && d.type === "Range_dragger") {
                     graph.ignoreOtherHoverEvents(true);
-                    clearTimeout(delayedHider);
-                    frozenDomainForPropertyDragger = shadowClone.parentNode().domain;
-                    frozenRangeForPropertyDragger = shadowClone.parentNode().range;
-                    shadowClone.setInitialPosition();
-                    shadowClone.hideClone(false);
-                    shadowClone.hideParentProperty(true);
-                    shadowClone.updateElement();
-                    deleteGroupElement.classed("hidden", true);
-                    addDataPropertyGroupElement.classed("hidden", true);
-                    frozenDomainForPropertyDragger.frozen = true;
-                    frozenDomainForPropertyDragger.locked = true;
-                    frozenRangeForPropertyDragger.frozen = true;
-                    frozenRangeForPropertyDragger.locked = true;
-                    domainDragger.updateElement();
-                    domainDragger.mouseButtonPressed = true;
-                    rangeDragger.updateElement();
-                    rangeDragger.mouseButtonPressed = true;
+                    clearTimeout(_this.delayedHider);
+                    _this.frozenDomainForPropertyDragger = _this.shadowClone.parentNode().domain;
+                    _this.frozenRangeForPropertyDragger = _this.shadowClone.parentNode().range;
+                    _this.shadowClone.setInitialPosition();
+                    _this.shadowClone.hideClone(false);
+                    _this.shadowClone.hideParentProperty(true);
+                    _this.shadowClone.updateElement();
+                    _this.deleteGroupElement.classed("hidden", true);
+                    _this.addDataPropertyGroupElement.classed("hidden", true);
+                    _this.frozenDomainForPropertyDragger.frozen = true;
+                    _this.frozenDomainForPropertyDragger.locked = true;
+                    _this.frozenRangeForPropertyDragger.frozen = true;
+                    _this.frozenRangeForPropertyDragger.locked = true;
+                    _this.domainDragger.updateElement();
+                    _this.domainDragger.mouseButtonPressed = true;
+                    _this.rangeDragger.updateElement();
+                    _this.rangeDragger.mouseButtonPressed = true;
                     //  shadowClone.setPosition(d.x, d.y);
                 } else if (d.type && d.type === "Domain_dragger") {
                     graph.ignoreOtherHoverEvents(true);
-                    clearTimeout(delayedHider);
-                    frozenDomainForPropertyDragger = shadowClone.parentNode().domain;
-                    frozenRangeForPropertyDragger = shadowClone.parentNode().range;
-                    shadowClone.setInitialPosition();
-                    shadowClone.hideClone(false);
-                    shadowClone.hideParentProperty(true);
-                    shadowClone.updateElement();
-                    deleteGroupElement.classed("hidden", true);
-                    addDataPropertyGroupElement.classed("hidden", true);
+                    clearTimeout(_this.delayedHider);
+                    _this.frozenDomainForPropertyDragger = _this.shadowClone.parentNode().domain;
+                    _this.frozenRangeForPropertyDragger = _this.shadowClone.parentNode().range;
+                    _this.shadowClone.setInitialPosition();
+                    _this.shadowClone.hideClone(false);
+                    _this.shadowClone.hideParentProperty(true);
+                    _this.shadowClone.updateElement();
+                    _this.deleteGroupElement.classed("hidden", true);
+                    _this.addDataPropertyGroupElement.classed("hidden", true);
 
-                    frozenDomainForPropertyDragger.frozen = true;
-                    frozenDomainForPropertyDragger.locked = true;
-                    frozenRangeForPropertyDragger.frozen = true;
-                    frozenRangeForPropertyDragger.locked = true;
-                    domainDragger.updateElement();
-                    domainDragger.mouseButtonPressed = true;
-                    rangeDragger.updateElement();
-                    rangeDragger.mouseButtonPressed = true;
+                    _this.frozenDomainForPropertyDragger.frozen = true;
+                    _this.frozenDomainForPropertyDragger.locked = true;
+                    _this.frozenRangeForPropertyDragger.frozen = true;
+                    _this.frozenRangeForPropertyDragger.locked = true;
+                    _this.domainDragger.updateElement();
+                    _this.domainDragger.mouseButtonPressed = true;
+                    _this.rangeDragger.updateElement();
+                    _this.rangeDragger.mouseButtonPressed = true;
                 }
                 else {
                     d.locked = true;
                     moved = false;
                 }
             })
-            .on("drag", function (d) {
+            .on("drag", function (/** @type {{ type: string; px: any; py: any; renderType: string; }} */ d) {
 
                 if (d.type && d.type === "Class_dragger") {
-                    clearTimeout(delayedHider);
-                    classDragger.setPosition(d3.event.x, d3.event.y);
+                    clearTimeout(_this.delayedHider);
+                    _this.classDragger.setPosition(d3.event.x, d3.event.y);
                 } else if (d.type && d.type === "Range_dragger") {
-                    clearTimeout(delayedHider);
-                    rangeDragger.setPosition(d3.event.x, d3.event.y);
-                    shadowClone.setPosition(d3.event.x, d3.event.y);
-                    domainDragger.updateElementViaRangeDragger(d3.event.x, d3.event.y);
+                    clearTimeout(_this.delayedHider);
+                    _this.rangeDragger.setPosition(d3.event.x, d3.event.y);
+                    _this.shadowClone.setPosition(d3.event.x, d3.event.y);
+                    _this.domainDragger.updateElementViaRangeDragger(d3.event.x, d3.event.y);
                 }
                 else if (d.type && d.type === "Domain_dragger") {
-                    clearTimeout(delayedHider);
-                    domainDragger.setPosition(d3.event.x, d3.event.y);
-                    shadowClone.setPositionDomain(d3.event.x, d3.event.y);
-                    rangeDragger.updateElementViaDomainDragger(d3.event.x, d3.event.y);
+                    clearTimeout(_this.delayedHider);
+                    _this.domainDragger.setPosition(d3.event.x, d3.event.y);
+                    _this.shadowClone.setPositionDomain(d3.event.x, d3.event.y);
+                    _this.rangeDragger.updateElementViaDomainDragger(d3.event.x, d3.event.y);
                 }
                 else {
                     d.px = d3.event.x;
                     d.py = d3.event.y;
-                    force.resume();
-                    updateHaloRadius();
+                    _this.force.resume();
+                    _this.updateHaloRadius();
                     moved = true;
                     if (d.renderType && d.renderType === "round") {
-                        classDragger.setParentNode(d);
+                        _this.classDragger.setParentNode(d);
                     }
                 }
             })
-            .on("dragend", function (d) {
+            .on("dragend", function (/** @type {any} */ d) {
                 graph.ignoreOtherHoverEvents(false);
                 if (d.type && d.type === "Class_dragger") {
-                    var nX = classDragger.x;
-                    var nY = classDragger.y;
-                    clearTimeout(delayedHider);
-                    classDragger.mouseButtonPressed = false;
-                    classDragger.selectedViaTouch(false);
+                    var nX = _this.classDragger.x;
+                    var nY = _this.classDragger.y;
+                    clearTimeout(_this.delayedHider);
+                    _this.classDragger.mouseButtonPressed = false;
+                    _this.classDragger.selectedViaTouch(false);
                     d.setParentNode(d.parentNode());
 
                     var draggerEndPos = [nX, nY];
-                    var targetNode = graph.getTargetNode(draggerEndPos);
+                    var targetNode = _this.getTargetNode(draggerEndPos);
                     if (targetNode) {
                         createNewObjectProperty(d.parentNode(), targetNode, draggerEndPos);
                     }
-                    if (touchDevice === false) {
+                    if (_this.touchDevice === false) {
                         editElementHoverOut();
                     }
-                    draggingStarted = false;
+                    _this.draggingStarted = false;
                 } else if (d.type && d.type === "Range_dragger") {
-                    graph.ignoreOtherHoverEvents(false);
-                    frozenDomainForPropertyDragger.frozen = false;
-                    frozenDomainForPropertyDragger.locked = false;
-                    frozenRangeForPropertyDragger.frozen = false;
-                    frozenRangeForPropertyDragger.locked = false;
-                    rangeDragger.mouseButtonPressed = false;
-                    domainDragger.mouseButtonPressed = false;
-                    domainDragger.updateElement();
-                    rangeDragger.updateElement();
-                    shadowClone.hideClone(true);
-                    var rX = rangeDragger.x;
-                    var rY = rangeDragger.y;
+                    _this.ignoreOtherHoverEvents(false);
+                    _this.frozenDomainForPropertyDragger.frozen = false;
+                    _this.frozenDomainForPropertyDragger.locked = false;
+                    _this.frozenRangeForPropertyDragger.frozen = false;
+                    _this.frozenRangeForPropertyDragger.locked = false;
+                    _this.rangeDragger.mouseButtonPressed = false;
+                    _this.domainDragger.mouseButtonPressed = false;
+                    _this.domainDragger.updateElement();
+                    _this.rangeDragger.updateElement();
+                    _this.shadowClone.hideClone(true);
+                    var rX = _this.rangeDragger.x;
+                    var rY = _this.rangeDragger.y;
                     var rangeDraggerEndPos = [rX, rY];
                     var targetRangeNode = graph.getTargetNode(rangeDraggerEndPos);
-                    if (elementTools.isDatatype(targetRangeNode) === true) {
+                    if (ElementTools.isDatatype(targetRangeNode) === true) {
                         targetRangeNode = null;
                         console.log("---------------TARGET NODE IS A DATATYPE/ LITERAL ------------");
                     }
 
                     if (targetRangeNode === null) {
                         d.redrawEverything();
-                        shadowClone.hideParentProperty(false);
+                        _this.shadowClone.hideParentProperty(false);
                     }
                     else {
                         d.updateRange(targetRangeNode);
-                        graph.update();
-                        shadowClone.hideParentProperty(false);
+                        _this.update();
+                        _this.shadowClone.hideParentProperty(false);
                     }
                 } else if (d.type && d.type === "Domain_dragger") {
                     graph.ignoreOtherHoverEvents(false);
-                    frozenDomainForPropertyDragger.frozen = false;
-                    frozenDomainForPropertyDragger.locked = false;
-                    frozenRangeForPropertyDragger.frozen = false;
-                    frozenRangeForPropertyDragger.locked = false;
-                    rangeDragger.mouseButtonPressed = false;
-                    domainDragger.mouseButtonPressed = false;
-                    domainDragger.updateElement();
-                    rangeDragger.updateElement();
-                    shadowClone.hideClone(true);
+                    _this.frozenDomainForPropertyDragger.frozen = false;
+                    _this.frozenDomainForPropertyDragger.locked = false;
+                    _this.frozenRangeForPropertyDragger.frozen = false;
+                    _this.frozenRangeForPropertyDragger.locked = false;
+                    _this.rangeDragger.mouseButtonPressed = false;
+                    _this.domainDragger.mouseButtonPressed = false;
+                    _this.domainDragger.updateElement();
+                    _this.rangeDragger.updateElement();
+                    _this.shadowClone.hideClone(true);
 
-                    var dX = domainDragger.x;
-                    var dY = domainDragger.y;
+                    var dX = _this.domainDragger.x;
+                    var dY = _this.domainDragger.y;
                     var domainDraggerEndPos = [dX, dY];
                     var targetDomainNode = graph.getTargetNode(domainDraggerEndPos);
-                    if (elementTools.isDatatype(targetDomainNode) === true) {
+                    if (ElementTools.isDatatype(targetDomainNode) === true) {
                         targetDomainNode = null;
                         console.log("---------------TARGET NODE IS A DATATYPE/ LITERAL ------------");
                     }
-                    shadowClone.hideClone(true);
+                    _this.shadowClone.hideClone(true);
                     if (targetDomainNode === null) {
                         d.redrawEverything();
-                        shadowClone.hideParentProperty(false);
+                        _this.shadowClone.hideParentProperty(false);
                     }
                     else {
                         d.updateDomain(targetDomainNode);
-                        graph.update();
-                        shadowClone.hideParentProperty(false);
+                        _this.update();
+                        _this.shadowClone.hideParentProperty(false);
                     }
                 }
                 else {
                     d.locked = false;
-                    var pnp = graph.options().pickAndPinModule();
+                    var pnp = _this.options.pickAndPinModule();
                     if (pnp.enabled === true && moved === true) {
                         if (d.id) { // node
                             pnp.handle(d, true);
@@ -410,218 +440,210 @@ export default function (graphContainerSelector) {
             });
 
         // Apply the zooming factor.
-        zoom = d3.behavior.zoom()
+        this.zoom = d3.behavior.zoom()
             .duration(150)
-            .scaleExtent([options.minMagnification(), options.maxMagnification()])
+            .scaleExtent([this.options.minMagnification(), this.options.maxMagnification()])
             .on("zoom", zoomed);
-        draggerObjectsArray.push(classDragger);
-        draggerObjectsArray.push(rangeDragger);
-        draggerObjectsArray.push(domainDragger);
-        draggerObjectsArray.push(shadowClone);
-        force.stop();
+        this.draggerObjectsArray.push(this.classDragger);
+        this.draggerObjectsArray.push(this.rangeDragger);
+        this.draggerObjectsArray.push(this.domainDragger);
+        this.draggerObjectsArray.push(this.shadowClone);
+        this.force.stop();
     }
 
-    graph.lazyRefresh = function () {
-        redrawContent();
-        recalculatePositions();
+    lazyRefresh(){
+        this.redrawContent();
+        this.recalculatePositions();
     };
 
-    graph.adjustingGraphSize = function (val) {
-        adjustingGraphSize = val;
-    };
-
-    graph.showReloadButtonAfterLayoutOptimization = function (show) {
-        showReloadButtonAfterLayoutOptimization = show;
-    };
-
-    function hiddenRecalculatePositions() {
-        finishedLoadingSequence = false;
-        if (!graph.options().loadingModule().loadingWasSuccessFul) {
-            force.stop();
+    hiddenRecalculatePositions() {
+        this.finishedLoadingSequence = false;
+        if (!this.options.loadingModule().loadingWasSuccessFul) {
+            this.force.stop();
             d3.select("#progressBarValue").node().innerHTML = "";
             graph.updateProgressBarMode();
-            graph.options().loadingModule().showErrorDetailsMessage(hiddenRecalculatePositions);
-            if (keepDetailsCollapsedOnLoading && adjustingGraphSize === false) {
-                graph.options().loadingModule().collapseDetails("hiddenRecalculatePositions");
+            this.options.loadingModule().showErrorDetailsMessage(this.hiddenRecalculatePositions);
+            if (this.keepDetailsCollapsedOnLoading && this.adjustingGraphSize === false) {
+                this.options.loadingModule().collapseDetails("hiddenRecalculatePositions");
             }
             return;
         }
-        if (updateRenderingDuringSimulation === false) {
-            var value = 1.0 - 10 * force.alpha();
-            var percent = parseInt(200 * value) + "%";
-            graph.options().loadingModule().setPercentValue(percent);
+        if (this.updateRenderingDuringSimulation === false) {
+            var value = 1.0 - 10 * this.force.alpha();
+            var percent = (200 * value) + "%";
+            this.options.loadingModule().setPercentValue(percent);
             d3.select("#progressBarValue").style("width", percent);
             d3.select("#progressBarValue").node().innerHTML = percent;
 
             if (value > 0.49) {
-                updateRenderingDuringSimulation = true;
+                this.updateRenderingDuringSimulation = true;
                 // show graph container;
-                if (graphContainer) {
-                    graphContainer.style("opacity", "1");
+                if (this.graphContainer) {
+                    this.graphContainer.style("opacity", "1");
                     percent = "100%";
                     d3.select("#progressBarValue").style("width", percent);
                     d3.select("#progressBarValue").node().innerHTML = percent;
-                    graph.options().ontologyMenu().append_message_toLastBulletPoint("done");
-                    d3.select("#reloadCachedOntology").classed("hidden", !showReloadButtonAfterLayoutOptimization);
-                    if (showFilterWarning === true && seenFilterWarning === false) {
-                        graph.options().warningModule().showFilterHint();
-                        seenFilterWarning = true;
+                    this.options.ontologyMenu().append_message_toLastBulletPoint("done");
+                    d3.select("#reloadCachedOntology").classed("hidden", !this.showReloadButtonAfterLayoutOptimization);
+                    if (this.showFilterWarning === true && this.seenFilterWarning === false) {
+                        this.options.warningModule().showFilterHint();
+                        this.seenFilterWarning = true;
                     }
                 }
 
-                if (initialLoad) {
+                if (this.initialLoad) {
                     if (graph.paused() === false)
-                        force.resume(); // resume force
-                    initialLoad = false;
+                        this.force.resume(); // resume force
+                    this.initialLoad = false;
                 }
-                finishedLoadingSequence = true;
-                if (showFPS === true) {
-                    force.on("tick", recalculatePositionsWithFPS);
-                    recalculatePositionsWithFPS();
+                this.finishedLoadingSequence = true;
+                if (this.showFPS === true) {
+                    this.force.on("tick", this.recalculatePositionsWithFPS);
+                    this.recalculatePositionsWithFPS();
                 }
                 else {
-                    force.on("tick", recalculatePositions);
-                    recalculatePositions();
+                    this.force.on("tick", this.recalculatePositions);
+                    this.recalculatePositions();
                 }
 
-                if (centerGraphViewOnLoad === true && force.nodes().length > 0) {
-                    if (force.nodes().length < 10) graph.forceRelocationEvent(true); // uses dynamic zoomer;
-                    else graph.forceRelocationEvent();
-                    centerGraphViewOnLoad = false;
+                if (this.centerGraphViewOnLoad === true && this.force.nodes().length > 0) {
+                    if (this.force.nodes().length < 10) this.forceRelocationEvent(true); // uses dynamic zoomer;
+                    else this.forceRelocationEvent();
+                    this.centerGraphViewOnLoad = false;
                     // console.log("--------------------------------------")
                 }
-                graph.showEditorHintIfNeeded();
+                this.showEditorHintIfNeeded();
 
-                if (!graph.options().loadingModule().missingImportsWarning) {
-                    graph.options().loadingModule().hideLoadingIndicator();
-                    graph.options().ontologyMenu().append_bulletPoint("Successfully loaded ontology");
-                    graph.options().loadingModule().setSuccessful();
+                if (!this.options.loadingModule().missingImportsWarning) {
+                    this.options.loadingModule().hideLoadingIndicator();
+                    this.options.ontologyMenu().append_bulletPoint("Successfully loaded ontology");
+                    this.options.loadingModule().setSuccessful();
                 } else {
-                    graph.options().loadingModule().showWarningDetailsMessage();
-                    graph.options().ontologyMenu().append_bulletPoint("Loaded ontology with warnings");
+                    this.options.loadingModule().showWarningDetailsMessage();
+                    this.options.ontologyMenu().append_bulletPoint("Loaded ontology with warnings");
                 }
             }
         }
     }
 
-    graph.showEditorHintIfNeeded = function () {
-        if (seenEditorHint === false && editMode === true) {
-            seenEditorHint = true;
-            graph.options().warningModule().showEditorHint();
+    gshowEditorHintIfNeeded() {
+        if (this.seenEditorHint === false && this.editMode === true) {
+            this.seenEditorHint = true;
+            this.options.warningModule().showEditorHint();
         }
-    };
-
-    graph.setForceTickFunctionWithFPS = function () {
-        showFPS = true;
-        if (force && finishedLoadingSequence === true) {
-            force.on("tick", recalculatePositionsWithFPS);
-        }
-
-    };
-    graph.setDefaultForceTickFunction = function () {
-        showFPS = false;
-        if (force && finishedLoadingSequence === true) {
-            force.on("tick", recalculatePositions);
-        }
-    };
-    function recalculatePositionsWithFPS() {
-        // compute the fps
-
-        recalculatePositions();
-        now = Date.now();
-        var diff = now - then;
-        var fps = (1000 / (diff)).toFixed(2);
-
-        debugContainer.node().innerHTML = "FPS: " + fps + "<br>" + "Nodes: " + force.nodes().length + "<br>" + "Links: " + force.links().length;
-        then = Date.now();
-
+        this.showFPS
     }
 
-    function recalculatePositions() {
+    setForceTickFunctionWithFPS() {
+        this.showFPS = true;
+        if (this.force && this.finishedLoadingSequence === true) {
+            this.force.on("tick", this.recalculatePositionsWithFPS());
+        }
+
+    }
+    setDefaultForceTickFunction() {
+        this.showFPS = false;
+        if (this.force && this.finishedLoadingSequence === true) {
+            this.force.on("tick", this.recalculatePositions());
+        }
+    }
+    recalculatePositionsWithFPS() {
+        // compute the fps
+        this.recalculatePositions();
+        this.now = Date.now();
+        var diff = this.now - this.then;
+        var fps = (1000 / (diff)).toFixed(2);
+
+        this.debugContainer.node().innerHTML = "FPS: " + fps + "<br>" + "Nodes: " + this.force.nodes().length + "<br>" + "Links: " + this.force.links().length;
+        this.then = Date.now();
+    }
+
+    recalculatePositions() {
+        const _this = this;
         // Set node positions
 
 
         // add switch for edit mode to make this faster;
-        if (!editMode) {
-            nodeElements.attr("transform", function (node) {
+        if (!this.editMode) {
+            this.nodeElements.attr("transform", function (node) {
                 return "translate(" + node.x + "," + node.y + ")";
             });
 
             // Set label group positions
-            labelGroupElements.attr("transform", function (label) {
+            this.labelGroupElements.attr("transform", function (label) {
                 var position;
 
                 // force centered positions on single-layered links
                 var link = label.link;
                 if (link.layers === 1 && !link.loops) {
-                    var linkDomainIntersection = math.calculateIntersection(link.range, link.domain, 0);
-                    var linkRangeIntersection = math.calculateIntersection(link.domain, link.range, 0);
-                    position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
+                    var linkDomainIntersection = MathUtils.calculateIntersection(link.range, link.domain, 0);
+                    var linkRangeIntersection = MathUtils.calculateIntersection(link.domain, link.range, 0);
+                    position = MathUtils.calculateCenter(linkDomainIntersection, linkRangeIntersection);
                     label.x = position.x;
                     label.y = position.y;
                 }
                 return "translate(" + label.x + "," + label.y + ")";
             });
             // Set link paths and calculate additional information
-            linkPathElements.attr("d", function (l) {
+            this.linkPathElements.attr("d", function (l) {
                 if (l.isLoop()) {
-                    return math.calculateLoopPath(l);
+                    return MathUtils.calculateLoopPath(l);
                 }
                 var curvePoint = l.label;
-                var pathStart = math.calculateIntersection(curvePoint, l.domain, 1);
-                var pathEnd = math.calculateIntersection(curvePoint, l.range, 1);
+                var pathStart = MathUtils.calculateIntersection(curvePoint, l.domain, 1);
+                var pathEnd = MathUtils.calculateIntersection(curvePoint, l.range, 1);
 
-                return curveFunction([pathStart, curvePoint, pathEnd]);
+                return _this.curveFunction([pathStart, curvePoint, pathEnd]);
             });
 
             // Set cardinality positions
-            cardinalityElements.attr("transform", function (property) {
+            this.cardinalityElements.attr("transform", function (/** @type {{ link: { label: any; } range: any; }} */ property) {
 
                 var label = property.link.label,
-                    pos = math.calculateIntersection(label, property.range, CARDINALITY_HDISTANCE),
-                    normalV = math.calculateNormalVector(label, property.range, CARDINALITY_VDISTANCE);
+                    pos = MathUtils.calculateIntersection(label, property.range, _this.CARDINALITY_HDISTANCE),
+                    normalV = MathUtils.calculateNormalVector(label, property.range, _this.CARDINALITY_VDISTANCE);
 
                 return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
             });
 
 
-            updateHaloRadius();
+            this.updateHaloRadius();
             return;
         }
 
         // TODO: this is Editor redraw function // we need to make this faster!!
 
 
-        nodeElements.attr("transform", function (node) {
+        this.nodeElements.attr("transform", function (node) {
             return "translate(" + node.x + "," + node.y + ")";
         });
 
         // Set label group positions
-        labelGroupElements.attr("transform", function (label) {
+        this.labelGroupElements.attr("transform", function (/** @type {{ link: any; x: string; y: string; linkRangeIntersection: any; linkDomainIntersection: any; }} */ label) {
             var position;
 
             // force centered positions on single-layered links
             var link = label.link;
             if (link.layers === 1 && !link.loops) {
-                var linkDomainIntersection = math.calculateIntersection(link.range, link.domain, 0);
-                var linkRangeIntersection = math.calculateIntersection(link.domain, link.range, 0);
-                position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
+                var linkDomainIntersection = MathUtils.calculateIntersection(link.range, link.domain, 0);
+                var linkRangeIntersection = MathUtils.calculateIntersection(link.domain, link.range, 0);
+                position = MathUtils.calculateCenter(linkDomainIntersection, linkRangeIntersection);
                 label.x = position.x;
                 label.y = position.y;
                 label.linkRangeIntersection = linkRangeIntersection;
                 label.linkDomainIntersection = linkDomainIntersection;
-                if (link.property.focused === true || hoveredPropertyElement !== undefined) {
-                    rangeDragger.updateElement();
-                    domainDragger.updateElement();
+                if (link.property.focused === true || _this.hoveredPropertyElement !== undefined) {
+                    _this.rangeDragger.updateElement();
+                    _this.domainDragger.updateElement();
                     // shadowClone.setPosition(link.property.range.x,link.property.range.y);
                     // shadowClone.setPositionDomain(link.property.domain.x,link.property.domain.y);
                 }
             } else {
-                label.linkDomainIntersection = math.calculateIntersection(link.label, link.domain, 0);
-                label.linkRangeIntersection = math.calculateIntersection(link.label, link.range, 0);
-                if (link.property.focused === true || hoveredPropertyElement !== undefined) {
-                    rangeDragger.updateElement();
-                    domainDragger.updateElement();
+                label.linkDomainIntersection = MathUtils.calculateIntersection(link.label, link.domain, 0);
+                label.linkRangeIntersection = MathUtils.calculateIntersection(link.label, link.range, 0);
+                if (link.property.focused === true || _this.hoveredPropertyElement !== undefined) {
+                    _this.rangeDragger.updateElement();
+                    _this.domainDragger.updateElement();
                     // shadowClone.setPosition(link.property.range.x,link.property.range.y);
                     // shadowClone.setPositionDomain(link.property.domain.x,link.property.domain.y);
                 }
@@ -630,90 +652,97 @@ export default function (graphContainerSelector) {
             return "translate(" + label.x + "," + label.y + ")";
         });
         // Set link paths and calculate additional information
-        linkPathElements.attr("d", function (l) {
+        this.linkPathElements.attr("d", function (l) {
             if (l.isLoop()) {
 
-                var ptrAr = math.getLoopPoints(l);
+                var ptrAr = MathUtils.getLoopPoints(l);
                 l.label.linkRangeIntersection = ptrAr[1];
                 l.label.linkDomainIntersection = ptrAr[0];
 
-                if (l.property.focused === true || hoveredPropertyElement !== undefined) {
-                    rangeDragger.updateElement();
-                    domainDragger.updateElement();
+                if (l.property.focused === true || _this.hoveredPropertyElement !== undefined) {
+                    _this.rangeDragger.updateElement();
+                    _this.domainDragger.updateElement();
                 }
-                return math.calculateLoopPath(l);
+                return MathUtils.calculateLoopPath(l);
             }
             var curvePoint = l.label;
-            var pathStart = math.calculateIntersection(curvePoint, l.domain, 1);
-            var pathEnd = math.calculateIntersection(curvePoint, l.range, 1);
+            var pathStart = MathUtils.calculateIntersection(curvePoint, l.domain, 1);
+            var pathEnd = MathUtils.calculateIntersection(curvePoint, l.range, 1);
             l.linkRangeIntersection = pathStart;
             l.linkDomainIntersection = pathEnd;
-            if (l.property.focused === true || hoveredPropertyElement !== undefined) {
-                domainDragger.updateElement();
-                rangeDragger.updateElement();
+            if (l.property.focused === true || _this.hoveredPropertyElement !== undefined) {
+                _this.domainDragger.updateElement();
+                _this.rangeDragger.updateElement();
                 // shadowClone.setPosition(l.property.range.x,l.property.range.y);
                 // shadowClone.setPositionDomain(l.property.domain.x,l.property.domain.y);
             }
-            return curveFunction([pathStart, curvePoint, pathEnd]);
+            return _this.curveFunction([pathStart, curvePoint, pathEnd]);
         });
 
         // Set cardinality positions
-        cardinalityElements.attr("transform", function (property) {
+        this.cardinalityElements.attr("transform", function (/** @type {{ link: { label: any; }; range: any; }} */ property) {
 
             var label = property.link.label,
-                pos = math.calculateIntersection(label, property.range, CARDINALITY_HDISTANCE),
-                normalV = math.calculateNormalVector(label, property.range, CARDINALITY_VDISTANCE);
+                pos = MathUtils.calculateIntersection(label, property.range, _this.CARDINALITY_HDISTANCE),
+                normalV = MathUtils.calculateNormalVector(label, property.range, _this.CARDINALITY_VDISTANCE);
 
             return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
         });
 
-        if (hoveredNodeElement) {
-            setDeleteHoverElementPosition(hoveredNodeElement);
-            setAddDataPropertyHoverElementPosition(hoveredNodeElement);
-            if (draggingStarted === false) {
-                classDragger.setParentNode(hoveredNodeElement);
+        if (this.hoveredNodeElement) {
+            this.setDeleteHoverElementPosition(this.hoveredNodeElement);
+            this.setAddDataPropertyHoverElementPosition(this.hoveredNodeElement);
+            if (this.draggingStarted === false) {
+                this.classDragger.setParentNode(this.hoveredNodeElement);
             }
         }
-        if (hoveredPropertyElement) {
-            setDeleteHoverElementPositionProperty(hoveredPropertyElement);
+        if (this.hoveredPropertyElement) {
+            this.setDeleteHoverElementPositionProperty(this.hoveredPropertyElement);
         }
 
-        updateHaloRadius();
+        this.updateHaloRadius();
     }
 
-    graph.updatePropertyDraggerElements = function (property) {
+    /**
+     * @param {{ type: string; }} property
+     */
+    updatePropertyDraggerElements(property) {
         if (property.type !== "owl:DatatypeProperty") {
 
-            shadowClone.setParentProperty(property);
-            rangeDragger.setParentProperty(property);
-            rangeDragger.hideDragger(false);
-            rangeDragger.addMouseEvents();
-            domainDragger.setParentProperty(property);
-            domainDragger.hideDragger(false);
-            domainDragger.addMouseEvents();
+            this.shadowClone.setParentProperty(property);
+            this.rangeDragger.setParentProperty(property);
+            this.rangeDragger.hideDragger(false);
+            this.rangeDragger.addMouseEvents();
+            this.domainDragger.setParentProperty(property);
+            this.domainDragger.hideDragger(false);
+            this.domainDragger.addMouseEvents();
 
         }
         else {
-            rangeDragger.hideDragger(true);
-            domainDragger.hideDragger(true);
-            shadowClone.hideClone(true);
+            this.rangeDragger.hideDragger(true);
+            this.domainDragger.hideDragger(true);
+            this.shadowClone.hideClone(true);
         }
-    };
+    }
 
-    function addClickEvents() {
+    addClickEvents() {
+        const _this = this;
+        /**
+         * @param {any} selectedElement
+         */
         function executeModules(selectedElement) {
-            options.selectionModules().forEach(function (module) {
+            _this.options.selectionModules().forEach(function (/** @type {{ handle: (arg0: any) => void; }} */ module) {
                 module.handle(selectedElement);
             });
         }
 
-        nodeElements.on("click", function (clickedNode) {
+        this.nodeElements.on("click", function (clickedNode) {
 
             // manaual double clicker // helper for iphone 6 etc...
-            if (touchDevice === true && doubletap() === true) {
+            if (_this.touchDevice === true && this.doubletap() === true) {
                 d3.event.stopPropagation();
-                if (editMode === true) {
-                    clickedNode.raiseDoubleClickEdit(defaultIriValue(clickedNode));
+                if (_this.editMode === true) {
+                    clickedNode.raiseDoubleClickEdit(_this.defaultIriValue(clickedNode));
                 }
             }
             else {
@@ -721,22 +750,22 @@ export default function (graphContainerSelector) {
             }
         });
 
-        nodeElements.on("dblclick", function (clickedNode) {
+        this.nodeElements.on("dblclick", function (/** @type {{ raiseDoubleClickEdit: (arg0: boolean) => void; }} */ clickedNode) {
 
             d3.event.stopPropagation();
-            if (editMode === true) {
-                clickedNode.raiseDoubleClickEdit(defaultIriValue(clickedNode));
+            if (_this.editMode === true) {
+                clickedNode.raiseDoubleClickEdit(_this.defaultIriValue(clickedNode));
             }
         });
 
-        labelGroupElements.selectAll(".label").on("click", function (clickedProperty) {
+        this.labelGroupElements.selectAll(".label").on("click", function (/** @type {{ raiseDoubleClickEdit: (arg0: any) => void; }} */ clickedProperty) {
             executeModules(clickedProperty);
 
             // this is for enviroments that do not define dblClick function;
-            if (touchDevice === true && doubletap() === true) {
+            if (_this.touchDevice === true && _this.doubletap() === true) {
                 d3.event.stopPropagation();
-                if (editMode === true) {
-                    clickedProperty.raiseDoubleClickEdit(defaultIriValue(clickedProperty));
+                if (_this.editMode === true) {
+                    clickedProperty.raiseDoubleClickEdit(_this.defaultIriValue(clickedProperty));
                 }
             }
 
@@ -780,29 +809,33 @@ export default function (graphContainerSelector) {
             //      }
             //  }
         });
-        labelGroupElements.selectAll(".label").on("dblclick", function (clickedProperty) {
+        this.labelGroupElements.selectAll(".label").on("dblclick", function (/** @type {{ raiseDoubleClickEdit: (arg0: boolean) => void; }} */ clickedProperty) {
             d3.event.stopPropagation();
-            if (editMode === true) {
-                clickedProperty.raiseDoubleClickEdit(defaultIriValue(clickedProperty));
+            if (_this.editMode === true) {
+                clickedProperty.raiseDoubleClickEdit(_this.defaultIriValue(clickedProperty));
             }
 
         });
     }
 
-    function defaultIriValue(element) {
+    /**
+     * @param {{ raiseDoubleClickEdit?: ((arg0: boolean) => void) | ((arg0: any) => void) | ((arg0: boolean) => void); id?: any; iri?: any; }} element
+     */
+    defaultIriValue(element) {
         // get the iri of that element;
-        if (graph.options().getGeneralMetaObject().iri) {
-            var str2Compare = graph.options().getGeneralMetaObject().iri + element.id;
+        if (this.options.getGeneralMetaObject().iri) {
+            var str2Compare = this.options.getGeneralMetaObject().iri + element.id;
             return element.iri === str2Compare;
         }
         return false;
     }
 
     /** Adjusts the containers current scale and position. */
-    function zoomed() {
-        if (forceNotZooming === true) {
-            zoom.translate(graphTranslation);
-            zoom.scale(zoomFactor);
+    zoomed() {
+        const _this = this;
+        if (this.forceNotZooming === true) {
+            this.zoom.translate(this.graphTranslation);
+            this.zoom.scale(this.zoomFactor);
             return;
         }
 
@@ -812,80 +845,80 @@ export default function (graphContainerSelector) {
             if (d3.event.sourceEvent.deltaY) zoomEventByMWheel = true;
         }
         if (zoomEventByMWheel === false) {
-            if (transformAnimation === true) {
+            if (this.transformAnimation === true) {
                 return;
             }
-            zoomFactor = d3.event.scale;
-            graphTranslation = d3.event.translate;
-            graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-            updateHaloRadius();
-            graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
+            this.zoomFactor = d3.event.scale;
+            this.graphTranslation = d3.event.translate;
+            this.graphContainer.attr("transform", "translate(" + this.graphTranslation + ")scale(" + this.zoomFactor + ")");
+            this.updateHaloRadius();
+            this.options.zoomSlider().updateZoomSliderValue(zoomFactor);
             return;
         }
         /** animate the transition **/
-        zoomFactor = d3.event.scale;
-        graphTranslation = d3.event.translate;
-        graphContainer.transition()
+        this.zoomFactor = d3.event.scale;
+        this.graphTranslation = d3.event.translate;
+        this.graphContainer.transition()
             .tween("attr.translate", function () {
                 return function (t) {
-                    transformAnimation = true;
-                    var tr = d3.transform(graphContainer.attr("transform"));
-                    graphTranslation[0] = tr.translate[0];
-                    graphTranslation[1] = tr.translate[1];
-                    zoomFactor = tr.scale[0];
-                    updateHaloRadius();
-                    graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
+                    _this.transformAnimation = true;
+                    var tr = d3.transform(_this.graphContainer.attr("transform"));
+                    _this.graphTranslation[0] = tr.translate[0];
+                    _this.graphTranslation[1] = tr.translate[1];
+                    _this.zoomFactor = tr.scale[0];
+                    _this.updateHaloRadius();
+                    _this.options.zoomSlider().updateZoomSliderValue(this.zoomFactor);
                 };
             })
             .each("end", function () {
-                transformAnimation = false;
+                _this.transformAnimation = false;
             })
-            .attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")")
+            .attr("transform", "translate(" + this.graphTranslation + ")scale(" + this.zoomFactor + ")")
             .ease('linear')
             .duration(250);
     }// end of zoomed function
 
-    function redrawGraph() {
-        remove();
+    redrawGraph() {
+        this.remove();
 
-        graphContainer = d3.selectAll(options.graphContainerSelector())
+        this.graphContainer = d3.selectAll(this.options.graphContainerSelector())
             .append("svg")
             .classed("vowlGraph", true)
-            .attr("width", options.width)
-            .attr("height", options.height)
-            .call(zoom)
+            .attr("width", this.options.width)
+            .attr("height", this.options.height)
+            .call(this.zoom)
             .append("g");
         // add touch and double click functions
 
         var svgGraph = d3.selectAll(".vowlGraph");
-        originalD3_dblClickFunction = svgGraph.on("dblclick.zoom");
-        originalD3_touchZoomFunction = svgGraph.on("touchstart");
-        svgGraph.on("touchstart", touchzoomed);
-        if (editMode === true) {
-            svgGraph.on("dblclick.zoom", graph.modified_dblClickFunction);
+        this.originalD3_dblClickFunction = svgGraph.on("dblclick.zoom");
+        this.originalD3_touchZoomFunction = svgGraph.on("touchstart");
+        svgGraph.on("touchstart", this.touchzoomed);
+        if (this.editMode === true) {
+            svgGraph.on("dblclick.zoom", this.modified_dblClickFunction);
         }
         else {
-            svgGraph.on("dblclick.zoom", originalD3_dblClickFunction);
+            svgGraph.on("dblclick.zoom", this.originalD3_dblClickFunction);
         }
 
     }
 
-    function generateEditElements() {
-        addDataPropertyGroupElement = editContainer.append('g')
+    generateEditElements() {
+        this.addDataPropertyGroupElement = this.editContainer.append('g')
             .classed("hidden-in-export", true)
             .classed("hidden", true)
             .classed("addDataPropertyElement", true)
             .attr("transform", "translate(" + 0 + "," + 0 + ")");
 
 
-        addDataPropertyGroupElement.append("circle")
+        this.addDataPropertyGroupElement.append("circle")
             // .classed("deleteElement", true)
             .attr("r", 12)
             .attr("cx", 0)
             .attr("cy", 0)
             .append("title").text("Add Datatype Property");
 
-        addDataPropertyGroupElement.append("line")
+        this.addDataPropertyGroupElement.append("line")
             // .classed("deleteElementIcon ",true)
             .attr("x1", -8)
             .attr("y1", 0)
@@ -893,7 +926,7 @@ export default function (graphContainerSelector) {
             .attr("y2", 0)
             .append("title").text("Add Datatype Property");
 
-        addDataPropertyGroupElement.append("line")
+        this.addDataPropertyGroupElement.append("line")
             // .classed("deleteElementIcon",true)
             .attr("x1", 0)
             .attr("y1", -8)
@@ -901,61 +934,56 @@ export default function (graphContainerSelector) {
             .attr("y2", 8)
             .append("title").text("Add Datatype Property");
 
-        if (graph.options().useAccuracyHelper()) {
-            addDataPropertyGroupElement.append("circle")
+        if (this.options.useAccuracyHelper()) {
+            this.addDataPropertyGroupElement.append("circle")
                 .attr("r", 15)
                 .attr("cx", -7)
                 .attr("cy", 7)
                 .classed("superHiddenElement", true)
-                .classed("superOpacityElement", !graph.options().showDraggerObject());
+                .classed("superOpacityElement", !this.options.showDraggerObject());
         }
 
-
-        deleteGroupElement = editContainer.append('g')
+        this.deleteGroupElement = this.editContainer.append('g')
             .classed("hidden-in-export", true)
             .classed("hidden", true)
             .classed("deleteParentElement", true)
             .attr("transform", "translate(" + 0 + "," + 0 + ")");
 
-        deleteGroupElement.append("circle")
+        this.deleteGroupElement.append("circle")
             .attr("r", 12)
             .attr("cx", 0)
             .attr("cy", 0)
             .append("title").text("Delete This Node");
 
         var crossLen = 5;
-        deleteGroupElement.append("line")
+        this.deleteGroupElement.append("line")
             .attr("x1", -crossLen)
             .attr("y1", -crossLen)
             .attr("x2", crossLen)
             .attr("y2", crossLen)
             .append("title").text("Delete This Node");
 
-        deleteGroupElement.append("line")
+        this.deleteGroupElement.append("line")
             .attr("x1", crossLen)
             .attr("y1", -crossLen)
             .attr("x2", -crossLen)
             .attr("y2", crossLen)
             .append("title").text("Delete This Node");
 
-        if (graph.options().useAccuracyHelper()) {
-            deleteGroupElement.append("circle")
+        if (this.options.useAccuracyHelper()) {
+            this.deleteGroupElement.append("circle")
                 .attr("r", 15)
                 .attr("cx", 7)
                 .attr("cy", -7)
                 .classed("superHiddenElement", true)
-                .classed("superOpacityElement", !graph.options().showDraggerObject());
+                .classed("superOpacityElement", !this.options.showDraggerObject());
         }
-
-
     }
 
-    graph.getUnfilteredData = function () {
-        return unfilteredData;
-    };
 
-    graph.getClassDataForTtlExport = function () {
-        var allNodes = unfilteredData.nodes;
+
+    getClassDataForTtlExport() {
+        var allNodes = this.unfilteredData.nodes;
         var nodeData = [];
         for (var i = 0; i < allNodes.length; i++) {
             if (allNodes[i].type !== "rdfs:Literal" &&
@@ -965,11 +993,11 @@ export default function (graphContainerSelector) {
             }
         }
         return nodeData;
-    };
+    }
 
-    graph.getPropertyDataForTtlExport = function () {
+    getPropertyDataForTtlExport(){
         var propertyData = [];
-        var allProperties = unfilteredData.properties;
+        var allProperties = this.unfilteredData.properties;
         for (var i = 0; i < allProperties.length; i++) {
             // currently using only the object properties
             if (allProperties[i].type === "owl:ObjectProperty" ||
@@ -989,7 +1017,7 @@ export default function (graphContainerSelector) {
             }
         }
         return propertyData;
-    };
+    }
 
     // NOTE: Disabled to save memory while this method is not used
     /**
@@ -1008,58 +1036,45 @@ export default function (graphContainerSelector) {
     //         ) { } else { }
     //     }
     //     return axioms;
-    // };
+    // }
 
-    graph.getClassDataForTtlExport = function () {
-        var allNodes = unfilteredData.nodes;
-        var nodeData = [];
-        for (var i = 0; i < allNodes.length; i++) {
-            if (allNodes[i].type !== "rdfs:Literal" &&
-                allNodes[i].type !== "rdfs:Datatype" &&
-                allNodes[i].type !== "owl:Thing") {
-                nodeData.push(allNodes[i]);
-            }
-        }
-        return nodeData;
-    };
-
-
-    function redrawContent() {
+    redrawContent(){
+        const _this = this;
         var markerContainer;
 
-        if (!graphContainer) {
+        if (!this.graphContainer) {
             return;
         }
 
         // Empty the graph container
-        graphContainer.selectAll("*").remove();
+        this.graphContainer.selectAll("*").remove();
 
         // Last container -> elements of this container overlap others
-        linkContainer = graphContainer.append("g").classed("linkContainer", true);
-        cardinalityContainer = graphContainer.append("g").classed("cardinalityContainer", true);
-        labelContainer = graphContainer.append("g").classed("labelContainer", true);
-        nodeContainer = graphContainer.append("g").classed("nodeContainer", true);
+        this.linkContainer = this.graphContainer.append("g").classed("linkContainer", true);
+        this.cardinalityContainer = this.graphContainer.append("g").classed("cardinalityContainer", true);
+        this.labelContainer = this.graphContainer.append("g").classed("labelContainer", true);
+        this.nodeContainer = this.graphContainer.append("g").classed("nodeContainer", true);
 
         // adding editing Elements
-        var draggerPathLayer = graphContainer.append("g").classed("linkContainer", true);
-        draggerLayer = graphContainer.append("g").classed("editContainer", true);
-        editContainer = graphContainer.append("g").classed("editContainer", true);
+        var draggerPathLayer = this.graphContainer.append("g").classed("linkContainer", true);
+        this.draggerLayer = this.graphContainer.append("g").classed("editContainer", true);
+        this.editContainer = this.graphContainer.append("g").classed("editContainer", true);
 
-        draggerPathLayer.classed("hidden-in-export", true);
-        editContainer.classed("hidden-in-export", true);
-        draggerLayer.classed("hidden-in-export", true);
+        this.draggerPathLayer.classed("hidden-in-export", true);
+        this.editContainer.classed("hidden-in-export", true);
+        this.draggerLayer.classed("hidden-in-export", true);
 
         // Add an extra container for all markers
-        markerContainer = linkContainer.append("defs");
-        var drElement = draggerLayer.selectAll(".node")
-            .data(draggerObjectsArray).enter()
+        markerContainer = this.linkContainer.append("defs");
+        var drElement = this.draggerLayer.selectAll(".node")
+            .data(_this.draggerObjectsArray).enter()
             .append("g")
             .classed("node", true)
             .classed("hidden-in-export", true)
             .attr("id", function (d) {
                 return d.id;
             })
-            .call(dragBehaviour);
+            .call(_this.dragBehaviour);
         drElement.each(function (node) {
             node.svgRoot = d3.select(this);
             node.svgPathLayer(draggerPathLayer);
@@ -1071,39 +1086,39 @@ export default function (graphContainerSelector) {
                 node.hideDragger(true);
             }
         });
-        generateEditElements();
+        this.generateEditElements();
 
 
         // Add an extra container for all markers
-        markerContainer = linkContainer.append("defs");
+        markerContainer = this.linkContainer.append("defs");
 
         // Draw nodes
 
-        if (classNodes === undefined) classNodes = [];
-
-        nodeElements = nodeContainer.selectAll(".node")
-            .data(classNodes).enter()
+        if (this.classNodes === undefined) this.classNodes = [];
+        
+        this.nodeElements = this.nodeContainer.selectAll(".node")
+            .data(this.classNodes).enter()
             .append("g")
             .classed("node", true)
             .attr("id", function (d) {
                 return d.id;
             })
-            .call(dragBehaviour);
-        nodeElements.each(function (node) {
+            .call(this.dragBehaviour);
+            this.nodeElements.each(function (node) {
             node.draw(d3.select(this));
         });
 
 
-        if (labelNodes === undefined) labelNodes = [];
+        if (this.labelNodes === undefined) this.labelNodes = [];
 
         // Draw label groups (property + inverse)
-        labelGroupElements = labelContainer.selectAll(".labelGroup")
-            .data(labelNodes).enter()
+        this.labelGroupElements = this.labelContainer.selectAll(".labelGroup")
+            .data(this.labelNodes).enter()
             .append("g")
             .classed("labelGroup", true)
-            .call(dragBehaviour);
+            .call(this.dragBehaviour);
 
-        labelGroupElements.each(function (label) {
+            this.labelGroupElements.each(function (label) {
             var success = label.draw(d3.select(this));
             label.property.labelObject = label;
             // Remove empty groups without a label.
@@ -1112,25 +1127,25 @@ export default function (graphContainerSelector) {
             }
         });
         // Place subclass label groups on the bottom of all labels
-        labelGroupElements.each(function (label) {
+        this.labelGroupElements.each(function (label) {
             // the label might be hidden e.g. in compact notation
             if (!this.parentNode) {
                 return;
             }
 
-            if (elementTools.isRdfsSubClassOf(label.property)) {
+            if (ElementTools.isRdfsSubClassOf(label.property)) {
                 var parentNode = this.parentNode;
                 parentNode.insertBefore(this, parentNode.firstChild);
             }
         });
-        if (properties === undefined) properties = [];
+        if (this.properties === undefined) this.properties = [];
         // Draw cardinality elements
-        cardinalityElements = cardinalityContainer.selectAll(".cardinality")
-            .data(properties).enter()
+        this.cardinalityElements = this.cardinalityContainer.selectAll(".cardinality")
+            .data(this.properties).enter()
             .append("g")
             .classed("cardinality", true);
 
-        cardinalityElements.each(function (property) {
+            this.cardinalityElements.each(function (property) {
             var success = property.drawCardinality(d3.select(this));
 
             // Remove empty groups without a label.
@@ -1139,73 +1154,66 @@ export default function (graphContainerSelector) {
             }
         });
         // Draw links
-        if (links === undefined) links = [];
-        linkGroups = linkContainer.selectAll(".link")
-            .data(links).enter()
+        if (this.links === undefined) this.links = [];
+        this.linkGroups = this.linkContainer.selectAll(".link")
+            .data(this.links).enter()
             .append("g")
             .classed("link", true);
 
-        linkGroups.each(function (link) {
+            this.linkGroups.each(function (link) {
             link.draw(d3.select(this), markerContainer);
         });
-        linkPathElements = linkGroups.selectAll("path");
+        this.linkPathElements = this.linkGroups.selectAll("path");
         // Select the path for direct access to receive a better performance
-        addClickEvents();
+        this.addClickEvents();
     }
 
-    function remove() {
-        if (graphContainer) {
+    remove() {
+        if (this.graphContainer) {
             // Select the parent element because the graph container is a group (e.g. for zooming)
-            d3.select(graphContainer.node().parentNode).remove();
+            d3.select(this.graphContainer.node().parentNode).remove();
         }
     }
 
-    initializeGraph(); // << call the initialization function
-
-    graph.updateCanvasContainerSize = function () {
-        if (graphContainer) {
+    updateCanvasContainerSize() {
+        if (this.graphContainer) {
             var svgElement = d3.selectAll(".vowlGraph");
-            svgElement.attr("width", options.labelWidth);
-            svgElement.attr("height", options.height);
-            graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
+            svgElement.attr("width", this.options.labelWidth);
+            svgElement.attr("height", this.options.height);
+            this.graphContainer.attr("transform", "translate(" + this.graphTranslation + ")scale(" + this.zoomFactor + ")");
         }
-    };
+    }
 
     // Loads all settings, removes the old graph (if it exists) and draws a new one.
-    graph.start = function () {
-        force.stop();
-        loadGraphData(true);
-        redrawGraph();
-        graph.update(true);
+    start() {
+        this.force.stop();
+        this.loadGraphData(true);
+        this.redrawGraph();
+        this.update(true);
 
-        if (!graph.options().loadingModule().loadingWasSuccessFul) {
-            graph.options().loadingModule().setErrorMode();
+        if (!this.options.loadingModule().loadingWasSuccessFul) {
+            this.options.loadingModule().setErrorMode();
         }
 
-    };
+    }
 
     // Updates only the style of the graph.
-    graph.updateStyle = function () {
-        refreshGraphStyle();
-        if (!graph.options().loadingModule().loadingWasSuccessFul) {
-            force.stop();
+    updateStyle() {
+        this.refreshGraphStyle();
+        if (!this.options.loadingModule().loadingWasSuccessFul) {
+            this.force.stop();
         } else {
-            force.start();
+            this.force.start();
         }
-    };
+    }
 
-    graph.reload = function () {
-        loadGraphData();
-        graph.update();
 
-    };
-
-    graph.load = function () {
-        force.stop();
-        loadGraphData();
-        labelNodes = computeLabelNodes(linkCreator.createLinks(unfilteredData.properties));
-        for (var i = 0; i < labelNodes.length; i++) {
-            var label = labelNodes[i];
+    load() {
+        this.force.stop();
+        this.loadGraphData();
+        this.labelNodes = this.computeLabelNodes(LinkCreator.createLinks(this.unfilteredData.properties));
+        for (var i = 0; i < this.labelNodes.length; i++) {
+            var label = this.labelNodes[i];
             if (label.property.x && label.property.y) {
                 label.x = label.property.x;
                 label.y = label.property.y;
@@ -1214,57 +1222,54 @@ export default function (graphContainerSelector) {
                 label.py = label.y;
             }
         }
-        graph.update(false, unfilteredData);
-    };
+        this.update(false, this.unfilteredData);
+    }
 
-    graph.fastUpdate = function () {
+    fastUpdate() {
         // fast update function for editor calls;
         // -- experimental ;
-        quick_refreshGraphData();
-        updateNodeMap();
-        force.start();
-        redrawContent();
-        graph.updatePulseIds(nodeArrayForPulse);
-        refreshGraphStyle();
-        updateHaloStyles();
+        this.quick_refreshGraphData();
+        this.updateNodeMap();
+        this.force.start();
+        this.redrawContent();
+        this.updatePulseIds(this.nodeArrayForPulse);
+        this.refreshGraphStyle();
+        this.updateHaloStyles();
 
-    };
+    }
 
-    graph.getNodeMapForSearch = function () {
-        return nodeMap;
-    };
-    function updateNodeMap() {
-        nodeMap = [];
+    updateNodeMap() {
+        this.nodeMap = [];
         var node;
-        for (var j = 0; j < force.nodes().length; j++) {
-            node = force.nodes()[j];
+        for (var j = 0; j < this.force.nodes().length; j++) {
+            node = this.force.nodes()[j];
             if (node.id) {
-                nodeMap[node.id] = j;
+                this.nodeMap[node.id] = j;
                 // check for equivalents
                 var eqs = node.equivalents;
                 if (eqs.length > 0) {
                     for (var e = 0; e < eqs.length; e++) {
                         var eqObject = eqs[e];
-                        nodeMap[eqObject.id] = j;
+                        this.nodeMap[eqObject.id] = j;
                     }
                 }
             }
             if (node.property) {
-                nodeMap[node.property.id] = j;
+                this.nodeMap[node.property.id] = j;
                 var inverse = node.inverse;
                 if (inverse) {
-                    nodeMap[inverse.id] = j;
+                    this.nodeMap[inverse.id] = j;
                 }
             }
         }
     }
 
-    function updateHaloStyles() {
+    updateHaloStyles() {
         var haloElement;
         var halo;
         var node;
-        for (var j = 0; j < force.nodes().length; j++) {
-            node = force.nodes()[j];
+        for (var j = 0; j < this.force.nodes().length; j++) {
+            node = this.force.nodes()[j];
             if (node.id) {
                 haloElement = node.haloGroupElement;
                 if (haloElement) {
@@ -1293,99 +1298,101 @@ export default function (graphContainerSelector) {
      *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
      * @returns
      */
-    graph.update = function (init, data = currentData) {
-        var validOntology = graph.options().loadingModule().loadingWasSuccessFul;
+    update(init, data = this.currentData) {
+        var validOntology = this.options.loadingModule().loadingWasSuccessFul;
         if (validOntology === false && init === true) {
-            graph.options().loadingModule().collapseDetails();
+            this.options.loadingModule().collapseDetails();
             return;
         }
         if (validOntology === false) {
             return;
         }
 
-        keepDetailsCollapsedOnLoading = false;
-        refreshGraphData(data);
-        updateNodeMap();
+        this.keepDetailsCollapsedOnLoading = false;
+        this.refreshGraphData(data);
+        this.updateNodeMap();
 
-        force.start();
-        redrawContent();
-        graph.updatePulseIds(nodeArrayForPulse);
-        refreshGraphStyle();
-        updateHaloStyles();
-    };
+        this.force.start();
+        this.redrawContent();
+        this.updatePulseIds(this.nodeArrayForPulse);
+        this.refreshGraphStyle();
+        this.updateHaloStyles();
+    }
 
-    graph.paused = function (p) {
-        if (!arguments.length) return paused;
-        paused = p;
-        graph.updateStyle();
-        return graph;
-    };
+    paused(p) {
+        if (!arguments.length) return this.paused;
+        this.paused = p;
+        this.updateStyle();
+        return this;
+    }
 
     // resetting the graph
-    graph.reset = function () {
-        if (unfilteredData) {
-            options.filterModules().forEach(function (module) {
-                filterFunction(module, unfilteredData, true);
+    reset() {
+        const _this = this;
+        if (this.unfilteredData) {
+            this.options.filterModules().forEach(function (/** @type {any} */ module) {
+                _this.filterFunction(module, _this.unfilteredData, true);
             });
         }
-        currentData = unfilteredData;
+        this.currentData = this.unfilteredData;
         // window size
-        let w = 0.5 * graph.options().width();
-        let h = 0.5 * graph.options().height();
+        let w = 0.5 * this.options.width();
+        let h = 0.5 * this.options.height();
         // computing initial translation for the graph due to the dynamic default zoom level
-        let tx = w - defaultZoom * w;
-        let ty = h - defaultZoom * h;
-        zoom.translate([tx, ty])
-            .scale(defaultZoom);
-    };
+        let tx = w - this.defaultZoom * w;
+        let ty = h - this.defaultZoom * h;
+        this.zoom.translate([tx, ty])
+            .scale(this.defaultZoom);
+    }
 
-    graph.zoomOut = function () {
-
-        var minMag = options.minMagnification(),
-            maxMag = options.maxMagnification();
+    zoomOut() {
+        const _this = this;
+        var minMag = this.options.minMagnification(),
+            maxMag = this.options.maxMagnification();
         var stepSize = (maxMag - minMag) / 10;
-        var val = zoomFactor - stepSize;
+        var val = this.zoomFactor - stepSize;
         if (val < minMag) val = minMag;
 
-        var cx = 0.5 * graph.options().width();
-        var cy = 0.5 * graph.options().height();
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
-        var sP = [cp.x, cp.y, graph.options().height() / zoomFactor];
-        var eP = [cp.x, cp.y, graph.options().height() / val];
+        var cx = 0.5 * this.options.width();
+        var cy = 0.5 * this.options.height();
+        var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, this.zoomFactor);
+        var sP = [cp.x, cp.y, this.options.height() / this.zoomFactor];
+        var eP = [cp.x, cp.y, this.options.height() / val];
         var pos_intp = d3.interpolateZoom(sP, eP);
 
-        graphContainer.attr("transform", transform(sP, cx, cy))
+        this.graphContainer.attr("transform", this.transform(sP, cx, cy))
             .transition()
             .duration(250)
             .attrTween("transform", function () {
                 return function (t) {
-                    return transform(pos_intp(t), cx, cy);
+                    return this.transform(pos_intp(t), cx, cy);
                 };
             })
             .each("end", function () {
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                updateHaloRadius();
-                options.zoomSlider().updateZoomSliderValue(zoomFactor);
+                _this.graphContainer.attr("transform", "translate(" + _this.graphTranslation + ")scale(" + _this.zoomFactor + ")");
+                _this.zoom.translate(_this.graphTranslation);
+                _this.zoom.scale(_this.zoomFactor);
+                _this.updateHaloRadius();
+                _this.options.zoomSlider().updateZoomSliderValue(_this.zoomFactor);
             });
 
-    };
+    }
 
-    graph.zoomIn = function () {
-        var minMag = options.minMagnification(),
-            maxMag = options.maxMagnification();
+    zoomIn() {
+        const _this = this;
+        var minMag = this.options.minMagnification(),
+            maxMag = this.options.maxMagnification();
         var stepSize = (maxMag - minMag) / 10;
-        var val = zoomFactor + stepSize;
+        var val = this.zoomFactor + stepSize;
         if (val > maxMag) val = maxMag;
-        var cx = 0.5 * graph.options().width();
-        var cy = 0.5 * graph.options().height();
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
-        var sP = [cp.x, cp.y, graph.options().height() / zoomFactor];
-        var eP = [cp.x, cp.y, graph.options().height() / val];
+        var cx = 0.5 * this.options.width();
+        var cy = 0.5 * this.options.height();
+        var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, zoomFactor);
+        var sP = [cp.x, cp.y, this.options.height() / this.zoomFactor];
+        var eP = [cp.x, cp.y, this.options.height() / val];
         var pos_intp = d3.interpolateZoom(sP, eP);
 
-        graphContainer.attr("transform", transform(sP, cx, cy))
+        this.graphContainer.attr("transform", transform(sP, cx, cy))
             .transition()
             .duration(250)
             .attrTween("transform", function () {
@@ -1394,46 +1401,42 @@ export default function (graphContainerSelector) {
                 };
             })
             .each("end", function () {
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                updateHaloRadius();
-                options.zoomSlider().updateZoomSliderValue(zoomFactor);
+                _this.graphContainer.attr("transform", "translate(" + _this.graphTranslation + ")scale(" + _this.zoomFactor + ")");
+                _this.zoom.translate(graphTranslation);
+                _this.zoom.scale(zoomFactor);
+                _this.updateHaloRadius();
+                _this.options.zoomSlider().updateZoomSliderValue(_this.zoomFactor);
             });
-    };
+    }
 
     /** --------------------------------------------------------- **/
     /** -- data related handling                               -- **/
     /** --------------------------------------------------------- **/
 
-    var cachedJsonOBJ = null;
-    graph.clearAllGraphData = function () {
-        if (graph.graphNodeElements() && graph.graphNodeElements().length > 0) {
-            cachedJsonOBJ = graph.options().exportMenu().createJSON_exportObject();
+    clearAllGraphData() {
+        if (this.graphNodeElements() && this.graphNodeElements().length > 0) {
+            this.cachedJsonOBJ = this.options.exportMenu().createJSON_exportObject();
         } else {
-            cachedJsonOBJ = null;
+            this.cachedJsonOBJ = null;
         }
-        force.stop();
-        if (unfilteredData) {
-            unfilteredData.nodes = [];
-            unfilteredData.properties = [];
+        this.force.stop();
+        if (this.unfilteredData) {
+            this.unfilteredData.nodes = [];
+            this.unfilteredData.properties = [];
         }
-    };
-    graph.getCachedJsonObj = function () {
-        return cachedJsonOBJ;
-    };
+    }
 
     // removes data when data could not be loaded
-    graph.clearGraphData = function () {
-        force.stop();
-        var sidebar = graph.options().sidebar();
+    clearGraphData() {
+        this.force.stop();
+        var sidebar = this.options.sidebar();
         if (sidebar)
             sidebar.clearOntologyInformation();
-        if (graphContainer)
-            redrawGraph();
-    };
+        if (this.graphContainer)
+            this.redrawGraph();
+    }
 
-    function generateDictionary(data) {
+    generateDictionary(data) {
         var originalDictionary = [];
         var nodes = data.nodes;
         for (let i = 0; i < nodes.length; i++) {
@@ -1446,11 +1449,11 @@ export default function (graphContainerSelector) {
             if (props[i].labelForCurrentLanguage() !== undefined)
                 originalDictionary.push(props[i]);
         }
-        parser.dictionary = originalDictionary;
+        this.parser.dictionary = originalDictionary;
 
-        var literFilter = graph.options().literalFilter();
+        var literFilter = this.options.literalFilter();
         var idsToRemove = literFilter.removedNodes; // A set
-        var originalDict = parser.dictionary;
+        var originalDict = this.parser.dictionary;
         var newDict = [];
 
         // go through the dictionary and remove the ids;
@@ -1462,11 +1465,11 @@ export default function (graphContainerSelector) {
             }
         }
         // tell the parser that the dictionary is updated
-        parser.dictionary = newDict;
+        this.parser.dictionary = newDict;
     }
 
-    graph.updateProgressBarMode = function () {
-        var loadingModule = graph.options().loadingModule();
+    updateProgressBarMode() {
+        var loadingModule = this.options.loadingModule();
 
         var state = loadingModule.progressBarMode;
         switch (state) {
@@ -1482,134 +1485,135 @@ export default function (graphContainerSelector) {
             default:
                 loadingModule.setPercentMode();
         }
-    };
+    }
 
-    graph.setFilterWarning = function (val) {
-        showFilterWarning = val;
-    };
-    function loadGraphData(init) {
+    setFilterWarning(val) {
+        this.showFilterWarning = val;
+    }
+    loadGraphData(init) {
+        const _this = this;
         // reset the locate button and previously selected locations and other variables
 
-        var loadingModule = graph.options().loadingModule();
-        force.stop();
+        var loadingModule = this.options.loadingModule();
+        this.force.stop();
 
-        force.nodes([]);
-        force.links([]);
-        nodeArrayForPulse = [];
-        pulseNodeIds = [];
-        locationId = 0;
+        this.force.nodes([]);
+        this.force.links([]);
+        this.nodeArrayForPulse = [];
+        this.pulseNodeIds = [];
+        this.locationId = 0;
         d3.select("#locateSearchResult").classed("highlighted", false);
         d3.select("#locateSearchResult").node().title = "Nothing to locate";
-        graph.clearGraphData();
+        this.clearGraphData();
 
         if (init) {
-            force.stop();
+            this.force.stop();
             return;
         }
 
-        showFilterWarning = false;
-        parser.parse(options.data());
-        unfilteredData = {
-            nodes: parser.nodes,
-            properties: parser.properties
+        this.showFilterWarning = false;
+        this.parser.parse(this.options.data());
+        this.unfilteredData = {
+            nodes: this.parser.nodes,
+            properties: this.parser.properties
         };
 
         // fixing class and property id counter for the editor
-        eN = unfilteredData.nodes.length + 1;
-        eP = unfilteredData.properties.length + 1;
+        this.eN = this.unfilteredData.nodes.length + 1;
+        this.eP = this.unfilteredData.properties.length + 1;
 
 
         // using the ids of elements if to ensure that loaded elements will not get the same id;
-        for (var p = 0; p < unfilteredData.properties.length; p++) {
-            var currentId = unfilteredData.properties[p].id;
+        for (var p = 0; p < this.unfilteredData.properties.length; p++) {
+            var currentId = this.unfilteredData.properties[p].id;
             if (currentId.indexOf('objectProperty') !== -1) {
                 // could be ours;
                 var idStr = currentId.split('objectProperty');
                 if (idStr[0].length === 0) {
                     var idInt = parseInt(idStr[1]);
-                    if (eP < idInt) {
-                        eP = idInt + 1;
+                    if (this.eP < idInt) {
+                        this.eP = idInt + 1;
                     }
                 }
             }
         }
         // using the ids of elements if to ensure that loaded elements will not get the same id;
-        for (var n = 0; n < unfilteredData.nodes.length; n++) {
-            var currentId_Nodes = unfilteredData.nodes[n].id;
+        for (var n = 0; n < this.unfilteredData.nodes.length; n++) {
+            var currentId_Nodes = this.unfilteredData.nodes[n].id;
             if (currentId_Nodes.indexOf('Class') !== -1) {
                 // could be ours;
                 var idStr_Nodes = currentId_Nodes.split('Class');
                 if (idStr_Nodes[0].length === 0) {
                     var idInt_Nodes = parseInt(idStr_Nodes[1]);
-                    if (eN < idInt_Nodes) {
-                        eN = idInt_Nodes + 1;
+                    if (this.eN < idInt_Nodes) {
+                        this.eN = idInt_Nodes + 1;
                     }
                 }
             }
         }
 
-        links = linkCreator.createLinks(unfilteredData.properties);
-        storeLinksOnNodes(unfilteredData.nodes, links);
-        currentData = unfilteredData;
+        this.links = LinkCreator.createLinks(this.unfilteredData.properties);
+        this.storeLinksOnNodes(this.unfilteredData.nodes, this.links);
+        this.currentData = this.unfilteredData;
 
-        initialLoad = true;
-        graph.options().warningModule().closeFilterHint();
+        this.initialLoad = true;
+        this.options.warningModule().closeFilterHint();
 
         // loading handler
-        updateRenderingDuringSimulation = true;
-        var validOntology = graph.options().loadingModule().loadingWasSuccessFul;
-        if (graphContainer && validOntology === true) {
-            updateRenderingDuringSimulation = false;
-            graph.options().ontologyMenu().append_bulletPoint("Generating visualization ... ");
+        this.updateRenderingDuringSimulation = true;
+        var validOntology = this.options.loadingModule().loadingWasSuccessFul;
+        if (this.graphContainer && validOntology === true) {
+            this.updateRenderingDuringSimulation = false;
+            this.options.ontologyMenu().append_bulletPoint("Generating visualization ... ");
             loadingModule.setPercentMode();
 
-            if (unfilteredData.nodes.length > 0) {
-                graphContainer.style("opacity", "0");
-                force.on("tick", hiddenRecalculatePositions);
+            if (this.unfilteredData.nodes.length > 0) {
+                this.graphContainer.style("opacity", "0");
+                this.force.on("tick", this.hiddenRecalculatePositions);
             } else {
-                graphContainer.style("opacity", "1");
-                if (showFPS === true) {
-                    force.on("tick", recalculatePositionsWithFPS);
+                this.graphContainer.style("opacity", "1");
+                if (this.showFPS === true) {
+                    this.force.on("tick", this.recalculatePositionsWithFPS);
                 }
                 else {
-                    force.on("tick", recalculatePositions);
+                    this.force.on("tick", this.recalculatePositions);
                 }
             }
-            force.start();
+            this.force.start();
         } else {
-            force.stop();
-            graph.options().ontologyMenu().append_bulletPoint("Failed to load ontology");
+            this.force.stop();
+            this.options.ontologyMenu().append_bulletPoint("Failed to load ontology");
             loadingModule.setErrorMode();
         }
         // update prefixList(
         // update general MetaOBJECT
-        graph.options().clearMetaObject();
-        graph.options().clearGeneralMetaObject();
-        graph.options().editSidebar().clearMetaObjectValue();
-        if (options.data() !== undefined) {
-            var header = options.data().header;
+        this.options.clearMetaObject();
+        this.options.clearGeneralMetaObject();
+        this.options.editSidebar().clearMetaObjectValue();
+        if (this.options.data() !== undefined) {
+            var header = this.options.data().header;
             if (header) {
                 if (header.iri) {
-                    graph.options().addOrUpdateGeneralObjectEntry("iri", header.iri);
+                    this.options.addOrUpdateGeneralObjectEntry("iri", header.iri);
                 }
                 if (header.title) {
-                    graph.options().addOrUpdateGeneralObjectEntry("title", header.title);
+                    this.options.addOrUpdateGeneralObjectEntry("title", header.title);
                 }
                 if (header.author) {
-                    graph.options().addOrUpdateGeneralObjectEntry("author", header.author);
+                    this.options.addOrUpdateGeneralObjectEntry("author", header.author);
                 }
                 if (header.version) {
-                    graph.options().addOrUpdateGeneralObjectEntry("version", header.version);
+                    this.options.addOrUpdateGeneralObjectEntry("version", header.version);
                 }
                 if (header.description) {
-                    graph.options().addOrUpdateGeneralObjectEntry("description", header.description);
+                    this.options.addOrUpdateGeneralObjectEntry("description", header.description);
                 }
                 if (header.prefixList) {
                     var pL = header.prefixList;
                     for (var pr in pL) {
                         if (pL.hasOwnProperty(pr)) {
                             var val = pL[pr];
-                            graph.options().addPrefix(pr, val);
+                            this.options.addPrefix(pr, val);
                         }
                     }
                 }
@@ -1620,7 +1624,7 @@ export default function (graphContainerSelector) {
                         if (otherObjects.hasOwnProperty(name)) {
                             var otherObj = otherObjects[name];
                             if (otherObj.hasOwnProperty("identifier") && otherObj.hasOwnProperty("value")) {
-                                graph.options().addOrUpdateMetaObjectEntry(otherObj.identfier, otherObj.value);
+                                this.options.addOrUpdateMetaObjectEntry(otherObj.identfier, otherObj.value);
                             }
                         }
                     }
@@ -1629,56 +1633,56 @@ export default function (graphContainerSelector) {
         }
         // update more meta OBJECT
         // Initialize filters with data to replicate consecutive filtering
-        links = linkCreator.createLinks(unfilteredData.properties);
-        storeLinksOnNodes(unfilteredData.nodes, links);
+        this.links = LinkCreator.createLinks(this.unfilteredData.properties);
+        this.storeLinksOnNodes(this.unfilteredData.nodes, this.links);
 
         // Create a map of all nodes and properties for fast lookup
-        unfilteredData.nodes.forEach((node) => {
-            unfilteredDataMap.nodes.set(node.id, node);
+        this.unfilteredData.nodes.forEach((node) => {
+            this.unfilteredDataMap.nodes.set(node.id, node);
         });
-        unfilteredData.properties.forEach((property) => {
-            unfilteredDataMap.properties.set(property.id, property);
+        this.unfilteredData.properties.forEach((property) => {
+            this.unfilteredDataMap.properties.set(property.id, property);
         });
 
         // currentData = unfilteredData;
-        options.filterModules().forEach(function (module) {
-            filterFunction(module, unfilteredData, true);
+        this.options.filterModules().forEach(function (module) {
+            _this.filterFunction(module, unfilteredData, true);
         });
 
         // generate dictionary here ;
-        generateDictionary(unfilteredData);
+        this.generateDictionary(this.unfilteredData);
 
         // parser.parseSettings(); // NOTE: Disabled to save memory while this method is not used (the attributes of this method are only written to, never read)
-        graphUpdateRequired = parser.settingsImported;
-        centerGraphViewOnLoad = true;
-        if (parser.settingsImportGraphZoomAndTranslation) {
-            centerGraphViewOnLoad = false;
+        this.graphUpdateRequired = this.parser.settingsImported;
+        this.centerGraphViewOnLoad = true;
+        if (this.parser.settingsImportGraphZoomAndTranslation) {
+            this.centerGraphViewOnLoad = false;
         }
-        graph.options().searchMenu().requestDictionaryUpdate();
-        graph.options().editSidebar().updateGeneralOntologyInfo();
-        graph.options().editSidebar().updatePrefixUi();
-        graph.options().editSidebar().updateElementWidth();
+        this.options.searchMenu().requestDictionaryUpdate();
+        this.options.editSidebar().updateGeneralOntologyInfo();
+        this.options.editSidebar().updatePrefixUi();
+        this.options.editSidebar().updateElementWidth();
     }
 
-    graph.handleOnLoadingError = function () {
-        force.stop();
-        graph.clearGraphData();
-        graph.options().ontologyMenu().append_bulletPoint("Failed to load ontology");
-        d3.select("#progressBarValue").node().innherHTML = "";
+    handleOnLoadingError() {
+        this.force.stop();
+        this.graph.clearGraphData();
+        this.options.ontologyMenu().append_bulletPoint("Failed to load ontology");
+        d3.select("#progressBarValue").node().innerHTML = "";
         d3.select("#progressBarValue").classed("busyProgressBar", false);
-        graph.options().loadingModule().setErrorMode();
-        graph.options().loadingModule().showErrorDetailsMessage();
-    };
-
-    function quick_refreshGraphData() {
-        links = linkCreator.createLinks(properties);
-        labelNodes = computeLabelNodes(links);
-
-        storeLinksOnNodes(classNodes, links);
-        setForceLayoutData(classNodes, labelNodes, links);
+        this.options.loadingModule().setErrorMode();
+        this.options.loadingModule().showErrorDetailsMessage();
     }
 
-    function computeLabelNodes(links) {
+    quick_refreshGraphData() {
+        this.links = LinkCreator.createLinks(this.properties);
+        this.labelNodes = this.computeLabelNodes(this.links);
+
+        this.storeLinksOnNodes(this.classNodes, this.links);
+        this.setForceLayoutData(this.classNodes, this.labelNodes, this.links);
+    }
+
+    computeLabelNodes(links) {
         return links.map(function (link) {
             return link.label;
         });
@@ -1690,27 +1694,28 @@ export default function (graphContainerSelector) {
      * @param {object} preprocessedData An object containing nodes and properties.
      *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
      */
-    function refreshGraphData(preprocessedData) {
-        let shouldExecuteEmptyFilter = options.literalFilter().enabled;
-        graph.executeEmptyLiteralFilter();
-        options.literalFilter().enabled = shouldExecuteEmptyFilter;
+    refreshGraphData(preprocessedData) {
+        const _this = this;
+        let shouldExecuteEmptyFilter = this.options.literalFilter().enabled;
+        this.graph.executeEmptyLiteralFilter();
+        this.options.literalFilter().enabled = shouldExecuteEmptyFilter;
 
         // Filter the data
-        links = linkCreator.createLinks(preprocessedData.properties);
-        storeLinksOnNodes(preprocessedData.nodes, links);
-        options.filterModules().forEach(function (module) {
-            preprocessedData = filterFunction(module, preprocessedData);
+        this.links = LinkCreator.createLinks(preprocessedData.properties);
+        this.storeLinksOnNodes(preprocessedData.nodes, this.links);
+        this.options.filterModules().forEach(function (module) {
+            preprocessedData = _this.filterFunction(module, preprocessedData);
         });
-        options.focuserModule().handle(undefined, true);
-        classNodes = preprocessedData.nodes;
-        properties = preprocessedData.properties;
-        links = linkCreator.createLinks(properties);
-        labelNodes = computeLabelNodes(links);
-        storeLinksOnNodes(classNodes, links);
-        setForceLayoutData(classNodes, labelNodes, links);
+        this.options.focuserModule().handle(undefined, true);
+        this.classNodes = preprocessedData.nodes;
+        this.properties = preprocessedData.properties;
+        this.links = LinkCreator.createLinks(this.properties);
+        this.labelNodes = this.computeLabelNodes(this.links);
+        this.storeLinksOnNodes(this.classNodes, this.links);
+        this.setForceLayoutData(this.classNodes, this.labelNodes, this.links);
         // for (var i = 0; i < classNodes.length; i++) {
         //     if (classNodes[i].rectangularRepresentation)
-        //         classNodes[i].rectangularRepresentation = graph.options().rectangularRepresentation();
+        //         classNodes[i].rectangularRepresentation = this.options.rectangularRepresentation();
         // }
     }
 
@@ -1718,30 +1723,30 @@ export default function (graphContainerSelector) {
      * Create a subgraph with `rootNodeID` as root.
      * @param {string} rootNodeID
      */
-    graph.loadSearchData = function (rootNodeID) {
-        let nodes = [unfilteredDataMap.nodes.get(rootNodeID)];
+    loadSearchData(rootNodeID) {
+        let nodes = [this.unfilteredDataMap.nodes.get(rootNodeID)];
         if (nodes[0] === undefined) {
-            let prop = unfilteredDataMap.properties.get(rootNodeID);
+            let prop = this.unfilteredDataMap.properties.get(rootNodeID);
             if (prop !== undefined) {
                 nodes = [prop.domain, prop.range];
             } else {
                 console.log(`Failed to find a node or property with id ${rootNodeID}`);
             }
         }
-        let selectedNodes = breadthFirstSearchDepth(nodes, 2);
+        let selectedNodes = this.breadthFirstSearchDepth(nodes, 2);
         let selectedProperties = [];
-        for (const property of unfilteredData.properties) {
+        for (const property of this.unfilteredData.properties) {
             if (selectedNodes.get(property.domain.id) && selectedNodes.get(property.range.id)) {
                 selectedProperties.push(property);
             }
         }
-        currentData = { nodes: Array.from(selectedNodes.values()), properties: selectedProperties };
-        graph.update(false, currentData);
-        graph.resetSearchHighlight();
-        graph.highLightNodes(rootNodeID);
+        this.currentData = { nodes: Array.from(selectedNodes.values()), properties: selectedProperties };
+        this.update(false, this.currentData);
+        this.resetSearchHighlight();
+        this.graph.highLightNodes(rootNodeID);
     }
 
-    function filterFunction(module, data, initializing) {
+    filterFunction(module, data, initializing) {
         if (initializing) {
             if (module.initialize) {
                 module.initialize(data.nodes, data.properties);
@@ -1760,7 +1765,7 @@ export default function (graphContainerSelector) {
      * @param {integer} depth How many edges, starting from `rootNodes`, should be explored.
      * @returns {Map<string, object>} Nodes visited. A map of nodeIDs to nodes.
      */
-    function breadthFirstSearchDepth(rootNodes, depth) {
+    breadthFirstSearchDepth(rootNodes, depth) {
         let visited = new Map();
         let frontier = new Deque(rootNodes);
 
@@ -1801,7 +1806,7 @@ export default function (graphContainerSelector) {
     /** --------------------------------------------------------- **/
     /** -- force-layout related functions                      -- **/
     /** --------------------------------------------------------- **/
-    function storeLinksOnNodes(nodes, links) {
+    storeLinksOnNodes(nodes, links) {
         for (let i = 0; i < nodes.length; i++) {
             nodes[i].links = [];
         }
@@ -1828,22 +1833,25 @@ export default function (graphContainerSelector) {
         }
     }
 
-    function setForceLayoutData(classNodes, labelNodes, links) {
+    setForceLayoutData(classNodes, labelNodes, links) {
+        /**
+         * @type {any[]}
+         */
         var d3Links = [];
         links.forEach(function (link) {
             d3Links = d3Links.concat(link.linkParts());
         });
 
         var d3Nodes = [].concat(classNodes).concat(labelNodes);
-        setPositionOfOldLabelsOnNewLabels(force.nodes(), labelNodes);
+        this.setPositionOfOldLabelsOnNewLabels(this.force.nodes(), labelNodes);
 
-        force.nodes(d3Nodes)
+        this.force.nodes(d3Nodes)
             .links(d3Links);
     }
 
     // The label nodes are positioned randomly, because they are created from scratch if the data changes and lose
     // their position information. With this hack the position of old labels is copied to the new labels.
-    function setPositionOfOldLabelsOnNewLabels(oldLabelNodes, labelNodes) {
+    setPositionOfOldLabelsOnNewLabels(oldLabelNodes, labelNodes) {
         labelNodes.forEach(function (labelNode) {
             for (var i = 0; i < oldLabelNodes.length; i++) {
                 var oldNode = oldLabelNodes[i];
@@ -1859,48 +1867,49 @@ export default function (graphContainerSelector) {
     }
 
     // Applies all options that don't change the graph data.
-    function refreshGraphStyle() {
-        zoom = zoom.scaleExtent([options.minMagnification(), options.maxMagnification()]);
-        if (graphContainer) {
-            zoom.event(graphContainer);
+    refreshGraphStyle() {
+        const _this = this
+        this.zoom = zoom.scaleExtent([this.options.minMagnification(), this.options.maxMagnification()]);
+        if (this.graphContainer) {
+            this.zoom.event(this.graphContainer);
         }
 
-        force.charge(function (element) {
-            var charge = options.charge();
-            if (elementTools.isLabel(element)) {
+        this.force.charge(function (element) {
+            var charge = _this.options.charge();
+            if (ElementTools.isLabel(element)) {
                 charge *= 0.8;
             }
             return charge;
         })
-            .size([options.width, options.height])
-            .linkDistance(calculateLinkPartDistance)
-            .gravity(options.gravity())
-            .linkStrength(options.linkStrength()); // Flexibility of links
+            .size([this.options.width, options.height])
+            .linkDistance(this.calculateLinkPartDistance)
+            .gravity(this.options.gravity())
+            .linkStrength(this.options.linkStrength()); // Flexibility of links
 
-        force.nodes().forEach(function (n) {
-            n.frozen = paused;
+            this.force.nodes().forEach(function (n) {
+            n.frozen = _this.paused;
         });
     }
 
-    function calculateLinkPartDistance(linkPart) {
+    calculateLinkPartDistance(this.linkPart) {
         var link = linkPart.link;
 
         if (link.isLoop()) {
-            return options.loopDistance();
+            return this.options.loopDistance();
         }
 
         // divide by 2 to receive the length for a single link part
-        var linkPartDistance = getVisibleLinkDistance(link) / 2;
+        var linkPartDistance = this.getVisibleLinkDistance(link) / 2;
         linkPartDistance += linkPart.domain.smallestRadius;
         linkPartDistance += linkPart.range.smallestRadius;
         return linkPartDistance;
     }
 
-    function getVisibleLinkDistance(link) {
-        if (elementTools.isDatatype(link.domain) || elementTools.isDatatype(link.range)) {
-            return options.datatypeDistance();
+    getVisibleLinkDistance(link) {
+        if (ElementTools.isDatatype(link.domain) || ElementTools.isDatatype(link.range)) {
+            return this.options.datatypeDistance();
         } else {
-            return options.classDistance();
+            return this.options.classDistance();
         }
     }
 
@@ -1908,42 +1917,42 @@ export default function (graphContainerSelector) {
     /** -- animation functions for the nodes --                   **/
     /** --------------------------------------------------------- **/
 
-    graph.animateDynamicLabelWidth = function () {
-        var wantedWidth = options.dynamicLabelWidth();
+    animateDynamicLabelWidth() {
+        var wantedWidth = this.options.dynamicLabelWidth();
         var i;
-        for (i = 0; i < classNodes.length; i++) {
-            var nodeElement = classNodes[i];
-            if (elementTools.isDatatype(nodeElement)) {
+        for (i = 0; i < this.classNodes.length; i++) {
+            var nodeElement = this.classNodes[i];
+            if (ElementTools.isDatatype(nodeElement)) {
                 nodeElement.animateDynamicLabelWidth(wantedWidth);
             }
         }
-        for (i = 0; i < properties.length; i++) {
-            properties[i].animateDynamicLabelWidth(wantedWidth);
+        for (i = 0; i < this.properties.length; i++) {
+            this.properties[i].animateDynamicLabelWidth(wantedWidth);
         }
-    };
+    }
 
 
     /** --------------------------------------------------------- **/
     /** -- halo and localization functions --                     **/
     /** --------------------------------------------------------- **/
-    function updateHaloRadius() {
-        if (pulseNodeIds && pulseNodeIds.length > 0) {
-            var forceNodes = force.nodes();
-            for (var i = 0; i < pulseNodeIds.length; i++) {
-                var node = forceNodes[pulseNodeIds[i]];
+    updateHaloRadius() {
+        if (this.pulseNodeIds && this.pulseNodeIds.length > 0) {
+            var forceNodes = this.force.nodes();
+            for (var i = 0; i < this.pulseNodeIds.length; i++) {
+                var node = forceNodes[this.pulseNodeIds[i]];
                 if (node) {
                     if (node.property) {
                         // match search strings with property label
                         if (node.property.inverse) {
-                            var searchString = graph.options().searchMenu().getSearchString().toLowerCase();
+                            var searchString = this.options.searchMenu().getSearchString().toLowerCase();
                             var name = node.property.labelForCurrentLanguage().toLowerCase();
-                            if (name === searchString) computeDistanceToCenter(node);
+                            if (name === searchString) this.computeDistanceToCenter(node);
                             else {
                                 node.property.removeHalo();
                                 if (node.property.inverse) {
                                     if (!node.property.inverse.haloGroupElement)
                                         node.property.inverse.drawHalo();
-                                    computeDistanceToCenter(node, true);
+                                    this.computeDistanceToCenter(node, true);
                                 }
                                 if (node.property.equivalents) {
                                     var eq = node.property.equivalents;
@@ -1953,42 +1962,42 @@ export default function (graphContainerSelector) {
                                     }
                                     if (!node.property.haloGroupElement)
                                         node.property.drawHalo();
-                                    computeDistanceToCenter(node, false);
+                                    this.computeDistanceToCenter(node, false);
 
                                 }
                             }
                         }
                     }
-                    computeDistanceToCenter(node);
+                    this.computeDistanceToCenter(node);
                 }
             }
         }
     }
 
-    function getScreenCoords(x, y, translate, scale) {
+    getScreenCoords(x, y, translate, scale) {
         var xn = translate[0] + x * scale;
         var yn = translate[1] + y * scale;
         return { x: xn, y: yn };
     }
 
-    function getClickedScreenCoords(x, y, translate, scale) {
+    getClickedScreenCoords(x, y, translate, scale) {
         var xn = (x - translate[0]) / scale;
         var yn = (y - translate[1]) / scale;
         return { x: xn, y: yn };
     }
 
 
-    function computeDistanceToCenter(node, inverse) {
+    computeDistanceToCenter(node, inverse) {
         var container = node;
-        var w = graph.options().width();
-        var h = graph.options().height();
-        var posXY = getScreenCoords(node.x, node.y, graphTranslation, zoomFactor);
+        var w = this.options.width();
+        var h = this.options.height();
+        var posXY = this.getScreenCoords(node.x, node.y, this.graphTranslation, this.zoomFactor);
 
         var highlightOfInv = false;
 
         if (inverse && inverse === true) {
             highlightOfInv = true;
-            posXY = getScreenCoords(node.x, node.y + 20, graphTranslation, zoomFactor);
+            posXY = getScreenCoords(node.x, node.y + 20, this.graphTranslation, this.zoomFactor);
         }
         var x = posXY.x;
         var y = posXY.y;
@@ -2131,8 +2140,8 @@ export default function (graphContainerSelector) {
             var newVectorX = normedX * len + x;
             var newVectorY = normedY * len + y;
             // compute world coordinates of this point
-            var wX = (newVectorX - graphTranslation[0]) / zoomFactor;
-            var wY = (newVectorY - graphTranslation[1]) / zoomFactor;
+            var wX = (newVectorX - this.graphTranslation[0]) / this.zoomFactor;
+            var wY = (newVectorY - this.graphTranslation[1]) / this.zoomFactor;
 
             // compute distance in world coordinates
             var dx = wX - node.x;
@@ -2177,34 +2186,36 @@ export default function (graphContainerSelector) {
         }
     }
 
-    function transform(p, cx, cy) {
+    transform(p, cx, cy) {
         // one iteration step for the locate target animation
-        zoomFactor = graph.options().height() / p[2];
-        graphTranslation = [(cx - p[0] * zoomFactor), (cy - p[1] * zoomFactor)];
-        updateHaloRadius();
+        this.zoomFactor = this.options.height() / p[2];
+        this.graphTranslation = [(cx - p[0] * this.zoomFactor), (cy - p[1] * this.zoomFactor)];
+        this.updateHaloRadius();
         // update the values in case the user wants to break the animation
-        zoom.translate(graphTranslation);
-        zoom.scale(zoomFactor);
-        graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
-        return "translate(" + graphTranslation[0] + "," + graphTranslation[1] + ")scale(" + zoomFactor + ")";
+        this.zoom.translate(this.graphTranslation);
+        this.zoom.scale(this.zoomFactor);
+        this.options.zoomSlider().updateZoomSliderValue(this.zoomFactor);
+        return "translate(" + this.graphTranslation[0] + "," + this.graphTranslation[1] + ")scale(" + this.zoomFactor + ")";
     }
 
-    graph.zoomToElementInGraph = function (element) {
-        targetLocationZoom(element);
-    };
-    graph.updateHaloRadius = function (element) {
-        computeDistanceToCenter(element);
-    };
+    zoomToElementInGraph(element){
+        this.targetLocationZoom(element);
+    }
+    updateHaloRadius(element) {
+        this.computeDistanceToCenter(element);
+    }
 
-    function targetLocationZoom(target) {
+    targetLocationZoom(target) {
+        const _this = this;
+        
         // store the original information
-        var cx = 0.5 * graph.options().width();
-        var cy = 0.5 * graph.options().height();
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
-        var sP = [cp.x, cp.y, graph.options().height() / zoomFactor];
+        var cx = 0.5 * this.options.width();
+        var cy = 0.5 * this.options.height();
+        var cp = this.getWorldPosFromScreen(cx, cy,this. graphTranslation, this.zoomFactor);
+        var sP = [cp.x, cp.y, this.options.height() / this.zoomFactor];
 
-        var zoomLevel = Math.max(defaultZoom + 0.5 * defaultZoom, defaultTargetZoom);
-        var eP = [target.x, target.y, graph.options().height() / zoomLevel];
+        var zoomLevel = Math.max(this.defaultZoom + 0.5 * this.defaultZoom, this.defaultTargetZoom);
+        var eP = [target.x, target.y, this.options.height() / zoomLevel];
         var pos_intp = d3.interpolateZoom(sP, eP);
 
         var lenAnimation = pos_intp.duration;
@@ -2212,7 +2223,7 @@ export default function (graphContainerSelector) {
             lenAnimation = 2500;
         }
 
-        graphContainer.attr("transform", transform(sP, cx, cy))
+        this.graphContainer.attr("transform", transform(sP, cx, cy))
             .transition()
             .duration(lenAnimation)
             .attrTween("transform", function () {
@@ -2221,14 +2232,14 @@ export default function (graphContainerSelector) {
                 };
             })
             .each("end", function () {
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                updateHaloRadius();
+                _this.graphContainer.attr("transform", "translate(" + _this.graphTranslation + ")scale(" + _this.zoomFactor + ")");
+                _this.zoom.translate(_this.graphTranslation);
+                _this.zoom.scale(_this.zoomFactor);
+                _this.updateHaloRadius();
             });
     }
 
-    function getWorldPosFromScreen(x, y, translate, scale) {
+    getWorldPosFromScreen(x, y, translate, scale) {
         var temp = scale[0], xn, yn;
         if (temp) {
             xn = (x - translate[0]) / temp;
@@ -2240,27 +2251,27 @@ export default function (graphContainerSelector) {
         return { x: xn, y: yn };
     }
 
-    graph.locateSearchResult = function () {
-        if (pulseNodeIds && pulseNodeIds.length > 0) {
+    locateSearchResult() {
+        if (this.pulseNodeIds && this.pulseNodeIds.length > 0) {
             // move the center of the viewport to this location
-            if (transformAnimation === true) return; // << prevents incrementing the location id if we are in an animation
-            var node = force.nodes()[pulseNodeIds[locationId]];
-            locationId++;
-            locationId = locationId % pulseNodeIds.length;
+            if (this.transformAnimation === true) return; // << prevents incrementing the location id if we are in an animation
+            var node = this.force.nodes()[this.pulseNodeIds[this.locationId]];
+            this.locationId++;
+            this.locationId = this.locationId % this.pulseNodeIds.length;
             if (node.id) node.foreground();
             if (node.property) node.property.foreground();
 
             targetLocationZoom(node);
         }
-    };
+    }
 
-    graph.resetSearchHighlight = function () {
+    resetSearchHighlight() {
         // get all nodes (handle also already filtered nodes )
-        pulseNodeIds = [];
-        nodeArrayForPulse = [];
+        this.pulseNodeIds = [];
+        this.nodeArrayForPulse = [];
         // clear from stored nodes
-        var nodes = unfilteredData.nodes;
-        var props = unfilteredData.properties;
+        var nodes = this.unfilteredData.nodes;
+        var props = this.unfilteredData.properties;
         var j;
         for (j = 0; j < nodes.length; j++) {
             var node = nodes[j];
@@ -2272,18 +2283,18 @@ export default function (graphContainerSelector) {
             if (prop.removeHalo)
                 prop.removeHalo();
         }
-    };
+    }
 
-    graph.updatePulseIds = function (nodeIdArray) {
-        pulseNodeIds = [];
+    updatePulseIds(nodeIdArray) {
+        this.pulseNodeIds = [];
         for (var i = 0; i < nodeIdArray.length; i++) {
             var selectedId = nodeIdArray[i];
-            var forceId = nodeMap[selectedId];
+            var forceId = this.nodeMap[selectedId];
             if (forceId !== undefined) {
-                var le_node = force.nodes()[forceId];
+                var le_node = this.force.nodes()[forceId];
                 if (le_node.id) {
-                    if (pulseNodeIds.indexOf(forceId) === -1) {
-                        pulseNodeIds.push(forceId);
+                    if (this.pulseNodeIds.indexOf(forceId) === -1) {
+                        this.pulseNodeIds.push(forceId);
                     }
                 }
                 if (le_node.property) {
@@ -2302,14 +2313,14 @@ export default function (graphContainerSelector) {
             d3.select("#locateSearchResult").classed("highlighted", false);
             d3.select("#locateSearchResult").node().title = "Nothing to locate";
         }
-    };
+    }
 
-    graph.highLightNodes = function (nodeIdArray) {
+    highLightNodes(nodeIdArray) {
         if (nodeIdArray.length === 0) {
             return; // nothing to highlight
         }
-        pulseNodeIds = [];
-        nodeArrayForPulse = nodeIdArray;
+        this.pulseNodeIds = [];
+        this.nodeArrayForPulse = nodeIdArray;
         var missedIds = [];
 
         // identify the force id to highlight
@@ -2342,8 +2353,8 @@ export default function (graphContainerSelector) {
 
         }
         // store the highlight on the missed nodes;
-        var s_nodes = unfilteredData.nodes;
-        var s_props = unfilteredData.properties;
+        var s_nodes = this.unfilteredData.nodes;
+        var s_props = this.unfilteredData.properties;
         for (i = 0; i < missedIds.length; i++) {
             var missedId = missedIds[i];
             // search for this in the nodes;
@@ -2366,21 +2377,21 @@ export default function (graphContainerSelector) {
         else {
             d3.select("#locateSearchResult").classed("highlighted", true);
         }
-        locationId = 0;
-        updateHaloRadius();
-    };
+        this.locationId = 0;
+        this.updateHaloRadius();
+    }
 
-    graph.hideHalos = function () {
+    hideHalos() {
         var haloElements = d3.selectAll(".searchResultA,.searchResultB");
         haloElements.classed("hidden", true);
         return haloElements;
-    };
+    }
 
-    function nodeInViewport(node, property) {
+    nodeInViewport(node, property) {
 
-        var w = graph.options().width();
-        var h = graph.options().height();
-        var posXY = getScreenCoords(node.x, node.y, graphTranslation, zoomFactor);
+        var w = this.options.width();
+        var h = this.options.height();
+        var posXY = this.getScreenCoords(node.x, node.y, graphTranslation, zoomFactor);
         var x = posXY.x;
         var y = posXY.y;
 
@@ -2388,20 +2399,20 @@ export default function (graphContainerSelector) {
         return retVal;
     }
 
-    graph.getBoundingBoxForTex = function () {
-        var halos = graph.hideHalos();
-        var bbox = graphContainer.node().getBoundingClientRect();
+    getBoundingBoxForTex() {
+        var halos = this.graph.hideHalos();
+        var bbox = this.graphContainer.node().getBoundingClientRect();
         halos.classed("hidden", false);
-        var w = graph.options().width();
-        var h = graph.options().height();
+        var w = this.options.width();
+        var h = this.options.height();
 
         // get the graph coordinates
-        var topLeft = getWorldPosFromScreen(0, 0, graphTranslation, zoomFactor);
-        var botRight = getWorldPosFromScreen(w, h, graphTranslation, zoomFactor);
+        var topLeft = this.getWorldPosFromScreen(0, 0, this.graphTranslation, this.zoomFactor);
+        var botRight = this.getWorldPosFromScreen(w, h, this.graphTranslation, this.zoomFactor);
 
 
-        var t_topLeft = getWorldPosFromScreen(bbox.left, bbox.top, graphTranslation, zoomFactor);
-        var t_botRight = getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
+        var t_topLeft = this.getWorldPosFromScreen(bbox.left, bbox.top, this.graphTranslation, this.zoomFactor);
+        var t_botRight = this.getWorldPosFromScreen(bbox.right, bbox.bottom, this.graphTranslation, this.zoomFactor);
 
         // tighten up the bounding box;
 
@@ -2413,7 +2424,7 @@ export default function (graphContainerSelector) {
 
 
         // tighten further;
-        var allForceNodes = force.nodes();
+        var allForceNodes = this.force.nodes();
         var numNodes = allForceNodes.length;
         var visibleNodes = [];
         var bbx;
@@ -2425,7 +2436,7 @@ export default function (graphContainerSelector) {
             var node = allForceNodes[i];
             if (node) {
                 if (node.property) {
-                    if (nodeInViewport(node, true)) {
+                    if (this.nodeInViewport(node, true)) {
                         if (node.property.labelElement === undefined) continue;
                         bbx = node.property.labelElement.node().getBoundingClientRect();
                         if (bbx) {
@@ -2436,7 +2447,7 @@ export default function (graphContainerSelector) {
                         }
                     }
                 } else {
-                    if (nodeInViewport(node, false)) {
+                    if (this.nodeInViewport(node, false)) {
                         bbx = node.nodeElement.node().getBoundingClientRect();
                         if (bbx) {
                             contentBBox.tx = Math.min(contentBBox.tx, bbx.left);
@@ -2449,8 +2460,8 @@ export default function (graphContainerSelector) {
             }
         }
 
-        var tt_topLeft = getWorldPosFromScreen(contentBBox.tx, contentBBox.ty, graphTranslation, zoomFactor);
-        var tt_botRight = getWorldPosFromScreen(contentBBox.bx, contentBBox.by, graphTranslation, zoomFactor);
+        var tt_topLeft = this.getWorldPosFromScreen(contentBBox.tx, contentBBox.ty, graphTranslation, zoomFactor);
+        var tt_botRight = this.getWorldPosFromScreen(contentBBox.bx, contentBBox.by, graphTranslation, zoomFactor);
 
         tX = Math.max(tX, tt_topLeft.x);
         tY = Math.max(tY, tt_topLeft.y);
@@ -2460,21 +2471,21 @@ export default function (graphContainerSelector) {
         // y axis flip for tex
         return [tX, -tY, bX, -bY];
 
-    };
+    }
 
-    var updateTargetElement = function () {
-        var bbox = graphContainer.node().getBoundingClientRect();
+    updateTargetElement() {
+        var bbox = this.graphContainer.node().getBoundingClientRect();
 
 
         // get the graph coordinates
         var bboxOffset = 50; // default radius of a node;
-        var topLeft = getWorldPosFromScreen(bbox.left, bbox.top, graphTranslation, zoomFactor);
-        var botRight = getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
+        var topLeft = this.getWorldPosFromScreen(bbox.left, bbox.top, graphTranslation, zoomFactor);
+        var botRight = this.getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
 
-        var w = graph.options().width();
-        if (graph.options().leftSidebar().visibleSidebar === true)
+        var w = this.options.width();
+        if (this.options.leftSidebar().visibleSidebar === true)
             w -= 200;
-        var h = graph.options().height();
+        var h = this.options.height();
         topLeft.x += bboxOffset;
         topLeft.y -= bboxOffset;
         botRight.x -= bboxOffset;
@@ -2489,9 +2500,9 @@ export default function (graphContainerSelector) {
         var cx = 0.5 * w,
             cy = 0.5 * h;
 
-        if (graph.options().leftSidebar().visibleSidebar === true)
+        if (this.options.leftSidebar().visibleSidebar === true)
             cx += 200;
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
+        var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, this.zoomFactor);
 
         // zoom factor calculations and fail safes;
         var newZoomFactor = 1.0; // fail save if graph and window are squares
@@ -2503,38 +2514,38 @@ export default function (graphContainerSelector) {
 
 
         // fail saves
-        if (newZoomFactor > zoom.scaleExtent()[1]) {
-            newZoomFactor = zoom.scaleExtent()[1];
+        if (newZoomFactor > this.zoom.scaleExtent()[1]) {
+            newZoomFactor = this.zoom.scaleExtent()[1];
         }
-        if (newZoomFactor < zoom.scaleExtent()[0]) {
-            newZoomFactor = zoom.scaleExtent()[0];
+        if (newZoomFactor < this.zoom.scaleExtent()[0]) {
+            newZoomFactor = this.zoom.scaleExtent()[0];
         }
 
         // apply Zooming
-        var sP = [cp.x, cp.y, h / zoomFactor];
+        var sP = [cp.x, cp.y, h / this.zoomFactor];
         var eP = [posX, posY, h / newZoomFactor];
 
 
         var pos_intp = d3.interpolateZoom(sP, eP);
         return [pos_intp, cx, cy];
 
-    };
+    }
 
-    graph.forceRelocationEvent = function (dynamic) {
+    forceRelocationEvent(dynamic) {
         // we need to kill the halo to determine the bounding box;
-        var halos = graph.hideHalos();
-        var bbox = graphContainer.node().getBoundingClientRect();
+        var halos = this.graph.hideHalos();
+        var bbox = this.graphContainer.node().getBoundingClientRect();
         halos.classed("hidden", false);
 
         // get the graph coordinates
         var bboxOffset = 50; // default radius of a node;
-        var topLeft = getWorldPosFromScreen(bbox.left, bbox.top, graphTranslation, zoomFactor);
-        var botRight = getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
+        var topLeft = this.getWorldPosFromScreen(bbox.left, bbox.top, this.graphTranslation, this.zoomFactor);
+        var botRight = this.getWorldPosFromScreen(bbox.right, bbox.bottom, this.graphTranslation, this.zoomFactor);
 
-        var w = graph.options().width();
-        if (graph.options().leftSidebar().visibleSidebar === true)
+        var w = this.options.width();
+        if (this.options.leftSidebar().visibleSidebar === true)
             w -= 200;
-        var h = graph.options().height();
+        var h = this.options.height();
         topLeft.x += bboxOffset;
         topLeft.y -= bboxOffset;
         botRight.x -= bboxOffset;
@@ -2549,9 +2560,9 @@ export default function (graphContainerSelector) {
         var cx = 0.5 * w,
             cy = 0.5 * h;
 
-        if (graph.options().leftSidebar().visibleSidebar === true)
+        if (this.options.leftSidebar().visibleSidebar === true)
             cx += 200;
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
+        var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, this.zoomFactor);
 
         // zoom factor calculations and fail safes;
         var newZoomFactor = 1.0; // fail save if graph and window are squares
@@ -2563,15 +2574,15 @@ export default function (graphContainerSelector) {
 
 
         // fail saves
-        if (newZoomFactor > zoom.scaleExtent()[1]) {
-            newZoomFactor = zoom.scaleExtent()[1];
+        if (newZoomFactor > this.zoom.scaleExtent()[1]) {
+            newZoomFactor = this.zoom.scaleExtent()[1];
         }
-        if (newZoomFactor < zoom.scaleExtent()[0]) {
-            newZoomFactor = zoom.scaleExtent()[0];
+        if (newZoomFactor < this.zoom.scaleExtent()[0]) {
+            newZoomFactor = this.zoom.scaleExtent()[0];
         }
 
         // apply Zooming
-        var sP = [cp.x, cp.y, h / zoomFactor];
+        var sP = [cp.x, cp.y, h / this.zoomFactor];
         var eP = [posX, posY, h / newZoomFactor];
 
 
@@ -2580,13 +2591,14 @@ export default function (graphContainerSelector) {
         if (lenAnimation > 2500) {
             lenAnimation = 2500;
         }
-        graphContainer.attr("transform", transform(sP, cx, cy))
+        this.graphContainer.attr("transform", transform(sP, cx, cy))
+    
             .transition()
             .duration(lenAnimation)
             .attrTween("transform", function () {
                 return function (t) {
                     if (dynamic) {
-                        var param = updateTargetElement();
+                        var param = _this.updateTargetElement();
                         var nV = param[0](t);
                         return transform(nV, cx, cy);
                     }
@@ -2598,40 +2610,40 @@ export default function (graphContainerSelector) {
                     return;
                 }
 
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
+                this.graphContainer.attr("transform", "translate(" + this.graphTranslation + ")scale(" + this.zoomFactor + ")");
+                this.zoom.translate(this.graphTranslation);
+                this.zoom.scale(this.zoomFactor);
+                this.options.zoomSlider().updateZoomSliderValue(this.zoomFactor);
 
 
             });
-    };
+    }
 
 
-    graph.isADraggerActive = function () {
-        if (classDragger.mouseButtonPressed === true ||
-            domainDragger.mouseButtonPressed === true ||
-            rangeDragger.mouseButtonPressed === true) {
+    isADraggerActive() {
+        if (this.classDragger.mouseButtonPressed === true ||
+            this.domainDragger.mouseButtonPressed === true ||
+            this.rangeDragger.mouseButtonPressed === true) {
             return true;
         }
         return false;
-    };
+    }
 
     /** --------------------------------------------------------- **/
     /** -- VOWL EDITOR  create/ edit /delete functions --         **/
     /** --------------------------------------------------------- **/
 
-    graph.changeNodeType = function (element) {
+    changeNodeType(element) {
         var typeString = d3.select("#typeEditor").node().value;
 
         if (graph.classesSanityCheck(element, typeString) === false) {
             // call reselection to restore previous type selection
-            graph.options().editSidebar().updateSelectionInformation(element);
+            this.options.editSidebar().updateSelectionInformation(element);
             return;
         }
 
-        var prototype = NodePrototypeMap.get(typeString.toLowerCase());
-        var aNode = new prototype(graph);
+        var prototype = this.NodePrototypeMap.get(typeString.toLowerCase());
+        var aNode = new prototype(this);
         aNode.x = element.x;
         aNode.y = element.y;
         aNode.px = element.x;
@@ -2642,7 +2654,7 @@ export default function (graphContainerSelector) {
         if (typeString === "owl:Thing") {
             aNode.label = "Thing";
         }
-        else if (elementTools.isDatatype(element) === false) {
+        else if (ElementTools.isDatatype(element) === false) {
             if (element.backupLabel !== undefined) {
                 aNode.label = element.backupLabel;
             } else if (aNode.backupLabel !== undefined) {
@@ -2662,42 +2674,42 @@ export default function (graphContainerSelector) {
         }
         var i;
         // updates the property domain and range
-        for (i = 0; i < unfilteredData.properties.length; i++) {
-            if (unfilteredData.properties[i].domain === element) {
-                unfilteredData.properties[i].domain = aNode;
+        for (i = 0; i < this.unfilteredData.properties.length; i++) {
+            if (this.unfilteredData.properties[i].domain === element) {
+                this.unfilteredData.properties[i].domain = aNode;
             }
-            if (unfilteredData.properties[i].range === element) {
-                unfilteredData.properties[i].range = aNode;
+            if (this.unfilteredData.properties[i].range === element) {
+                this.unfilteredData.properties[i].range = aNode;
             }
         }
 
         // update for fastUpdate:
-        for (i = 0; i < properties.length; i++) {
-            if (properties[i].domain === element) {
-                properties[i].domain = aNode;
+        for (i = 0; i < this.properties.length; i++) {
+            if (this.properties[i].domain === element) {
+                this.properties[i].domain = aNode;
             }
-            if (properties[i].range === element) {
-                properties[i].range = aNode;
+            if (this.properties[i].range === element) {
+                this.properties[i].range = aNode;
             }
         }
 
-        var remId = unfilteredData.nodes.indexOf(element);
+        var remId = this.unfilteredData.nodes.indexOf(element);
         if (remId !== -1)
-            unfilteredData.nodes.splice(remId, 1);
-        remId = classNodes.indexOf(element);
+            this.unfilteredData.nodes.splice(remId, 1);
+        remId = this.classNodes.indexOf(element);
         if (remId !== -1)
-            classNodes.splice(remId, 1);
+            this.classNodes.splice(remId, 1);
         // very important thing for selection!;
-        addNewNodeElement(aNode);
+        this.addNewNodeElement(aNode);
         // handle focuser!
-        options.focuserModule().handle(aNode);
-        generateDictionary(unfilteredData);
-        graph.getUpdateDictionary();
+        this.options.focuserModule().handle(aNode);
+        this.generateDictionary(this.unfilteredData);
+        this.graph.getUpdateDictionary();
         element = null;
-    };
+    }
 
 
-    graph.changePropertyType = function (element) {
+    changePropertyType(element) {
         var typeString = d3.select("#typeEditor").node().value;
 
         // create warning
@@ -2725,12 +2737,12 @@ export default function (graphContainerSelector) {
             aProp.iri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
         } else {
             if (element.iri === "http://www.w3.org/2000/01/rdf-schema#subClassOf") {
-                aProp.iri = graph.options().getGeneralMetaObjectProperty('iri') + aProp.id;
+                aProp.iri = this.options.getGeneralMetaObjectProperty('iri') + aProp.id;
             }
         }
 
-        if (graph.propertyCheckExistenceChecker(aProp, element.domain, element.range) === false) {
-            graph.options().editSidebar().updateSelectionInformation(element);
+        if (this.propertyCheckExistenceChecker(aProp, element.domain, element.range) === false) {
+            this.options.editSidebar().updateSelectionInformation(element);
             return;
         }
         // // TODO: change its base IRI to proper value
@@ -2763,14 +2775,14 @@ export default function (graphContainerSelector) {
 
         options.focuserModule().handle(aProp);
         element = null;
-    };
+    }
 
-    graph.removeEditElements = function () {
+    removeEditElements() {
         // just added to be called form outside
         removeEditElements();
-    };
+    }
 
-    function removeEditElements() {
+    removeEditElements() {
         rangeDragger.hideDragger(true);
         domainDragger.hideDragger(true);
         shadowClone.hideClone(true);
@@ -2795,7 +2807,7 @@ export default function (graphContainerSelector) {
         }
     }
 
-    graph.editorMode = function (val) {
+    editorMode(val) {
         var create_entry = d3.select("#empty");
         var create_container = d3.select("#emptyContainer");
         var modeOfOpString = d3.select("#modeOfOperationString").node();
@@ -2817,11 +2829,11 @@ export default function (graphContainerSelector) {
 
             return editMode;
         }
-        graph.options().setEditorModeForDefaultObject(val);
+        this.options.setEditorModeForDefaultObject(val);
 
         // if (seenEditorHint===false  && val===true){
         //     seenEditorHint=true;
-        //     graph.options().warningModule().showEditorHint();
+        //     this.options.warningModule().showEditorHint();
         // }
         editMode = val;
 
@@ -2885,9 +2897,9 @@ export default function (graphContainerSelector) {
         if (editMode === true) {
             options.leftSidebar().showSidebar(options.leftSidebar().getSidebarVisibility(), true);
             options.leftSidebar().hideCollapseButton(false);
-            graph.options().editSidebar().updatePrefixUi();
-            graph.options().editSidebar().updateElementWidth();
-            svgGraph.on("dblclick.zoom", graph.modified_dblClickFunction);
+            this.options.editSidebar().updatePrefixUi();
+            this.options.editSidebar().updateElementWidth();
+            svgGraph.on("dblclick.zoom", this.modified_dblClickFunction);
 
         } else {
             svgGraph.on("dblclick.zoom", originalD3_dblClickFunction);
@@ -2899,15 +2911,15 @@ export default function (graphContainerSelector) {
         options.sidebar().updateShowedInformation();
         options.editSidebar().updateElementWidth();
 
-    };
+    }
 
-    function createLowerCasePrototypeMap(prototypeMap) {
+    createLowerCasePrototypeMap(prototypeMap) {
         return d3.map(prototypeMap.values(), function (Prototype) { // FIXME: Check Map docs
             return new Prototype().type.toLowerCase();
         });
     }
 
-    function createNewNodeAtPosition(pos) {
+    createNewNodeAtPosition(pos) {
         var aNode, prototype;
         var forceUpdate = true;
         // create a node of that id;
@@ -2939,7 +2951,7 @@ export default function (graphContainerSelector) {
         aNode.enableEditing(autoEditElement);
     }
 
-    function addNewNodeElement(element) {
+    addNewNodeElement(element) {
         unfilteredData.nodes.push(element);
         if (classNodes.indexOf(element) === -1)
             classNodes.push(element);
@@ -2949,7 +2961,7 @@ export default function (graphContainerSelector) {
         graph.fastUpdate();
     }
 
-    graph.getTargetNode = function (position) {
+    getTargetNode(position) {
         var dx = position[0];
         var dy = position[1];
         var tN = null;
@@ -2980,11 +2992,11 @@ export default function (graphContainerSelector) {
             else return tN;
 
         }
-    };
+    }
 
-    graph.genericPropertySanityCheck = function (domain, range, typeString, header, action) {
+    genericPropertySanityCheck(domain, range, typeString, header, action) {
         if (domain === range && typeString === "rdfs:subClassOf") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 header,
                 "rdfs:subClassOf can not be created as loops (domain == range)",
                 action,
@@ -2994,7 +3006,7 @@ export default function (graphContainerSelector) {
             return false;
         }
         if (domain === range && typeString === "owl:disjointWith") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 header,
                 "owl:disjointWith  can not be created as loops (domain == range)",
                 action,
@@ -3006,7 +3018,7 @@ export default function (graphContainerSelector) {
         // allProps[i].type==="owl:allValuesFrom"  ||
         // allProps[i].type==="owl:someValuesFrom"
         if (domain.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 header,
                 "owl:allValuesFrom can not originate from owl:Thing",
                 action,
@@ -3016,7 +3028,7 @@ export default function (graphContainerSelector) {
             return false;
         }
         if (domain.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 header,
                 "owl:someValuesFrom can not originate from owl:Thing",
                 action,
@@ -3027,7 +3039,7 @@ export default function (graphContainerSelector) {
         }
 
         if (range.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 header,
                 "owl:allValuesFrom can not be connected to owl:Thing",
                 action,
@@ -3037,7 +3049,7 @@ export default function (graphContainerSelector) {
             return false;
         }
         if (range.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 header,
                 "owl:someValuesFrom can not be connected to owl:Thing",
                 action,
@@ -3047,13 +3059,13 @@ export default function (graphContainerSelector) {
             return false;
         }
         return true; // we can Change the domain or range
-    };
+    }
 
-    graph.checkIfIriClassAlreadyExist = function (url) {
+    checkIfIriClassAlreadyExist(url) {
         // search for a class node with this url
         var allNodes = unfilteredData.nodes;
         for (var i = 0; i < allNodes.length; i++) {
-            if (elementTools.isDatatype(allNodes[i]) === true || allNodes[i].type === "owl:Thing")
+            if (ElementTools.isDatatype(allNodes[i]) === true || allNodes[i].type === "owl:Thing")
                 continue;
 
             // now we are a real class;
@@ -3066,9 +3078,9 @@ export default function (graphContainerSelector) {
             }
         }
         return false;
-    };
+    }
 
-    graph.classesSanityCheck = function (classElement, targetType) {
+    classesSanityCheck(classElement, targetType) {
         // this is added due to someValuesFrom properties
         // we should not be able to change a classElement to a owl:Thing
         // when it has a property attached to it that uses these restrictions
@@ -3083,7 +3095,7 @@ export default function (graphContainerSelector) {
                 if (allProps[i].range === classElement || allProps[i].domain === classElement) {
                     // check for the type of that property
                     if (allProps[i].type === "owl:someValuesFrom") {
-                        graph.options().warningModule().showWarning(
+                        this.options.warningModule().showWarning(
                             "Can not change class type",
                             "The element has a property that is of type owl:someValuesFrom",
                             "Element type not changed!",
@@ -3093,7 +3105,7 @@ export default function (graphContainerSelector) {
                         return false;
                     }
                     if (allProps[i].type === "owl:allValuesFrom") {
-                        graph.options().warningModule().showWarning(
+                        this.options.warningModule().showWarning(
                             "Can not change class type",
                             "The element has a property that is of type owl:allValuesFrom",
                             "Element type not changed!",
@@ -3106,9 +3118,9 @@ export default function (graphContainerSelector) {
             }
         }
         return true;
-    };
+    }
 
-    graph.propertyCheckExistenceChecker = function (property, domain, range) {
+    propertyCheckExistenceChecker(property, domain, range) {
         var allProps = unfilteredData.properties;
         var i;
         if (property.type === "rdfs:subClassOf" || property.type === "owl:disjointWith") {
@@ -3116,7 +3128,7 @@ export default function (graphContainerSelector) {
             for (i = 0; i < allProps.length; i++) {
                 if (allProps[i] === property) continue;
                 if (allProps[i].domain === domain && allProps[i].range === range && allProps[i].type === property.type) {
-                    graph.options().warningModule().showWarning(
+                    this.options.warningModule().showWarning(
                         "Warning",
                         "This triple already exist!",
                         "Element not created!",
@@ -3126,7 +3138,7 @@ export default function (graphContainerSelector) {
                     return false;
                 }
                 if (allProps[i].domain === range && allProps[i].range === domain && allProps[i].type === property.type) {
-                    graph.options().warningModule().showWarning(
+                    this.options.warningModule().showWarning(
                         "Warning",
                         "Inverse assignment already exist! ",
                         "Element not created!",
@@ -3139,7 +3151,7 @@ export default function (graphContainerSelector) {
             return true;
         }
         return true;
-    };
+    }
 
     // graph.checkForTripleDuplicate=function(property){
     //     var domain=property.domain;
@@ -3152,7 +3164,7 @@ export default function (graphContainerSelector) {
     //     console.log("test range results in "+ b1);
 
     //     if (b1  && b2 ){
-    //         graph.options().warningModule().showWarning(
+    //         this.options.warningModule().showWarning(
     //             "Warning",
     //             "This triple already exist!",
     //             "Element not created!",
@@ -3162,12 +3174,12 @@ export default function (graphContainerSelector) {
     //         return false;
     //     }
     //     return true;
-    // };
+    // }
 
-    graph.sanityCheckProperty = function (domain, range, typeString) {
+    sanityCheckProperty(domain, range, typeString) {
         // check for duplicate triple in the element;
-        if (typeString === "owl:objectProperty" && graph.options().objectPropertyFilter().enabled === true) {
-            graph.options().warningModule().showWarning(
+        if (typeString === "owl:objectProperty" && this.options.objectPropertyFilter().enabled === true) {
+            this.options.warningModule().showWarning(
                 "Warning",
                 "Object properties are filtered out in the visualization!",
                 "Element not created!",
@@ -3177,8 +3189,8 @@ export default function (graphContainerSelector) {
             return false;
         }
 
-        if (typeString === "owl:disjointWith" && graph.options().disjointPropertyFilter().enabled === true) {
-            graph.options().warningModule().showWarning(
+        if (typeString === "owl:disjointWith" && this.options.disjointPropertyFilter().enabled === true) {
+            this.options.warningModule().showWarning(
                 "Warning",
                 "owl:disjointWith properties are filtered out in the visualization!",
                 "Element not created!",
@@ -3190,7 +3202,7 @@ export default function (graphContainerSelector) {
 
 
         if (domain === range && typeString === "rdfs:subClassOf") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 "Warning",
                 "rdfs:subClassOf can not be created as loops (domain == range)",
                 "Element not created!",
@@ -3200,7 +3212,7 @@ export default function (graphContainerSelector) {
             return false;
         }
         if (domain === range && typeString === "owl:disjointWith") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 "Warning",
                 "owl:disjointWith  can not be created as loops (domain == range)",
                 "Element not created!",
@@ -3211,7 +3223,7 @@ export default function (graphContainerSelector) {
         }
 
         if (domain.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 "Warning",
                 "owl:someValuesFrom can not originate from owl:Thing",
                 "Element not created!",
@@ -3221,7 +3233,7 @@ export default function (graphContainerSelector) {
             return false;
         }
         if (domain.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 "Warning",
                 "owl:allValuesFrom can not originate from owl:Thing",
                 "Element not created!",
@@ -3232,7 +3244,7 @@ export default function (graphContainerSelector) {
         }
 
         if (range.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 "Warning",
                 "owl:allValuesFrom can not be connected to owl:Thing",
                 "Element not created!",
@@ -3242,7 +3254,7 @@ export default function (graphContainerSelector) {
             return false;
         }
         if (range.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning(
+            this.options.warningModule().showWarning(
                 "Warning",
                 "owl:someValuesFrom can not be connected to owl:Thing",
                 "Element not created!",
@@ -3252,9 +3264,9 @@ export default function (graphContainerSelector) {
             return false;
         }
         return true; // we can create a property
-    };
+    }
 
-    function createNewObjectProperty(domain, range, draggerEndposition) {
+    createNewObjectProperty(domain, range, draggerEndposition) {
         // check type of the property that we want to create;
         var defaultPropertyName = d3.select("#defaultProperty").node().title;
 
@@ -3338,12 +3350,12 @@ export default function (graphContainerSelector) {
         aProp.enableEditing(autoEditElement);
     }
 
-    graph.createDataTypeProperty = function (node) {
+    createDataTypeProperty(node) {
         // random postion issues;
         clearTimeout(nodeFreezer);
         // tells user when element is filtered out
-        if (graph.options().datatypeFilter().enabled === true) {
-            graph.options().warningModule().showWarning(
+        if (this.options.datatypeFilter().enabled === true) {
+            this.options.warningModule().showWarning(
                 "Warning",
                 "Datatype properties are filtered out in the visualization!",
                 "Element not created!",
@@ -3429,9 +3441,9 @@ export default function (graphContainerSelector) {
             node.frozen = true;
             node.locked = true;
         }
-    };
+    }
 
-    graph.removeNodesViaResponse = function (nodesToRemove, propsToRemove) {
+    removeNodesViaResponse(nodesToRemove, propsToRemove) {
         var i, remId;
         // splice them;
         for (i = 0; i < propsToRemove.length; i++) {
@@ -3460,9 +3472,9 @@ export default function (graphContainerSelector) {
         nodesToRemove = null;
         propsToRemove = null;
 
-    };
+    }
 
-    graph.removeNodeViaEditor = function (node) {
+    removeNodeViaEditor(node) {
         var propsToRemove = [];
         var nodesToRemove = [];
         var datatypes = 0;
@@ -3488,7 +3500,7 @@ export default function (graphContainerSelector) {
             }
 
 
-            graph.options().warningModule().responseWarning(
+            this.options.warningModule().responseWarning(
                 "Removing elements",
                 text,
                 "Awaiting response!",
@@ -3530,9 +3542,9 @@ export default function (graphContainerSelector) {
             nodesToRemove = null;
             propsToRemove = null;
         }
-    };
+    }
 
-    graph.removePropertyViaEditor = function (property) {
+    removePropertyViaEditor(property) {
         property.domain.removePropertyElement(property);
         property.range.removePropertyElement(property);
         var remId;
@@ -3563,48 +3575,48 @@ export default function (graphContainerSelector) {
         graph.getUpdateDictionary();
         options.focuserModule().handle(undefined);
         property = null;
-    };
+    }
 
-    graph.executeColorExternalsModule = function () {
+    executeColorExternalsModule() {
         options.colorExternalsModule().filter(unfilteredData.nodes, unfilteredData.properties);
-    };
+    }
 
-    graph.executeCompactNotationModule = function () {
+    executeCompactNotationModule() {
         if (unfilteredData) {
             options.compactNotationModule().filter(unfilteredData.nodes, unfilteredData.properties);
         }
-    };
+    }
 
-    graph.executeEmptyLiteralFilter = function () {
+    executeEmptyLiteralFilter() {
         if (unfilteredData && unfilteredData.nodes.length > 1) {
             options.literalFilter().filter(unfilteredData.nodes, unfilteredData.properties);
             unfilteredData.nodes = options.literalFilter().filteredNodes();
             unfilteredData.properties = options.literalFilter().filteredProperties();
         }
-    };
+    }
 
     /** --------------------------------------------------------- **/
     /** -- Touch behaviour functions --                   **/
     /** --------------------------------------------------------- **/
 
-    graph.setTouchDevice = function (val) {
+    setTouchDevice(val) {
         touchDevice = val;
-    };
+    }
 
-    graph.isTouchDevice = function () {
+    isTouchDevice = function () {
         return touchDevice;
-    };
+    }
 
-    graph.modified_dblClickFunction = function () {
+    modified_dblClickFunction() {
 
         d3.event.stopPropagation();
         d3.event.preventDefault();
         // get position where we want to add the node;
         var grPos = getClickedScreenCoords(d3.event.clientX, d3.event.clientY, graph.translation(), graph.scaleFactor());
         createNewNodeAtPosition(grPos);
-    };
+    }
 
-    function doubletap() {
+    doubletap() {
         var touch_time = d3.event.timeStamp;
         var numTouchers = 1;
         if (d3.event && d3.event.touches && d3.event.touches.length)
@@ -3625,7 +3637,7 @@ export default function (graphContainerSelector) {
     }
 
 
-    function touchzoomed() {
+    touchzoomed() {
         forceNotZooming = true;
 
 
@@ -3655,7 +3667,7 @@ export default function (graphContainerSelector) {
             originalD3_touchZoomFunction();
     }
 
-    graph.modified_dblTouchFunction = function (d) {
+    modified_dblTouchFunction(d) {
         d3.event.stopPropagation();
         d3.event.preventDefault();
         var xy;
@@ -3664,20 +3676,20 @@ export default function (graphContainerSelector) {
         }
         var grPos = getClickedScreenCoords(xy[0][0], xy[0][1], graph.translation(), graph.scaleFactor());
         createNewNodeAtPosition(grPos);
-    };
+    }
 
     /** --------------------------------------------------------- **/
     /** -- Hover and Selection functions, adding edit elements --  **/
     /** --------------------------------------------------------- **/
 
-    graph.ignoreOtherHoverEvents = function (val) {
+    ignoreOtherHoverEvents = function (val) {
         if (!arguments.length) {
             return ignoreOtherHoverEvents;
         }
         else ignoreOtherHoverEvents = val;
-    };
+    }
 
-    function delayedHiddingHoverElements(tbh) {
+    delayedHiddingHoverElements(tbh) {
         if (tbh === true) return;
         if (hoveredNodeElement) {
             if (hoveredNodeElement.editingTextElement === true) return;
@@ -3700,7 +3712,7 @@ export default function (graphContainerSelector) {
                 rangeDragger.hideDragger(true);
                 domainDragger.hideDragger(true);
                 shadowClone.hideClone(true);
-                if (hoveredPropertyElement && hoveredPropertyElement.focused === true && graph.options().drawPropertyDraggerOnHover() === true) {
+                if (hoveredPropertyElement && hoveredPropertyElement.focused === true && this.options.drawPropertyDraggerOnHover() === true) {
                     hoveredPropertyElement.labelObject.increasedLoopAngle = false;
                     // lazy update
                     recalculatePositions();
@@ -3715,39 +3727,39 @@ export default function (graphContainerSelector) {
     }
 
     // TODO : experimental code for updating dynamic label with and its hover element
-    graph.hideHoverPropertyElementsForAnimation = function () {
+    hideHoverPropertyElementsForAnimation() {
         deleteGroupElement.classed("hidden", true);
-    };
+    }
 
-    graph.showHoverElementsAfterAnimation = function (property, inversed) {
+    showHoverElementsAfterAnimation(property, inversed) {
         setDeleteHoverElementPositionProperty(property, inversed);
         deleteGroupElement.classed("hidden", false);
-    };
+    }
 
-    function editElementHoverOnHidden() {
+    editElementHoverOnHidden() {
         classDragger.nodeElement.classed("classDraggerNodeHovered", true);
         classDragger.nodeElement.classed("classDraggerNode", false);
         editElementHoverOn();
     }
 
-    function editElementHoverOutHidden() {
+    editElementHoverOutHidden() {
         classDragger.nodeElement.classed("classDraggerNodeHovered", false);
         classDragger.nodeElement.classed("classDraggerNode", true);
         editElementHoverOut();
     }
 
-    function editElementHoverOn(touch) {
+    editElementHoverOn(touch) {
         if (touch === true) return;
         clearTimeout(delayedHider); // ignore touch behaviour
 
     }
 
-    graph.killDelayedTimer = function () {
+    killDelayedTimer() {
         clearTimeout(delayedHider);
         clearTimeout(nodeFreezer);
-    };
+    }
 
-    function editElementHoverOut(tbh) {
+    editElementHoverOut(tbh) {
         if (hoveredNodeElement) {
             if (graph.ignoreOtherHoverEvents() === true || tbh === true || hoveredNodeElement.editingTextElement === true) return;
             delayedHider = setTimeout(function () {
@@ -3776,7 +3788,7 @@ export default function (graphContainerSelector) {
         }
     }
 
-    graph.activateHoverElementsForProperties = function (val, property, inversed, touchBehaviour) {
+    activateHoverElementsForProperties(val, property, inversed, touchBehaviour) {
         if (editMode === false) return; // nothing to do;
 
         if (touchBehaviour === undefined)
@@ -3792,7 +3804,7 @@ export default function (graphContainerSelector) {
             }
 
             hoveredPropertyElement = property;
-            if (graph.options().drawPropertyDraggerOnHover() === true) {
+            if (this.options.drawPropertyDraggerOnHover() === true) {
 
 
                 if (property.type !== "owl:DatatypeProperty") {
@@ -3820,7 +3832,7 @@ export default function (graphContainerSelector) {
                 }
             }
             else { // hide when we dont want that option
-                if (graph.options().drawPropertyDraggerOnHover() === true) {
+                if (this.options.drawPropertyDraggerOnHover() === true) {
                     rangeDragger.hideDragger(true);
                     domainDragger.hideDragger(true);
                     shadowClone.hideClone(true);
@@ -3842,7 +3854,7 @@ export default function (graphContainerSelector) {
             setDeleteHoverElementPositionProperty(property, inversed);
             deleteGroupElement.selectAll("*").on("click", function () {
                 if (touchBehaviour && property.focused === false) {
-                    graph.options().focuserModule().handle(property);
+                    this.options.focuserModule().handle(property);
                     return;
                 }
                 graph.removePropertyViaEditor(property);
@@ -3853,26 +3865,26 @@ export default function (graphContainerSelector) {
         } else {
             delayedHiddingHoverElements();
         }
-    };
+    }
 
-    graph.updateDraggerElements = function () {
+    updateDraggerElements() {
 
         // set opacity style for all elements
 
-        rangeDragger.draggerObject.classed("superOpacityElement", !graph.options().showDraggerObject());
-        domainDragger.draggerObject.classed("superOpacityElement", !graph.options().showDraggerObject());
-        classDragger.draggerObject.classed("superOpacityElement", !graph.options().showDraggerObject());
+        rangeDragger.draggerObject.classed("superOpacityElement", !this.options.showDraggerObject());
+        domainDragger.draggerObject.classed("superOpacityElement", !this.options.showDraggerObject());
+        classDragger.draggerObject.classed("superOpacityElement", !this.options.showDraggerObject());
 
-        nodeContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !graph.options().showDraggerObject());
-        labelContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !graph.options().showDraggerObject());
+        nodeContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject());
+        labelContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject());
 
-        deleteGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !graph.options().showDraggerObject());
-        addDataPropertyGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !graph.options().showDraggerObject());
+        deleteGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject());
+        addDataPropertyGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject());
 
 
-    };
+    }
 
-    function setAddDataPropertyHoverElementPosition(node) {
+    setAddDataPropertyHoverElementPosition(node) {
         var delX, delY = 0;
         if (node.renderType === "round") {
             var scale = 0.5 * Math.sqrt(2.0);
@@ -3884,7 +3896,7 @@ export default function (graphContainerSelector) {
         }
     }
 
-    function setDeleteHoverElementPosition(node) {
+    setDeleteHoverElementPosition(node) {
         var delX, delY = 0;
         if (node.renderType === "round") {
             var scale = 0.5 * Math.sqrt(2.0);
@@ -3899,7 +3911,7 @@ export default function (graphContainerSelector) {
         deleteGroupElement.attr("transform", "translate(" + delX + "," + delY + ")");
     }
 
-    function setDeleteHoverElementPositionProperty(property, inversed) {
+    setDeleteHoverElementPositionProperty(property, inversed) {
         if (property && property.labelElement) {
             var pos = [property.labelObject.x, property.labelObject.y];
             var widthElement = parseFloat(property.shapeElement.attr("width"));
@@ -3920,7 +3932,8 @@ export default function (graphContainerSelector) {
 
     }
 
-    graph.activateHoverElements = function (val, node, touchBehaviour) {
+    activateHoverElements(val, node, touchBehaviour) {
+        
         if (editMode === false) {
             return; // nothing to do;
         }
@@ -3928,7 +3941,7 @@ export default function (graphContainerSelector) {
             touchBehaviour = false;
         }
         if (val === true) {
-            if (graph.options().drawPropertyDraggerOnHover() === true) {
+            if (this.options.drawPropertyDraggerOnHover() === true) {
                 rangeDragger.hideDragger(true);
                 domainDragger.hideDragger(true);
                 shadowClone.hideClone(true);
@@ -3956,7 +3969,7 @@ export default function (graphContainerSelector) {
 
             deleteGroupElement.selectAll("*").on("click", function () {
                 if (touchBehaviour && node.focused === false) {
-                    graph.options().focuserModule().handle(node);
+                    this.options.focuserModule().handle(node);
                     return;
                 }
                 graph.removeNodeViaEditor(node);
@@ -3984,7 +3997,7 @@ export default function (graphContainerSelector) {
                 setAddDataPropertyHoverElementPosition(node);
                 addDataPropertyGroupElement.selectAll("*").on("click", function () {
                     if (touchBehaviour && node.focused === false) {
-                        graph.options().focuserModule().handle(node);
+                        this.options.focuserModule().handle(node);
                         return;
                     }
                     graph.createDataTypeProperty(node);
@@ -4005,8 +4018,6 @@ export default function (graphContainerSelector) {
             delayedHiddingHoverElements(node, touchBehaviour);
 
         }
-    };
+    }
 
-
-    return graph;
-};
+}

@@ -31,7 +31,7 @@ export default class ResetMenu {
     var menuEntry = d3.select("#resetOption");
     menuEntry.on("mouseover", function (){
       // @ts-ignore
-      var searchMenu = graph.options().searchMenu();
+      var searchMenu = graph.options.searchMenu();
       searchMenu.hideSearchEntries();
     });
   };
@@ -40,7 +40,7 @@ export default class ResetMenu {
     // @ts-ignore
     this.graph.resetSearchHighlight();
     // @ts-ignore
-    this.graph.options().searchMenu().clearText();
+    this.graph.options.searchMenu().clearText();
     this.options.classDistance(this.untouchedOptions.classDistance());
     this.options.datatypeDistance(this.untouchedOptions.datatypeDistance());
     this.options.charge(this.untouchedOptions.charge());

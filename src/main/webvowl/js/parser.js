@@ -69,20 +69,20 @@ export class Parser {
 
     //         if (this.settingsData.global.paused) {
     //             const paused = this.settingsData.global.paused;
-    //             this.graph.options().pauseMenu().setPauseValue(paused);
+    //             this.graph.options.pauseMenu().setPauseValue(paused);
     //         }
     //     }
     //     /** Gravity Settings  **********************************************************/
     //     if (this.settingsData.gravity) {
     //         if (this.settingsData.gravity.classDistance) {
     //             const classDistance = this.settingsData.gravity.classDistance;
-    //             this.graph.options().classDistance(classDistance);
+    //             this.graph.options.classDistance(classDistance);
     //         }
     //         if (this.settingsData.gravity.datatypeDistance) {
     //             const datatypeDistance = this.settingsData.gravity.datatypeDistance;
-    //             this.graph.options().datatypeDistance(datatypeDistance);
+    //             this.graph.options.datatypeDistance(datatypeDistance);
     //         }
-    //         this.graph.options().gravityMenu().reset(); // reads the options values and sets the gui values
+    //         this.graph.options.gravityMenu().reset(); // reads the options values and sets the gui values
     //     }
 
     //     /** Filter Settings **********************************************************/
@@ -90,14 +90,14 @@ export class Parser {
     //         // checkbox settings
     //         if (this.settingsData.filter.checkBox) {
     //             for (const filterCheckbox of this.settingsData.filter.checkBox) {
-    //                 this.graph.options().filterMenu().setCheckBoxValue(filterCheckbox.id, filterCheckbox.checked);
+    //                 this.graph.options.filterMenu().setCheckBoxValue(filterCheckbox.id, filterCheckbox.checked);
     //             }
     //         }
     //         // node degree filter settings
     //         if (this.settingsData.filter.degreeSliderValue) {
-    //             this.graph.options().filterMenu().setDegreeSliderValue(this.settingsData.filter.degreeSliderValue);
+    //             this.graph.options.filterMenu().setDegreeSliderValue(this.settingsData.filter.degreeSliderValue);
     //         }
-    //         this.graph.options().filterMenu().updateSettings();
+    //         this.graph.options.filterMenu().updateSettings();
     //     }
 
     //     /** Modes Setting **********************************************************/
@@ -105,12 +105,12 @@ export class Parser {
     //         // checkbox settings
     //         if (this.settingsData.modes.checkBox) {
     //             for (const modeCheckbox of this.settingsData.modes.checkBox) {
-    //                 this.graph.options().modeMenu().setCheckBoxValue(modeCheckbox.id, modeCheckbox.checked);
+    //                 this.graph.options.modeMenu().setCheckBoxValue(modeCheckbox.id, modeCheckbox.checked);
     //             }
     //         }
     //         // color switch settings
-    //         this.graph.options().modeMenu().setColorSwitchState(Boolean(this.settingsData.modes.colorSwitchState));
-    //         this.graph.options().modeMenu().updateSettings();
+    //         this.graph.options.modeMenu().setColorSwitchState(Boolean(this.settingsData.modes.colorSwitchState));
+    //         this.graph.options.modeMenu().updateSettings();
     //     }
     //     this.graph.updateStyle(); // updates graph representation(setting charges and distances)
     // }
@@ -177,7 +177,7 @@ export class Parser {
      */
     parseOntologyFromText(jsonObject, filename, alternativeFilename) {
         let isValidData = false;
-        const options = this.graph.options();
+        const options = this.graph.options;
         const loadingModule = options.loadingModule();
 
         if (!jsonObject && filename === undefined) {
@@ -261,7 +261,7 @@ export class Parser {
                     // Class element pin
                     if (element.pinned === true) {
                         object.pinned = true;
-                        this.graph.options().pickAndPinModule().addPinnedElement(object);
+                        this.graph.options.pickAndPinModule().addPinnedElement(object);
                     }
 
                     // Combine attributes
