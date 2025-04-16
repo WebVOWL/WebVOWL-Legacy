@@ -1,23 +1,27 @@
-/**
- * Contains the logic for the sidebar.
- * @param graph the graph that belongs to these controls
- * @returns {{}}
- */
-
+import { BaseNode } from "../../webvowl/js/elements/nodes/BaseNode";
+import { BaseProperty } from "../../webvowl/js/elements/properties/BaseProperty";
 import { Statistics } from "../../webvowl/js/modules/filters/statistics";
 import { Constants } from "../../webvowl/js/util/constants";
 import { ElementTools } from "../../webvowl/js/util/elementTools";
 import { LanguageTools } from "../../webvowl/js/util/languageTools";
 
+
 export class SideBar {
+    /**
+     * Contains the logic for the sidebar.
+     * @param {any} graph the graph that belongs to these controls
+     */
     constructor(graph) {
         this.graph = graph
-
-        // Required for reloading when the language changes
-        this.ontologyInfo = undefined
-        this.visibleSidebar = 1
+        /**
+         * @type {{ [x: string]: any; } | undefined}
+         */
+        this.ontologyInfo = undefined // Required for reloading when the language changes
+        this.visibleSidebar = true
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
         this.lastSelectedElement = undefined
-
         this.detailArea = d3.select("#detailsArea")
         this.graphArea = d3.select("#canvasArea")
         this.menuArea = d3.select("#swipeBarContainer")
@@ -181,10 +185,14 @@ export class SideBar {
             d3.select("#authors").text("--");
         }
 
-        const description = LanguageTools.textInLanguage(ontologyInfo.description, graph.language());
+        const description = LanguageTools.textInLanguage(this.ontologyInfo.description, this.graph.language());
         d3.select("#description").text(description || "No description available.");
     }
 
+    /**
+     * @param {any} deliveredMetrics The graph data
+     * @param {Statistics} statistics The statistics module
+     */
     #displayGraphStatistics(deliveredMetrics, statistics) {
         // Metrics are optional and may be undefined
         deliveredMetrics = deliveredMetrics || {};
@@ -203,17 +211,24 @@ export class SideBar {
             .text(statistics.edgeCount);
     }
 
+    /**
+     * @param {{ [x: string]: any[]; }} metadata
+     */
     #displayMetadata(metadata) {
         const container = d3.select("#ontology-metadata");
         container.selectAll("*").remove();
 
-        listAnnotations(container, metadata);
+        this.#listAnnotations(container, metadata);
 
         if (container.selectAll(".annotation").size() <= 0) {
             container.append("p").text("No annotations available.");
         }
     }
 
+    /**
+     * @param {d3.Selection<any, any, HTMLElement, any>} container
+     * @param {{ [x: string]: any[]; }} annotationObject
+     */
     #listAnnotations(container, annotationObject) {
         annotationObject = annotationObject || {};  //todo
 
@@ -224,7 +239,7 @@ export class SideBar {
                 annotations.push(annotationObject[annotation][0]);
             }
         }
-
+        const _this = this
         container.selectAll(".annotation").remove();
         container.selectAll(".annotation").data(annotations).enter().append("p")
             .classed("annotation", true)
@@ -234,16 +249,16 @@ export class SideBar {
             })
             .append("span")
             .each(function (d) {
-                appendIriLabel(d3.select(this), d.value, d.type === "iri" ? d.value : undefined);
+                _this.#appendIriLabel(d3.select(this), d.value, d.type === "iri" ? d.value : undefined);
             });
     }
 
     /**
      * Update the information of the selected node.
-     * @param selectedElement the selection or null if nothing is selected
+     * @param {d3.Selection<any, any, null, undefined>} selectedElement the selection or null if nothing is selected
      */
     updateSelectionInformation(selectedElement) {
-        lastSelectedElement = selectedElement;
+        this.lastSelectedElement = selectedElement;
 
         // Click event was prevented when dragging
         if (d3.event && d3.event.defaultPrevented) {
@@ -254,45 +269,60 @@ export class SideBar {
         if (selectedElement && !isTriggerActive) {
             d3.select("#selection-details-trigger").node().click();
         } else if (!selectedElement && isTriggerActive) {
-            showSelectionAdvice();
+            this.#showSelectionAdvice();
             return;
         }
 
         if (ElementTools.isProperty(selectedElement)) {
-            displayPropertyInformation(selectedElement);
+            this.#displayPropertyInformation(selectedElement);
         } else if (ElementTools.isNode(selectedElement)) {
-            displayNodeInformation(selectedElement);
+            this.#displayNodeInformation(selectedElement);
         }
-    };
-
-    #showSelectionAdvice() {
-        setSelectionInformationVisibility(false, false, true);
     }
 
+    #showSelectionAdvice() {
+        this.#setSelectionInformationVisibility(false, false, true);
+    }
+
+    #showClassInformations() {
+        this.#setSelectionInformationVisibility(true, false, false);
+    }
+
+    #showPropertyInformations() {
+        this.#setSelectionInformationVisibility(false, true, false);
+    }
+
+    /**
+     * @param {boolean} showClasses
+     * @param {boolean} showProperties
+     * @param {boolean} showAdvice
+     */
     #setSelectionInformationVisibility(showClasses, showProperties, showAdvice) {
         d3.select("#classSelectionInformation").classed("hidden", !showClasses);
         d3.select("#propertySelectionInformation").classed("hidden", !showProperties);
         d3.select("#noSelectionInformation").classed("hidden", !showAdvice);
     }
 
+    /**
+     * @param {BaseProperty} property
+     */
     #displayPropertyInformation(property) {
-        showPropertyInformations();
+        this.#showPropertyInformations();
 
-        setIriLabel(d3.select("#propname"), property.labelForCurrentLanguage(), property.iri);
+        this.#setIriLabel(d3.select("#propname"), property.labelForCurrentLanguage(), property.iri);
         d3.select("#typeProp").text(property.type);
 
         if (property.inverse !== undefined) {
             d3.select("#inverse").classed("hidden", false);
-            setIriLabel(d3.select("#inverse span"), property.inverse.labelForCurrentLanguage(), property.inverse.iri);
+            this.#setIriLabel(d3.select("#inverse span"), property.inverse.labelForCurrentLanguage(), property.inverse.iri);
         } else {
             d3.select("#inverse").classed("hidden", true);
         }
 
         const equivalentIriSpan = d3.select("#propEquivUri");
-        listNodeArray(equivalentIriSpan, property.equivalents);
-
-        listNodeArray(d3.select("#subproperties"), property.subproperties);
-        listNodeArray(d3.select("#superproperties"), property.superproperties);
+        this.#listNodeArray(equivalentIriSpan, property.equivalents);
+        this.#listNodeArray(d3.select("#subproperties"), property.subproperties);
+        this.#listNodeArray(d3.select("#superproperties"), property.superproperties);
 
         if (property.minCardinality !== undefined) {
             d3.select("#infoCardinality").classed("hidden", true);
@@ -317,36 +347,40 @@ export class SideBar {
             d3.select("#maxCardinality").classed("hidden", true);
         }
 
-        setIriLabel(d3.select("#domain"), property.domain.labelForCurrentLanguage(), property.domain.iri);
-        setIriLabel(d3.select("#range"), property.range.labelForCurrentLanguage(), property.range.iri);
+        this.#setIriLabel(d3.select("#domain"), property.domain.labelForCurrentLanguage(), property.domain.iri);
+        this.#setIriLabel(d3.select("#range"), property.range.labelForCurrentLanguage(), property.range.iri);
 
-        displayAttributes(property.attributes, d3.select("#propAttributes"));
+        this.#displayAttributes(property.attributes, d3.select("#propAttributes"));
 
-        setTextAndVisibility(d3.select("#propDescription"), property.descriptionForCurrentLanguage());
-        setTextAndVisibility(d3.select("#propComment"), property.commentForCurrentLanguage());
+        this.#setTextAndVisibility(d3.select("#propDescription"), property.descriptionForCurrentLanguage());
+        this.#setTextAndVisibility(d3.select("#propComment"), property.commentForCurrentLanguage());
 
-        listAnnotations(d3.select("#propertySelectionInformation"), property.annotations);
+        this.#listAnnotations(d3.select("#propertySelectionInformation"), property.annotations);
     }
 
-    #showPropertyInformations() {
-        setSelectionInformationVisibility(false, true, false);
-    }
-
+    /**
+     * @param {d3.Selection<any, any, HTMLElement, any>} element
+     * @param {string} name
+     * @param {string} iri
+     */
     #setIriLabel(element, name, iri) {
         const parent = d3.select(element.node().parentNode);
-
         if (name) {
             element.selectAll("*").remove();
-            appendIriLabel(element, name, iri);
+            this.#appendIriLabel(element, name, iri);
             parent.classed("hidden", false);
         } else {
             parent.classed("hidden", true);
         }
     }
 
+    /**
+     * @param {d3.Selection<any, any, HTMLElement, any>} element
+     * @param {string} name
+     * @param {string} iri
+     */
     #appendIriLabel(element, name, iri) {
-        const tag;
-
+        let tag;
         if (iri) {
             tag = element.append("a")
                 .attr("href", iri)
@@ -358,14 +392,18 @@ export class SideBar {
         tag.text(name);
     }
 
+    /**
+     * @param {string[]} attributes
+     * @param {d3.Selection<any, any, HTMLElement, any>} textSpan
+     */
     #displayAttributes(attributes, textSpan) {
         const spanParent = d3.select(textSpan.node().parentNode);
 
         if (attributes && attributes.length > 0) {
             // Remove redundant redundant attributes for sidebar
-            removeElementFromArray("object", attributes);
-            removeElementFromArray("datatype", attributes);
-            removeElementFromArray("rdf", attributes);
+            this.#removeElementFromArray("object", attributes);
+            this.#removeElementFromArray("datatype", attributes);
+            this.#removeElementFromArray("rdf", attributes);
         }
 
         if (attributes && attributes.length > 0) {
@@ -377,6 +415,10 @@ export class SideBar {
         }
     }
 
+    /**
+     * @param {string} element
+     * @param {string[]} array
+     */
     #removeElementFromArray(element, array) {
         const index = array.indexOf(element);
         if (index > -1) {
@@ -384,17 +426,20 @@ export class SideBar {
         }
     }
 
+    /**
+     * @param {BaseNode} node
+     */
     #displayNodeInformation(node) {
-        showClassInformations();
-
-        setIriLabel(d3.select("#name"), node.labelForCurrentLanguage(), node.iri);
+        this.#showClassInformations();
+        this.#setIriLabel(d3.select("#name"), node.labelForCurrentLanguage(), node.iri);
 
         /* Equivalent stuff. */
         const equivalentIriSpan = d3.select("#classEquivUri");
-        listNodeArray(equivalentIriSpan, node.equivalents);
+        // @ts-ignore
+        this.#listNodeArray(equivalentIriSpan, node.equivalents);
 
         d3.select("#typeNode").text(node.type);
-        listNodeArray(d3.select("#individuals"), node.individuals);
+        this.#listNodeArray(d3.select("#individuals"), node.individuals);
 
         /* Disjoint stuff. */
         const disjointNodes = d3.select("#disjointNodes");
@@ -402,175 +447,180 @@ export class SideBar {
 
         if (node.disjointWith !== undefined) {
             disjointNodes.selectAll("*").remove();
-
-            node.disjointWith.forEach(function (element, index) {
-                if (index > 0) {
+            for (let i = 0; i < node.disjointWith.length; i++) {
+                if (i > 0) {
                     disjointNodes.append("span").text(", ");
                 }
-                appendIriLabel(disjointNodes, element.labelForCurrentLanguage(), element.iri);
-            });
-
+                const element = node.disjointWith[i];
+                this.#appendIriLabel(disjointNodes, element.labelForCurrentLanguage(), element.iri);
+            }
             disjointNodesParent.classed("hidden", false);
         } else {
             disjointNodesParent.classed("hidden", true);
         }
+        this.#displayAttributes(node.attributes, d3.select("#classAttributes"));
 
-        displayAttributes(node.attributes, d3.select("#classAttributes"));
+        this.#setTextAndVisibility(d3.select("#nodeDescription"), node.descriptionForCurrentLanguage());
+        this.#setTextAndVisibility(d3.select("#nodeComment"), node.commentForCurrentLanguage());
 
-        setTextAndVisibility(d3.select("#nodeDescription"), node.descriptionForCurrentLanguage());
-        setTextAndVisibility(d3.select("#nodeComment"), node.commentForCurrentLanguage());
-
-        listAnnotations(d3.select("#classSelectionInformation"), node.annotations);
+        this.#listAnnotations(d3.select("#classSelectionInformation"), node.annotations);
     }
 
-    #showClassInformations() {
-        setSelectionInformationVisibility(true, false, false);
-    }
-
+    /**
+     * @param {d3.Selection<any,any,HTMLElement,undefined>} textSpan
+     * @param {BaseNode[] | BaseProperty[]} nodes
+     */
     #listNodeArray(textSpan, nodes) {
         const spanParent = d3.select(textSpan.node().parentNode);
 
         if (nodes && nodes.length) {
             textSpan.selectAll("*").remove();
-            nodes.forEach(function (element, index) {
-                if (index > 0) {
+            for (let i = 0; i < nodes.length; i++) {
+                if (i > 0) {
                     textSpan.append("span").text(", ");
                 }
-                appendIriLabel(textSpan, element.labelForCurrentLanguage(), element.iri);
-            });
-
+                const element = nodes[i];
+                this.#appendIriLabel(textSpan, element.labelForCurrentLanguage(), element.iri);
+            }
             spanParent.classed("hidden", false);
         } else {
             spanParent.classed("hidden", true);
         }
     }
 
+    /**
+     * @param {d3.Selection<any,any,HTMLElement,undefined>} label
+     * @param {string} value
+     */
     #setTextAndVisibility(label, value) {
         const parentNode = d3.select(label.node().parentNode);
-        const hasValue = !!value;
-        if (value) {
+        const hasValue = Boolean(value);
+        if (hasValue) {
             label.text(value);
         }
         parentNode.classed("hidden", !hasValue);
     }
 
     // Collapsible Sidebar functions
-    showSidebar = function (val, init) {
-        // make val to bool
-        if (val === 1) {
-            visibleSidebar = true;
-            collapseButton.node().innerHTML = ">";
-            detailArea.classed("hidden", true);
-            if (init === true) {
-                detailArea.classed("hidden", !visibleSidebar);
-                graphArea.style("width", "78%");
-                graphArea.style("-webkit-animation-name", "none");
+    /**
+     * @param {boolean} isVisible
+     * @param {boolean} init
+     */
+    #showSidebar(isVisible, init = false) {
+        if (isVisible) {
+            this.visibleSidebar = true;
+            this.collapseButton.node().innerHTML = ">";
+            this.detailArea.classed("hidden", true);
+            if (init) {
+                this.detailArea.classed("hidden", !this.visibleSidebar);
+                this.graphArea.style("width", "78%");
+                this.graphArea.style("-webkit-animation-name", "none");
 
-                menuArea.style("width", "78%");
-                menuArea.style("-webkit-animation-name", "none");
+                this.menuArea.style("width", "78%");
+                this.menuArea.style("-webkit-animation-name", "none");
 
                 d3.select("#WarningErrorMessagesContainer").style("width", "78%");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-name", "none");
             } else {
-                graphArea.style("width", "78%");
-                graphArea.style("-webkit-animation-name", "sbCollapseAnimation");
-                graphArea.style("-webkit-animation-duration", "0.5s");
+                this.graphArea.style("width", "78%");
+                this.graphArea.style("-webkit-animation-name", "sbCollapseAnimation");
+                this.graphArea.style("-webkit-animation-duration", "0.5s");
 
-                menuArea.style("width", "78%");
-                menuArea.style("-webkit-animation-name", "sbCollapseAnimation");
-                menuArea.style("-webkit-animation-duration", "0.5s");
+                this.menuArea.style("width", "78%");
+                this.menuArea.style("-webkit-animation-name", "sbCollapseAnimation");
+                this.menuArea.style("-webkit-animation-duration", "0.5s");
 
                 d3.select("#WarningErrorMessagesContainer").style("width", "78%");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-name", "warn_ExpandRightBarAnimation");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-duration", "0.5s");
             }
-            graph.options().width() = window.innerWidth - (window.innerWidth * 0.22);
-            graph.options().navigationMenu().updateScrollButtonVisibility();
-        }
-        if (val === 0) {
-            visibleSidebar = false;
-            detailArea.classed("hidden", true);
-
-            collapseButton.node().innerHTML = "<";
+            this.graph.options().width(window.innerWidth - (window.innerWidth * 0.22));
+            this.graph.options().navigationMenu().updateScrollButtonVisibility();
+        } else {
+            this.visibleSidebar = false;
+            this.detailArea.classed("hidden", true);
+            this.collapseButton.node().innerHTML = "<";
             // adjust the layout
-            if (init === true) {
-                graphArea.style("width", "100%");
-                graphArea.style("-webkit-animation-name", "none");
+            if (init) {
+                this.graphArea.style("width", "100%");
+                this.graphArea.style("-webkit-animation-name", "none");
 
-                menuArea.style("width", "100%");
-                menuArea.style("-webkit-animation-name", "none");
+                this.menuArea.style("width", "100%");
+                this.menuArea.style("-webkit-animation-name", "none");
 
                 d3.select("#WarningErrorMessagesContainer").style("width", "100%");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-name", "none");
             } else {
-                graphArea.style("width", "100%");
-                graphArea.style("-webkit-animation-name", "sbExpandAnimation");
-                graphArea.style("-webkit-animation-duration", "0.5s");
+                this.graphArea.style("width", "100%");
+                this.graphArea.style("-webkit-animation-name", "sbExpandAnimation");
+                this.graphArea.style("-webkit-animation-duration", "0.5s");
 
-                menuArea.style("width", "100%");
-                menuArea.style("-webkit-animation-name", "sbExpandAnimation");
-                menuArea.style("-webkit-animation-duration", "0.5s");
+                this.menuArea.style("width", "100%");
+                this.menuArea.style("-webkit-animation-name", "sbExpandAnimation");
+                this.menuArea.style("-webkit-animation-duration", "0.5s");
 
                 d3.select("#WarningErrorMessagesContainer").style("width", "100%");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-name", "warn_CollapseRightBarAnimation");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-duration", "0.5s");
-
             }
-            graph.options().width() = window.innerWidth;
-            graph.updateCanvasContainerSize();
-            graph.options().navigationMenu().updateScrollButtonVisibility();
+            this.graph.options().width(window.innerWidth);
+            this.graph.updateCanvasContainerSize();
+            this.graph.options().navigationMenu().updateScrollButtonVisibility();
         }
     }
 
+    /**
+     * @param {boolean} init
+     */
     updateSideBarVis(init) {
-        const vis = sidebar.getSidebarVisibility();
-        sidebar.showSidebar(parseInt(vis), init);
+        this.#showSidebar(this.getSidebarVisibility(), init);
     }
 
+    /**
+     * 0 === True, 1 === False
+     * @returns {boolean} Returns true if sidebar is hidden. Otherwise, false
+     */
     getSidebarVisibility() {
-        const isHidden = detailArea.classed("hidden");
-        if (isHidden === false) return String(1);
-        if (isHidden === true) return String(0);
+        return this.detailArea.classed("hidden");
     }
 
     initSideBarAnimation() {
-        graphArea.node().addEventListener("animationend", function () {
-            detailArea.classed("hidden", !visibleSidebar);
-            graph.updateCanvasContainerSize();
-            graph.options().navigationMenu().updateScrollButtonVisibility();
+        this.graphArea.node().addEventListener("animationend", () => {
+            this.detailArea.classed("hidden", !this.visibleSidebar);
+            this.graph.updateCanvasContainerSize();
+            this.graph.options().navigationMenu().updateScrollButtonVisibility();
         });
     }
 
     setup() {
-        setupCollapsing();
-        sidebar.initSideBarAnimation();
+        this.#setupCollapsing();
+        this.initSideBarAnimation();
 
-        collapseButton.on("click", function () {
-            graph.options().navigationMenu().hideAllMenus();
-            const settingValue = parseInt(sidebar.getSidebarVisibility());
-            if (settingValue === 1) sidebar.showSidebar(0);
-            else sidebar.showSidebar(1);
+        this.collapseButton.on("click", () => {
+            this.graph.options().navigationMenu().hideAllMenus();
+            const isVisible = this.getSidebarVisibility()
+            this.#showSidebar(!isVisible)
         });
     }
 
     updateShowedInformation() {
-        const editMode = graph.editorMode();
+        const editMode = this.graph.editorMode();
         d3.select("#generalDetails").classed("hidden", editMode);
         d3.select("#generalDetailsEdit").classed("hidden", !editMode);
 
         // store the meta information in graph.options()
 
         // todo: update edit meta info
-        graph.options().editSidebar().updateGeneralOntologyInfo();
+        this.graph.options().editSidebar().updateGeneralOntologyInfo();
 
         // todo: update showed meta info;
-        graph.options().sidebar().updateGeneralOntologyInfo();
+        this.graph.options().sidebar().updateGeneralOntologyInfo();
     }
 
     updateGeneralOntologyInfo() {
         // get it from graph.options
-        const generalMetaObj = graph.options().getGeneralMetaObject();
-        const preferredLanguage = graph && graph.language ? graph.language() : null;
+        const generalMetaObj = this.graph.options().getGeneralMetaObject();
+        const preferredLanguage = this.graph && this.graph.language ? this.graph.language() : null;
         if (generalMetaObj.hasOwnProperty("title")) {
             // title has language to it -.-
             if (typeof generalMetaObj.title === "object") {

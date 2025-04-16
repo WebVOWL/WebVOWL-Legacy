@@ -1,4 +1,7 @@
 export class DirectInputModule {
+    /**
+     * @param {any} graph
+     */
     constructor(graph) {
         this.graph = graph
         this.inputContainer = d3.select("#DirectInputContent");

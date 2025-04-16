@@ -1,23 +1,38 @@
-var nodes = [];
-nodes.push(require("./implementations/ExternalClass"));
-nodes.push(require("./implementations/OwlClass"));
-nodes.push(require("./implementations/OwlComplementOf"));
-nodes.push(require("./implementations/OwlDeprecatedClass"));
-nodes.push(require("./implementations/OwlDisjointUnionOf"));
-nodes.push(require("./implementations/OwlEquivalentClass"));
-nodes.push(require("./implementations/OwlIntersectionOf"));
-nodes.push(require("./implementations/OwlNothing"));
-nodes.push(require("./implementations/OwlThing"));
-nodes.push(require("./implementations/OwlUnionOf"));
-nodes.push(require("./implementations/RdfsClass"));
-nodes.push(require("./implementations/RdfsDatatype"));
-nodes.push(require("./implementations/RdfsLiteral"));
-nodes.push(require("./implementations/RdfsResource"));
+import { ExternalClass } from "./implementations/ExternalClass";
+import { OwlClass } from "./implementations/OwlClass";
+import { OwlComplementOf } from "./implementations/OwlComplementOf";
+import { OwlDeprecatedClass } from "./implementations/OwlDeprecatedClass";
+import { OwlDisjointUnionOf } from "./implementations/OwlDisjointUnionOf";
+import { OwlEquivalentClass } from "./implementations/OwlEquivalentClass";
+import { OwlIntersectionOf } from "./implementations/OwlIntersectionOf";
+import { OwlNothing } from "./implementations/OwlNothing";
+import { OwlThing } from "./implementations/OwlThing";
+import { OwlUnionOf } from "./implementations/OwlUnionOf";
+import { RdfsClass } from "./implementations/RdfsClass";
+import { RdfsDataType } from "./implementations/RdfsDatatype";
+import { RdfsLiteral } from "./implementations/RdfsLiteral";
+import { RdfsResource } from "./implementations/RdfsResource";
 
-var map = d3.map(nodes, function (Prototype) {
-  return new Prototype().type;
-});
+const nodes = [
+    ExternalClass,
+    OwlClass,
+    OwlComplementOf,
+    OwlDeprecatedClass,
+    OwlDisjointUnionOf,
+    OwlEquivalentClass,
+    OwlIntersectionOf,
+    OwlNothing,
+    OwlThing,
+    OwlUnionOf,
+    RdfsClass,
+    RdfsDataType,
+    RdfsLiteral,
+    RdfsResource
+]
 
-export default function () {
-  return map;
-};
+let nodeMap = new Map()
+for (const nodeCls of nodes) {
+    let node = new nodeCls()
+    nodeMap.set(node.type, nodeCls)
+}
+export default nodeMap

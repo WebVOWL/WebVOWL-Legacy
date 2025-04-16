@@ -33,16 +33,16 @@ webvowl.modules.subclassFilter = require("./modules/filters/subclassFilter");
 
 
 webvowl.nodes = {};
-nodeMap.entries().forEach(function (entry) {
+nodeMap.entries().forEach(function (entry) { // FIXME: Check Map docs
   mapEntryToIdentifier(webvowl.nodes, entry);
 });
 
 webvowl.properties = {};
-propertyMap.entries().forEach(function (entry) {
+propertyMap.entries().forEach(function (entry) { // FIXME: Check Map docs
   mapEntryToIdentifier(webvowl.properties, entry);
 });
 
-function mapEntryToIdentifier(map, entry) {
+function mapEntryToIdentifier(map, entry) { // FIXME: Check Map docs
   var identifier = entry.key.replace(":", "").toLowerCase();
   map[identifier] = entry.value;
 }

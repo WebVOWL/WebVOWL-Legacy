@@ -1,8 +1,8 @@
-/**
- * Contains the logic for the sidebar.
- * @param graph the graph that belongs to these controls
- */
 export class LeftSideBar {
+    /**
+     * Contains the logic for the sidebar.
+     * @param {any} graph the graph that belongs to these controls
+     */
     constructor(graph) {
         this.graph = graph
         this.collapseButton = d3.select("#leftSideBarCollapseButton")
@@ -192,6 +192,13 @@ export class LeftSideBar {
         this.showSidebar(this.getSidebarVisibility(), init);
     }
 
+    /**
+     * @returns {boolean} Returns true if sidebar is hidden. Otherwise, false
+     */
+    getSidebarVisibility() {
+        return this.sideBarContent.classed("hidden");
+    }
+
     initSideBarAnimation() {
         this.sideBarContainer.node().addEventListener("animationend", () => {
             this.sideBarContent.classed("hidden", !this.visibleSidebar);
@@ -219,9 +226,8 @@ export class LeftSideBar {
      * @param {boolean} [init]
      */
     showSidebar(isVisible, init) {
-        // make val to bool
         const collapseButton = d3.select("#leftSideBarCollapseButton");
-        if (init === true) {
+        if (init) {
             this.visibleSidebar = (this.backupVisibility === false);
             this.sideBarContent.classed("hidden", !this.visibleSidebar);
             this.sideBarContainer.style("-webkit-animation-name", "none");
@@ -266,13 +272,5 @@ export class LeftSideBar {
             d3.select("#WarningErrorMessages").style("-webkit-animation-duration", "0.5s");
             d3.select("#WarningErrorMessages").style("left", "0");
         }
-    }
-
-    /**
-     * 0 === True, 1 === False
-     * @returns {boolean} Returns true if sidebar is hidden. Otherwise, false
-     */
-    getSidebarVisibility() {
-        return this.sideBarContent.classed("hidden");
     }
 }

@@ -1,4 +1,3 @@
-
 import { BaseElement } from "../../webvowl/js/elements/BaseElement";
 import { RdfsDataType } from "../../webvowl/js/elements/nodes/implementations/RdfsDatatype";
 import { BaseProperty } from "../../webvowl/js/elements/properties/BaseProperty";
@@ -7,11 +6,12 @@ import { ElementTools } from "../../webvowl/js/util/elementTools";
 import { LanguageTools } from "../../webvowl/js/util/languageTools";
 import { PrefixTools } from "../../webvowl/js/util/prefixTools";
 
-/**
- * Contains the logic for the sidebar.
- * @param graph the graph that belongs to these controls
- */
+
 export class EditSidebar {
+    /**
+     * Contains the logic for the sidebar.
+     * @param {any} graph the graph that belongs to these controls
+     */
     constructor(graph) {
         this.graph = graph
         this.prefixTools = new PrefixTools(graph)
@@ -391,9 +391,13 @@ export class EditSidebar {
             if (ElementTools.isProperty(element) === true) {
                 const sanityCheckResult = this.checkProperIriChange(element, url);
                 if (sanityCheckResult !== false) {
-                    this.graph.options().warningModule().showWarning("Already seen this property",
+                    this.graph.options().warningModule().showWarning(
+                        "Already seen this property",
                         "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
-                        "Continuing with duplicate property!", 1, false, sanityCheckResult);
+                        "Continuing with duplicate property!",
+                        1,
+                        element
+                    );
                     this.updateSelectionInformation(element);
                     return;
                 }
@@ -402,9 +406,13 @@ export class EditSidebar {
             if (ElementTools.isNode(element) === true) {
                 const sanityCheckResult = this.graph.checkIfIriClassAlreadyExist(url);
                 if (sanityCheckResult !== false) {
-                    this.graph.options().warningModule().showWarning("Already seen this Class",
+                    this.graph.options().warningModule().showWarning(
+                        "Already seen this Class",
                         "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
-                        "Restoring previous IRI for Element : " + element.iri, 2, false, sanityCheckResult);
+                        "Restoring previous IRI for Element : " + element.iri,
+                        2,
+                        element
+                    );
                     this.updateSelectionInformation(element);
                     return;
                 }
@@ -922,7 +930,7 @@ export class EditSidebar {
                             "Could not resolve prefix '" + basePref + "'",
                             "Restoring previous IRI for Element" + element.iri,
                             1,
-                            false
+                            element
                         );
                         d3.select("#element_iriEditor").node().value = element.iri;
                         return;
@@ -934,7 +942,7 @@ export class EditSidebar {
                             "Input IRI is EMPTY",
                             "Restoring previous IRI for Element" + element.iri,
                             1,
-                            false
+                            element
                         );
                         console.log("NO INPUT PROVIDED");
                         d3.select("#element_iriEditor").node().value = element.iri;
@@ -975,8 +983,7 @@ export class EditSidebar {
                     "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                     "Restoring previous IRI for Element : " + element.iri,
                     2,
-                    false,
-                    sanityCheckResult
+                    element
                 );
                 this.updateSelectionInformation(element);
                 return;
@@ -990,8 +997,7 @@ export class EditSidebar {
                     "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                     "Restoring previous IRI for Element : " + element.iri,
                     1,
-                    false,
-                    sanityCheckResult
+                    element
                 );
                 this.updateSelectionInformation(element);
                 return;
@@ -1000,12 +1006,16 @@ export class EditSidebar {
 
         // NOTE: Remember to enable method `existingPropertyIRI` in classes `BaseNode` and `BaseProperty` and
         // method `checkForExistingURL` in this class if this code is ever used
-        // if (element.existingPropertyIRI(url)===true){
-        //     console.log("I Have seen this Particular URL already "+url);
-        //     graph.options().warningModule().showWarning("Already Seen This one ",
-        //         "Input IRI For Element"+ element.labelForCurrentLanguage()+" already been set  ",
-        //         "Restoring previous IRI for Element"+element.iri,1,false);
-        //     d3.select("#element_iriEditor").node().value=graph.options().PrefixTools().getPrefixRepresentationForFullURI(element.iri);
+        // if (element.existingPropertyIRI(url) === true) {
+        //     console.log("I Have seen this Particular URL already " + url);
+        //     this.graph.options().warningModule().showWarning(
+        //         "Already Seen This one ",
+        //         "Input IRI For Element" + element.labelForCurrentLanguage() + " already been set  ",
+        //         "Restoring previous IRI for Element" + element.iri,
+        //         1,
+        //         element
+        //     );
+        //     d3.select("#element_iriEditor").node().value = this.graph.options().PrefixTools().getPrefixRepresentationForFullURI(element.iri);
         //     this.updateSelectionInformation(element);
         //     return;
         // }

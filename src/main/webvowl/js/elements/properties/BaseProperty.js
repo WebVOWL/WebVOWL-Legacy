@@ -233,7 +233,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         }
 
         if (this.halo) {
-            this.drawHalo(false);
+            this.drawHalo();
         }
         return this.labelElement;
     }
@@ -534,7 +534,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     /**
      * @param {boolean} pulseAnimation
      */
-    drawHalo(pulseAnimation) {
+    drawHalo(pulseAnimation = false) {
         this.halo = true;
         var offset = 0;
         if (this.labelElement && this.labelElement.node()) {
@@ -545,7 +545,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                 labelContainer.appendChild(labelNode);
             }
         }
-        this.haloGroupElement = DrawTools.drawRectHalo(this, this.width, this.height, offset);
+        this.haloGroupElement = DrawTools.drawRectHalo(this.labelElement, this.width, this.height, offset);
         if (this.haloGroupElement) {
             var haloNode = this.haloGroupElement.node();
             var haloContainer = haloNode.parentNode;
@@ -654,7 +654,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         }
         this.backupFullIri = undefined;
         this.graph.options().focuserModule().handle(undefined);
-        graph.options().focuserModule().handle(this);
+        this.graph.options().focuserModule().handle(this);
         this.editingTextElement = true;
         this.ignoreLocalHoverEvents = true;
         this.labelElement.selectAll("rect").classed("hoveredForEditing", true);
@@ -731,53 +731,57 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
             .on("keydown", function () {
                 if (d3.event.keyCode === 13) {
                     this.blur();
-                    this.frozen = false; // << releases the not after selection
-                    this.locked = false;
+                    _this.frozen = false; // << releases the not after selection
+                    _this.locked = false;
                 }
             })
             .on("keyup", function () {
                 if (forceIRISync) {
                     var labelName = editText.node().value;
                     var resourceName = labelName.replaceAll(" ", "_");
-                    var syncedIRI = this.baseIri + resourceName;
-                    this.backupFullIri = syncedIRI;
+                    var syncedIRI = _this.baseIri + resourceName;
+                    _this.backupFullIri = syncedIRI;
 
                     d3.select("#element_iriEditor").node().title = syncedIRI;
-                    d3.select("#element_iriEditor").node().value = graph.options().prefixModule().getPrefixRepresentationForFullURI(syncedIRI);
+                    d3.select("#element_iriEditor").node().value = _this.graph.options().prefixModule().getPrefixRepresentationForFullURI(syncedIRI);
                 }
                 d3.select("#element_labelEditor").node().value = editText.node().value;
             })
             // add a foreiner element to this thing;
             .on("blur", function () {
-                this.editingTextElement = false;
-                this.ignoreLocalHoverEvents = false;
-                this.labelElement.selectAll("rect").classed("hoveredForEditing", false);
+                _this.editingTextElement = false;
+                _this.ignoreLocalHoverEvents = false;
+                _this.labelElement.selectAll("rect").classed("hoveredForEditing", false);
                 var newLabel = editText.node().value;
-                this.labelElement.selectAll(".foreignelements").remove();
+                _this.labelElement.selectAll(".foreignelements").remove();
                 // this.setLabelForCurrentLanguage(classNameConvention(editText.node().value));
-                this.label = newLabel;
-                this.backupLabel = newLabel;
-                this.redrawLabelText();
-                this.updateHoverElements(true);
+                _this.label = newLabel;
+                _this.backupLabel = newLabel;
+                _this.redrawLabelText();
+                _this.updateHoverElements(true);
                 _this.graph.showHoverElementsAfterAnimation(this, false);
                 _this.graph.ignoreOtherHoverEvents(false);
 
-                this.frozen = _this.graph.paused();
-                this.locked = _this.graph.paused();
-                this.domain.frozen = _this.graph.paused();
-                this.domain.locked = _this.graph.paused();
-                this.range.frozen = _this.graph.paused();
-                this.range.locked = _this.graph.paused();
+                _this.frozen = _this.graph.paused();
+                _this.locked = _this.graph.paused();
+                _this.domain.frozen = _this.graph.paused();
+                _this.domain.locked = _this.graph.paused();
+                _this.range.frozen = _this.graph.paused();
+                _this.range.locked = _this.graph.paused();
                 _this.graph.removeEditElements();
-                if (this.backupFullIri) {
+                if (_this.backupFullIri) {
                     // console.log("Checking if element is Identical ?");
-                    var sanityCheckResult = _this.graph.options().editSidebar().checkProperIriChange(this, this.backupFullIri);
+                    var sanityCheckResult = _this.graph.options().editSidebar().checkProperIriChange(this, _this.backupFullIri);
                     if (sanityCheckResult !== false) {
-                        _this.graph.options().warningModule().showWarning("Already seen this property",
-                            "Input IRI: " + this.backupFullIri + " for element: " + this.labelForCurrentLanguage() + " already been set",
-                            "Continuing with duplicate property!", 1, false, sanityCheckResult);
+                        _this.graph.options().warningModule().showWarning(
+                            "Already seen this property",
+                            "Input IRI: " + _this.backupFullIri + " for element: " + _this.labelForCurrentLanguage() + " already been set",
+                            "Continuing with duplicate property!",
+                            1,
+                            this
+                        );
                     }
-                    this.iri = this.backupFullIri;
+                    _this.iri = _this.backupFullIri;
                 }
                 _this.graph.options().focuserModule().handle(undefined);
                 _this.graph.options().focuserModule().handle(this);

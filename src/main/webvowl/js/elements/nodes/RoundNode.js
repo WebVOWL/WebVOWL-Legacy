@@ -88,7 +88,7 @@ export class RoundNode extends BaseNode {
     /**
      * @param {boolean} pulseAnimation
      */
-    drawHalo(pulseAnimation) {
+    drawHalo(pulseAnimation = false) {
         this.halo = true;
         if (this.rectangularRepresentation === true) {
             this.haloGroupElement = DrawTools.drawRectHalo(this.nodeElement, 80, 80, 5);
@@ -227,7 +227,7 @@ export class RoundNode extends BaseNode {
             this.drawPin();
         }
         if (this.halo) {
-            this.drawHalo(false);
+            this.drawHalo();
         }
         if (this.collapsible) {
             this.drawCollapsingButton();

@@ -128,21 +128,14 @@ export class DrawTools {
     }
 
     /**
-     * @param {d3.Selection<any, any, null, undefined>} node
+     * @param {d3.Selection<any, any, null, undefined>} container
      * @param {number} width
      * @param {number} height
      * @param {number} offset
      */
-    static drawRectHalo(node, width, height, offset) {
-        var container;
-        if (node.nodeElement)
-            container = node.nodeElement;
-        else
-            container = node.labelElement;
-
+    static drawRectHalo(container, width, height, offset) {
         if (!container) {
-            // console.log("no container found");
-            return;
+            return undefined;
         }
 
         var haloGroupElement = container

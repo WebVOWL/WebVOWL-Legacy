@@ -435,7 +435,7 @@ export default class {
             if (loadingSuccessful) {
                 clearTimeout(_this.loadingStatusTimer);
                 _this.stopTimer = true;
-                _this.loadingModule.setJSONText(request.responseText);
+                _this.loadingModule.jsonText = request.responseText;
                 request = undefined // Nuke reference to save memory
                 _this.getLoadingStatusOnceCallBacked(_this.callbackFromIRI_Success, [ontoName, localThreadId]);
             }
@@ -511,7 +511,7 @@ export default class {
             if (loadingSuccessful) {
                 clearTimeout(_this.loadingStatusTimer);
                 _this.stopTimer = true;
-                _this.loadingModule.setJSONText(request.responseText);
+                _this.loadingModule.jsonText = request.responseText;
                 request = undefined // Nuke reference to save memory
                 _this.getLoadingStatusOnceCallBacked(_this.callbackFromJSON_Success, [ontoName, local_conversionId]);
             }
@@ -621,7 +621,7 @@ export default class {
             return;
         }
         if (xhr.status === 200) {
-            this.loadingModule.setJSONText(xhr.responseText)
+            this.loadingModule.jsonText = xhr.responseText
             xhr = undefined // Nuke reference to save memory
             this.loadingModule.loadOntologyContent(this.loadingModule.loadFromOWL2VOWL(filename));
             this.conversionFinished();

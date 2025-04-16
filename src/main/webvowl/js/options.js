@@ -113,7 +113,13 @@ export default function () {
       //console.log("Updating Property:"+ property);
       if (property === "iri") {
         if (validURL(value) === false) {
-          warningModule.showWarning("Invalid Ontology IRI", "Input IRI does not represent an URL", "Restoring previous IRI for ontology", 1, false);
+          warningModule.showWarning(
+            "Invalid Ontology IRI",
+            "Input IRI does not represent an URL",
+            "Restoring previous IRI for ontology",
+            1,
+            undefined
+          );
           return false;
         }
       }
@@ -175,7 +181,13 @@ export default function () {
       prefixList[oldPrefix] = newURL;
     } else if (oldPrefix === newPrefix && oldURL !== newURL && validURL(newURL) === false) {
       if (validURL(newURL) === false) {
-        warningModule.showWarning("Invalid Prefix IRI", "Input IRI does not represent an IRI", "You should enter a valid IRI in form of a URL", 1, false);
+        warningModule.showWarning(
+          "Invalid Prefix IRI",
+          "Input IRI does not represent an IRI",
+          "You should enter a valid IRI in form of a URL",
+          1,
+          undefined
+        );
         return false;
       }
 
@@ -186,7 +198,13 @@ export default function () {
       // sanity check
       if (prefixList.hasOwnProperty(newPrefix)) {
         //  console.log("Already have this prefix!");
-        warningModule.showWarning("Prefix Already Exist", "Prefix: " + newPrefix + " is already defined", "You should use an other one", 1, false);
+        warningModule.showWarning(
+          "Prefix Already Exist",
+          "Prefix: " + newPrefix + " is already defined",
+          "You should use an other one",
+          1,
+          undefined
+        );
         return false;
       }
       options.removePrefix(oldPrefix);
@@ -197,8 +215,13 @@ export default function () {
 
     //	console.log("Is new URL ("+newURL+") valid?  >> "+validURL(newURL));
     if (validURL(newURL) === false) {
-      warningModule.showWarning("Invalid Prefix IRI", "Input IRI does not represent an URL", "You should enter a valid URL", 1, false);
-
+      warningModule.showWarning(
+        "Invalid Prefix IRI",
+        "Input IRI does not represent an URL",
+        "You should enter a valid URL",
+        1,
+        undefined
+      );
     }
     return false;
   };
