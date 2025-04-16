@@ -201,7 +201,7 @@ export default function (graphContainerSelector) {
     };
     // search functionality
     graph.getUpdateDictionary = function () {
-        return parser.getDictionary();
+        return parser.dictionary;
     };
     graph.language = function (newLanguage) {
         if (!arguments.length) return language;
@@ -1446,11 +1446,11 @@ export default function (graphContainerSelector) {
             if (props[i].labelForCurrentLanguage() !== undefined)
                 originalDictionary.push(props[i]);
         }
-        parser.setDictionary(originalDictionary);
+        parser.dictionary = originalDictionary;
 
         var literFilter = graph.options().literalFilter();
         var idsToRemove = literFilter.removedNodes; // A set
-        var originalDict = parser.getDictionary();
+        var originalDict = parser.dictionary;
         var newDict = [];
 
         // go through the dictionary and remove the ids;
@@ -1462,8 +1462,7 @@ export default function (graphContainerSelector) {
             }
         }
         // tell the parser that the dictionary is updated
-        parser.setDictionary(newDict);
-
+        parser.dictionary = newDict;
     }
 
     graph.updateProgressBarMode = function () {
@@ -1511,8 +1510,8 @@ export default function (graphContainerSelector) {
         showFilterWarning = false;
         parser.parse(options.data());
         unfilteredData = {
-            nodes: parser.nodes(),
-            properties: parser.properties()
+            nodes: parser.nodes,
+            properties: parser.properties
         };
 
         // fixing class and property id counter for the editor
@@ -1649,10 +1648,10 @@ export default function (graphContainerSelector) {
         // generate dictionary here ;
         generateDictionary(unfilteredData);
 
-        parser.parseSettings();
-        graphUpdateRequired = parser.settingsImported();
+        // parser.parseSettings(); // NOTE: Disabled to save memory while this method is not used (the attributes of this method are only written to, never read)
+        graphUpdateRequired = parser.settingsImported;
         centerGraphViewOnLoad = true;
-        if (parser.settingsImportGraphZoomAndTranslation() === true) {
+        if (parser.settingsImportGraphZoomAndTranslation) {
             centerGraphViewOnLoad = false;
         }
         graph.options().searchMenu().requestDictionaryUpdate();

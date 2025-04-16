@@ -1,3 +1,4 @@
+import { BaseElement } from "../BaseElement";
 import { OwlAllValuesFromProperty } from "./implementations/OwlAllValuesFromProperty";
 import { OwlDatatypeProperty } from "./implementations/OwlDatatypeProperty";
 import { OwlDeprecatedProperty } from "./implementations/OwlDeprecatedProperty";
@@ -30,10 +31,14 @@ const properties = [
     SetOperatorProperty
 ]
 
-let propertyMap = new Map()
+/**
+ * @type {Map<string, new (graph: any) => BaseElement>}
+ */
+let propertyClassMap = new Map()
 for (const propertyCls of properties) {
     let property = new propertyCls()
-    propertyMap.set(property.type, propertyCls)
+    // @ts-ignore
+    propertyClassMap.set(property.type.toLowerCase(), propertyCls)
 }
 
-export default propertyMap
+export default propertyClassMap

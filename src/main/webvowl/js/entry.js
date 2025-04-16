@@ -1,9 +1,4 @@
 import '../css/vowl.css';
-import nodeMapFactory from './elements/nodes/nodeMap';
-import propertyMapFactory from './elements/properties/propertyMap';
-const nodeMap = nodeMapFactory();
-const propertyMap = propertyMapFactory();
-
 
 var webvowl = {};
 webvowl.graph = require("./graph");
@@ -30,22 +25,6 @@ webvowl.modules.selectionDetailsDisplayer = require("./modules/selectionDetailsD
 webvowl.modules.setOperatorFilter = require("./modules/filters/setOperatorFilter");
 webvowl.modules.statistics = require("./modules/filters/statistics");
 webvowl.modules.subclassFilter = require("./modules/filters/subclassFilter");
-
-
-webvowl.nodes = {};
-nodeMap.entries().forEach(function (entry) { // FIXME: Check Map docs
-  mapEntryToIdentifier(webvowl.nodes, entry);
-});
-
-webvowl.properties = {};
-propertyMap.entries().forEach(function (entry) { // FIXME: Check Map docs
-  mapEntryToIdentifier(webvowl.properties, entry);
-});
-
-function mapEntryToIdentifier(map, entry) { // FIXME: Check Map docs
-  var identifier = entry.key.replace(":", "").toLowerCase();
-  map[identifier] = entry.value;
-}
 
 
 export default webvowl;

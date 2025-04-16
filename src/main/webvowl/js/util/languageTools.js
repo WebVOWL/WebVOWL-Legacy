@@ -9,7 +9,7 @@ export class LanguageTools {
      * @param {string | null} preferredLanguage
      * @returns {string}
      */
-    static textInLanguage(textObject, preferredLanguage) {
+    static textInLanguage(textObject, preferredLanguage = null) {
         if (typeof textObject === "undefined") {
             return undefined;
         }

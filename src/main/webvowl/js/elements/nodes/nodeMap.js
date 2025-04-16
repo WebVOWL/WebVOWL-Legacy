@@ -1,3 +1,4 @@
+import { BaseElement } from "../BaseElement";
 import { ExternalClass } from "./implementations/ExternalClass";
 import { OwlClass } from "./implementations/OwlClass";
 import { OwlComplementOf } from "./implementations/OwlComplementOf";
@@ -30,9 +31,13 @@ const nodes = [
     RdfsResource
 ]
 
-let nodeMap = new Map()
+/**
+ * @type {Map<string, new (graph: any) => BaseElement>}
+ */
+let nodeClassMap = new Map()
 for (const nodeCls of nodes) {
     let node = new nodeCls()
-    nodeMap.set(node.type, nodeCls)
+    // @ts-ignore
+    nodeClassMap.set(node.type.toLowerCase(), nodeCls)
 }
-export default nodeMap
+export default nodeClassMap
