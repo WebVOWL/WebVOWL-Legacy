@@ -19,7 +19,7 @@ export class ColorExternalsSwitch extends AbstractFilter {
     // REVIEW: This does not filter anything. Check if this method can be combined in a class elsewhere
     /**
      * Applies color to "external" nodes or properties.
-     * This mutates the input!
+     * @note This mutates the input!
      * @param {BaseNode[]} nodes
      * @param {BaseProperty[]} properties
      */

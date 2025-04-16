@@ -11,7 +11,7 @@ export class DisjointFilter extends AbstractFilter {
 
     /**
      * If enabled, all disjointWith properties are filtered.
-     * This mutates the input!
+     * @note This mutates the input!
      * @param {BaseNode[]} nodes
      * @param {BaseProperty[]} properties
      */

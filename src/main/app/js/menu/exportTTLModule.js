@@ -1,10 +1,6 @@
-/**
- * Contains the logic for the export button.
- * @returns {{}}
- */
 export default class ExportTTLModule {
-
     /**
+     * Contains the logic for the export button.
      * @param {any} graph
      */
     constructor(graph) {

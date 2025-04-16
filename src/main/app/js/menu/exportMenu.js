@@ -1,11 +1,9 @@
 import d3 from "d3";
 import ExportTTLModule from "./exportTTLModule";
 
-/**
- * Contains the logic for the export button.
- */
 export default class ExportMenu {
     /**
+     * Contains the logic for the export button.
      * @param {any} graph
      */
     constructor(graph) {
@@ -326,7 +324,7 @@ export default class ExportMenu {
             return;
         }
 
-        const _this = this; 
+        const _this = this;
         styles.forEach(function (style) {
             elements.each(function () {
                 var element = d3.select(this);

@@ -1,15 +1,9 @@
 import d3 from "d3";
 
-/**
- * Contains the logic for connecting the modes with the website.
- *
- * @param graph the graph that belongs to these controls
- * @returns {{}}
- */
 export default class ModeMenu {
-
     /**
-     * @param {any} graph
+     * Contains the logic for connecting the modes with the website.
+     * @param {any} graph the graph that belongs to these controls
      */
     constructor(graph) {
         this.graph = graph;
@@ -21,10 +15,10 @@ export default class ModeMenu {
          */
         this.checkboxes = [];
         this.colorModeSwitch = undefined;
-    
+
         this.dynamicLabelWidthCheckBox = undefined;
     }
-    
+
     // getter and setter for the state of color modes
     colorModeState(/** @type {any} */ s) {
         // @ts-ignore

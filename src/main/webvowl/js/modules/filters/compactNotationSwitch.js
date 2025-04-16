@@ -13,7 +13,7 @@ export class CompactNotationSwitch extends AbstractFilter {
     // REVIEW: This does not filter anything. Check if this method can be combined in a class elsewhere
     /**
      * If enabled, redundant details won't be drawn anymore.
-     * This mutates the input!
+     * @note This mutates the input!
      * @param {BaseNode[]} nodes
      * @param {BaseProperty[]} properties
      */

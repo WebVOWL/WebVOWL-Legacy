@@ -11,7 +11,7 @@ export class Collapsing extends AbstractFilter {
     // REVIEW: This does not filter anything. Check if this method can be combined in a class elsewhere
     /**
      * Assigns a "collapsible" boolean to all elements
-     * This mutates the input!
+     * @note This mutates the input!
      * @param {BaseNode[]} nodes
      * @param {BaseProperty[]} properties
      */

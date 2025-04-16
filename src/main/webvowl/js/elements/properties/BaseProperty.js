@@ -16,15 +16,15 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
 
         // Basic attributes
         /**
-         * @type {BaseNode | undefined}
+         * @type {BaseNode | string | undefined}
          */
         this.domain = undefined
         /**
-         * @type {BaseNode | undefined}
+         * @type {BaseNode | string | undefined}
          */
         this.range = undefined
         /**
-         * @type {BaseProperty | undefined}
+         * @type {BaseProperty | string | undefined}
          */
         this.inverse = undefined
         /**
@@ -44,11 +44,11 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
          */
         this.maxCardinality = undefined
         /**
-         * @type {BaseProperty[] | undefined}
+         * @type {BaseProperty[] | string[] | undefined}
          */
         this.subproperties = undefined
         /**
-         * @type {BaseProperty[] | undefined}
+         * @type {BaseProperty[] | string[] | undefined}
          */
         this.superproperties = undefined
         /**

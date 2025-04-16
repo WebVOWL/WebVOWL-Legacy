@@ -12,7 +12,7 @@ export class DataTypeFilter extends AbstractFilter {
 
     /**
      * If enabled, all datatypes and literals including connected properties are filtered.
-     * This mutates the input!
+     * @note This mutates the input!
      * @param {BaseNode[]} nodes
      * @param {BaseProperty[]} properties
      */

@@ -21,7 +21,7 @@ export class BaseElement {
         // Basic attributes
         /**
          * ID of equivalent elements
-         * @type {string[]}
+         * @type {string[] | BaseElement[]}
          */
         this.equivalents = []
         /**

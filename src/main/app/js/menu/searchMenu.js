@@ -1,16 +1,11 @@
 import d3 from 'd3';
 import { Trie } from '../../../webvowl/js/datastructures/trie';
+import { PrefixTools } from '../../../webvowl/js/util/prefixTools';
 
-/**
- * Contains the search "engine"
- *
- * @param graph the associated webvowl graph
- * @returns {{}}
- */
 export default class SearchMenu {
-
     /**
-     * @param {any} graph
+     * Contains the search "engine"
+     * @param {any} graph the associated webvowl graph
      */
     constructor(graph) {
         this.graph = graph;
@@ -24,11 +19,6 @@ export default class SearchMenu {
         this.c_locate = d3.select("#locateSearchResult");
         this.c_search = d3.select("#c_search");
         this.m_search = d3.select("#m_search"); // << dropdown container;
-
-        // @ts-ignore
-        String.prototype.beginsWith = function (/** @type {string} */ string) {
-            return (this.indexOf(string) === 0);
-        };
     }
 
     requestDictionaryUpdate() {
@@ -97,20 +87,11 @@ export default class SearchMenu {
     hideSearchEntries() {
         this.m_search.style("display", "none");
         this.viewStatusOfSearchEntries = false;
-    };
+    }
 
     showSearchEntries() {
         this.m_search.style("display", "block");
         this.viewStatusOfSearchEntries = true;
-    };
-
-    /**
-     * @param {string} str
-     */
-    ValidURL(str) {
-        var urlregex = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/;
-        return urlregex.test(str);
-
     }
 
     userNavigation() {
@@ -142,7 +123,7 @@ export default class SearchMenu {
                 // check if input text ends or begins with with space
                 // remove first spaces
                 var clearedText = inputText.replace(/%20/g, " ");
-                while (clearedText.beginsWith(" ")) {
+                while (clearedText.startsWith(" ")) {
                     clearedText = clearedText.substr(1, clearedText.length);
                 }
                 // remove ending spaces
@@ -151,7 +132,7 @@ export default class SearchMenu {
                 }
                 var iri = clearedText.replace(/ /g, "%20");
 
-                var valid = this.ValidURL(iri);
+                var valid = PrefixTools.validURL(iri);
                 // validate url:
                 if (valid) {
                     var ontM = this.graph.options().ontologyMenu();

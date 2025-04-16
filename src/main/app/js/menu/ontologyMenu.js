@@ -1,7 +1,6 @@
 import d3 from "d3";
 
 export default class {
-
     /**
      * @param {any} graph
      */
@@ -21,12 +20,6 @@ export default class {
         this.cachedConversions = {};
         this.loadingModule = undefined;
         this.currentLoadedOntologyName = "";
-
-        // @ts-ignore
-        String.prototype.beginsWith = function (/** @type {any} */ string) {
-            // @ts-ignore
-            return (this.indexOf(string) === 0);
-        };
     }
 
     clearCachedVersion() {
@@ -237,11 +230,14 @@ export default class {
         });
 
         d3.select("#iri-converter-form").on("submit", function () {
+            /**
+             * @type {string}
+             */
             var inputName = iriConverterInput.property("value");
 
             // remove first spaces
             var clearedName = inputName.replace(/%20/g, " ");
-            while (clearedName.beginsWith(" ")) {
+            while (clearedName.startsWith(" ")) {
                 clearedName = clearedName.substr(1, clearedName.length);
             }
             // remove ending spaces
@@ -361,7 +357,7 @@ export default class {
                 console.log(request);
             }
             _this.setLoadingStatusInfo(request.responseText);
-            const parseResult = callback(parameter);
+            const parseResult = callback(parameter); // FIXME: Use the result
         });
     }
 

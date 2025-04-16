@@ -7,7 +7,6 @@ import { BaseProperty } from './elements/properties/BaseProperty';
 import { OwlDisjointWith } from './elements/properties/implementations/OwlDisjointWith';
 import propertyClassMap from './elements/properties/propertyMap';
 import { AttributeParser } from './parsing/attributeParser';
-import { EquivalentPropertyMerger } from './parsing/equivalentPropertyMerger';
 import { ElementTools } from './util/elementTools';
 import { LanguageTools } from './util/languageTools';
 
@@ -37,101 +36,89 @@ export class Parser {
         this.propertyMap = new Map()
         this.dictionary = []
 
-        // NOTE: Disabled to save memory while these attributes are not used
-        // this.settingsData = undefined
-        // this.settingsImported = false
-        // this.settingsImportGraphZoomAndTranslation = false
+        this.settingsData = undefined
+        this.settingsImported = false
+        this.settingsImportGraphZoomAndTranslation = false
     }
 
-    // NOTE: Disabled to save memory while this method is not used
-    // Remember to enable a call to parseSettings in graph.js and some code in `parse` of this class if this method ever used
-    // parseSettings() {
-    //     this.settingsImported = true;
-    //     this.settingsImportGraphZoomAndTranslation = false;
+    parseSettings() {
+        this.settingsImported = true;
+        this.settingsImportGraphZoomAndTranslation = false;
 
-    //     if (!this.settingsData) {
-    //         this.settingsImported = false;
-    //         return;
-    //     }
-    //     /** global settings **********************************************************/
-    //     if (this.settingsData.global) {
-    //         if (this.settingsData.global.zoom) {
-    //             const zoomFactor = this.settingsData.global.zoom;
-    //             this.graph.setZoom(zoomFactor);
-    //             this.settingsImportGraphZoomAndTranslation = true;
-    //         }
+        if (!this.settingsData) {
+            this.settingsImported = false;
+            return;
+        }
+        /** global settings **********************************************************/
+        if (this.settingsData.global) {
+            if (this.settingsData.global.zoom) {
+                const zoomFactor = this.settingsData.global.zoom;
+                this.graph.setZoom(zoomFactor);
+                this.settingsImportGraphZoomAndTranslation = true;
+            }
 
-    //         if (this.settingsData.global.translation) {
-    //             const translation = this.settingsData.global.translation;
-    //             this.graph.setTranslation(translation);
-    //             this.settingsImportGraphZoomAndTranslation = true;
-    //         }
+            if (this.settingsData.global.translation) {
+                const translation = this.settingsData.global.translation;
+                this.graph.setTranslation(translation);
+                this.settingsImportGraphZoomAndTranslation = true;
+            }
 
-    //         if (this.settingsData.global.paused) {
-    //             const paused = this.settingsData.global.paused;
-    //             this.graph.options().pauseMenu().setPauseValue(paused);
-    //         }
-    //     }
-    //     /** Gravity Settings  **********************************************************/
-    //     if (this.settingsData.gravity) {
-    //         if (this.settingsData.gravity.classDistance) {
-    //             const classDistance = this.settingsData.gravity.classDistance;
-    //             this.graph.options().classDistance(classDistance);
-    //         }
-    //         if (this.settingsData.gravity.datatypeDistance) {
-    //             const datatypeDistance = this.settingsData.gravity.datatypeDistance;
-    //             this.graph.options().datatypeDistance(datatypeDistance);
-    //         }
-    //         this.graph.options().gravityMenu().reset(); // reads the options values and sets the gui values
-    //     }
+            if (this.settingsData.global.paused) {
+                const paused = this.settingsData.global.paused;
+                this.graph.options().pauseMenu().setPauseValue(paused);
+            }
+        }
+        /** Gravity Settings  **********************************************************/
+        if (this.settingsData.gravity) {
+            if (this.settingsData.gravity.classDistance) {
+                const classDistance = this.settingsData.gravity.classDistance;
+                this.graph.options().classDistance(classDistance);
+            }
+            if (this.settingsData.gravity.datatypeDistance) {
+                const datatypeDistance = this.settingsData.gravity.datatypeDistance;
+                this.graph.options().datatypeDistance(datatypeDistance);
+            }
+            this.graph.options().gravityMenu().reset(); // reads the options values and sets the gui values
+        }
 
-    //     /** Filter Settings **********************************************************/
-    //     if (this.settingsData.filter) {
-    //         // checkbox settings
-    //         if (this.settingsData.filter.checkBox) {
-    //             for (const filterCheckbox of this.settingsData.filter.checkBox) {
-    //                 this.graph.options().filterMenu().setCheckBoxValue(filterCheckbox.id, filterCheckbox.checked);
-    //             }
-    //         }
-    //         // node degree filter settings
-    //         if (this.settingsData.filter.degreeSliderValue) {
-    //             this.graph.options().filterMenu().setDegreeSliderValue(this.settingsData.filter.degreeSliderValue);
-    //         }
-    //         this.graph.options().filterMenu().updateSettings();
-    //     }
+        /** Filter Settings **********************************************************/
+        if (this.settingsData.filter) {
+            // checkbox settings
+            if (this.settingsData.filter.checkBox) {
+                for (const filterCheckbox of this.settingsData.filter.checkBox) {
+                    this.graph.options().filterMenu().setCheckBoxValue(filterCheckbox.id, filterCheckbox.checked);
+                }
+            }
+            // node degree filter settings
+            if (this.settingsData.filter.degreeSliderValue) {
+                this.graph.options().filterMenu().setDegreeSliderValue(this.settingsData.filter.degreeSliderValue);
+            }
+            this.graph.options().filterMenu().updateSettings();
+        }
 
-    //     /** Modes Setting **********************************************************/
-    //     if (this.settingsData.modes) {
-    //         // checkbox settings
-    //         if (this.settingsData.modes.checkBox) {
-    //             for (const modeCheckbox of this.settingsData.modes.checkBox) {
-    //                 this.graph.options().modeMenu().setCheckBoxValue(modeCheckbox.id, modeCheckbox.checked);
-    //             }
-    //         }
-    //         // color switch settings
-    //         this.graph.options().modeMenu().setColorSwitchState(Boolean(this.settingsData.modes.colorSwitchState));
-    //         this.graph.options().modeMenu().updateSettings();
-    //     }
-    //     this.graph.updateStyle(); // updates graph representation(setting charges and distances)
-    // }
+        /** Modes Setting **********************************************************/
+        if (this.settingsData.modes) {
+            // checkbox settings
+            if (this.settingsData.modes.checkBox) {
+                for (const modeCheckbox of this.settingsData.modes.checkBox) {
+                    this.graph.options().modeMenu().setCheckBoxValue(modeCheckbox.id, modeCheckbox.checked);
+                }
+            }
+            // color switch settings
+            this.graph.options().modeMenu().setColorSwitchState(Boolean(this.settingsData.modes.colorSwitchState));
+            this.graph.options().modeMenu().updateSettings();
+        }
+        this.graph.updateStyle(); // updates graph representation(setting charges and distances)
+    }
 
     /**
      * Parses the ontology data and preprocesses it (e.g. connecting inverse properties and so on).
-     * @param ontologyData the loaded ontology json file
+     * @param {{ settings: any; class: any[]; datatype: any[]; classAttribute: any[]; datatypeAttribute: any[]; namespace: any[]; property: any[]; propertyAttribute: any[]; }} ontologyData the loaded ontology json file
      */
     parse(ontologyData) {
-        if (!ontologyData) {
-            nodes = [];
-            properties = [];
-            dictionary = [];
-            return;
+        if (ontologyData.settings) {
+            this.settingsData = ontologyData.settings;
         }
-        dictionary = [];
-        // if (ontologyData.settings) {
-        //     this.settingsData = ontologyData.settings;
-        // } else {
-        //     this.settingsData = undefined;
-        // }
 
         // Create node objects
         const combinedClassesAndDatatypes = this.#combineClassesOrProperties(
@@ -142,10 +129,9 @@ export class Parser {
             this.#combineClasses
         )
 
-
         const unparsedProperties = ontologyData.property || []
 
-        // Inject properties for unions, intersections, ...
+        // Inject properties for unions, intersections etc.
         // @ts-ignore
         this.#addSetOperatorProperties(combinedClassesAndDatatypes, unparsedProperties)
 
@@ -159,13 +145,14 @@ export class Parser {
             this.#combineProperties
         )
 
-        this.#mergeRangesOfEquivalentProperties(combinedProperties, combinedClassesAndDatatypes);
+        // @ts-ignore
+        this.mergeRangesOfEquivalentProperties(combinedProperties, combinedClassesAndDatatypes)
 
         // Process the graph data
-        this.#convertTypesToIris(combinedClassesAndDatatypes, ontologyData.namespace);
-        this.#convertTypesToIris(combinedProperties, ontologyData.namespace);
-        nodes = this.#createNodeStructure(combinedClassesAndDatatypes, classMap);
-        properties = this.#createPropertyStructure(combinedProperties, classMap, propertyMap);
+        // @ts-ignore
+        this.nodes = this.#createNodeStructure(combinedClassesAndDatatypes);
+        // @ts-ignore
+        this.properties = this.#createPropertyStructure(combinedProperties);
     }
 
     /**
@@ -318,7 +305,7 @@ export class Parser {
                 node.individuals.push(individualNode);
             };
         }
-        this.nodeMap.set(node.id, node)
+        this.nodeMap.set(node.id, node);
         return node;
     }
 
@@ -351,22 +338,8 @@ export class Parser {
             property.px = element.pos[0];
             property.py = element.pos[1];
         }
-        this.propertyMap.set(property.id, property)
+        this.propertyMap.set(property.id, property);
         return property;
-    }
-
-    /**
-     * @param {BaseProperty[]} properties
-     * @param {BaseNode[]} nodes
-     */
-    #mergeRangesOfEquivalentProperties(properties, nodes) {
-        // pass clones of arrays into the merger to keep the current functionality of this module
-        const newNodes = EquivalentPropertyMerger.merge(properties.slice(), nodes.slice(), this.propertyMap, this.nodeMap, this.graph);
-
-        // replace all the existing nodes and map the nodes again
-        nodes.length = 0;
-        Array.prototype.push.apply(nodes, newNodes);
-        this.nodeMap = this.#mapElements(nodes);
     }
 
     /**
@@ -375,28 +348,24 @@ export class Parser {
      * <b>equivalent</b> is filled with only ID's of the corresponding nodes. It would be better to used the
      * object instead of the ID so we swap the ID's with the correct object reference and can delete it from drawing
      * because it is not necessary.
+     * @param {BaseNode[]} rawNodes
      */
-    #createNodeStructure(rawNodes, classMap) {
-        let nodes = [];
-
-        // Set the default values
-        rawNodes.forEach(function (node) { // FIXME: Should be removed
-            node.visible = true;
-        });
+    #createNodeStructure(rawNodes) {
+        let nodes = []
 
         for (const node of rawNodes) {
             // Merge and connect the equivalent nodes
-            this.#processEquivalentIds(node, classMap);
-            AttributeParser.parseClassAttributes(node);
+            this.#processEquivalentIds(node, this.nodeMap)
+            AttributeParser.parseClassAttributes(node)
         }
 
         // Collect all nodes that should be displayed
         for (const node of rawNodes) {
             if (node.visible) {
-                nodes.push(node);
+                nodes.push(node)
             }
-        };
-        return nodes;
+        }
+        return nodes
     }
 
     /**
@@ -404,7 +373,7 @@ export class Parser {
      * @param {BaseProperty} property
      */
     #processDisjoints(property) {
-        if (property instanceof OwlDisjointWith === false) {
+        if (!(property instanceof OwlDisjointWith)) {
             return;
         }
 
@@ -427,41 +396,34 @@ export class Parser {
 
     /**
      * Connect all properties and also their sub- and superproperties.
-     * We iterate over the rawProperties array because it is way faster than iterating
-     * over an object and its attributes.
-     *
-     * @param rawProperties the properties
-     * @param classMap a map of all classes
-     * @param propertyMap the properties in a map
+     * @note This mutates `rawProperties`
+     * @param {BaseProperty[]} rawProperties the properties
      */
-    #createPropertyStructure(rawProperties, classMap, propertyMap) {
+    #createPropertyStructure(rawProperties) {
         let properties = [];
-        // Set default values
-        rawProperties.forEach(function (property) { // FIXME: Should be removed
-            property.visible = true;
-        });
 
-        // Connect properties
+        // Connect properties with nodes
         for (const property of rawProperties) {
             /* Skip properties that have no information about their domain and range, like
              inverse properties with optional inverse and optional domain and range attributes */
             if ((property.domain && property.range) || property.inverse) {
                 let domainObject;
                 let rangeObject;
+                // @ts-ignore
                 const inversePropertyId = this.#findId(property.inverse);
-                const inverse = propertyMap[inversePropertyId];
+                const inverse = this.propertyMap.get(inversePropertyId);
                 if (!inverse) {
                     console.warn("No inverse property was found for id: " + inversePropertyId);
                     property.inverse = undefined;
                 }
                 // Either domain and range are set on this property or at the inverse
                 if (typeof property.domain !== "undefined" && typeof property.range !== "undefined") {
-                    domainObject = classMap[this.#findId(property.domain)];
-                    rangeObject = classMap[this.#findId(property.range)];
+                    domainObject = this.nodeMap.get(this.#findId(property.domain));
+                    rangeObject = this.nodeMap.get(this.#findId(property.range));
                 } else if (inverse) {
                     // Domain and range need to be switched
-                    domainObject = classMap[this.#findId(inverse.range)];
-                    rangeObject = classMap[this.#findId(inverse.domain)];
+                    domainObject = this.nodeMap.get(this.#findId(inverse.range));
+                    rangeObject = this.nodeMap.get(this.#findId(inverse.domain));
                 } else {
                     console.warn("Domain and range not found for property: " + property.id);
                 }
@@ -486,7 +448,7 @@ export class Parser {
 
         // Merge equivalent properties and process disjoints.
         for (const property of rawProperties) {
-            this.#processEquivalentIds(property, propertyMap);
+            this.#processEquivalentIds(property, this.propertyMap);
             this.#processDisjoints(property);
             AttributeParser.parsePropertyAttributes(property);
         }
@@ -496,7 +458,7 @@ export class Parser {
             // Properties of merged classes should point to/from the visible equivalent class
             let propertyWasRerouted = false;
             if (property.domain === undefined) {
-                console.warn("No Domain was found for id:" + property.id);
+                console.warn("No Domain was found for id: " + property.id);
                 return [];
             }
             if (this.#wasNodeMerged(property.domain)) {
@@ -505,7 +467,7 @@ export class Parser {
             }
 
             if (property.range === undefined) {
-                console.warn("No range was found for id:" + property.id);
+                console.warn("No range was found for id: " + property.id);
                 return [];
             }
             if (this.#wasNodeMerged(property.range)) {
@@ -535,17 +497,21 @@ export class Parser {
             if (property.visible) {
                 properties.push(property);
             }
-        };
+        }
         return properties;
     }
 
+    /**
+     * @param {string[] | BaseProperty[]} subOrSuperPropertiesArray
+     */
     #referenceSubOrSuperProperties(subOrSuperPropertiesArray) {
         if (!subOrSuperPropertiesArray) {
             return;
         }
         for (let i = 0; i < subOrSuperPropertiesArray.length; ++i) {
+            // @ts-ignore
             const subOrSuperPropertyId = this.#findId(subOrSuperPropertiesArray[i]);
-            const subOrSuperProperty = this.propertyMap[subOrSuperPropertyId];
+            const subOrSuperProperty = this.propertyMap.get(subOrSuperPropertyId);
 
             if (subOrSuperProperty) {
                 // Replace id with object
@@ -556,10 +522,17 @@ export class Parser {
         }
     }
 
+    /**
+     * @param {BaseNode} node
+     */
     #wasNodeMerged(node) {
         return !node.visible && node.equivalentBase;
     }
 
+    /**
+     * @param {BaseProperty[]} properties
+     * @param {BaseProperty} referenceProperty
+     */
     #getOtherEqualProperty(properties, referenceProperty) {
         for (const property of properties) {
             if (referenceProperty === property) {
@@ -586,7 +559,7 @@ export class Parser {
     /**
      * Generates and adds properties for links to set operators.
      * @param {BaseNode[]} nodes
-     * @param {any[]} properties unprocessed properties
+     * @param {any[]} properties JSON property objects
      */
     #addSetOperatorProperties(nodes, properties) {
         /**
@@ -622,44 +595,35 @@ export class Parser {
     /**
      * Replaces the ids of equivalent nodes/properties with the matching objects, cross references them
      * and tags them as processed.
-     * @param element a node or a property
-     * @param elementMap a map where nodes/properties can be looked up
-     * @note This method mutates `element`
+     * @note This mutates `element` and its `equivalents`.
+     * @param {BaseNode | BaseProperty} element a node or a property
+     * @param {Map<string,BaseNode> | Map<string,BaseProperty>} elementMap a map where nodes/properties can be looked up
      */
     #processEquivalentIds(element, elementMap) {
-        const eqIds = element.equivalents;
-        if (!eqIds || element.equivalentBase) {
+        if (!element.equivalents || element.equivalentBase) {
             return;
         }
 
         // Replace ids with the corresponding objects
-        for (let i = 0; i < eqIds.length; ++i) {
-            const eqId = this.#findId(eqIds[i]);
-            const eqObject = elementMap[eqId];
+        for (let i = 0; i < element.equivalents.length; ++i) {
+            const equivalentId = this.#findId(element.equivalents[i]);
+            const equivalentObject = elementMap.get(equivalentId);
 
-            if (eqObject) {
+            if (equivalentObject) {
+                // Clear the old string array
+                if (equivalentObject.equivalents.length !== 0
+                    && typeof equivalentObject.equivalents[0] === "string"
+                ) {
+                    equivalentObject.equivalents = []
+                }
                 // Cross reference both objects
-                eqObject.equivalents = eqObject.equivalents;
-                eqObject.equivalents.push(element);
-                eqObject.equivalentBase = element;
-                eqIds[i] = eqObject;
+                equivalentObject.equivalents.push(element);
+                equivalentObject.equivalentBase = element;
+                element.equivalents[i] = equivalentObject;
                 // Hide other equivalent nodes
-                eqObject.visible = false;
+                equivalentObject.visible = false;
             } else {
-                console.warn("No class/property was found for equivalent id: " + eqId);
-            }
-        }
-    }
-
-    /**
-     * Tries to convert the type to an iri and sets it.
-     * @param element classes or properties
-     * @param namespaces an array of namespaces
-     */
-    #convertTypesToIris(element, namespaces) {
-        for (const element of element) {
-            if (typeof element.iri === "string") {
-                element.iri = this.#replaceNamespace(element.iri, namespaces);
+                console.warn("No class/property was found for equivalent id: " + equivalentId);
             }
         }
     }
@@ -705,21 +669,33 @@ export class Parser {
         return address;
     }
 
-    #merge(properties, nodes) {
-        let totalNodeIdsToHide = new Set()
+    /**
+     * @note This mutates `properties` and `nodes`
+     * @param {BaseProperty[]} properties
+     * @param {BaseNode[]} nodes
+     */
+    mergeRangesOfEquivalentProperties(properties, nodes) {
+        let domainIds = new Set()
+        let rangeIds = new Set()
+        let nodeIdsToHide = new Set()
         let processedPropertyIds = new Set()
         let mergeNodes = []
+
+        for (const property of properties) {
+            domainIds.add(property.domain.id)
+            rangeIds.add(property.range.id)
+        }
 
         for (const property of properties) {
             let propertyWithEquivalents = [property]
             if (processedPropertyIds.has(property.id)) {
                 continue
             } else {
-                // Add the equivalent property instance from its ID
+                // Add the equivalent property instances from their ID
                 for (const equivalentProperty of property.equivalents) {
                     propertyWithEquivalents.push(this.propertyMap.get(equivalentProperty.id))
                 }
-                if (propertyWithEquivalents.length === 0) {
+                if (propertyWithEquivalents.length === 1) {
                     continue
                 }
             }
@@ -727,16 +703,19 @@ export class Parser {
             const mergeNode = this.#findMergeNode(propertyWithEquivalents)
             if (mergeNode) {
                 mergeNodes.push(this.#createDefaultMergeNode(property))
-            }
-
-            // FIXME: This call makes this function's runtime O(n^2) w.r.t. properties
-            const nodeIdsToHide = this.#replaceRangesAndCollectNodesToHide(propertyWithEquivalents, mergeNodes.at(-1), properties, processedPropertyIds);
-            for (const hiddenNodeID of nodeIdsToHide) {
-                totalNodeIdsToHide.add(hiddenNodeID);
+                for (const equivalentProperty of propertyWithEquivalents) {
+                    const oldRangeId = equivalentProperty.range.id;
+                    equivalentProperty.range.id = mergeNode.id;
+                    // isDomainOrRangeOfOtherProperty
+                    if (!(domainIds.has(oldRangeId) || rangeIds.has(oldRangeId))) {
+                        nodeIdsToHide.add(oldRangeId);
+                    }
+                    processedPropertyIds.add(equivalentProperty.id);
+                }
             }
         }
-        // FIXME: This call can be optimized away and replaced with info from `nodes` of this function
-        return this.#filterVisibleNodes(nodes.concat(mergeNodes), totalNodeIdsToHide);
+        // @ts-ignore
+        return this.#filterVisibleNodes(nodes.concat(mergeNodes), nodeIdsToHide);
     }
 
     /**
@@ -798,43 +777,6 @@ export class Parser {
     }
 
     /**
-     * @param {BaseProperty[]} propertyWithEquivalents
-     * @param {BaseNode} mergeNode
-     * @param {BaseProperty[]} properties
-     * @param {Set<string>} processedPropertyIds
-     */
-    #replaceRangesAndCollectNodesToHide(propertyWithEquivalents, mergeNode, properties, processedPropertyIds) {
-        var nodesToHide = [];
-
-        for (let property of propertyWithEquivalents) {
-            if (property === undefined || mergeNode === undefined) {
-                //@ WORKAROUND
-                throw new TypeError(`Property (${property}) and mergeNode (${mergeNode}) cannot be undefined in this context`)
-            }
-            const oldRangeId = property.range.id;
-            property.range.id = mergeNode.id;
-            if (!this.#isDomainOrRangeOfOtherProperty(oldRangeId, properties)) {
-                nodesToHide.push(oldRangeId);
-            }
-            processedPropertyIds.add(property.id);
-        }
-        return nodesToHide;
-    }
-
-    /**
-     * @param {string} nodeId
-     * @param {BaseProperty[]} properties
-     */
-    #isDomainOrRangeOfOtherProperty(nodeId, properties) {
-        for (const property of properties) {
-            if (property.domain.id === nodeId || property.range.id === nodeId) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * @param {BaseNode[]} nodes
      * @param {Set<string>} nodeIdsToHide
      */
@@ -843,6 +785,9 @@ export class Parser {
         for (const node of nodes) {
             if (!nodeIdsToHide.has(node.id)) {
                 filteredNodes.push(node);
+            } else {
+                // Remove hidden nodes from the map
+                this.nodeMap.delete(node.id)
             }
         }
         return filteredNodes;

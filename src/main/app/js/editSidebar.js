@@ -14,7 +14,6 @@ export class EditSidebar {
      */
     constructor(graph) {
         this.graph = graph
-        this.prefixTools = new PrefixTools(graph)
         this.selectedElementForCharacteristics = undefined
         this.oldPrefix = undefined
         this.oldPrefixURL = undefined
@@ -174,7 +173,7 @@ export class EditSidebar {
 
             d3.select("#element_iriEditor")
                 .on("change", () => {
-                    const prefixed = this.prefixTools.getPrefixRepresentationForFullURI(element.iri);
+                    const prefixed = PrefixTools.getPrefixRepresentationForFullURI(element.iri, this.graph);
                     if (prefixed === d3.select("#element_iriEditor").node().value) {
                         console.log("Iri is identical, nothing has changed!");
                         return;
@@ -211,7 +210,7 @@ export class EditSidebar {
 
                         //element.iri=syncedIRI;
                         d3.select("#element_iriEditor").node().title = element.iri;
-                        d3.select("#element_iriEditor").node().value = _this.prefixTools.getPrefixRepresentationForFullURI(syncedIRI);
+                        d3.select("#element_iriEditor").node().value = PrefixTools.getPrefixRepresentationForFullURI(syncedIRI, _this.graph);
                     }
                 });
             // check if we are allowed to change IRI OR LABEL
@@ -294,7 +293,7 @@ export class EditSidebar {
                 this.#addElementsCharacteristics(element);
             }
             const fullURI = d3.select("#element_iriEditor").node().value;
-            d3.select("#element_iriEditor").node().value = this.prefixTools.getPrefixRepresentationForFullURI(fullURI);
+            d3.select("#element_iriEditor").node().value = PrefixTools.getPrefixRepresentationForFullURI(fullURI, this.graph);
             d3.select("#element_iriEditor").node().title = fullURI;
             this.updateElementWidth();
         }
@@ -877,7 +876,7 @@ export class EditSidebar {
         element.baseIri = "http://www.w3.org/2001/XMLSchema#";
         element.redrawLabelText();
 
-        d3.select("#element_iriEditor").node().value = this.prefixTools.getPrefixRepresentationForFullURI(element.iri);
+        d3.select("#element_iriEditor").node().value = PrefixTools.getPrefixRepresentationForFullURI(element.iri, this.graph);
         d3.select("#element_iriEditor").node().title = element.iri;
         d3.select("#element_labelEditor").node().value = element.labelForCurrentLanguage();
     }
@@ -908,7 +907,7 @@ export class EditSidebar {
     #getURLFROMPrefixedVersion(element) {
         let url = d3.select("#element_iriEditor").node().value;
         const base = this.graph.options().getGeneralMetaObjectProperty("iri");
-        if (this.#validURL(url) === false) {
+        if (PrefixTools.validURL(url) === false) {
             // make better usability
             // try to split element;
             const tokens = url.split(":");
@@ -1041,16 +1040,8 @@ export class EditSidebar {
             this.graph.options().focuserModule().handle(element, true); // focus
         }
         // graph.options().focuserModule().handle(undefined);
-        d3.select("#element_iriEditor").node().value = this.prefixTools.getPrefixRepresentationForFullURI(url);
+        d3.select("#element_iriEditor").node().value = PrefixTools.getPrefixRepresentationForFullURI(url, this.graph);
         this.updateSelectionInformation(element);
-    }
-
-    /**
-     * @param {string} str
-     */
-    #validURL(str) {
-        const urlregex = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/;
-        return urlregex.test(str);
     }
 
     /**

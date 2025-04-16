@@ -1648,7 +1648,7 @@ export default function (graphContainerSelector) {
         // generate dictionary here ;
         generateDictionary(unfilteredData);
 
-        // parser.parseSettings(); // NOTE: Disabled to save memory while this method is not used (the attributes of this method are only written to, never read)
+        parser.parseSettings();
         graphUpdateRequired = parser.settingsImported;
         centerGraphViewOnLoad = true;
         if (parser.settingsImportGraphZoomAndTranslation) {
