@@ -17,13 +17,13 @@ export default class PauseMenu {
         const _this = this;
         var menuEntry = d3.select("#pauseOption");
         menuEntry.on("mouseover", function () {
-            var searchMenu = _this.graph.options.searchMenu();
+            var searchMenu = _this.graph.options.searchMenu;
             searchMenu.hideSearchEntries();
         });
         this.pauseButton = d3.select("#pause-button")
             .datum({ paused: false })
             .on("click", function (d) {
-                _this.graph.paused(!d.paused);
+                _this.graph.paused = !d.paused;
                 d.paused = !d.paused;
                 _this.updatePauseButton();
                 _this.pauseButton.classed("highlighted", d.paused);
@@ -37,7 +37,7 @@ export default class PauseMenu {
      */
     setPauseValue(value) {
         this.pauseButton.datum().paused = value;
-        this.graph.paused(value);
+        this.graph.paused = value;
         this.pauseButton.classed("highlighted", value);
         this.updatePauseButton();
     };

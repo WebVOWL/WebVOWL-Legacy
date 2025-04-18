@@ -43,8 +43,8 @@ export class OnologyLoading {
 
     checkForScreenSize() {
         // checks for window size and adjusts the loading indicator
-        const w = this.graph.options.width();
-        const h = this.graph.options.height();
+        const w = this.graph.options.width;
+        const h = this.graph.options.height;
 
         if (w < 270) {
             d3.select("#loading-info").classed("hidden", true);
@@ -631,8 +631,8 @@ export class OnologyLoading {
     #loadOntologyContent(parseResult) {
         const [data, isValidData] = parseResult;
         d3.select("#reloadCachedOntology").classed("hidden", true);
-        this.graph.options.pauseMenu().reset();
-        this.graph.options.navigationMenu().hideAllMenus();
+        this.graph.options.pauseMenu.reset();
+        this.graph.options.navigationMenu.hideAllMenus();
         this.graph.editorMode(); // updates the checkbox
 
         let loadEmptyOntologyForEditing = false;
@@ -650,7 +650,7 @@ export class OnologyLoading {
                 this.graph.editorMode(true);
             }
             this.graph.load();
-            this.graph.options.sidebar().updateOntologyInformation(data, this.statistics);
+            this.graph.options.sidebar.updateOntologyInformation(data, this.statistics);
             this.graph.updateZoomSliderValueFromOutside();
             this.adjustSizeCallable();
 
@@ -715,7 +715,7 @@ export class OnologyLoading {
         function loadCustomConfig(opts) {
             let changeEditingFlag = false;
             const defObj = _this.graph.options.defaultConfig();
-            for (const i = 0; i < opts.length; i++) {
+            for (let i = 0; i < opts.length; i++) {
                 const keyVal = opts[i].split('=');
                 if (keyVal[0] === "editorMode") {
                     changeEditingFlag = true;

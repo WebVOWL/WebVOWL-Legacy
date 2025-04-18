@@ -1,8 +1,61 @@
-import { PrefixTools } from "./util/prefixTools";
+import { PrefixTools } from "./util/prefixTools"
+
+
+class InitialConfig {
+    constructor() {
+        this.sidebar = "1"
+        this.doc = -1
+        this.cd = 200
+        this.dd = 120
+        this.editorMode = "false"
+        this.filter_datatypes = "false"
+        this.filter_objectProperties = "false"
+        this.filter_sco = "false"
+        this.filter_disjoint = "true"
+        this.filter_setOperator = "false"
+        this.mode_dynamic = "true"
+        this.mode_scaling = "true"
+        this.mode_compact = "false"
+        this.mode_colorExt = "true"
+        this.mode_multiColor = "false"
+        this.mode_pnp = "false"
+        this.debugFeatures = "false"
+        this.rect = 0
+    }
+}
+
+class DefaultOptionsConfig {
+    constructor() {
+        this.sidebar = "1"
+        this.doc = -1
+        this.cd = 200
+        this.dd = 120
+        this.editorMode = "false"
+        this.filter_datatypes = "false"
+        this.filter_objectProperties = "false"
+        this.filter_sco = "false"
+        this.filter_disjoint = "true"
+        this.filter_setOperator = "false"
+        this.mode_dynamic = "true"
+        this.mode_scaling = "true"
+        this.mode_compact = "false"
+        this.mode_colorExt = "true"
+        this.mode_multiColor = "false"
+        this.mode_pnp = "false"
+        this.debugFeatures = "false"
+        this.rect = 0
+    }
+}
 
 export class Options {
-    constructor() {
-        this.data
+    /**
+     * @param {any} graph
+     */
+    constructor(graph) {
+        this.graph = graph
+        this.metadataObject = {}
+        this.generalOntologyMetaData = {}
+        this.data = undefined
         this.graphContainerSelector = undefined
         this.classDistance = 200
         this.datatypeDistance = 120
@@ -12,23 +65,43 @@ export class Options {
         this.linkStrength = 1
         this.height = 600
         this.width = 800
+        this.maxLabelWidth = 120
         this.selectionModules = []
-        this.filterModules = []
         this.minMagnification = 0.01
         this.maxMagnification = 4
         this.compactNotation = false
         this.dynamicLabelWidth = true
+        this.scaleNodesByIndividuals = true
+        this.useAccuracyHelper = true
+        this.showRenderingStatistic = true
+        this.showInputModality = false
+        this.hideDebugOptions = true
+        this.rectangularRep = false
+        this.drawPropertyDraggerOnHover = true
+        this.showDraggerObject = false
 
-        // some filters
+        // Configs
+        this.initialConfig = new InitialConfig()
+        this._defaultConfig = new DefaultOptionsConfig()
+
+        // Filters
+        this.filterModules = []
         this.literalFilter = undefined
+        this.datatypeFilter = undefined
+        this.subclassFilter = undefined
+        this.setOperatorFilter = undefined
+        this.disjointPropertyFilter = undefined
+        this.objectPropertyFilter = undefined
+        this.nodeDegreeFilter = undefined
+        this.colorExternalsModule = undefined
+        this.compactNotationModule = undefined
 
-        // menus
+        // Menus
         this.gravityMenu = undefined
         this.filterMenu = undefined
         this.loadingModule = undefined
         this.modeMenu = undefined
         this.pauseMenu = undefined
-        this.pickAndPinModule = undefined
         this.resetMenu = undefined
         this.searchMenu = undefined
         this.ontologyMenu = undefined
@@ -37,33 +110,17 @@ export class Options {
         this.editSidebar = undefined
         this.navigationMenu = undefined
         this.exportMenu = undefined
-        this.graphObject = undefined
         this.zoomSlider = undefined
-        this.datatypeFilter = undefined
-        this.focuserModule = undefined
-        this.colorExternalsModule = undefined
-        this.compactNotationModule = undefined
-        this.objectPropertyFilter = undefined
-        this.subclassFilter = undefined
-        this.setOperatorFilter = undefined
-        this.maxLabelWidth = 120
-        this.metadataObject = {}
-        this.generalOntologyMetaData = {}
-        this.disjointPropertyFilter = undefined
-        this.rectangularRep = false
         this.warningModule = undefined
-        this.prefixModule = undefined
-        this.drawPropertyDraggerOnHover = true
-        this.showDraggerObject = false
         this.directInputModule = undefined
-        this.scaleNodesByIndividuals = true
-        this.useAccuracyHelper = true
-        this.showRenderingStatistic = true
-        this.showInputModality = false
-        this.hideDebugOptions = true
-        this.nodeDegreeFilter = undefined
         this.debugMenu = undefined
 
+        // Misc
+        this.prefixModule = undefined
+        this.focuserModule = undefined
+        this.pickAndPinModule = undefined
+
+        // Supported types
         this.supportedDatatypes = ["rdfs:Literal", "xsd:boolean", "xsd:double", "xsd:integer", "xsd:string", "undefined"]
         this.supportedClasses = ["owl:Thing", "owl:Class", "owl:DeprecatedClass"]
         this.supportedProperties = [
@@ -83,43 +140,48 @@ export class Options {
         }
     }
 
-  options.clearMetaObject = function () {
-        generalOntologyMetaData = {};
-    };
-  options.clearGeneralMetaObject = function () {
-        generalOntologyMetaData = {};
-    };
+    get defaultConfig() {
+        this.#updateConfigObject();
+        return this._defaultConfig;
+    }
 
-  options.debugMenu = function (val) {
-        if (!arguments.length) return debugMenu;
-        debugMenu = val;
-    };
+    get rectangularRepresentation() {
+        return this.rectangularRep
+    }
 
-  options.getHideDebugFeatures = function () {
-        return hideDebugOptions;
-    };
-  options.executeHiddenDebugFeatuers = function () {
-        hideDebugOptions = !hideDebugOptions;
-        d3.selectAll(".debugOption").classed("hidden", hideDebugOptions);
-        if (hideDebugOptions === false) {
-            graphObject.setForceTickFunctionWithFPS();
+    set rectangularRepresentation(val) {
+        this.rectangularRep = Boolean(parseInt(val))
+    }
+
+    clearGeneralMetaObject() {
+        this.generalOntologyMetaData = {};
+    }
+
+    executeHiddenDebugFeatuers() {
+        this.hideDebugOptions = !this.hideDebugOptions;
+        d3.selectAll(".debugOption").classed("hidden", this.hideDebugOptions);
+        if (!this.hideDebugOptions) {
+            this.graph.setForceTickFunctionWithFPS();
         }
         else {
-            graphObject.setDefaultForceTickFunction();
+            this.graph.setDefaultForceTickFunction();
         }
-        if (debugMenu) {
-            debugMenu.updateSettings();
+        if (this.debugMenu) {
+            this.debugMenu.updateSettings();
         }
-        options.setHideDebugFeaturesForDefaultObject(hideDebugOptions);
-    };
+        this.setHideDebugFeaturesForDefaultObject(this.hideDebugOptions);
+    }
 
-
-  options.addOrUpdateGeneralObjectEntry = function (property, value) {
-        if (generalOntologyMetaData.hasOwnProperty(property)) {
+    /**
+     * @param {PropertyKey} property
+     * @param {string} value
+     */
+    addOrUpdateGeneralObjectEntry(property, value) {
+        if (this.generalOntologyMetaData.hasOwnProperty(property)) {
             //console.log("Updating Property:"+ property);
             if (property === "iri") {
                 if (!PrefixTools.validURL(value)) {
-                    warningModule.showWarning(
+                    this.warningModule.showWarning(
                         "Invalid Ontology IRI",
                         "Input IRI does not represent an URL",
                         "Restoring previous IRI for ontology",
@@ -129,60 +191,66 @@ export class Options {
                     return false;
                 }
             }
-            generalOntologyMetaData[property] = value;
+            this.generalOntologyMetaData[property] = value;
         } else {
-            generalOntologyMetaData[property] = value;
+            this.generalOntologyMetaData[property] = value;
         }
         return true;
-    };
+    }
 
-  options.getGeneralMetaObjectProperty = function (property) {
-        if (generalOntologyMetaData.hasOwnProperty(property)) {
-            return generalOntologyMetaData[property];
+    /**
+     * @param {PropertyKey} property
+     */
+    getGeneralMetaObjectProperty(property) {
+        if (this.generalOntologyMetaData.hasOwnProperty(property)) {
+            return this.generalOntologyMetaData[property];
         }
-    };
+    }
 
-  options.getGeneralMetaObject = function () {
-        return generalOntologyMetaData;
-    };
-
-  options.addOrUpdateMetaObjectEntry = function (property, value) {
-
-        if (metadataObject.hasOwnProperty(property)) {
-            metadataObject[property] = value;
+    /**
+     * @param {PropertyKey} property
+     * @param {any} value
+     */
+    addOrUpdateMetaObjectEntry(property, value) {
+        if (this.metadataObject.hasOwnProperty(property)) {
+            this.metadataObject[property] = value;
         } else {
-            metadataObject[property] = value;
+            this.metadataObject[property] = value;
         }
-    };
+    }
 
-  options.getMetaObjectProperty = function (property) {
-        if (metadataObject.hasOwnProperty(property)) {
-            return metadataObject[property];
+    /**
+     * @param {PropertyKey} property
+     */
+    getMetaObjectProperty(property) {
+        if (this.metadataObject.hasOwnProperty(property)) {
+            return this.metadataObject[property];
         }
-    };
-  options.getMetaObject = function () {
-        return metadataObject;
-    };
+    }
 
+    /**
+     * @param {string | number} prefix
+     * @param {any} url
+     */
+    addPrefix(prefix, url) {
+        this.prefixList[prefix] = url;
+    }
 
-  options.prefixList = function () {
-        return prefixList;
-    };
-  options.addPrefix = function (prefix, url) {
-        prefixList[prefix] = url;
-    };
-
-  options.updatePrefix = function (oldPrefix, newPrefix, oldURL, newURL) {
+    /**
+     * @param {string | number} oldPrefix
+     * @param {PropertyKey} newPrefix
+     * @param {any} oldURL
+     * @param {string} newURL
+     */
+    updatePrefix(oldPrefix, newPrefix, oldURL, newURL) {
         if (oldPrefix === newPrefix && oldURL === newURL) {
-            //	console.log("Nothing to update");
             return true;
         }
         if (oldPrefix === newPrefix && oldURL !== newURL && PrefixTools.validURL(newURL)) {
-            //  console.log("Update URL");
-            prefixList[oldPrefix] = newURL;
+            this.prefixList[oldPrefix] = newURL;
         } else if (oldPrefix === newPrefix && oldURL !== newURL && !PrefixTools.validURL(newURL)) {
             if (!PrefixTools.validURL(newURL)) {
-                warningModule.showWarning(
+                this.warningModule.showWarning(
                     "Invalid Prefix IRI",
                     "Input IRI does not represent an IRI",
                     "You should enter a valid IRI in form of a URL",
@@ -191,15 +259,13 @@ export class Options {
                 );
                 return false;
             }
-
             return false;
         }
         if (oldPrefix !== newPrefix && PrefixTools.validURL(newURL)) {
-
             // sanity check
-            if (prefixList.hasOwnProperty(newPrefix)) {
+            if (this.prefixList.hasOwnProperty(newPrefix)) {
                 //  console.log("Already have this prefix!");
-                warningModule.showWarning(
+                this.warningModule.showWarning(
                     "Prefix Already Exist",
                     "Prefix: " + newPrefix + " is already defined",
                     "You should use an other one",
@@ -208,14 +274,13 @@ export class Options {
                 );
                 return false;
             }
-            options.removePrefix(oldPrefix);
-            options.addPrefix(newPrefix, newURL);
-            editSidebar.updateEditDeleteButtonIds(oldPrefix, newPrefix);
+            this.removePrefix(oldPrefix);
+            this.addPrefix(newPrefix, newURL);
+            this.editSidebar.updateEditDeleteButtonIds(oldPrefix, newPrefix);
             return true;
         }
-
         if (!PrefixTools.validURL(newURL)) {
-            warningModule.showWarning(
+            this.warningModule.showWarning(
                 "Invalid Prefix IRI",
                 "Input IRI does not represent an URL",
                 "You should enter a valid URL",
@@ -224,529 +289,150 @@ export class Options {
             );
         }
         return false;
-    };
+    }
 
-  options.removePrefix = function (prefix) {
-        delete prefixList[prefix];
-    };
+    /**
+     * @param {string | number} prefix
+     */
+    removePrefix(prefix) {
+        delete this.prefixList[prefix];
+    }
 
+    /**
+     * @param {any} val
+     */
+    setEditorModeForDefaultObject(val) {
+        this._defaultConfig.editorMode = String(val);
+    }
 
-  options.supportedDatatypes = function () {
-        return supportedDatatypes;
-    };
-  options.supportedClasses = function () {
-        return supportedClasses;
-    };
-  options.supportedProperties = function () {
-        return supportedProperties;
-    };
+    /**
+     * @param {boolean} val
+     */
+    setHideDebugFeaturesForDefaultObject(val) {
+        this._defaultConfig.debugFeatures = String(!val);
+    }
 
-  options.datatypeFilter = function (val) {
-        if (!arguments.length) return datatypeFilter;
-        datatypeFilter = val;
-    };
+    #updateConfigObject() {
+        this._defaultConfig.sidebar = this.sidebar.getSidebarVisibility();
+        this._defaultConfig.cd = this.classDistance;
+        this._defaultConfig.dd = this.datatypeDistance;
+        this._defaultConfig.filter_datatypes = String(this.filterMenu.getCheckBoxValue("datatypeFilterCheckbox"));
+        this._defaultConfig.filter_sco = String(this.filterMenu.getCheckBoxValue("subclassFilterCheckbox"));
+        this._defaultConfig.filter_disjoint = String(this.filterMenu.getCheckBoxValue("disjointFilterCheckbox"));
+        this._defaultConfig.filter_setOperator = String(this.filterMenu.getCheckBoxValue("setoperatorFilterCheckbox"));
+        this._defaultConfig.filter_objectProperties = String(this.filterMenu.getCheckBoxValue("objectPropertyFilterCheckbox"));
+        this._defaultConfig.mode_dynamic = String(this.dynamicLabelWidth);
+        this._defaultConfig.mode_scaling = String(this.modeMenu.getCheckBoxValue("nodescalingModuleCheckbox"));
+        this._defaultConfig.mode_compact = String(this.modeMenu.getCheckBoxValue("compactnotationModuleCheckbox"));
+        this._defaultConfig.mode_colorExt = String(this.modeMenu.getCheckBoxValue("colorexternalsModuleCheckbox"));
+        this._defaultConfig.mode_multiColor = String(this.modeMenu.colorModeState());
+        this._defaultConfig.mode_pnp = String(this.modeMenu.getCheckBoxValue("pickandpinModuleCheckbox"));
+        this._defaultConfig.rect = 0;
+    }
 
-  options.showDraggerObject = function (val) {
-        if (!arguments.length) {
-            return showDraggerObject;
+    /**
+     * define url loadable options and update all set values in the default object
+     * @param {DefaultOptionsConfig} opts
+     * @param {boolean} changeEditFlag
+     */
+    setOptionsFromURL(opts, changeEditFlag) {
+        if (opts.sidebar !== undefined) {
+            this.sidebar.showSidebar(parseInt(opts.sidebar), true);
         }
-        showDraggerObject = val;
-    };
-  options.useAccuracyHelper = function (val) {
-        if (!arguments.length) {
-            return useAccuracyHelper;
+        if (opts.doc) {
+            var asInt = parseInt(opts.doc);
+            this.filterMenu.setDegreeSliderValue(asInt);
+            this.graph.setGlobalDOF(asInt);
+            // reset the value to be -1;
+            this.defaultConfig.doc = -1;
         }
-        useAccuracyHelper = val;
-    };
-  options.showAccuracyHelper = function (val) {
-        if (!arguments.length) {
-            return options.showDraggerObject();
+        if (opts.editorMode) {
+            const settingFlag = opts.editorMode === "true"
+            d3.select("#editorModeModuleCheckbox").node().checked = settingFlag;
+            if (changeEditFlag) {
+                this.graph.editorMode(settingFlag);
+            }
+            // update config object
+            this.defaultConfig.editorMode = opts.editorMode;
         }
-        options.showDraggerObject(val);
-    };
-  options.showRenderingStatistic = function (val) {
-        if (!arguments.length) {
-            return showRenderingStatistic;
+        if (opts.cd) { // class distance
+            this.classDistance = opts.cd; // class distance
+            this.defaultConfig.cd = opts.cd;
         }
-        showRenderingStatistic = val;
-    };
-  options.showInputModality = function (val) {
-        if (!arguments.length) {
-            return showInputModality;
+        if (opts.dd) { // data distance
+            this.datatypeDistance = opts.dd;
+            this.defaultConfig.cd = opts.cd;
         }
-        showInputModality = val;
-    };
-
-  options.drawPropertyDraggerOnHover = function (val) {
-        if (!arguments.length) return drawPropertyDraggerOnHover;
-        drawPropertyDraggerOnHover = val;
-    };
-
-  options.warningModule = function (val) {
-        if (!arguments.length) return warningModule;
-        warningModule = val;
-    };
-  options.directInputModule = function (val) {
-        if (!arguments.length) return directInputModule;
-        directInputModule = val;
-    };
-  options.prefixModule = function (val) {
-        if (!arguments.length) return prefixModule;
-        prefixModule = val;
-    };
-
-  options.focuserModule = function (val) {
-        if (!arguments.length) return focuserModule;
-        focuserModule = val;
-    };
-  options.colorExternalsModule = function (val) {
-        if (!arguments.length) return colorExternalsModule;
-        colorExternalsModule = val;
-    };
-  options.compactNotationModule = function (val) {
-        if (!arguments.length) return compactNotationModule;
-        compactNotationModule = val;
-    };
-
-  options.maxLabelWidth = function (val) {
-        if (!arguments.length) return maxLabelWidth;
-        maxLabelWidth = val;
-    };
-  options.objectPropertyFilter = function (val) {
-        if (!arguments.length) return objectPropertyFilter;
-        objectPropertyFilter = val;
-    };
-  options.disjointPropertyFilter = function (val) {
-        if (!arguments.length) return disjointPropertyFilter;
-        disjointPropertyFilter = val;
-    };
-  options.subclassFilter = function (val) {
-        if (!arguments.length) return subclassFilter;
-        subclassFilter = val;
-    };
-  options.setOperatorFilter = function (val) {
-        if (!arguments.length) return setOperatorFilter;
-        setOperatorFilter = val;
-    };
-  options.leftSidebar = function (val) {
-        if (!arguments.length) return leftSidebar;
-        leftSidebar = val;
-    };
-  options.editSidebar = function (val) {
-        if (!arguments.length) return editSidebar;
-        editSidebar = val;
-    };
-
-  options.zoomSlider = function (val) {
-        if (!arguments.length) return zoomSlider;
-        zoomSlider = val;
-    };
-
-  options.graphObject = function (val) {
-        if (!arguments.length) return graphObject;
-        graphObject = val;
-    };
-
-
-  var defaultOptionsConfig = {};
-defaultOptionsConfig.sidebar = "1";
-defaultOptionsConfig.doc = -1;
-defaultOptionsConfig.cd = 200;
-defaultOptionsConfig.dd = 120;
-defaultOptionsConfig.editorMode = "false";
-defaultOptionsConfig.filter_datatypes = "false";
-defaultOptionsConfig.filter_objectProperties = "false";
-defaultOptionsConfig.filter_sco = "false";
-defaultOptionsConfig.filter_disjoint = "true";
-defaultOptionsConfig.filter_setOperator = "false";
-defaultOptionsConfig.mode_dynamic = "true";
-defaultOptionsConfig.mode_scaling = "true";
-defaultOptionsConfig.mode_compact = "false";
-defaultOptionsConfig.mode_colorExt = "true";
-defaultOptionsConfig.mode_multiColor = "false";
-defaultOptionsConfig.debugFeatures = "false";
-defaultOptionsConfig.rect = 0;
-
-
-options.initialConfig = function () {
-    var initCfg = {};
-    initCfg.sidebar = "1";
-    initCfg.doc = -1;
-    initCfg.cd = 200;
-    initCfg.dd = 120;
-    initCfg.editorMode = "false";
-    initCfg.filter_datatypes = "false";
-    initCfg.filter_objectProperties = "false";
-    initCfg.filter_sco = "false";
-    initCfg.filter_disjoint = "true";
-    initCfg.filter_setOperator = "false";
-    initCfg.mode_dynamic = "true";
-    initCfg.mode_scaling = "true";
-    initCfg.mode_compact = "false";
-    initCfg.mode_colorExt = "true";
-    initCfg.mode_multiColor = "false";
-    initCfg.mode_pnp = "false";
-    initCfg.debugFeatures = "false";
-    initCfg.rect = 0;
-    return initCfg;
-};
-
-options.setEditorModeForDefaultObject = function (val) {
-    defaultOptionsConfig.editorMode = String(val);
-};
-options.setHideDebugFeaturesForDefaultObject = function (val) {
-    defaultOptionsConfig.debugFeatures = String(!val);
-};
-
-function updateConfigObject() {
-    defaultOptionsConfig.sidebar = options.sidebar().getSidebarVisibility();
-    defaultOptionsConfig.cd = options.classDistance();
-    defaultOptionsConfig.dd = options.datatypeDistance();
-    defaultOptionsConfig.filter_datatypes = String(options.filterMenu().getCheckBoxValue("datatypeFilterCheckbox"));
-    defaultOptionsConfig.filter_sco = String(options.filterMenu().getCheckBoxValue("subclassFilterCheckbox"));
-    defaultOptionsConfig.filter_disjoint = String(options.filterMenu().getCheckBoxValue("disjointFilterCheckbox"));
-    defaultOptionsConfig.filter_setOperator = String(options.filterMenu().getCheckBoxValue("setoperatorFilterCheckbox"));
-    defaultOptionsConfig.filter_objectProperties = String(options.filterMenu().getCheckBoxValue("objectPropertyFilterCheckbox"));
-    defaultOptionsConfig.mode_dynamic = String(options.dynamicLabelWidth());
-    defaultOptionsConfig.mode_scaling = String(options.modeMenu().getCheckBoxValue("nodescalingModuleCheckbox"));
-    defaultOptionsConfig.mode_compact = String(options.modeMenu().getCheckBoxValue("compactnotationModuleCheckbox"));
-    defaultOptionsConfig.mode_colorExt = String(options.modeMenu().getCheckBoxValue("colorexternalsModuleCheckbox"));
-    defaultOptionsConfig.mode_multiColor = String(options.modeMenu().colorModeState());
-    defaultOptionsConfig.mode_pnp = String(options.modeMenu().getCheckBoxValue("pickandpinModuleCheckbox"));
-    defaultOptionsConfig.rect = 0;
-}
-
-options.defaultConfig = function () {
-    updateConfigObject();
-    return defaultOptionsConfig;
-};
-
-options.exportMenu = function (val) {
-    if (!arguments.length) return exportMenu;
-    exportMenu = val;
-};
-
-options.rectangularRepresentation = function (val) {
-    if (!arguments.length) {
-        return rectangularRep;
-    } else {
-        var intVal = parseInt(val);
-        if (intVal === 0) {
-            rectangularRep = false;
-        } else {
-            rectangularRep = true;
+        if (opts.cd || opts.dd) {
+            this.gravityMenu.reset(); // reset the values so the slider is updated;
         }
-    }
-};
-
-options.dynamicLabelWidth = function (val) {
-    if (!arguments.length)
-        return dynamicLabelWidth;
-    else {
-        dynamicLabelWidth = val;
-    }
-};
-options.sidebar = function (s) {
-    if (!arguments.length) return sidebar;
-    sidebar = s;
-    return options;
-
-};
-
-options.navigationMenu = function (m) {
-    if (!arguments.length) return navigationMenu;
-    navigationMenu = m;
-    return options;
-
-};
-
-options.ontologyMenu = function (m) {
-    if (!arguments.length) return ontologyMenu;
-    ontologyMenu = m;
-    return options;
-};
-
-options.searchMenu = function (m) {
-    if (!arguments.length) return searchMenu;
-    searchMenu = m;
-    return options;
-};
-
-options.resetMenu = function (m) {
-    if (!arguments.length) return resetMenu;
-    resetMenu = m;
-    return options;
-};
-
-options.pauseMenu = function (m) {
-    if (!arguments.length) return pauseMenu;
-    pauseMenu = m;
-    return options;
-};
-
-options.pickAndPinModule = function (m) {
-    if (!arguments.length) return pickAndPinModule;
-    pickAndPinModule = m;
-    return options;
-};
-
-options.gravityMenu = function (m) {
-    if (!arguments.length) return gravityMenu;
-    gravityMenu = m;
-    return options;
-};
-
-options.filterMenu = function (m) {
-    if (!arguments.length) return filterMenu;
-    filterMenu = m;
-    return options;
-};
-
-options.modeMenu = function (m) {
-    if (!arguments.length) return modeMenu;
-    modeMenu = m;
-    return options;
-};
-
-options.charge = function (p) {
-    if (!arguments.length) return charge;
-    charge = +p;
-    return options;
-};
-
-options.classDistance = function (p) {
-    if (!arguments.length) return classDistance;
-    classDistance = +p;
-    return options;
-};
-
-options.compactNotation = function (p) {
-
-    if (!arguments.length) return compactNotation;
-    compactNotation = p;
-    return options;
-};
-
-options.data = function (p) {
-    if (!arguments.length) return data;
-    data = p;
-    return options;
-};
-
-options.datatypeDistance = function (p) {
-    if (!arguments.length) return datatypeDistance;
-    datatypeDistance = +p;
-    return options;
-};
-
-options.filterModules = function (p) {
-    if (!arguments.length) return filterModules;
-    filterModules = p;
-    return options;
-};
-
-options.graphContainerSelector = function (p) {
-    if (!arguments.length) return graphContainerSelector;
-    graphContainerSelector = p;
-    return options;
-};
-
-options.gravity = function (p) {
-    if (!arguments.length) return gravity;
-    gravity = +p;
-    return options;
-};
-
-options.height = function (p) {
-    if (!arguments.length) return height;
-    height = +p;
-    return options;
-};
-
-options.linkStrength = function (p) {
-    if (!arguments.length) return linkStrength;
-    linkStrength = +p;
-    return options;
-};
-
-options.loopDistance = function (p) {
-    if (!arguments.length) return loopDistance;
-    loopDistance = p;
-    return options;
-};
-
-options.minMagnification = function (p) {
-    if (!arguments.length) return minMagnification;
-    minMagnification = +p;
-    return options;
-};
-
-options.maxMagnification = function (p) {
-    if (!arguments.length) return maxMagnification;
-    maxMagnification = +p;
-    return options;
-};
-
-options.scaleNodesByIndividuals = function (p) {
-    if (!arguments.length) return scaleNodesByIndividuals;
-    scaleNodesByIndividuals = p;
-    return options;
-};
-
-options.selectionModules = function (p) {
-    if (!arguments.length) return selectionModules;
-    selectionModules = p;
-    return options;
-};
-
-options.width = function (p) {
-    if (!arguments.length) return width;
-    width = +p;
-    return options;
-};
-
-options.literalFilter = function (p) {
-    if (!arguments.length) return literalFilter;
-    literalFilter = p;
-    return options;
-};
-options.nodeDegreeFilter = function (p) {
-    if (!arguments.length) return nodeDegreeFilter;
-    nodeDegreeFilter = p;
-    return options;
-};
-
-options.loadingModule = function (p) {
-    if (!arguments.length) return loadingModule;
-    loadingModule = p;
-    return options;
-};
-
-// define url loadable options;
-// update all set values in the default object
-options.setOptionsFromURL = function (opts, changeEditFlag) {
-    if (opts.sidebar !== undefined) sidebar.showSidebar(parseInt(opts.sidebar), true);
-    if (opts.doc) {
-        var asInt = parseInt(opts.doc);
-        filterMenu.setDegreeSliderValue(asInt);
-        graphObject.setGlobalDOF(asInt);
-        // reset the value to be -1;
-        defaultOptionsConfig.doc = -1;
-    }
-    var settingFlag = false;
-    if (opts.editorMode) {
-        if (opts.editorMode === "true") settingFlag = true;
-        d3.select("#editorModeModuleCheckbox").node().checked = settingFlag;
-
-        if (changeEditFlag && changeEditFlag === true) {
-            graphObject.editorMode(settingFlag);
+        if (opts.filter_datatypes) {
+            const settingFlag = opts.filter_datatypes === "true"
+            this.filterMenu.setCheckBoxValue("datatypeFilterCheckbox", settingFlag);
+            this.defaultConfig.filter_datatypes = opts.filter_datatypes;
         }
-
-        // update config object
-        defaultOptionsConfig.editorMode = opts.editorMode;
-
-    }
-    if (opts.cd) { // class distance
-        options.classDistance(opts.cd); // class distance
-        defaultOptionsConfig.cd = opts.cd;
-    }
-    if (opts.dd) { // data distance
-        options.datatypeDistance(opts.dd);
-        defaultOptionsConfig.cd = opts.cd;
-    }
-    if (opts.cd || opts.dd) options.gravityMenu().reset(); // reset the values so the slider is updated;
-
-
-    settingFlag = false;
-    if (opts.filter_datatypes) {
-        if (opts.filter_datatypes === "true") settingFlag = true;
-        filterMenu.setCheckBoxValue("datatypeFilterCheckbox", settingFlag);
-        defaultOptionsConfig.filter_datatypes = opts.filter_datatypes;
-    }
-    if (opts.debugFeatures) {
-        if (opts.debugFeatures === "true") settingFlag = true;
-        hideDebugOptions = settingFlag;
-        if (options.getHideDebugFeatures() === false) {
-            options.executeHiddenDebugFeatuers();
+        if (opts.debugFeatures) {
+            this.hideDebugOptions = opts.debugFeatures === "true";
+            if (!this.hideDebugOptions) {
+                this.executeHiddenDebugFeatuers();
+            }
+            this.defaultConfig.debugFeatures = opts.debugFeatures;
         }
-        defaultOptionsConfig.debugFeatures = opts.debugFeatures;
-    }
+        if (opts.filter_objectProperties) {
+            const settingFlag = opts.filter_objectProperties === "true"
+            this.filterMenu.setCheckBoxValue("objectPropertyFilterCheckbox", settingFlag);
+            this.defaultConfig.filter_objectProperties = opts.filter_objectProperties;
+        }
+        if (opts.filter_sco) {
+            const settingFlag = opts.filter_sco === "true"
+            this.filterMenu.setCheckBoxValue("subclassFilterCheckbox", settingFlag);
+            this.defaultConfig.filter_sco = opts.filter_sco;
+        }
+        if (opts.filter_disjoint) {
+            const settingFlag = opts.filter_disjoint === "true"
+            this.filterMenu.setCheckBoxValue("disjointFilterCheckbox", settingFlag);
+            this.defaultConfig.filter_disjoint = opts.filter_disjoint;
+        }
+        if (opts.filter_setOperator) {
+            const settingFlag = opts.filter_setOperator === "true"
+            this.filterMenu.setCheckBoxValue("setoperatorFilterCheckbox", settingFlag);
+            this.defaultConfig.filter_setOperator = opts.filter_setOperator;
+        }
+        this.filterMenu.updateSettings();
 
-    settingFlag = false;
-    if (opts.filter_objectProperties) {
-        if (opts.filter_objectProperties === "true") settingFlag = true;
-        filterMenu.setCheckBoxValue("objectPropertyFilterCheckbox", settingFlag);
-        defaultOptionsConfig.filter_objectProperties = opts.filter_objectProperties;
+        // modesMenu
+        if (opts.mode_dynamic) {
+            const settingFlag = opts.mode_dynamic === "true"
+            this.modeMenu.setDynamicLabelWidth(settingFlag);
+            this.dynamicLabelWidth = settingFlag;
+            this.defaultConfig.mode_dynamic = opts.mode_dynamic;
+        }
+        if (opts.mode_pnp) {
+            const settingFlag = opts.mode_pnp === "true"
+            this.modeMenu.setCheckBoxValue("pickandpinModuleCheckbox", settingFlag);
+            this.defaultConfig.mode_pnp = opts.mode_pnp;
+        }
+        if (opts.mode_scaling) {
+            const settingFlag = opts.mode_scaling === "true"
+            this.modeMenu.setCheckBoxValue("nodescalingModuleCheckbox", settingFlag);
+            this.defaultConfig.mode_scaling = opts.mode_scaling;
+        }
+        if (opts.mode_compact) {
+            const settingFlag = opts.mode_compact === "true"
+            this.modeMenu.setCheckBoxValue("compactnotationModuleCheckbox", settingFlag);
+            this.defaultConfig.mode_compact = opts.mode_compact;
+        }
+        if (opts.mode_colorExt) {
+            const settingFlag = opts.mode_colorExt === "true"
+            this.modeMenu.setCheckBoxValue("colorexternalsModuleCheckbox", settingFlag);
+            this.defaultConfig.mode_colorExt = opts.mode_colorExt;
+        }
+        if (opts.mode_multiColor) {
+            const settingFlag = opts.mode_multiColor === "true"
+            this.modeMenu.setColorSwitchStateUsingURL(settingFlag);
+            this.defaultConfig.mode_multiColor = opts.mode_multiColor;
+        }
+        this.modeMenu.updateSettingsUsingURL();
+        this.rectangularRepresentation = opts.rect;
     }
-    settingFlag = false;
-    if (opts.filter_sco) {
-        if (opts.filter_sco === "true") settingFlag = true;
-        filterMenu.setCheckBoxValue("subclassFilterCheckbox", settingFlag);
-        defaultOptionsConfig.filter_sco = opts.filter_sco;
-    }
-    settingFlag = false;
-    if (opts.filter_disjoint) {
-        if (opts.filter_disjoint === "true") settingFlag = true;
-        filterMenu.setCheckBoxValue("disjointFilterCheckbox", settingFlag);
-        defaultOptionsConfig.filter_disjoint = opts.filter_disjoint;
-    }
-    settingFlag = false;
-    if (opts.filter_setOperator) {
-        if (opts.filter_setOperator === "true") settingFlag = true;
-        filterMenu.setCheckBoxValue("setoperatorFilterCheckbox", settingFlag);
-        defaultOptionsConfig.filter_setOperator = opts.filter_setOperator;
-    }
-    filterMenu.updateSettings();
-
-    // modesMenu
-    settingFlag = false;
-    if (opts.mode_dynamic) {
-        if (opts.mode_dynamic === "true") settingFlag = true;
-        modeMenu.setDynamicLabelWidth(settingFlag);
-        dynamicLabelWidth = settingFlag;
-        defaultOptionsConfig.mode_dynamic = opts.mode_dynamic;
-    }
-    // settingFlag=false;
-    // THIS SHOULD NOT BE SET USING THE OPTIONS ON THE URL
-    // if (opts.mode_picnpin) {
-    //     graph.options.filterMenu().setCheckBoxValue("pickandpin ModuleCheckbox", settingFlag);
-    // }
-
-    settingFlag = false;
-    if (opts.mode_pnp) {
-        if (opts.mode_pnp === "true") settingFlag = true;
-        modeMenu.setCheckBoxValue("pickandpinModuleCheckbox", settingFlag);
-        defaultOptionsConfig.mode_pnp = opts.mode_pnp;
-    }
-
-    settingFlag = false;
-    if (opts.mode_scaling) {
-        if (opts.mode_scaling === "true") settingFlag = true;
-        modeMenu.setCheckBoxValue("nodescalingModuleCheckbox", settingFlag);
-        defaultOptionsConfig.mode_scaling = opts.mode_scaling;
-    }
-
-    settingFlag = false;
-    if (opts.mode_compact) {
-        if (opts.mode_compact === "true") settingFlag = true;
-        modeMenu.setCheckBoxValue("compactnotationModuleCheckbox", settingFlag);
-        defaultOptionsConfig.mode_compact = opts.mode_compact;
-    }
-
-    settingFlag = false;
-    if (opts.mode_colorExt) {
-        if (opts.mode_colorExt === "true") settingFlag = true;
-        modeMenu.setCheckBoxValue("colorexternalsModuleCheckbox", settingFlag);
-        defaultOptionsConfig.mode_colorExt = opts.mode_colorExt;
-    }
-
-    settingFlag = false;
-    if (opts.mode_multiColor) {
-        if (opts.mode_multiColor === "true") settingFlag = true;
-        modeMenu.setColorSwitchStateUsingURL(settingFlag);
-        defaultOptionsConfig.mode_multiColor = opts.mode_multiColor;
-    }
-    modeMenu.updateSettingsUsingURL();
-    options.rectangularRepresentation(opts.rect);
-};
 }

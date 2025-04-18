@@ -5,7 +5,7 @@ export default function () {
     var newOntologyCounter = 1;
     var app = {},
         graph = webvowl.graph(),
-        options = graph.graphOptions(),
+        options = graph.options,
         languageTools = webvowl.util.languageTools(),
         GRAPH_SELECTOR = "#graph",
         // Modules for the webvowl app
@@ -32,18 +32,18 @@ export default function () {
         // Graph modules
         colorExternalsSwitch = webvowl.modules.colorExternalsSwitch(graph),
         compactNotationSwitch = webvowl.modules.compactNotationSwitch(graph),
-        datatypeFilter = webvowl.modules.datatypeFilter(),
+        datatypeFilter = webvowl.modules.datatypeFilter,
         disjointFilter = webvowl.modules.disjointFilter(),
         focuser = webvowl.modules.focuser(graph),
         emptyLiteralFilter = webvowl.modules.emptyLiteralFilter(),
         nodeDegreeFilter = webvowl.modules.nodeDegreeFilter(filterMenu),
         nodeScalingSwitch = webvowl.modules.nodeScalingSwitch(graph),
-        objectPropertyFilter = webvowl.modules.objectPropertyFilter(),
+        objectPropertyFilter = webvowl.modules.objectPropertyFilter,
         pickAndPin = webvowl.modules.pickAndPin(),
         selectionDetailDisplayer = webvowl.modules.selectionDetailsDisplayer(sidebar.updateSelectionInformation),
         statistics = webvowl.modules.statistics(),
-        subclassFilter = webvowl.modules.subclassFilter(),
-        setOperatorFilter = webvowl.modules.setOperatorFilter();
+        subclassFilter = webvowl.modules.subclassFilter,
+        setOperatorFilter = webvowl.modules.setOperatorFilter;
 
 
     app.getOptions = function () {
@@ -67,8 +67,8 @@ export default function () {
 
             d3.select("#dragDropContainer").classed("hidden", false);
             // get svg size
-            var w = graph.options.width();
-            var h = graph.options.height();
+            var w = graph.options.width;
+            var h = graph.options.height;
 
             // get event position; (using clientX and clientY);
             var cx = e.clientX;
@@ -137,12 +137,12 @@ export default function () {
                     if (ev.dataTransfer.items.length === 1) {
                         if (ev.dataTransfer.items[0].kind === 'file') {
                             var file = ev.dataTransfer.items[0].getAsFile();
-                            graph.options.loadingModule().fromFileDrop(file.name, file);
+                            graph.options.loadingModule.fromFileDrop(file.name, file);
                         }
                     }
                     else {
                         //  >> WARNING not multiple file uploaded;
-                        graph.options.warningModule().showMultiFileUploadWarning();
+                        graph.options.warningModule.showMultiFileUploadWarning();
                     }
                 }
             }
@@ -150,8 +150,8 @@ export default function () {
         };
 
         node.node().ondragleave = function (e) {
-            var w = graph.options.width();
-            var h = graph.options.height();
+            var w = graph.options.width;
+            var h = graph.options.height;
 
             // get event position; (using clientX and clientY);
             var cx = e.clientX;
@@ -166,7 +166,7 @@ export default function () {
 
             d3.select("#loading-info").classed("hidden", !wasMessageToShow); // show it again
             // check if it should be visible
-            var should_show = graph.options.loadingModule().visibilityStatus;
+            var should_show = graph.options.loadingModule.visibilityStatus;
             if (should_show === false) {
                 d3.select("#loading-info").classed("hidden", true); // hide it
             }
@@ -186,23 +186,23 @@ export default function () {
             clearTimeout(requestID);
         }; //fall back
 
-        options.graphContainerSelector(GRAPH_SELECTOR);
-        options.selectionModules().push(focuser);
-        options.selectionModules().push(selectionDetailDisplayer);
-        options.selectionModules().push(pickAndPin);
+        options.graphContainerSelector = GRAPH_SELECTOR;
+        options.selectionModules.push(focuser);
+        options.selectionModules.push(selectionDetailDisplayer);
+        options.selectionModules.push(pickAndPin);
 
-        options.filterModules().push(emptyLiteralFilter);
-        options.filterModules().push(statistics);
+        options.filterModules.push(emptyLiteralFilter);
+        options.filterModules.push(statistics);
 
-        options.filterModules().push(nodeDegreeFilter);
-        options.filterModules().push(datatypeFilter);
-        options.filterModules().push(objectPropertyFilter);
-        options.filterModules().push(subclassFilter);
-        options.filterModules().push(disjointFilter);
-        options.filterModules().push(setOperatorFilter);
-        options.filterModules().push(nodeScalingSwitch);
-        options.filterModules().push(compactNotationSwitch);
-        options.filterModules().push(colorExternalsSwitch);
+        options.filterModules.push(nodeDegreeFilter);
+        options.filterModules.push(datatypeFilter);
+        options.filterModules.push(objectPropertyFilter);
+        options.filterModules.push(subclassFilter);
+        options.filterModules.push(disjointFilter);
+        options.filterModules.push(setOperatorFilter);
+        options.filterModules.push(nodeScalingSwitch);
+        options.filterModules.push(compactNotationSwitch);
+        options.filterModules.push(colorExternalsSwitch);
 
         d3.select(window).on("resize", adjustSize);
 
@@ -240,34 +240,34 @@ export default function () {
             zoomSlider.setup();
 
             // give the options the pointer to the some menus for import and export
-            options.literalFilter(emptyLiteralFilter);
-            options.nodeDegreeFilter(nodeDegreeFilter);
-            options.loadingModule(loadingModule);
-            options.filterMenu(filterMenu);
-            options.modeMenu(modeMenu);
-            options.gravityMenu(gravityMenu);
-            options.pauseMenu(pauseMenu);
-            options.pickAndPinModule(pickAndPin);
-            options.resetMenu(resetMenu);
-            options.searchMenu(searchMenu);
-            options.ontologyMenu(ontologyMenu);
-            options.navigationMenu(navigationMenu);
-            options.sidebar(sidebar);
-            options.leftSidebar(leftSidebar);
-            options.editSidebar(editSidebar);
-            options.exportMenu(exportMenu);
-            options.graphObject(graph);
-            options.zoomSlider(zoomSlider);
-            options.warningModule(warningModule);
-            options.directInputModule(directInputMod);
-            options.datatypeFilter(datatypeFilter);
-            options.objectPropertyFilter(objectPropertyFilter);
-            options.subclassFilter(subclassFilter);
-            options.setOperatorFilter(setOperatorFilter);
-            options.disjointPropertyFilter(disjointFilter);
-            options.focuserModule(focuser);
-            options.colorExternalsModule(colorExternalsSwitch);
-            options.compactNotationModule(compactNotationSwitch);
+            options.literalFilter = emptyLiteralFilter;
+            options.nodeDegreeFilter = nodeDegreeFilter;
+            options.loadingModule = loadingModule;
+            options.filterMenu = filterMenu;
+            options.modeMenu = modeMenu;
+            options.gravityMenu = gravityMenu;
+            options.pauseMenu = pauseMenu;
+            options.pickAndPinModule = pickAndPin;
+            options.resetMenu = resetMenu;
+            options.searchMenu = searchMenu;
+            options.ontologyMenu = ontologyMenu;
+            options.navigationMenu = navigationMenu;
+            options.sidebar = sidebar;
+            options.leftSidebar = leftSidebar;
+            options.editSidebar = editSidebar;
+            options.exportMenu = exportMenu;
+            options.graphObject = graph;
+            options.zoomSlider = zoomSlider;
+            options.warningModule = warningModule;
+            options.directInputModule = directInputMod;
+            options.datatypeFilter = datatypeFilter;
+            options.objectPropertyFilter = objectPropertyFilter;
+            options.subclassFilter = subclassFilter;
+            options.setOperatorFilter = setOperatorFilter;
+            options.disjointPropertyFilter = disjointFilter;
+            options.focuserModule = focuser;
+            options.colorExternalsModule = colorExternalsSwitch;
+            options.compactNotationModule = compactNotationSwitch;
 
             ontologyMenu.setup();
             configMenu.setup();
@@ -282,8 +282,8 @@ export default function () {
             modeOp.style("font-style", "italic");
 
             adjustSize();
-            var w = graph.options.width();
-            var h = graph.options.height();
+            var w = graph.options.width;
+            var h = graph.options.height;
             let defZoom = Math.min(w, h) / 1000;
 
             var hideDebugOptions = true;
@@ -308,7 +308,7 @@ export default function () {
                 }
             });
             if (d3.select("#maxLabelWidthSliderOption")) {
-                var setValue = !graph.options.dynamicLabelWidth();
+                var setValue = !graph.options.dynamicLabelWidth;
                 d3.select("#maxLabelWidthSlider").node().disabled = setValue;
                 d3.select("#maxLabelWidthvalueLabel").classed("disabledLabelForSlider", setValue);
                 d3.select("#maxLabelWidthDescriptionLabel").classed("disabledLabelForSlider", setValue);
@@ -318,8 +318,8 @@ export default function () {
                 .style("background-color", "#bdbdbd")
                 .style("opacity", "0.5")
                 .style("pointer-events", "auto")
-                .style("width", graph.options.width() + "px")
-                .style("height", graph.options.height() + "px")
+                .style("width", graph.options.width + "px")
+                .style("height", graph.options.height + "px")
                 .on("click", function () {
                     d3.event.preventDefault();
                     d3.event.stopPropagation();
@@ -332,21 +332,21 @@ export default function () {
                 directInputMod.setDirectInputMode();
             });
             d3.select("#blockGraphInteractions").node().draggable = false;
-            options.prefixModule(webvowl.util.prefixTools(graph));
+            options.prefixModule = webvowl.util.prefixTools(graph);
             adjustSize();
             sidebar.updateOntologyInformation(undefined, statistics);
             loadingModule.parseUrlAndLoadOntology(); // loads automatically the ontology provided by the parameters
-            options.debugMenu(debugMenu);
+            options.debugMenu = debugMenu;
             debugMenu.updateSettings();
 
             // connect the reloadCachedVersionButton
             d3.select("#reloadSvgIcon").on("click", function () {
                 if (d3.select("#reloadSvgIcon").node().disabled === true) {
-                    graph.options.ontologyMenu().clearCachedVersion();
+                    graph.options.ontologyMenu.clearCachedVersion();
                     return;
                 }
                 d3.select("#reloadCachedOntology").classed("hidden", true);
-                graph.options.ontologyMenu().reloadCachedOntology();
+                graph.options.ontologyMenu.reloadCachedOntology();
             });
             // add the initialized objects
             webvowl.opts = options;
@@ -376,17 +376,17 @@ export default function () {
         svg.attr("width", width)
             .attr("height", height);
 
-        options.width(width)
-            .height(height);
+        options.width = width;
+        options.height = height;
 
         graph.updateStyle();
 
         if (isTouchDevice() === true) {
-            if (graph.isEditorMode() === true)
+            if (graph.isEditorMode === true)
                 d3.select("#modeOfOperationString").node().innerHTML = "touch able device detected";
             graph.setTouchDevice(true);
         } else {
-            if (graph.isEditorMode() === true)
+            if (graph.isEditorMode === true)
                 d3.select("#modeOfOperationString").node().innerHTML = "point & click device detected";
             graph.setTouchDevice(false);
         }

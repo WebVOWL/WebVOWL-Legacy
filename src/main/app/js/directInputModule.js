@@ -22,7 +22,7 @@ export class DirectInputModule {
         const text = this.textArea.node().value;
         try {
             const jsonOBJ = JSON.parse(text);
-            this.graph.options.loadingModule().directInput(text);
+            this.graph.options.loadingModule.directInput(text);
             // close if successful
             if (jsonOBJ.class.length > 0) {
                 this.setDirectInputMode(false);
@@ -31,9 +31,9 @@ export class DirectInputModule {
         catch (e) {
             try {
                 // Initialize;
-                this.graph.options.loadingModule().initializeLoader();
-                this.graph.options.loadingModule().requestServerTimeStampForDirectInput(
-                    this.graph.options.ontologyMenu().callbackLoad_Ontology_From_DirectInput,
+                this.graph.options.loadingModule.initializeLoader();
+                this.graph.options.loadingModule.requestServerTimeStampForDirectInput(
+                    this.graph.options.ontologyMenu.callbackLoad_Ontology_From_DirectInput,
                     text
                 );
             } catch (error2) {
@@ -49,8 +49,8 @@ export class DirectInputModule {
     }
 
     updateLayout() {
-        const w = this.graph.options.width();
-        const h = this.graph.options.height();
+        const w = this.graph.options.width;
+        const h = this.graph.options.height;
         this.textArea.style("width", 0.4 * w + "px");
         this.textArea.style("height", 0.7 * h + "px");
     }

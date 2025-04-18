@@ -51,7 +51,7 @@ export class SetOperatorNode extends RoundNode {
         );
 
         textElement.addEquivalents(equivalentsString, -17);
-        if (!this.graph.options.compactNotation()) {
+        if (!this.graph.options.compactNotation) {
             if (this.indicationString().length > 0) {
                 textElement.addSubText(this.indicationString(), 17);
                 textElement.addInstanceCount(this.individuals.length, 30);

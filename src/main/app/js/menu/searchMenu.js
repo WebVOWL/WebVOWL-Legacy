@@ -135,7 +135,7 @@ export default class SearchMenu {
                 var valid = PrefixTools.validURL(iri);
                 // validate url:
                 if (valid) {
-                    var ontM = this.graph.options.ontologyMenu();
+                    var ontM = this.graph.options.ontologyMenu;
                     ontM.setIriText(iri);
                     // @ts-ignore
                     this.searchLineEdit.node().value = "";

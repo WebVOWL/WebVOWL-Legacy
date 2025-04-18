@@ -300,10 +300,10 @@ export class EditSidebar {
     }
 
     updateGeneralOntologyInfo() {
-        const preferredLanguage = this.graph && this.graph.language ? this.graph.language() : null;
+        const preferredLanguage = this.graph && this.graph.language ? this.graph.language : null;
 
         // get it from graph.options
-        const generalMetaObj = this.graph.options.getGeneralMetaObject();
+        const generalMetaObj = this.graph.options.generalOntologyMetaData;
         if (generalMetaObj.hasOwnProperty("title")) {
             // title has language to it -.-
             if (typeof generalMetaObj.title === "object") {
@@ -390,7 +390,7 @@ export class EditSidebar {
             if (ElementTools.isProperty(element) === true) {
                 const sanityCheckResult = this.checkProperIriChange(element, url);
                 if (sanityCheckResult !== false) {
-                    this.graph.options.warningModule().showWarning(
+                    this.graph.options.warningModule.showWarning(
                         "Already seen this property",
                         "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                         "Continuing with duplicate property!",
@@ -405,7 +405,7 @@ export class EditSidebar {
             if (ElementTools.isNode(element) === true) {
                 const sanityCheckResult = this.graph.checkIfIriClassAlreadyExist(url);
                 if (sanityCheckResult !== false) {
-                    this.graph.options.warningModule().showWarning(
+                    this.graph.options.warningModule.showWarning(
                         "Already seen this Class",
                         "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                         "Restoring previous IRI for Element : " + element.iri,
@@ -609,11 +609,11 @@ export class EditSidebar {
     }
 
     #setupPrefixList() {
-        if (this.graph.isEditorMode() === false) {
+        if (this.graph.isEditorMode === false) {
             return;
         }
         const prefixListContainer = d3.select("#prefixURL_Container");
-        const prefixElements = this.graph.options.prefixList();
+        const prefixElements = this.graph.options.prefixList;
 
         /**
          * @param {any} sender
@@ -829,7 +829,7 @@ export class EditSidebar {
         if (stl === "save") {
             const newPrefixURL = d3.select("#prefixURLFor_" + selector).node().value;
             const newPrefix = d3.select("#prefixInputFor_" + selector).node().value;
-            if (this.graph.options.updatePrefix(this.oldPrefix, newPrefix, this.oldPrefixURL, newPrefixURL) === true) {
+            if (this.graph.options.updatePrefix(this.oldPrefix, newPrefix, this.oldPrefixURL, newPrefixURL)) {
                 d3.select("#prefixInputFor_" + newPrefix).node().disabled = true;
                 d3.select("#prefixURLFor_" + newPrefix).node().disabled = true;
                 d3.select("#addPrefixButton").node().innerHTML = "Add Prefix";
@@ -894,8 +894,8 @@ export class EditSidebar {
      */
     #defaultIriValue(element) {
         // get the iri of that element;
-        if (this.graph.options.getGeneralMetaObject().iri) {
-            const str2Compare = this.graph.options.getGeneralMetaObject().iri + element.id;
+        if (this.graph.options.generalOntologyMetaData.iri) {
+            const str2Compare = this.graph.options.generalOntologyMetaData.iri + element.id;
             return element.iri === str2Compare;
         }
         return false;
@@ -921,10 +921,10 @@ export class EditSidebar {
                 const pr = tokens[0];
                 const name = tokens[1];
                 if (pr.length > 0) {
-                    const basePref = this.graph.options.prefixList()[pr];
+                    const basePref = this.graph.options.prefixList[pr];
                     if (basePref === undefined) {
                         console.log("ERROR __________________");
-                        this.graph.options.warningModule().showWarning(
+                        this.graph.options.warningModule.showWarning(
                             "Invalid Element IRI",
                             "Could not resolve prefix '" + basePref + "'",
                             "Restoring previous IRI for Element" + element.iri,
@@ -936,7 +936,7 @@ export class EditSidebar {
                     }
                     // check if url is not empty
                     if (name.length === 0) {
-                        this.graph.options.warningModule().showWarning(
+                        this.graph.options.warningModule.showWarning(
                             "Invalid Element IRI",
                             "Input IRI is EMPTY",
                             "Restoring previous IRI for Element" + element.iri,
@@ -977,7 +977,7 @@ export class EditSidebar {
             if (sanityCheckResult === false) {
                 element.iri = url;
             } else {
-                this.graph.options.warningModule().showWarning(
+                this.graph.options.warningModule.showWarning(
                     "Already seen this class",
                     "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                     "Restoring previous IRI for Element : " + element.iri,
@@ -991,7 +991,7 @@ export class EditSidebar {
         if (ElementTools.isProperty(element) === true) {
             const sanityCheckResult = this.checkProperIriChange(element, url);
             if (sanityCheckResult !== false) {
-                this.graph.options.warningModule().showWarning(
+                this.graph.options.warningModule.showWarning(
                     "Already seen this property",
                     "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
                     "Restoring previous IRI for Element : " + element.iri,
@@ -1007,7 +1007,7 @@ export class EditSidebar {
         // method `checkForExistingURL` in this class if this code is ever used
         // if (element.existingPropertyIRI(url) === true) {
         //     console.log("I Have seen this Particular URL already " + url);
-        //     this.graph.options.warningModule().showWarning(
+        //     this.graph.options.warningModule.showWarning(
         //         "Already Seen This one ",
         //         "Input IRI For Element" + element.labelForCurrentLanguage() + " already been set  ",
         //         "Restoring previous IRI for Element" + element.iri,
@@ -1036,10 +1036,10 @@ export class EditSidebar {
         }
 
         if (element.focused) {
-            this.graph.options.focuserModule().handle(element, true); // unfocus
-            this.graph.options.focuserModule().handle(element, true); // focus
+            this.graph.options.focuserModule.handle(element, true); // unfocus
+            this.graph.options.focuserModule.handle(element, true); // focus
         }
-        // graph.options.focuserModule().handle(undefined);
+        // graph.options.focuserModule.handle(undefined);
         d3.select("#element_iriEditor").node().value = PrefixTools.getPrefixRepresentationForFullURI(url, this.graph);
         this.updateSelectionInformation(element);
     }

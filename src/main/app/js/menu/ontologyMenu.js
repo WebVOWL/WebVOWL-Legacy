@@ -96,10 +96,10 @@ export default class {
 
     setup() {
         const _this = this;
-        this.loadingModule = this.graph.options.loadingModule();
+        this.loadingModule = this.graph.options.loadingModule;
         var menuEntry = d3.select("#m_select");
         menuEntry.on("mouseover", function () {
-            var searchMenu = _this.graph.options.searchMenu();
+            var searchMenu = _this.graph.options.searchMenu;
             searchMenu.hideSearchEntries();
         });
 
@@ -283,7 +283,7 @@ export default class {
                 // @ts-ignore
                 uploadButton.node().click();
                 // close menu;
-                _this.graph.options.navigationMenu().hideAllMenus();
+                _this.graph.options.navigationMenu.hideAllMenus();
             }
         });
 

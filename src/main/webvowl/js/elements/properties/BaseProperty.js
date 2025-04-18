@@ -117,7 +117,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
 
     // NOTE: Disabled to save memory while this method is not used
     // existingPropertyIRI(url) {
-    //     return graph.options.editSidebar().checkForExistingURL(url);
+    //     return graph.options.editSidebar.checkForExistingURL(url);
     // }
 
     get labelObject() {
@@ -168,7 +168,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         this.focused = !this.focused;
         this.labelElement.select("rect").classed("focused", this.focused);
         this.graph.resetSearchHighlight();
-        this.graph.options.searchMenu().clearText();
+        this.graph.options.searchMenu.clearText();
     }
 
     redrawElement() {
@@ -176,7 +176,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         this.textBlock.remove();
 
         this.drawLabel(this.labelElement);
-        this.animateDynamicLabelWidth(this.graph.options.dynamicLabelWidth());
+        this.animateDynamicLabelWidth(this.graph.options.dynamicLabelWidth);
         //this. shapeElement=this.addRect(this.labelElement);
         //
         // var equivalentsString = this.equivalentsString();
@@ -209,8 +209,8 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         if (!this.labelVisible) {
             return undefined;
         }
-        if (this.graph.options.dynamicLabelWidth() === true) {
-            this.width = Math.min(this.getMyWidth(), this.graph.options.maxLabelWidth());
+        if (this.graph.options.dynamicLabelWidth === true) {
+            this.width = Math.min(this.getMyWidth(), this.graph.options.maxLabelWidth);
         } else {
             this.width = this.defaultWidth;
         }
@@ -471,7 +471,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
 
     drawPin() {
         this.pinned = true;
-        if (this.graph.options.dynamicLabelWidth() === true) {
+        if (this.graph.options.dynamicLabelWidth === true) {
             this.width = this.getMyWidth();
         } else {
             this.width = this.defaultWidth;
@@ -489,7 +489,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                     -0.5 * this.width + 10,
                     -25, this.removePin,
                     this.graph.options.showDraggerObject,
-                    this.graph.options.useAccuracyHelper()
+                    this.graph.options.useAccuracyHelper
                 );
             else
                 this.pinGroupElement = DrawTools.drawPin(
@@ -497,7 +497,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                     -0.5 * this.inverse.labelWidth + 10,
                     -25, this.removePin,
                     this.graph.options.showDraggerObject,
-                    this.graph.options.useAccuracyHelper()
+                    this.graph.options.useAccuracyHelper
                 );
         }
         else {
@@ -507,7 +507,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                 -25,
                 this.removePin,
                 this.graph.options.showDraggerObject,
-                this.graph.options.useAccuracyHelper()
+                this.graph.options.useAccuracyHelper
             );
         }
     }
@@ -583,7 +583,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
         }
         const _this = this
         if (dynamic === true) {
-            this.width = Math.min(this.getMyWidth(), this.graph.options.maxLabelWidth());
+            this.width = Math.min(this.getMyWidth(), this.graph.options.maxLabelWidth);
             this.shapeElement.transition().tween("attr", function () { })
                 .ease('linear')
                 .duration(100)
@@ -613,7 +613,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
     redrawLabelText() {
         this.textBlock.remove();
         this.addTextLabelElement();
-        this.animateDynamicLabelWidth(this.graph.options.dynamicLabelWidth());
+        this.animateDynamicLabelWidth(this.graph.options.dynamicLabelWidth);
         this.shapeElement.select("title").text(this.labelForCurrentLanguage());
     }
 
@@ -653,8 +653,8 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
             this.labelElement.selectAll(".foreignelements").remove();
         }
         this.backupFullIri = undefined;
-        this.graph.options.focuserModule().handle(undefined);
-        this.graph.options.focuserModule().handle(this);
+        this.graph.options.focuserModule.handle(undefined);
+        this.graph.options.focuserModule.handle(this);
         this.editingTextElement = true;
         this.ignoreLocalHoverEvents = true;
         this.labelElement.selectAll("rect").classed("hoveredForEditing", true);
@@ -743,7 +743,7 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                     _this.backupFullIri = syncedIRI;
 
                     d3.select("#element_iriEditor").node().title = syncedIRI;
-                    d3.select("#element_iriEditor").node().value = _this.graph.options.prefixModule().getPrefixRepresentationForFullURI(syncedIRI);
+                    d3.select("#element_iriEditor").node().value = _this.graph.options.prefixModule.getPrefixRepresentationForFullURI(syncedIRI);
                 }
                 d3.select("#element_labelEditor").node().value = editText.node().value;
             })
@@ -762,18 +762,18 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                 _this.graph.showHoverElementsAfterAnimation(this, false);
                 _this.graph.ignoreOtherHoverEvents(false);
 
-                _this.frozen = _this.graph.paused();
-                _this.locked = _this.graph.paused();
-                _this.domain.frozen = _this.graph.paused();
-                _this.domain.locked = _this.graph.paused();
-                _this.range.frozen = _this.graph.paused();
-                _this.range.locked = _this.graph.paused();
+                _this.frozen = _this.graph.paused;
+                _this.locked = _this.graph.paused;
+                _this.domain.frozen = _this.graph.paused;
+                _this.domain.locked = _this.graph.paused;
+                _this.range.frozen = _this.graph.paused;
+                _this.range.locked = _this.graph.paused;
                 _this.graph.removeEditElements();
                 if (_this.backupFullIri) {
                     // console.log("Checking if element is Identical ?");
-                    var sanityCheckResult = _this.graph.options.editSidebar().checkProperIriChange(this, _this.backupFullIri);
+                    var sanityCheckResult = _this.graph.options.editSidebar.checkProperIriChange(this, _this.backupFullIri);
                     if (sanityCheckResult !== false) {
-                        _this.graph.options.warningModule().showWarning(
+                        _this.graph.options.warningModule.showWarning(
                             "Already seen this property",
                             "Input IRI: " + _this.backupFullIri + " for element: " + _this.labelForCurrentLanguage() + " already been set",
                             "Continuing with duplicate property!",
@@ -783,8 +783,8 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
                     }
                     _this.iri = _this.backupFullIri;
                 }
-                _this.graph.options.focuserModule().handle(undefined);
-                _this.graph.options.focuserModule().handle(this);
+                _this.graph.options.focuserModule.handle(undefined);
+                _this.graph.options.focuserModule.handle(this);
                 _this.graph.updatePropertyDraggerElements(this);
             });
     }

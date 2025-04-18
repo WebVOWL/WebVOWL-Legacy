@@ -4,7 +4,7 @@ export class PrefixTools {
      * @param {any} graph
      */
     static getPrefixRepresentationForFullURI(fullURL, graph) {
-        let currentPrefixModel = graph.options.prefixList();
+        let currentPrefixModel = graph.options.prefixList;
         const splittedURL = this.#splitURLIntoBaseAndResource(fullURL);
 
         // lazy approach: for-loop over prefix model

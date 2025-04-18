@@ -249,11 +249,11 @@ export class BaseElement {
     }
 
     commentForCurrentLanguage() {
-        return LanguageTools.textInLanguage(this.comment, this.graph.language());
+        return LanguageTools.textInLanguage(this.comment, this.graph.language);
     }
 
     descriptionForCurrentLanguage() {
-        return LanguageTools.textInLanguage(this.description, this.graph.language());
+        return LanguageTools.textInLanguage(this.description, this.graph.language);
     }
 
     defaultLabel() {
@@ -265,7 +265,7 @@ export class BaseElement {
     }
 
     labelForCurrentLanguage() {
-        const preferredLanguage = this.graph && this.graph.language ? this.graph.language() : null;
+        const preferredLanguage = this.graph && this.graph.language ? this.graph.language : null;
         return LanguageTools.textInLanguage(this.label, preferredLanguage);
     }
 

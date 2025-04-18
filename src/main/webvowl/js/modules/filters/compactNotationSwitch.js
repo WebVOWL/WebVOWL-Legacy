@@ -18,7 +18,7 @@ export class CompactNotationSwitch extends AbstractFilter {
      * @param {BaseProperty[]} properties
      */
     filter(nodes, properties) {
-        this.graph.options.compactNotation(this.enabled);
+        this.graph.options.compactNotation = this.enabled;
         this.filteredNodes = nodes;
         this.filteredProperties = properties;
     }

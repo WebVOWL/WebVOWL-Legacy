@@ -64,7 +64,7 @@ export class RoundNode extends BaseNode {
         this.focused = !this.focused;
         this.nodeElement.select("circle").classed("focused", this.focused);
         this.graph.resetSearchHighlight();
-        this.graph.options.searchMenu().clearText();
+        this.graph.options.searchMenu.clearText();
     }
 
     /**
@@ -72,7 +72,7 @@ export class RoundNode extends BaseNode {
      * @returns {number}
      */
     actualRadius() {
-        if (!this.graph.options.scaleNodesByIndividuals() || this.individuals.length <= 0) {
+        if (!this.graph.options.scaleNodesByIndividuals || this.individuals.length <= 0) {
             return this.radius;
         } else {
             // we could "listen" for radius and individualCount changes, but this is easier
@@ -116,7 +116,7 @@ export class RoundNode extends BaseNode {
             dy,
             this.removePin,
             this.graph.options.showDraggerObject,
-            this.graph.options.useAccuracyHelper()
+            this.graph.options.useAccuracyHelper
         );
     }
 
@@ -251,7 +251,7 @@ export class RoundNode extends BaseNode {
 
         textBlock.addText(this.labelForCurrentLanguage(), "", suffixForFollowingEquivalents);
         textBlock.addEquivalents(equivalentsString);
-        if (!this.graph.options.compactNotation()) {
+        if (!this.graph.options.compactNotation) {
             textBlock.addSubText(this.indicationString());
         }
         textBlock.addInstanceCount(this.individuals.length);

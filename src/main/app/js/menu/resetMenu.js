@@ -8,9 +8,11 @@ export default class ResetMenu {
     constructor(graph) {
         this.graph = graph;
 
-        this.options = graph.graphOptions();
+        this.options = graph.options;
+        /**
+         * @type {any[] | undefined}
+         */
         this.resettableModules = undefined;
-        // @ts-ignore
         this.untouchedOptions = webvowl.options();
     }
 
@@ -21,32 +23,26 @@ export default class ResetMenu {
     setup(_resettableModules) {
         this.resettableModules = _resettableModules;
         d3.select("#reset-button").on("click", this.resetGraph);
-        var menuEntry = d3.select("#resetOption");
-        menuEntry.on("mouseover", function () {
-            // @ts-ignore
-            var searchMenu = graph.options.searchMenu();
+        const menuEntry = d3.select("#resetOption");
+        menuEntry.on("mouseover", () => {
+            const searchMenu = this.graph.options.searchMenu;
             searchMenu.hideSearchEntries();
         });
-    };
+    }
 
     resetGraph() {
-        // @ts-ignore
         this.graph.resetSearchHighlight();
-        // @ts-ignore
-        this.graph.options.searchMenu().clearText();
-        this.options.classDistance(this.untouchedOptions.classDistance());
-        this.options.datatypeDistance(this.untouchedOptions.datatypeDistance());
-        this.options.charge(this.untouchedOptions.charge());
-        this.options.gravity(this.untouchedOptions.gravity());
-        this.options.linkStrength(this.untouchedOptions.linkStrength());
-        // @ts-ignore
+        this.graph.options.searchMenu.clearText();
+        this.options.classDistance = this.untouchedOptions.classDistance;
+        this.options.datatypeDistance = this.untouchedOptions.datatypeDistance;
+        this.options.charge(this.untouchedOptions.charge);
+        this.options.gravity = this.untouchedOptions.gravity;
+        this.options.linkStrength = this.untouchedOptions.linkStrength;
         this.graph.reset();
 
-        this.resettableModules.forEach(function ( /** @type {{ reset: () => void; }} */ module) {
-            module.reset();
-        });
-
-        // @ts-ignore
+        for (const module of this.resettableModules) {
+            module.reset()
+        }
         this.graph.updateStyle();
     }
-};
+}

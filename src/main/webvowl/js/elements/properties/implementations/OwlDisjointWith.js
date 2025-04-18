@@ -43,7 +43,7 @@ export class OwlDisjointWith extends BaseProperty {
             .attr("r", 10);
 
         var textElement = new CenteringTextElement(labelContainer, this.backgroundColor);
-        if (!this.graph.options.compactNotation()) {
+        if (!this.graph.options.compactNotation) {
             textElement.addSubText("disjoint");
         }
         textElement.translation(0, 20);

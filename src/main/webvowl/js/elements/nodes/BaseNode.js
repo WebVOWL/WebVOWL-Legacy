@@ -167,8 +167,8 @@ export class BaseNode extends BaseElement {
         }
 
         this.backupFullIri = undefined;
-        this.graph.options.focuserModule().handle(undefined);
-        this.graph.options.focuserModule().handle(this);
+        this.graph.options.focuserModule.handle(undefined);
+        this.graph.options.focuserModule.handle(this);
         // add again the editing elements to this one
         if (this.graph.isTouchDevice() === true) {
             this.graph.activateHoverElements(true, this, true);
@@ -243,7 +243,7 @@ export class BaseNode extends BaseElement {
                     this.backupFullIri = syncedIRI;
 
                     d3.select("#element_iriEditor").node().title = syncedIRI;
-                    d3.select("#element_iriEditor").node().value = this.graph.options.prefixModule().getPrefixRepresentationForFullURI(syncedIRI);
+                    d3.select("#element_iriEditor").node().value = this.graph.options.prefixModule.getPrefixRepresentationForFullURI(syncedIRI);
                 }
                 d3.select("#element_labelEditor").node().value = editText.node().value;
             })
@@ -257,8 +257,8 @@ export class BaseNode extends BaseElement {
                 this.label = newLabel;
                 this.backupLabel = newLabel;
                 this.redrawLabelText();
-                this.frozen = this.graph.paused();
-                this.locked = this.graph.paused();
+                this.frozen = this.graph.paused;
+                this.locked = this.graph.paused;
                 this.graph.ignoreOtherHoverEvents(false);
                 if (this.backupFullIri) {
                     const sanityCheckResult = this.graph.checkIfIriClassAlreadyExist(this.backupFullIri);
@@ -266,7 +266,7 @@ export class BaseNode extends BaseElement {
                         this.iri = this.backupFullIri;
                     } else {
                         // throw warning
-                        this.graph.options.warningModule().showWarning(
+                        this.graph.options.warningModule.showWarning(
                             "Already seen this class",
                             "Input IRI: " + this.backupFullIri + " for element: " + this.labelForCurrentLanguage() + " already been set",
                             "Restoring previous IRI for Element : " + this.iri,
@@ -276,8 +276,8 @@ export class BaseNode extends BaseElement {
                     }
                 }
                 if (this.graph.isADraggerActive() === false) {
-                    this.graph.options.focuserModule().handle(undefined);
-                    this.graph.options.focuserModule().handle(this);
+                    this.graph.options.focuserModule.handle(undefined);
+                    this.graph.options.focuserModule.handle(this);
                 }
             });
     }

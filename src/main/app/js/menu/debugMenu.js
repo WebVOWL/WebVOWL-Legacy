@@ -22,7 +22,7 @@ export default class DebugMenu {
 
         menuEntry.on("mouseover", () => {
             if (this.hoverFlag === false) {
-                const searchMenu = this.graph.options.searchMenu();
+                const searchMenu = this.graph.options.searchMenu;
                 searchMenu.hideSearchEntries();
                 this.specialCbx.node().click();
                 if (this.graph.editorMode() === false) {
@@ -83,7 +83,7 @@ export default class DebugMenu {
             "#showFPS_Statistics",
             this.graph.options.showRenderingStatistic,
             (/** @type {any} */ enabled, /** @type {any} */ _silent) => {
-                if (this.graph.options.getHideDebugFeatures() === false) {
+                if (!this.graph.options.hideDebugOptions) {
                     d3.select("#FPS_Statistics").classed("hidden", !enabled);
                 } else {
                     d3.select("#FPS_Statistics").classed("hidden", true);
@@ -97,7 +97,7 @@ export default class DebugMenu {
             "#showModeOfOperation",
             this.graph.options.showInputModality,
             (/** @type {any} */ enabled) => {
-                if (this.graph.options.getHideDebugFeatures() === false) {
+                if (!this.graph.options.hideDebugOptions) {
                     d3.select("#modeOfOperationString").classed("hidden", !enabled);
                 } else {
                     d3.select("#modeOfOperationString").classed("hidden", true);
@@ -171,7 +171,7 @@ export default class DebugMenu {
     updateSettings() {
         d3.selectAll(".debugOption").classed(
             "hidden",
-            this.graph.options.getHideDebugFeatures()
+            this.graph.options.hideDebugOptions
         );
 
         const silent = true;

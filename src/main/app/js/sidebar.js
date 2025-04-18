@@ -132,7 +132,7 @@ export class SideBar {
 
         const languageSelection = d3.select("#language")
             .on("change", () => {
-                this.graph.language(d3.event.target.value);
+                this.graph.language = d3.event.target.value;
                 this.#updateGraphInformation();
                 this.updateSelectionInformation(this.lastSelectedElement);
             });
@@ -164,14 +164,14 @@ export class SideBar {
         const langIndex = languages.indexOf(language);
         if (langIndex >= 0) {
             selection.property("selectedIndex", langIndex);
-            this.graph.language(language);
+            this.graph.language = language;
             return true;
         }
         return false;
     }
 
     #updateGraphInformation() {
-        const title = LanguageTools.textInLanguage(this.ontologyInfo.title, this.graph.language());
+        const title = LanguageTools.textInLanguage(this.ontologyInfo.title, this.graph.language);
         d3.select("#title").text(title || "No title available");
         d3.select("#about").attr("href", this.ontologyInfo.iri).attr("target", "_blank").text(this.ontologyInfo.iri);
         d3.select("#version").text(this.ontologyInfo.version || "--");
@@ -185,7 +185,7 @@ export class SideBar {
             d3.select("#authors").text("--");
         }
 
-        const description = LanguageTools.textInLanguage(this.ontologyInfo.description, this.graph.language());
+        const description = LanguageTools.textInLanguage(this.ontologyInfo.description, this.graph.language);
         d3.select("#description").text(description || "No description available.");
     }
 
@@ -534,8 +534,8 @@ export class SideBar {
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-name", "warn_ExpandRightBarAnimation");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-duration", "0.5s");
             }
-            this.graph.options.width(window.innerWidth - (window.innerWidth * 0.22));
-            this.graph.options.navigationMenu().updateScrollButtonVisibility();
+            this.graph.options.width = window.innerWidth - (window.innerWidth * 0.22);
+            this.graph.options.navigationMenu.updateScrollButtonVisibility();
         } else {
             this.visibleSidebar = false;
             this.detailArea.classed("hidden", true);
@@ -563,9 +563,9 @@ export class SideBar {
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-name", "warn_CollapseRightBarAnimation");
                 d3.select("#WarningErrorMessagesContainer").style("-webkit-animation-duration", "0.5s");
             }
-            this.graph.options.width(window.innerWidth);
+            this.graph.options.width = window.innerWidth;
             this.graph.updateCanvasContainerSize();
-            this.graph.options.navigationMenu().updateScrollButtonVisibility();
+            this.graph.options.navigationMenu.updateScrollButtonVisibility();
         }
     }
 
@@ -588,7 +588,7 @@ export class SideBar {
         this.graphArea.node().addEventListener("animationend", () => {
             this.detailArea.classed("hidden", !this.visibleSidebar);
             this.graph.updateCanvasContainerSize();
-            this.graph.options.navigationMenu().updateScrollButtonVisibility();
+            this.graph.options.navigationMenu.updateScrollButtonVisibility();
         });
     }
 
@@ -597,7 +597,7 @@ export class SideBar {
         this.initSideBarAnimation();
 
         this.collapseButton.on("click", () => {
-            this.graph.options.navigationMenu().hideAllMenus();
+            this.graph.options.navigationMenu.hideAllMenus();
             const isVisible = this.getSidebarVisibility()
             this.#showSidebar(!isVisible)
         });
@@ -611,16 +611,16 @@ export class SideBar {
         // store the meta information in graph.options
 
         // todo: update edit meta info
-        this.graph.options.editSidebar().updateGeneralOntologyInfo();
+        this.graph.options.editSidebar.updateGeneralOntologyInfo();
 
         // todo: update showed meta info;
-        this.graph.options.sidebar().updateGeneralOntologyInfo();
+        this.graph.options.sidebar.updateGeneralOntologyInfo();
     }
 
     updateGeneralOntologyInfo() {
         // get it from graph.options
-        const generalMetaObj = this.graph.options.getGeneralMetaObject();
-        const preferredLanguage = this.graph && this.graph.language ? this.graph.language() : null;
+        const generalMetaObj = this.graph.options.generalOntologyMetaData;
+        const preferredLanguage = this.graph && this.graph.language ? this.graph.language : null;
         if (generalMetaObj.hasOwnProperty("title")) {
             // title has language to it -.-
             if (typeof generalMetaObj.title === "object") {

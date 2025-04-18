@@ -449,7 +449,7 @@ export default class ExportTTLModule {
 
     preparePrefixList() {
         var ontoIri = this.graph.options.getGeneralMetaObjectProperty('iri');
-        var prefixList = this.graph.options.prefixList();
+        var prefixList = this.graph.options.prefixList;
         var prefixDef = [];
         prefixDef.push('@prefix : \t\t<' + ontoIri + '> .');
         for (var name in prefixList) {

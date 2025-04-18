@@ -51,7 +51,7 @@ export default class ModeMenu {
         const _this = this;
         var menuEntry = d3.select("#m_modes");
         menuEntry.on("mouseover", function () {
-            var searchMenu = _this.graph.options.searchMenu();
+            var searchMenu = _this.graph.options.searchMenu;
             searchMenu.hideSearchEntries();
         });
         this.addCheckBoxD("labelWidth", "Dynamic label width", "#dynamicLabelWidth", this.graph.options.dynamicLabelWidth, 1);

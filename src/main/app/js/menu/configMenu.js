@@ -15,11 +15,11 @@ export default class ConfigMenu {
     setup() {
         const menuEntry = d3.select("#m_modes");
         menuEntry.on("mouseover", () => {
-            const searchMenu = this.graph.options.searchMenu();
+            const searchMenu = this.graph.options.searchMenu;
             searchMenu.hideSearchEntries();
         });
 
-        this.addCheckBox("showZoomSlider", "Zoom controls", "#zoomSliderOption", this.graph.options.zoomSlider().showSlider, 0);
+        this.addCheckBox("showZoomSlider", "Zoom controls", "#zoomSliderOption", this.graph.options.zoomSlider.showSlider, 0);
         this.addLabelWidthSlider("#maxLabelWidthSliderOption", "maxLabelWidth", "Max label width", this.graph.options.maxLabelWidth);
     }
 
@@ -58,7 +58,7 @@ export default class ConfigMenu {
             const value = slider.property("value");
             onChangeFunction(value);
             sliderValueLabel.text(value);
-            if (this.graph.options.dynamicLabelWidth() === true) {
+            if (this.graph.options.dynamicLabelWidth === true) {
                 this.graph.animateDynamicLabelWidth();
             }
         });

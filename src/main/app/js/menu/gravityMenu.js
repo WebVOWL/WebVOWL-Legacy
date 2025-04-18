@@ -11,8 +11,8 @@ export default class GravityMenu {
          * @type {d3.Selection<HTMLInputElement, { distanceFunction: (arg0?: number) => any; }, null, undefined>[]}
          */
         this.sliders = [];
-        this.options = graph.graphOptions();
-        this.defaultCharge = this.options.charge();
+        this.options = graph.options;
+        this.defaultCharge = this.options.charge;
     }
 
     /**
@@ -22,7 +22,7 @@ export default class GravityMenu {
         const _this = this;
         var menuEntry = d3.select("#m_gravity");
         menuEntry.on("mouseover", function () {
-            var searchMenu = _this.graph.options.searchMenu();
+            var searchMenu = _this.graph.options.searchMenu;
             searchMenu.hideSearchEntries();
         });
         this.addDistanceSlider("#classSliderOption", "class", "Class distance", this.options.classDistance);
@@ -107,7 +107,7 @@ export default class GravityMenu {
      * @param {number} defaultLinkDistance
      */
     adjustCharge(defaultLinkDistance) {
-        var greaterDistance = Math.max(this.options.classDistance(), this.options.datatypeDistance()),
+        var greaterDistance = Math.max(this.options.classDistance, this.options.datatypeDistance),
             ratio = greaterDistance / defaultLinkDistance,
             newCharge = this.defaultCharge * ratio;
 
