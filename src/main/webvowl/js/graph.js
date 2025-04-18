@@ -1,51 +1,52 @@
 import Deque from 'collections/deque';
-import LinkCreator from './parsing/LinkCreator';
-import ElementTools from './util/ElementTools';
-import MathUtils from './util/MathUtils';
-
-// add some maps for nodes and properties -- used for object generation
-import nodePrototypeMapFactory from './elements/nodes/nodeMap';
-import propertyPrototypeMapFactory from './elements/properties/propertyMap';
-
+import LinkCreator from './parsing/linkCreator';
+import ElementTools from './util/elementTools';
+import MathUtils from './util/math';
+import nodeClassMap from './elements/nodes/nodeMap';
+import propertyClassMap from './elements/properties/propertyMap';
 import { Parser } from "./parser";
 import { ClassDragger } from './draggers/classDragger';
 import { RangeDragger } from './draggers/rangeDragger';
 import { DomainDragger } from './draggers/domainDragger';
 import { ShadowClone } from './draggers/shadowClone';
-import d3 from 'd3';
-
-const nodePrototypeMap = nodePrototypeMapFactory();
-const propertyPrototypeMap = propertyPrototypeMapFactory();
+import { Options } from './options';
+import { BaseNode } from './elements/nodes/BaseNode';
+import { BaseProperty } from './elements/properties/BaseProperty';
+import { PlainLink } from './elements/links/PlainLink';
+import { BoxArrowLink } from './elements/links/BoxArrowLink';
+import { ArrowLink } from './elements/links/ArrowLink';
 
 
 export default class Graph {
+    CARDINALITY_HDISTANCE = 20;
+    CARDINALITY_VDISTANCE = 10;
+
+    curveFunction = d3.svg.line()
+        .x(function (/** @type {{ x: any; }} */ d) {
+            return d.x;
+        })
+        .y(function (/** @type {{ y: any; }} */ d) {
+            return d.y;
+        })
+        .interpolate("cardinal");
 
     /**
      * @param {any} graphContainerSelector
      */
     constructor(graphContainerSelector) {
         this.graphContainerSelector = graphContainerSelector;
+        this.options = new Options();
+        this.parser = new Parser(this);
+        this._language = "default";
+        this._paused = false;
 
-        this.CARDINALITY_HDISTANCE = 20;
-        this.CARDINALITY_VDISTANCE = 10;
-        this.curveFunction = d3.svg.line()
-            .x(function (/** @type {{ x: any; }} */ d) {
-                return d.x;
-            })
-            .y(function (/** @type {{ y: any; }} */ d) {
-                return d.y;
-            })
-            .interpolate("cardinal");
-        this.options = require("./options")();
-        this.parser = new Parser(graph);
-        this.language = "default";
-        this.paused = false;
         // Container for visual elements
         this.graphContainer = undefined;
         this.nodeContainer = undefined;
         this.labelContainer = undefined;
         this.cardinalityContainer = undefined;
         this.linkContainer = undefined;
+
         // Visual elements
         this.nodeElements = undefined;
         this.initialLoad = true;
@@ -54,14 +55,37 @@ export default class Graph {
         this.linkGroups = undefined;
         this.linkPathElements = undefined;
         this.cardinalityElements = undefined;
+
         // Internal data
+        /**
+         * @type {BaseNode[] | undefined}
+         */
         this.classNodes = undefined;
-        this.labelNodes = undefined;
-        this.links = undefined;
-        this.properties = undefined;
+        /**
+         * @type {(PlainLink | BoxArrowLink | ArrowLink)[]}
+         */
+        this.labelNodes = [];
+        /**
+         * @type {(PlainLink | BoxArrowLink | ArrowLink)[]}
+         */
+        this.links = [];
+        /**
+         * @type {BaseProperty[]}
+         */
+        this.properties = [];
+        /**
+         * @type {{ nodes: BaseNode[]; properties: BaseProperty[]; } | undefined}
+         */
         this.unfilteredData = undefined;
+        /**
+         * @type {{ nodes: BaseNode[]; properties: BaseProperty[]; } | undefined}
+         */
         this.currentData = undefined;
+        /**
+         * @type {{ nodes: Map<string,BaseNode>; properties: Map<string,BaseProperty>; }}
+         */
         this.unfilteredDataMap = { nodes: new Map(), properties: new Map() };
+
         // Graph behaviour
         this.force = undefined;
         this.dragBehaviour = undefined;
@@ -82,7 +106,7 @@ export default class Graph {
         this.originalD3_dblClickFunction = null;
         this.originalD3_touchZoomFunction = null;
 
-        // editing elements
+        // Editing elements
         this.deleteGroupElement = undefined;
         this.addDataPropertyGroupElement = undefined;
         this.editContainer = undefined;
@@ -99,7 +123,7 @@ export default class Graph {
 
         this.eP = 0; // id for new properties
         this.eN = 0; // id for new Nodes
-        this.editMode = true;
+        this.isEditorMode = true;
         this.debugContainer = d3.select("#FPS_Statistics");
         this.finishedLoadingSequence = false;
 
@@ -116,28 +140,47 @@ export default class Graph {
         this.adjustingGraphSize = false;
         this.showReloadButtonAfterLayoutOptimization = false;
         this.zoom = undefined;
-        //var prefixModule=require("./prefixRepresentationModule")(graph);
-        this.NodePrototypeMap = createLowerCasePrototypeMap(nodePrototypeMap);
-        this.PropertyPrototypeMap = createLowerCasePrototypeMap(propertyPrototypeMap);
-        this.classDragger = new ClassDragger(graph);
-        this.rangeDragger = new RangeDragger(graph);
-        this.domainDragger = new DomainDragger(graph);
-        this.shadowClone = new ShadowClone(graph);
-
+        this.classDragger = new ClassDragger(this);
+        this.rangeDragger = new RangeDragger(this);
+        this.domainDragger = new DomainDragger(this);
+        this.shadowClone = new ShadowClone(this);
         this.cachedJsonOBJ = null;
-
         this.initializeGraph();
     }
 
     /** --------------------------------------------------------- **/
     /** -- getter and setter definitions                       -- **/
     /** --------------------------------------------------------- **/
-    isEditorMode() {
-        return this.editMode;
+
+    get paused() {
+        return this._paused
+    }
+
+    set paused(p) {
+        this._paused = p;
+        this.updateStyle();
+    }
+
+    get language() {
+        return this._language
+    }
+
+    /**
+     * @param {string} newLanguage
+     */
+    set language(newLanguage) {
+        // Just update if the language changes
+        if (this._language !== newLanguage) {
+            this._language = newLanguage || "default";
+            this.redrawContent();
+            this.recalculatePositions();
+            this.options.searchMenu.requestDictionaryUpdate();
+            this.resetSearchHighlight();
+        }
     }
 
     updateZoomSliderValueFromOutside() {
-        this.options.zoomSlider().updateZoomSliderValue(this.zoomFactor);
+        this.options.zoomSlider.updateZoomSliderValue(this.zoomFactor);
     }
 
     /**
@@ -146,7 +189,7 @@ export default class Graph {
     setDefaultZoom(val) {
         this.defaultZoom = val;
         this.reset();
-        this.options.zoomSlider().updateZoomSliderValue(this.defaultZoom);
+        this.options.zoomSlider.updateZoomSliderValue(this.defaultZoom);
     }
 
     /**
@@ -156,42 +199,16 @@ export default class Graph {
         this.defaultTargetZoom = val;
     }
 
-    graphOptions() {
-        return this.options;
-    }
-
-    scaleFactor() {
-        return this.zoomFactor;
-    }
-
-    translation() {
-        return this.graphTranslation;
-    }
-
-    // Returns the visible nodes
-    graphNodeElements() {
-        return this.nodeElements;
-    }
-
-    // Returns the visible Label Nodes
-    graphLabelElements() {
-        return this.labelNodes;
-    }
-
-    graphLinkElements() {
-        return this.links;
-    }
-
     /**
      * @param {number} val
      */
     setSliderZoom(val) {
         const _this = this;
-        var cx = 0.5 * this.options.width();
-        var cy = 0.5 * this.options.height();
+        var cx = 0.5 * this.options.width;
+        var cy = 0.5 * this.options.height;
         var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, this.zoomFactor);
-        var sP = [cp.x, cp.y, this.options.height() / this.zoomFactor];
-        var eP = [cp.x, cp.y, this.options.height() / val];
+        var sP = [cp.x, cp.y, this.options.height / this.zoomFactor];
+        var eP = [cp.x, cp.y, this.options.height / val];
         var pos_intp = d3.interpolateZoom(sP, eP);
 
         this.graphContainer.attr("transform", this.transform(sP, cx, cy))
@@ -203,18 +220,22 @@ export default class Graph {
                 };
             })
             .each("end", function () {
-                _this.graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                _this.zoom.translate(graphTranslation);
-                _this.zoom.scale(zoomFactor);
-                _this.options.zoomSlider().updateZoomSliderValue(zoomFactor);
+                _this.graphContainer.attr("transform", "translate(" + _this.graphTranslation + ")scale(" + _this.zoomFactor + ")");
+                _this.zoom.translate(_this.graphTranslation);
+                _this.zoom.scale(_this.zoomFactor);
+                _this.options.zoomSlider.updateZoomSliderValue(_this.zoomFactor);
             });
     }
 
     /**
-     * @param {any} value
+     * @param {number} value
      */
     setZoom(value) {
         this.zoom.scale(value);
+    }
+
+    getScaleFactor() {
+        return this.zoomFactor;
     }
 
     /**
@@ -224,37 +245,34 @@ export default class Graph {
         this.zoom.translate([translation[0], translation[1]]);
     }
 
+    getTranslation() {
+        return this.graphTranslation;
+    }
+
+    getVisibleNodeElements() {
+        return this.nodeElements;
+    }
+
+    getVisibleLabelNodes() {
+        return this.labelNodes;
+    }
+
+    getVisibleLinks() {
+        return this.links;
+    }
+
     // search functionality
     getUpdateDictionary() {
         return this.parser.dictionary;
     }
 
-    /**
-     * @param {string} newLanguage
-     */
-    language(newLanguage) {
-        if (!arguments.length) return this.language;
-
-        // Just update if the language changes
-        if (this.language !== newLanguage) {
-            this.language = newLanguage || "default";
-            this.redrawContent();
-            this.recalculatePositions();
-            this.options.searchMenu().requestDictionaryUpdate();
-            this.resetSearchHighlight();
-        }
-        return this;
-    }
-
-
     /** --------------------------------------------------------- **/
     /** graph / rendering  related functions                      **/
     /** --------------------------------------------------------- **/
 
-    // Initializes the graph.
     initializeGraph() {
         const _this = this;
-        this.options.graphContainerSelector(this.graphContainerSelector);
+        this.options.graphContainerSelector = this.graphContainerSelector;
         var moved = false;
         this.force = d3.layout.force()
             .on("tick", this.hiddenRecalculatePositions);
@@ -263,9 +281,9 @@ export default class Graph {
             .origin(function (/** @type {any} */ d) {
                 return d;
             })
-            .on("dragstart", function (/** @type {{ type: string; parentNode: () => { (): any; new (): any; locked: boolean; }; locked: boolean; }} */ d) {
+            .on("dragstart", function (/** @type {any} */ d) {
                 d3.event.sourceEvent.stopPropagation(); // Prevent panning
-                graph.ignoreOtherHoverEvents(true);
+                _this.ignoreOtherHoverEvents(true);
                 if (d.type && d.type === "Class_dragger") {
                     _this.classDragger.mouseButtonPressed = true;
                     clearTimeout(_this.delayedHider);
@@ -273,7 +291,7 @@ export default class Graph {
                     d.parentNode().locked = true;
                     _this.draggingStarted = true;
                 } else if (d.type && d.type === "Range_dragger") {
-                    graph.ignoreOtherHoverEvents(true);
+                    _this.ignoreOtherHoverEvents(true);
                     clearTimeout(_this.delayedHider);
                     _this.frozenDomainForPropertyDragger = _this.shadowClone.parentNode().domain;
                     _this.frozenRangeForPropertyDragger = _this.shadowClone.parentNode().range;
@@ -293,7 +311,7 @@ export default class Graph {
                     _this.rangeDragger.mouseButtonPressed = true;
                     //  shadowClone.setPosition(d.x, d.y);
                 } else if (d.type && d.type === "Domain_dragger") {
-                    graph.ignoreOtherHoverEvents(true);
+                    _this.ignoreOtherHoverEvents(true);
                     clearTimeout(_this.delayedHider);
                     _this.frozenDomainForPropertyDragger = _this.shadowClone.parentNode().domain;
                     _this.frozenRangeForPropertyDragger = _this.shadowClone.parentNode().range;
@@ -318,8 +336,7 @@ export default class Graph {
                     moved = false;
                 }
             })
-            .on("drag", function (/** @type {{ type: string; px: any; py: any; renderType: string; }} */ d) {
-
+            .on("drag", function (/** @type {any} */ d) {
                 if (d.type && d.type === "Class_dragger") {
                     clearTimeout(_this.delayedHider);
                     _this.classDragger.setPosition(d3.event.x, d3.event.y);
@@ -347,7 +364,7 @@ export default class Graph {
                 }
             })
             .on("dragend", function (/** @type {any} */ d) {
-                graph.ignoreOtherHoverEvents(false);
+                _this.ignoreOtherHoverEvents(false);
                 if (d.type && d.type === "Class_dragger") {
                     var nX = _this.classDragger.x;
                     var nY = _this.classDragger.y;
@@ -359,10 +376,10 @@ export default class Graph {
                     var draggerEndPos = [nX, nY];
                     var targetNode = _this.getTargetNode(draggerEndPos);
                     if (targetNode) {
-                        createNewObjectProperty(d.parentNode(), targetNode, draggerEndPos);
+                        _this.createNewObjectProperty(d.parentNode(), targetNode, draggerEndPos);
                     }
                     if (_this.touchDevice === false) {
-                        editElementHoverOut();
+                        _this.editElementHoverOut();
                     }
                     _this.draggingStarted = false;
                 } else if (d.type && d.type === "Range_dragger") {
@@ -379,12 +396,11 @@ export default class Graph {
                     var rX = _this.rangeDragger.x;
                     var rY = _this.rangeDragger.y;
                     var rangeDraggerEndPos = [rX, rY];
-                    var targetRangeNode = graph.getTargetNode(rangeDraggerEndPos);
+                    var targetRangeNode = _this.getTargetNode(rangeDraggerEndPos);
                     if (ElementTools.isDatatype(targetRangeNode) === true) {
                         targetRangeNode = null;
                         console.log("---------------TARGET NODE IS A DATATYPE/ LITERAL ------------");
                     }
-
                     if (targetRangeNode === null) {
                         d.redrawEverything();
                         _this.shadowClone.hideParentProperty(false);
@@ -395,7 +411,7 @@ export default class Graph {
                         _this.shadowClone.hideParentProperty(false);
                     }
                 } else if (d.type && d.type === "Domain_dragger") {
-                    graph.ignoreOtherHoverEvents(false);
+                    _this.ignoreOtherHoverEvents(false);
                     _this.frozenDomainForPropertyDragger.frozen = false;
                     _this.frozenDomainForPropertyDragger.locked = false;
                     _this.frozenRangeForPropertyDragger.frozen = false;
@@ -409,7 +425,7 @@ export default class Graph {
                     var dX = _this.domainDragger.x;
                     var dY = _this.domainDragger.y;
                     var domainDraggerEndPos = [dX, dY];
-                    var targetDomainNode = graph.getTargetNode(domainDraggerEndPos);
+                    var targetDomainNode = _this.getTargetNode(domainDraggerEndPos);
                     if (ElementTools.isDatatype(targetDomainNode) === true) {
                         targetDomainNode = null;
                         console.log("---------------TARGET NODE IS A DATATYPE/ LITERAL ------------");
@@ -427,7 +443,7 @@ export default class Graph {
                 }
                 else {
                     d.locked = false;
-                    var pnp = _this.options.pickAndPinModule();
+                    var pnp = _this.options.pickAndPinModule;
                     if (pnp.enabled === true && moved === true) {
                         if (d.id) { // node
                             pnp.handle(d, true);
@@ -442,7 +458,7 @@ export default class Graph {
         // Apply the zooming factor.
         this.zoom = d3.behavior.zoom()
             .duration(150)
-            .scaleExtent([this.options.minMagnification(), this.options.maxMagnification()])
+            .scaleExtent([this.options.minMagnification, this.options.maxMagnification])
             .on("zoom", zoomed);
         this.draggerObjectsArray.push(this.classDragger);
         this.draggerObjectsArray.push(this.rangeDragger);
@@ -454,24 +470,24 @@ export default class Graph {
     lazyRefresh() {
         this.redrawContent();
         this.recalculatePositions();
-    };
+    }
 
     hiddenRecalculatePositions() {
         this.finishedLoadingSequence = false;
-        if (!this.options.loadingModule().loadingWasSuccessFul) {
+        if (!this.options.loadingModule.loadingWasSuccessFul) {
             this.force.stop();
             d3.select("#progressBarValue").node().innerHTML = "";
-            graph.updateProgressBarMode();
-            this.options.loadingModule().showErrorDetailsMessage(this.hiddenRecalculatePositions);
+            _this.updateProgressBarMode();
+            this.options.loadingModule.showErrorDetailsMessage(this.hiddenRecalculatePositions);
             if (this.keepDetailsCollapsedOnLoading && this.adjustingGraphSize === false) {
-                this.options.loadingModule().collapseDetails("hiddenRecalculatePositions");
+                this.options.loadingModule.collapseDetails("hiddenRecalculatePositions");
             }
             return;
         }
         if (this.updateRenderingDuringSimulation === false) {
             var value = 1.0 - 10 * this.force.alpha();
             var percent = (200 * value) + "%";
-            this.options.loadingModule().setPercentValue(percent);
+            this.options.loadingModule.setPercentValue(percent);
             d3.select("#progressBarValue").style("width", percent);
             d3.select("#progressBarValue").node().innerHTML = percent;
 
@@ -483,16 +499,16 @@ export default class Graph {
                     percent = "100%";
                     d3.select("#progressBarValue").style("width", percent);
                     d3.select("#progressBarValue").node().innerHTML = percent;
-                    this.options.ontologyMenu().append_message_toLastBulletPoint("done");
+                    this.options.ontologyMenu.append_message_toLastBulletPoint("done");
                     d3.select("#reloadCachedOntology").classed("hidden", !this.showReloadButtonAfterLayoutOptimization);
                     if (this.showFilterWarning === true && this.seenFilterWarning === false) {
-                        this.options.warningModule().showFilterHint();
+                        this.options.warningModule.showFilterHint();
                         this.seenFilterWarning = true;
                     }
                 }
 
                 if (this.initialLoad) {
-                    if (graph.paused() === false)
+                    if (this._paused === false)
                         this.force.resume(); // resume force
                     this.initialLoad = false;
                 }
@@ -514,39 +530,41 @@ export default class Graph {
                 }
                 this.showEditorHintIfNeeded();
 
-                if (!this.options.loadingModule().missingImportsWarning) {
-                    this.options.loadingModule().hideLoadingIndicator();
-                    this.options.ontologyMenu().append_bulletPoint("Successfully loaded ontology");
-                    this.options.loadingModule().setSuccessful();
+                if (!this.options.loadingModule.missingImportsWarning) {
+                    this.options.loadingModule.hideLoadingIndicator();
+                    this.options.ontologyMenu.append_bulletPoint("Successfully loaded ontology");
+                    this.options.loadingModule.setSuccessful();
                 } else {
-                    this.options.loadingModule().showWarningDetailsMessage();
-                    this.options.ontologyMenu().append_bulletPoint("Loaded ontology with warnings");
+                    this.options.loadingModule.showWarningDetailsMessage();
+                    this.options.ontologyMenu.append_bulletPoint("Loaded ontology with warnings");
                 }
             }
         }
     }
 
     gshowEditorHintIfNeeded() {
-        if (this.seenEditorHint === false && this.editMode === true) {
+        if (!this.seenEditorHint && this.isEditorMode) {
             this.seenEditorHint = true;
-            this.options.warningModule().showEditorHint();
+            this.options.warningModule.showEditorHint();
         }
         this.showFPS
     }
 
     setForceTickFunctionWithFPS() {
         this.showFPS = true;
-        if (this.force && this.finishedLoadingSequence === true) {
+        if (this.force && this.finishedLoadingSequence) {
             this.force.on("tick", this.recalculatePositionsWithFPS());
         }
 
     }
+
     setDefaultForceTickFunction() {
         this.showFPS = false;
-        if (this.force && this.finishedLoadingSequence === true) {
+        if (this.force && this.finishedLoadingSequence) {
             this.force.on("tick", this.recalculatePositions());
         }
     }
+
     recalculatePositionsWithFPS() {
         // compute the fps
         this.recalculatePositions();
@@ -560,11 +578,8 @@ export default class Graph {
 
     recalculatePositions() {
         const _this = this;
-        // Set node positions
-
-
         // add switch for edit mode to make this faster;
-        if (!this.editMode) {
+        if (!this.isEditorMode) {
             this.nodeElements.attr("transform", function (node) {
                 return "translate(" + node.x + "," + node.y + ")";
             });
@@ -597,29 +612,24 @@ export default class Graph {
             });
 
             // Set cardinality positions
-            this.cardinalityElements.attr("transform", function (/** @type {{ link: { label: any; } range: any; }} */ property) {
-
+            this.cardinalityElements.attr("transform", function (property) {
                 var label = property.link.label,
                     pos = MathUtils.calculateIntersection(label, property.range, _this.CARDINALITY_HDISTANCE),
                     normalV = MathUtils.calculateNormalVector(label, property.range, _this.CARDINALITY_VDISTANCE);
 
                 return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
             });
-
-
             this.updateHaloRadius();
             return;
         }
 
         // TODO: this is Editor redraw function // we need to make this faster!!
-
-
         this.nodeElements.attr("transform", function (node) {
             return "translate(" + node.x + "," + node.y + ")";
         });
 
         // Set label group positions
-        this.labelGroupElements.attr("transform", function (/** @type {{ link: any; x: string; y: string; linkRangeIntersection: any; linkDomainIntersection: any; }} */ label) {
+        this.labelGroupElements.attr("transform", function (label) {
             var position;
 
             // force centered positions on single-layered links
@@ -632,7 +642,7 @@ export default class Graph {
                 label.y = position.y;
                 label.linkRangeIntersection = linkRangeIntersection;
                 label.linkDomainIntersection = linkDomainIntersection;
-                if (link.property.focused === true || _this.hoveredPropertyElement !== undefined) {
+                if (link.property.focused || _this.hoveredPropertyElement !== undefined) {
                     _this.rangeDragger.updateElement();
                     _this.domainDragger.updateElement();
                     // shadowClone.setPosition(link.property.range.x,link.property.range.y);
@@ -641,7 +651,7 @@ export default class Graph {
             } else {
                 label.linkDomainIntersection = MathUtils.calculateIntersection(link.label, link.domain, 0);
                 label.linkRangeIntersection = MathUtils.calculateIntersection(link.label, link.range, 0);
-                if (link.property.focused === true || _this.hoveredPropertyElement !== undefined) {
+                if (link.property.focused || _this.hoveredPropertyElement !== undefined) {
                     _this.rangeDragger.updateElement();
                     _this.domainDragger.updateElement();
                     // shadowClone.setPosition(link.property.range.x,link.property.range.y);
@@ -654,12 +664,11 @@ export default class Graph {
         // Set link paths and calculate additional information
         this.linkPathElements.attr("d", function (l) {
             if (l.isLoop()) {
-
                 var ptrAr = MathUtils.getLoopPoints(l);
                 l.label.linkRangeIntersection = ptrAr[1];
                 l.label.linkDomainIntersection = ptrAr[0];
 
-                if (l.property.focused === true || _this.hoveredPropertyElement !== undefined) {
+                if (l.property.focused || _this.hoveredPropertyElement !== undefined) {
                     _this.rangeDragger.updateElement();
                     _this.domainDragger.updateElement();
                 }
@@ -670,7 +679,7 @@ export default class Graph {
             var pathEnd = MathUtils.calculateIntersection(curvePoint, l.range, 1);
             l.linkRangeIntersection = pathStart;
             l.linkDomainIntersection = pathEnd;
-            if (l.property.focused === true || _this.hoveredPropertyElement !== undefined) {
+            if (l.property.focused || _this.hoveredPropertyElement !== undefined) {
                 _this.domainDragger.updateElement();
                 _this.rangeDragger.updateElement();
                 // shadowClone.setPosition(l.property.range.x,l.property.range.y);
@@ -681,11 +690,9 @@ export default class Graph {
 
         // Set cardinality positions
         this.cardinalityElements.attr("transform", function (/** @type {{ link: { label: any; }; range: any; }} */ property) {
-
-            var label = property.link.label,
+            const label = property.link.label,
                 pos = MathUtils.calculateIntersection(label, property.range, _this.CARDINALITY_HDISTANCE),
                 normalV = MathUtils.calculateNormalVector(label, property.range, _this.CARDINALITY_VDISTANCE);
-
             return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
         });
 
@@ -699,16 +706,14 @@ export default class Graph {
         if (this.hoveredPropertyElement) {
             this.setDeleteHoverElementPositionProperty(this.hoveredPropertyElement);
         }
-
         this.updateHaloRadius();
     }
 
     /**
-     * @param {{ type: string; }} property
+     * @param property
      */
     updatePropertyDraggerElements(property) {
         if (property.type !== "owl:DatatypeProperty") {
-
             this.shadowClone.setParentProperty(property);
             this.rangeDragger.setParentProperty(property);
             this.rangeDragger.hideDragger(false);
@@ -716,7 +721,6 @@ export default class Graph {
             this.domainDragger.setParentProperty(property);
             this.domainDragger.hideDragger(false);
             this.domainDragger.addMouseEvents();
-
         }
         else {
             this.rangeDragger.hideDragger(true);
@@ -731,17 +735,16 @@ export default class Graph {
          * @param {any} selectedElement
          */
         function executeModules(selectedElement) {
-            _this.options.selectionModules().forEach(function (/** @type {{ handle: (arg0: any) => void; }} */ module) {
+            _this.options.selectionModules.forEach(function (/** @type {{ handle: (arg0: any) => void; }} */ module) {
                 module.handle(selectedElement);
             });
         }
 
         this.nodeElements.on("click", function (clickedNode) {
-
             // manaual double clicker // helper for iphone 6 etc...
-            if (_this.touchDevice === true && this.doubletap() === true) {
+            if (_this.touchDevice && _this.doubletap()) {
                 d3.event.stopPropagation();
-                if (_this.editMode === true) {
+                if (_this.isEditorMode === true) {
                     clickedNode.raiseDoubleClickEdit(_this.defaultIriValue(clickedNode));
                 }
             }
@@ -750,27 +753,25 @@ export default class Graph {
             }
         });
 
-        this.nodeElements.on("dblclick", function (/** @type {{ raiseDoubleClickEdit: (arg0: boolean) => void; }} */ clickedNode) {
-
+        this.nodeElements.on("dblclick", function (clickedNode) {
             d3.event.stopPropagation();
-            if (_this.editMode === true) {
+            if (_this.isEditorMode) {
                 clickedNode.raiseDoubleClickEdit(_this.defaultIriValue(clickedNode));
             }
         });
 
-        this.labelGroupElements.selectAll(".label").on("click", function (/** @type {{ raiseDoubleClickEdit: (arg0: any) => void; }} */ clickedProperty) {
+        this.labelGroupElements.selectAll(".label").on("click", function (clickedProperty) {
             executeModules(clickedProperty);
-
             // this is for enviroments that do not define dblClick function;
-            if (_this.touchDevice === true && _this.doubletap() === true) {
+            if (_this.touchDevice && _this.doubletap()) {
                 d3.event.stopPropagation();
-                if (_this.editMode === true) {
+                if (_this.isEditorMode) {
                     clickedProperty.raiseDoubleClickEdit(_this.defaultIriValue(clickedProperty));
                 }
             }
 
             // currently removed the selection of an element to invoke the dragger
-            // if (editMode===true && clickedProperty.editingTextElement!==true) {
+            // if (isEditorMode===true && clickedProperty.editingTextElement!==true) {
             //     return;
             //      // We say that Datatype properties are not allowed to have domain range draggers
             //      if (clickedProperty.focused && clickedProperty.type !== "owl:DatatypeProperty") {
@@ -809,22 +810,21 @@ export default class Graph {
             //      }
             //  }
         });
-        this.labelGroupElements.selectAll(".label").on("dblclick", function (/** @type {{ raiseDoubleClickEdit: (arg0: boolean) => void; }} */ clickedProperty) {
+        this.labelGroupElements.selectAll(".label").on("dblclick", function (clickedProperty) {
             d3.event.stopPropagation();
-            if (_this.editMode === true) {
+            if (_this.isEditorMode) {
                 clickedProperty.raiseDoubleClickEdit(_this.defaultIriValue(clickedProperty));
             }
-
         });
     }
 
     /**
-     * @param {{ raiseDoubleClickEdit?: ((arg0: boolean) => void) | ((arg0: any) => void) | ((arg0: boolean) => void); id?: any; iri?: any; }} element
+     * @param element
      */
     defaultIriValue(element) {
         // get the iri of that element;
-        if (this.options.getGeneralMetaObject().iri) {
-            var str2Compare = this.options.getGeneralMetaObject().iri + element.id;
+        if (this.options.generalOntologyMetaData.iri) {
+            var str2Compare = this.options.generalOntologyMetaData.iri + element.id;
             return element.iri === str2Compare;
         }
         return false;
@@ -833,26 +833,25 @@ export default class Graph {
     /** Adjusts the containers current scale and position. */
     zoomed() {
         const _this = this;
-        if (this.forceNotZooming === true) {
+        if (this.forceNotZooming) {
             this.zoom.translate(this.graphTranslation);
             this.zoom.scale(this.zoomFactor);
             return;
         }
 
-
         var zoomEventByMWheel = false;
         if (d3.event.sourceEvent) {
             if (d3.event.sourceEvent.deltaY) zoomEventByMWheel = true;
         }
-        if (zoomEventByMWheel === false) {
-            if (this.transformAnimation === true) {
+        if (!zoomEventByMWheel) {
+            if (this.transformAnimation) {
                 return;
             }
             this.zoomFactor = d3.event.scale;
             this.graphTranslation = d3.event.translate;
             this.graphContainer.attr("transform", "translate(" + this.graphTranslation + ")scale(" + this.zoomFactor + ")");
             this.updateHaloRadius();
-            this.options.zoomSlider().updateZoomSliderValue(zoomFactor);
+            this.options.zoomSlider.updateZoomSliderValue(this.zoomFactor);
             return;
         }
         /** animate the transition **/
@@ -867,7 +866,7 @@ export default class Graph {
                     _this.graphTranslation[1] = tr.translate[1];
                     _this.zoomFactor = tr.scale[0];
                     _this.updateHaloRadius();
-                    _this.options.zoomSlider().updateZoomSliderValue(this.zoomFactor);
+                    _this.options.zoomSlider.updateZoomSliderValue(_this.zoomFactor);
                 };
             })
             .each("end", function () {
@@ -876,31 +875,29 @@ export default class Graph {
             .attr("transform", "translate(" + this.graphTranslation + ")scale(" + this.zoomFactor + ")")
             .ease('linear')
             .duration(250);
-    }// end of zoomed function
+    }
 
     redrawGraph() {
         this.remove();
-
-        this.graphContainer = d3.selectAll(this.options.graphContainerSelector())
+        this.graphContainer = d3.selectAll(this.options.graphContainerSelector)
             .append("svg")
             .classed("vowlGraph", true)
             .attr("width", this.options.width)
             .attr("height", this.options.height)
             .call(this.zoom)
             .append("g");
-        // add touch and double click functions
 
+        // add touch and double click functions
         var svgGraph = d3.selectAll(".vowlGraph");
         this.originalD3_dblClickFunction = svgGraph.on("dblclick.zoom");
         this.originalD3_touchZoomFunction = svgGraph.on("touchstart");
         svgGraph.on("touchstart", this.touchzoomed);
-        if (this.editMode === true) {
+        if (this.isEditorMode) {
             svgGraph.on("dblclick.zoom", this.modified_dblClickFunction);
         }
         else {
             svgGraph.on("dblclick.zoom", this.originalD3_dblClickFunction);
         }
-
     }
 
     generateEditElements() {
@@ -909,15 +906,12 @@ export default class Graph {
             .classed("hidden", true)
             .classed("addDataPropertyElement", true)
             .attr("transform", "translate(" + 0 + "," + 0 + ")");
-
-
         this.addDataPropertyGroupElement.append("circle")
             // .classed("deleteElement", true)
             .attr("r", 12)
             .attr("cx", 0)
             .attr("cy", 0)
             .append("title").text("Add Datatype Property");
-
         this.addDataPropertyGroupElement.append("line")
             // .classed("deleteElementIcon ",true)
             .attr("x1", -8)
@@ -925,7 +919,6 @@ export default class Graph {
             .attr("x2", 8)
             .attr("y2", 0)
             .append("title").text("Add Datatype Property");
-
         this.addDataPropertyGroupElement.append("line")
             // .classed("deleteElementIcon",true)
             .attr("x1", 0)
@@ -933,28 +926,24 @@ export default class Graph {
             .attr("x2", 0)
             .attr("y2", 8)
             .append("title").text("Add Datatype Property");
-
-        if (this.options.useAccuracyHelper()) {
+        if (this.options.useAccuracyHelper) {
             this.addDataPropertyGroupElement.append("circle")
                 .attr("r", 15)
                 .attr("cx", -7)
                 .attr("cy", 7)
                 .classed("superHiddenElement", true)
-                .classed("superOpacityElement", !this.options.showDraggerObject());
+                .classed("superOpacityElement", !this.options.showDraggerObject);
         }
-
         this.deleteGroupElement = this.editContainer.append('g')
             .classed("hidden-in-export", true)
             .classed("hidden", true)
             .classed("deleteParentElement", true)
             .attr("transform", "translate(" + 0 + "," + 0 + ")");
-
         this.deleteGroupElement.append("circle")
             .attr("r", 12)
             .attr("cx", 0)
             .attr("cy", 0)
             .append("title").text("Delete This Node");
-
         var crossLen = 5;
         this.deleteGroupElement.append("line")
             .attr("x1", -crossLen)
@@ -962,25 +951,21 @@ export default class Graph {
             .attr("x2", crossLen)
             .attr("y2", crossLen)
             .append("title").text("Delete This Node");
-
         this.deleteGroupElement.append("line")
             .attr("x1", crossLen)
             .attr("y1", -crossLen)
             .attr("x2", -crossLen)
             .attr("y2", crossLen)
             .append("title").text("Delete This Node");
-
-        if (this.options.useAccuracyHelper()) {
+        if (this.options.useAccuracyHelper) {
             this.deleteGroupElement.append("circle")
                 .attr("r", 15)
                 .attr("cx", 7)
                 .attr("cy", -7)
                 .classed("superHiddenElement", true)
-                .classed("superOpacityElement", !this.options.showDraggerObject());
+                .classed("superOpacityElement", !this.options.showDraggerObject);
         }
     }
-
-
 
     getClassDataForTtlExport() {
         var allNodes = this.unfilteredData.nodes;
@@ -1039,9 +1024,6 @@ export default class Graph {
     // }
 
     redrawContent() {
-        const _this = this;
-        var markerContainer;
-
         if (!this.graphContainer) {
             return;
         }
@@ -1060,12 +1042,14 @@ export default class Graph {
         this.draggerLayer = this.graphContainer.append("g").classed("editContainer", true);
         this.editContainer = this.graphContainer.append("g").classed("editContainer", true);
 
-        this.draggerPathLayer.classed("hidden-in-export", true);
+        draggerPathLayer.classed("hidden-in-export", true);
         this.editContainer.classed("hidden-in-export", true);
         this.draggerLayer.classed("hidden-in-export", true);
 
         // Add an extra container for all markers
-        markerContainer = this.linkContainer.append("defs");
+        let markerContainer = this.linkContainer.append("defs");
+
+        const _this = this;
         var drElement = this.draggerLayer.selectAll(".node")
             .data(_this.draggerObjectsArray).enter()
             .append("g")
@@ -1088,14 +1072,14 @@ export default class Graph {
         });
         this.generateEditElements();
 
-
         // Add an extra container for all markers
         markerContainer = this.linkContainer.append("defs");
 
+        if (this.classNodes === undefined) {
+            this.classNodes = [];
+        }
+
         // Draw nodes
-
-        if (this.classNodes === undefined) this.classNodes = [];
-
         this.nodeElements = this.nodeContainer.selectAll(".node")
             .data(this.classNodes).enter()
             .append("g")
@@ -1104,12 +1088,10 @@ export default class Graph {
                 return d.id;
             })
             .call(this.dragBehaviour);
+
         this.nodeElements.each(function (node) {
             node.draw(d3.select(this));
         });
-
-
-        if (this.labelNodes === undefined) this.labelNodes = [];
 
         // Draw label groups (property + inverse)
         this.labelGroupElements = this.labelContainer.selectAll(".labelGroup")
@@ -1117,7 +1099,6 @@ export default class Graph {
             .append("g")
             .classed("labelGroup", true)
             .call(this.dragBehaviour);
-
         this.labelGroupElements.each(function (label) {
             var success = label.draw(d3.select(this));
             label.property.labelObject = label;
@@ -1126,6 +1107,7 @@ export default class Graph {
                 d3.select(this).remove();
             }
         });
+
         // Place subclass label groups on the bottom of all labels
         this.labelGroupElements.each(function (label) {
             // the label might be hidden e.g. in compact notation
@@ -1138,7 +1120,7 @@ export default class Graph {
                 parentNode.insertBefore(this, parentNode.firstChild);
             }
         });
-        if (this.properties === undefined) this.properties = [];
+
         // Draw cardinality elements
         this.cardinalityElements = this.cardinalityContainer.selectAll(".cardinality")
             .data(this.properties).enter()
@@ -1147,22 +1129,21 @@ export default class Graph {
 
         this.cardinalityElements.each(function (property) {
             var success = property.drawCardinality(d3.select(this));
-
             // Remove empty groups without a label.
             if (!success) {
                 d3.select(this).remove();
             }
         });
+
         // Draw links
-        if (this.links === undefined) this.links = [];
         this.linkGroups = this.linkContainer.selectAll(".link")
             .data(this.links).enter()
             .append("g")
             .classed("link", true);
-
         this.linkGroups.each(function (link) {
             link.draw(d3.select(this), markerContainer);
         });
+
         this.linkPathElements = this.linkGroups.selectAll("path");
         // Select the path for direct access to receive a better performance
         this.addClickEvents();
@@ -1178,7 +1159,7 @@ export default class Graph {
     updateCanvasContainerSize() {
         if (this.graphContainer) {
             var svgElement = d3.selectAll(".vowlGraph");
-            svgElement.attr("width", this.options.labelWidth);
+            svgElement.attr("width", this.options.width);
             svgElement.attr("height", this.options.height);
             this.graphContainer.attr("transform", "translate(" + this.graphTranslation + ")scale(" + this.zoomFactor + ")");
         }
@@ -1191,22 +1172,20 @@ export default class Graph {
         this.redrawGraph();
         this.update(true);
 
-        if (!this.options.loadingModule().loadingWasSuccessFul) {
-            this.options.loadingModule().setErrorMode();
+        if (!this.options.loadingModule.loadingWasSuccessFul) {
+            this.options.loadingModule.setErrorMode();
         }
-
     }
 
     // Updates only the style of the graph.
     updateStyle() {
         this.refreshGraphStyle();
-        if (!this.options.loadingModule().loadingWasSuccessFul) {
+        if (!this.options.loadingModule.loadingWasSuccessFul) {
             this.force.stop();
         } else {
             this.force.start();
         }
     }
-
 
     load() {
         this.force.stop();
@@ -1235,11 +1214,10 @@ export default class Graph {
         this.updatePulseIds(this.nodeArrayForPulse);
         this.refreshGraphStyle();
         this.updateHaloStyles();
-
     }
 
     updateNodeMap() {
-        this.nodeMap = [];
+        this.nodeMap = []; // FIXME: This should be an actual Map
         var node;
         for (var j = 0; j < this.force.nodes().length; j++) {
             node = this.force.nodes()[j];
@@ -1265,24 +1243,19 @@ export default class Graph {
     }
 
     updateHaloStyles() {
-        var haloElement;
-        var halo;
-        var node;
-        for (var j = 0; j < this.force.nodes().length; j++) {
-            node = this.force.nodes()[j];
+        for (const node of this.force.nodes()) {
             if (node.id) {
-                haloElement = node.haloGroupElement;
+                const haloElement = node.haloGroupElement;
                 if (haloElement) {
-                    halo = haloElement.selectAll(".searchResultA");
+                    const halo = haloElement.selectAll(".searchResultA");
                     halo.classed("searchResultA", false);
                     halo.classed("searchResultB", true);
                 }
             }
-
             if (node.property) {
-                haloElement = node.property.haloGroupElement;
+                const haloElement = node.property.haloGroupElement;
                 if (haloElement) {
-                    halo = haloElement.selectAll(".searchResultA");
+                    const halo = haloElement.selectAll(".searchResultA");
                     halo.classed("searchResultA", false);
                     halo.classed("searchResultB", true);
                 }
@@ -1294,24 +1267,20 @@ export default class Graph {
      * Updates the graphs displayed data and style.
      * @note `data` will be mutated by this function, thus it should be cloned beforehand.
      * @param {boolean} init Is first time load?
-     * @param {object} data An object containing nodes and properties.
+     * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} data An object containing nodes and properties.
      *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
      * @returns
      */
-    update(init, data = this.currentData) {
-        var validOntology = this.options.loadingModule().loadingWasSuccessFul;
-        if (validOntology === false && init === true) {
-            this.options.loadingModule().collapseDetails();
-            return;
+    update(init = false, data = this.currentData) {
+        if (init) {
+            this.options.loadingModule.collapseDetails();
         }
-        if (validOntology === false) {
-            return;
+        if (!this.options.loadingModule.loadingWasSuccessFul) {
+            return
         }
-
         this.keepDetailsCollapsedOnLoading = false;
         this.refreshGraphData(data);
         this.updateNodeMap();
-
         this.force.start();
         this.redrawContent();
         this.updatePulseIds(this.nodeArrayForPulse);
@@ -1319,45 +1288,40 @@ export default class Graph {
         this.updateHaloStyles();
     }
 
-    paused(p) {
-        if (!arguments.length) return this.paused;
-        this.paused = p;
-        this.updateStyle();
-        return this;
-    }
-
-    // resetting the graph
+    /**
+     * resetting the graph
+     */
     reset() {
         const _this = this;
         if (this.unfilteredData) {
-            this.options.filterModules().forEach(function (/** @type {any} */ module) {
+            for (const module of this.options.filterModules) {
                 _this.filterFunction(module, _this.unfilteredData, true);
-            });
+            }
         }
         this.currentData = this.unfilteredData;
         // window size
-        let w = 0.5 * this.options.width();
-        let h = 0.5 * this.options.height();
+        const w = 0.5 * this.options.width;
+        const h = 0.5 * this.options.height;
         // computing initial translation for the graph due to the dynamic default zoom level
-        let tx = w - this.defaultZoom * w;
-        let ty = h - this.defaultZoom * h;
+        const tx = w - this.defaultZoom * w;
+        const ty = h - this.defaultZoom * h;
         this.zoom.translate([tx, ty])
             .scale(this.defaultZoom);
     }
 
     zoomOut() {
         const _this = this;
-        var minMag = this.options.minMagnification(),
-            maxMag = this.options.maxMagnification();
+        const minMag = this.options.minMagnification;
+        const maxMag = this.options.maxMagnification;
         var stepSize = (maxMag - minMag) / 10;
         var val = this.zoomFactor - stepSize;
         if (val < minMag) val = minMag;
 
-        var cx = 0.5 * this.options.width();
-        var cy = 0.5 * this.options.height();
+        var cx = 0.5 * this.options.width;
+        var cy = 0.5 * this.options.height;
         var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, this.zoomFactor);
-        var sP = [cp.x, cp.y, this.options.height() / this.zoomFactor];
-        var eP = [cp.x, cp.y, this.options.height() / val];
+        var sP = [cp.x, cp.y, this.options.height / this.zoomFactor];
+        var eP = [cp.x, cp.y, this.options.height / val];
         var pos_intp = d3.interpolateZoom(sP, eP);
 
         this.graphContainer.attr("transform", this.transform(sP, cx, cy))
@@ -1373,31 +1337,30 @@ export default class Graph {
                 _this.zoom.translate(_this.graphTranslation);
                 _this.zoom.scale(_this.zoomFactor);
                 _this.updateHaloRadius();
-                _this.options.zoomSlider().updateZoomSliderValue(_this.zoomFactor);
+                _this.options.zoomSlider.updateZoomSliderValue(_this.zoomFactor);
             });
-
     }
 
     zoomIn() {
         const _this = this;
-        var minMag = this.options.minMagnification(),
-            maxMag = this.options.maxMagnification();
+        const minMag = this.options.minMagnification;
+        const maxMag = this.options.maxMagnification;
         var stepSize = (maxMag - minMag) / 10;
         var val = this.zoomFactor + stepSize;
         if (val > maxMag) val = maxMag;
-        var cx = 0.5 * this.options.width();
-        var cy = 0.5 * this.options.height();
+        var cx = 0.5 * this.options.width;
+        var cy = 0.5 * this.options.height;
         var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, zoomFactor);
-        var sP = [cp.x, cp.y, this.options.height() / this.zoomFactor];
-        var eP = [cp.x, cp.y, this.options.height() / val];
+        var sP = [cp.x, cp.y, this.options.height / this.zoomFactor];
+        var eP = [cp.x, cp.y, this.options.height / val];
         var pos_intp = d3.interpolateZoom(sP, eP);
 
-        this.graphContainer.attr("transform", transform(sP, cx, cy))
+        this.graphContainer.attr("transform", this.transform(sP, cx, cy))
             .transition()
             .duration(250)
             .attrTween("transform", function () {
                 return function (t) {
-                    return transform(pos_intp(t), cx, cy);
+                    return _this.transform(pos_intp(t), cx, cy);
                 };
             })
             .each("end", function () {
@@ -1405,7 +1368,7 @@ export default class Graph {
                 _this.zoom.translate(graphTranslation);
                 _this.zoom.scale(zoomFactor);
                 _this.updateHaloRadius();
-                _this.options.zoomSlider().updateZoomSliderValue(_this.zoomFactor);
+                _this.options.zoomSlider.updateZoomSliderValue(_this.zoomFactor);
             });
     }
 
@@ -1414,8 +1377,8 @@ export default class Graph {
     /** --------------------------------------------------------- **/
 
     clearAllGraphData() {
-        if (this.graphNodeElements() && this.graphNodeElements().length > 0) {
-            this.cachedJsonOBJ = this.options.exportMenu().createJSON_exportObject();
+        if (this.getVisibleNodeElements() && this.getVisibleNodeElements().length > 0) {
+            this.cachedJsonOBJ = this.options.exportMenu.createJSON_exportObject();
         } else {
             this.cachedJsonOBJ = null;
         }
@@ -1429,7 +1392,7 @@ export default class Graph {
     // removes data when data could not be loaded
     clearGraphData() {
         this.force.stop();
-        var sidebar = this.options.sidebar();
+        var sidebar = this.options.sidebar;
         if (sidebar)
             sidebar.clearOntologyInformation();
         if (this.graphContainer)
@@ -1451,8 +1414,8 @@ export default class Graph {
         }
         this.parser.dictionary = originalDictionary;
 
-        var literFilter = this.options.literalFilter();
-        var idsToRemove = literFilter.removedNodes; // A set
+        var literalFilter = this.options.literalFilter;
+        var idsToRemove = literalFilter.removedNodes; // A set
         var originalDict = this.parser.dictionary;
         var newDict = [];
 
@@ -1469,9 +1432,9 @@ export default class Graph {
     }
 
     updateProgressBarMode() {
-        var loadingModule = this.options.loadingModule();
-
+        var loadingModule = this.options.loadingModule;
         var state = loadingModule.progressBarMode;
+
         switch (state) {
             case 0:
                 loadingModule.setErrorMode();
@@ -1487,23 +1450,29 @@ export default class Graph {
         }
     }
 
+    /**
+     * @param {boolean} val
+     */
     setFilterWarning(val) {
         this.showFilterWarning = val;
     }
+
+    /**
+     * @param {boolean} [init]
+     */
     loadGraphData(init) {
-        const _this = this;
-        // reset the locate button and previously selected locations and other variables
-
-        var loadingModule = this.options.loadingModule();
+        var loadingModule = this.options.loadingModule;
         this.force.stop();
-
         this.force.nodes([]);
         this.force.links([]);
         this.nodeArrayForPulse = [];
         this.pulseNodeIds = [];
         this.locationId = 0;
+
+        // reset the locate button and previously selected locations and other variables
         d3.select("#locateSearchResult").classed("highlighted", false);
         d3.select("#locateSearchResult").node().title = "Nothing to locate";
+
         this.clearGraphData();
 
         if (init) {
@@ -1512,7 +1481,7 @@ export default class Graph {
         }
 
         this.showFilterWarning = false;
-        this.parser.parse(this.options.data());
+        this.parser.parse(this.options.data);
         this.unfilteredData = {
             nodes: this.parser.nodes,
             properties: this.parser.properties
@@ -1521,7 +1490,6 @@ export default class Graph {
         // fixing class and property id counter for the editor
         this.eN = this.unfilteredData.nodes.length + 1;
         this.eP = this.unfilteredData.properties.length + 1;
-
 
         // using the ids of elements if to ensure that loaded elements will not get the same id;
         for (var p = 0; p < this.unfilteredData.properties.length; p++) {
@@ -1552,19 +1520,20 @@ export default class Graph {
             }
         }
 
+        // REVIEW: This is done twice. Is that necessary?
         this.links = LinkCreator.createLinks(this.unfilteredData.properties);
         this.storeLinksOnNodes(this.unfilteredData.nodes, this.links);
         this.currentData = this.unfilteredData;
 
         this.initialLoad = true;
-        this.options.warningModule().closeFilterHint();
+        this.options.warningModule.closeFilterHint();
 
         // loading handler
         this.updateRenderingDuringSimulation = true;
-        var validOntology = this.options.loadingModule().loadingWasSuccessFul;
+        var validOntology = this.options.loadingModule.loadingWasSuccessFul;
         if (this.graphContainer && validOntology === true) {
             this.updateRenderingDuringSimulation = false;
-            this.options.ontologyMenu().append_bulletPoint("Generating visualization ... ");
+            this.options.ontologyMenu.append_bulletPoint("Generating visualization ... ");
             loadingModule.setPercentMode();
 
             if (this.unfilteredData.nodes.length > 0) {
@@ -1582,16 +1551,14 @@ export default class Graph {
             this.force.start();
         } else {
             this.force.stop();
-            this.options.ontologyMenu().append_bulletPoint("Failed to load ontology");
+            this.options.ontologyMenu.append_bulletPoint("Failed to load ontology");
             loadingModule.setErrorMode();
         }
-        // update prefixList(
         // update general MetaOBJECT
-        this.options.clearMetaObject();
         this.options.clearGeneralMetaObject();
-        this.options.editSidebar().clearMetaObjectValue();
-        if (this.options.data() !== undefined) {
-            var header = this.options.data().header;
+        this.options.editSidebar.clearMetaObjectValue();
+        if (this.options.data !== undefined) {
+            var header = this.options.data.header;
             if (header) {
                 if (header.iri) {
                     this.options.addOrUpdateGeneralObjectEntry("iri", header.iri);
@@ -1633,9 +1600,11 @@ export default class Graph {
         }
         // update more meta OBJECT
         // Initialize filters with data to replicate consecutive filtering
+        // REVIEW: This is done twice. Is that necessary?
         this.links = LinkCreator.createLinks(this.unfilteredData.properties);
         this.storeLinksOnNodes(this.unfilteredData.nodes, this.links);
 
+        // TODO: This must be created in the parser
         // Create a map of all nodes and properties for fast lookup
         this.unfilteredData.nodes.forEach((node) => {
             this.unfilteredDataMap.nodes.set(node.id, node);
@@ -1645,9 +1614,9 @@ export default class Graph {
         });
 
         // currentData = unfilteredData;
-        this.options.filterModules().forEach(function (module) {
-            _this.filterFunction(module, unfilteredData, true);
-        });
+        for (const module of this.options.filterModules) {
+            this.filterFunction(module, this.unfilteredData, true);
+        };
 
         // generate dictionary here ;
         this.generateDictionary(this.unfilteredData);
@@ -1658,26 +1627,25 @@ export default class Graph {
         if (this.parser.settingsImportGraphZoomAndTranslation) {
             this.centerGraphViewOnLoad = false;
         }
-        this.options.searchMenu().requestDictionaryUpdate();
-        this.options.editSidebar().updateGeneralOntologyInfo();
-        this.options.editSidebar().updatePrefixUi();
-        this.options.editSidebar().updateElementWidth();
+        this.options.searchMenu.requestDictionaryUpdate();
+        this.options.editSidebar.updateGeneralOntologyInfo();
+        this.options.editSidebar.updatePrefixUi();
+        this.options.editSidebar.updateElementWidth();
     }
 
     handleOnLoadingError() {
         this.force.stop();
-        this.graph.clearGraphData();
-        this.options.ontologyMenu().append_bulletPoint("Failed to load ontology");
+        this.clearGraphData();
+        this.options.ontologyMenu.append_bulletPoint("Failed to load ontology");
         d3.select("#progressBarValue").node().innerHTML = "";
         d3.select("#progressBarValue").classed("busyProgressBar", false);
-        this.options.loadingModule().setErrorMode();
-        this.options.loadingModule().showErrorDetailsMessage();
+        this.options.loadingModule.setErrorMode();
+        this.options.loadingModule.showErrorDetailsMessage();
     }
 
     quick_refreshGraphData() {
         this.links = LinkCreator.createLinks(this.properties);
         this.labelNodes = this.computeLabelNodes(this.links);
-
         this.storeLinksOnNodes(this.classNodes, this.links);
         this.setForceLayoutData(this.classNodes, this.labelNodes, this.links);
     }
@@ -1691,22 +1659,22 @@ export default class Graph {
     /**
      * Applies the data of the graph options object and parses it. The graph is not redrawn.
      * @note `preprocessedData` will be mutated by this function, thus it should be cloned beforehand.
-     * @param {object} preprocessedData An object containing nodes and properties.
+     * @param preprocessedData An object containing nodes and properties.
      *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
      */
     refreshGraphData(preprocessedData) {
-        const _this = this;
-        let shouldExecuteEmptyFilter = this.options.literalFilter().enabled;
-        this.graph.executeEmptyLiteralFilter();
-        this.options.literalFilter().enabled = shouldExecuteEmptyFilter;
+        let shouldExecuteEmptyFilter = this.options.literalFilter.enabled;
+        this.executeEmptyLiteralFilter();
+        this.options.literalFilter.enabled = shouldExecuteEmptyFilter;
 
         // Filter the data
         this.links = LinkCreator.createLinks(preprocessedData.properties);
         this.storeLinksOnNodes(preprocessedData.nodes, this.links);
-        this.options.filterModules().forEach(function (module) {
-            preprocessedData = _this.filterFunction(module, preprocessedData);
-        });
-        this.options.focuserModule().handle(undefined, true);
+        for (const module of this.options.filterModules) {
+            preprocessedData = this.filterFunction(module, preprocessedData);
+        }
+
+        this.options.focuserModule.handle(undefined, true);
         this.classNodes = preprocessedData.nodes;
         this.properties = preprocessedData.properties;
         this.links = LinkCreator.createLinks(this.properties);
@@ -1715,7 +1683,7 @@ export default class Graph {
         this.setForceLayoutData(this.classNodes, this.labelNodes, this.links);
         // for (var i = 0; i < classNodes.length; i++) {
         //     if (classNodes[i].rectangularRepresentation)
-        //         classNodes[i].rectangularRepresentation = this.options.rectangularRepresentation();
+        //         classNodes[i].rectangularRepresentation = this.options.rectangularRepresentation;
         // }
     }
 
@@ -1743,9 +1711,14 @@ export default class Graph {
         this.currentData = { nodes: Array.from(selectedNodes.values()), properties: selectedProperties };
         this.update(false, this.currentData);
         this.resetSearchHighlight();
-        this.graph.highLightNodes(rootNodeID);
+        this.highLightNodes(rootNodeID);
     }
 
+    /**
+     * @param {any} module
+     * @param {object} data
+     * @param {boolean} [initializing]
+     */
     filterFunction(module, data, initializing) {
         if (initializing) {
             if (module.initialize) {
@@ -1869,13 +1842,13 @@ export default class Graph {
     // Applies all options that don't change the graph data.
     refreshGraphStyle() {
         const _this = this
-        this.zoom = zoom.scaleExtent([this.options.minMagnification(), this.options.maxMagnification()]);
+        this.zoom = zoom.scaleExtent([this.options.minMagnification, this.options.maxMagnification]);
         if (this.graphContainer) {
             this.zoom.event(this.graphContainer);
         }
 
         this.force.charge(function (element) {
-            var charge = _this.options.charge();
+            var charge = _this.options.charge;
             if (ElementTools.isLabel(element)) {
                 charge *= 0.8;
             }
@@ -1883,11 +1856,11 @@ export default class Graph {
         })
             .size([this.options.width, options.height])
             .linkDistance(this.calculateLinkPartDistance)
-            .gravity(this.options.gravity())
-            .linkStrength(this.options.linkStrength()); // Flexibility of links
+            .gravity(this.options.gravity)
+            .linkStrength(this.options.linkStrength); // Flexibility of links
 
         this.force.nodes().forEach(function (n) {
-            n.frozen = _this.paused;
+            n.frozen = _this._paused;
         });
     }
 
@@ -1895,7 +1868,7 @@ export default class Graph {
         var link = linkPart.link;
 
         if (link.isLoop()) {
-            return this.options.loopDistance();
+            return this.options.loopDistance;
         }
 
         // divide by 2 to receive the length for a single link part
@@ -1907,9 +1880,9 @@ export default class Graph {
 
     getVisibleLinkDistance(link) {
         if (ElementTools.isDatatype(link.domain) || ElementTools.isDatatype(link.range)) {
-            return this.options.datatypeDistance();
+            return this.options.datatypeDistance;
         } else {
-            return this.options.classDistance();
+            return this.options.classDistance;
         }
     }
 
@@ -1918,7 +1891,7 @@ export default class Graph {
     /** --------------------------------------------------------- **/
 
     animateDynamicLabelWidth() {
-        var wantedWidth = this.options.dynamicLabelWidth();
+        var wantedWidth = this.options.dynamicLabelWidth;
         var i;
         for (i = 0; i < this.classNodes.length; i++) {
             var nodeElement = this.classNodes[i];
@@ -1944,7 +1917,7 @@ export default class Graph {
                     if (node.property) {
                         // match search strings with property label
                         if (node.property.inverse) {
-                            var searchString = this.options.searchMenu().getSearchString().toLowerCase();
+                            var searchString = this.options.searchMenu.getSearchString().toLowerCase();
                             var name = node.property.labelForCurrentLanguage().toLowerCase();
                             if (name === searchString) this.computeDistanceToCenter(node);
                             else {
@@ -1989,8 +1962,8 @@ export default class Graph {
 
     computeDistanceToCenter(node, inverse) {
         var container = node;
-        var w = this.options.width();
-        var h = this.options.height();
+        var w = this.options.width;
+        var h = this.options.height;
         var posXY = this.getScreenCoords(node.x, node.y, this.graphTranslation, this.zoomFactor);
 
         var highlightOfInv = false;
@@ -2188,13 +2161,13 @@ export default class Graph {
 
     transform(p, cx, cy) {
         // one iteration step for the locate target animation
-        this.zoomFactor = this.options.height() / p[2];
+        this.zoomFactor = this.options.height / p[2];
         this.graphTranslation = [(cx - p[0] * this.zoomFactor), (cy - p[1] * this.zoomFactor)];
         this.updateHaloRadius();
         // update the values in case the user wants to break the animation
         this.zoom.translate(this.graphTranslation);
         this.zoom.scale(this.zoomFactor);
-        this.options.zoomSlider().updateZoomSliderValue(this.zoomFactor);
+        this.options.zoomSlider.updateZoomSliderValue(this.zoomFactor);
         return "translate(" + this.graphTranslation[0] + "," + this.graphTranslation[1] + ")scale(" + this.zoomFactor + ")";
     }
 
@@ -2209,13 +2182,13 @@ export default class Graph {
         const _this = this;
 
         // store the original information
-        var cx = 0.5 * this.options.width();
-        var cy = 0.5 * this.options.height();
+        var cx = 0.5 * this.options.width;
+        var cy = 0.5 * this.options.height;
         var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, this.zoomFactor);
-        var sP = [cp.x, cp.y, this.options.height() / this.zoomFactor];
+        var sP = [cp.x, cp.y, this.options.height / this.zoomFactor];
 
         var zoomLevel = Math.max(this.defaultZoom + 0.5 * this.defaultZoom, this.defaultTargetZoom);
-        var eP = [target.x, target.y, this.options.height() / zoomLevel];
+        var eP = [target.x, target.y, this.options.height / zoomLevel];
         var pos_intp = d3.interpolateZoom(sP, eP);
 
         var lenAnimation = pos_intp.duration;
@@ -2389,8 +2362,8 @@ export default class Graph {
 
     nodeInViewport(node, property) {
 
-        var w = this.options.width();
-        var h = this.options.height();
+        var w = this.options.width;
+        var h = this.options.height;
         var posXY = this.getScreenCoords(node.x, node.y, graphTranslation, zoomFactor);
         var x = posXY.x;
         var y = posXY.y;
@@ -2403,8 +2376,8 @@ export default class Graph {
         var halos = this.graph.hideHalos();
         var bbox = this.graphContainer.node().getBoundingClientRect();
         halos.classed("hidden", false);
-        var w = this.options.width();
-        var h = this.options.height();
+        var w = this.options.width;
+        var h = this.options.height;
 
         // get the graph coordinates
         var topLeft = this.getWorldPosFromScreen(0, 0, this.graphTranslation, this.zoomFactor);
@@ -2482,10 +2455,10 @@ export default class Graph {
         var topLeft = this.getWorldPosFromScreen(bbox.left, bbox.top, graphTranslation, zoomFactor);
         var botRight = this.getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
 
-        var w = this.options.width();
-        if (this.options.leftSidebar().visibleSidebar === true)
+        var w = this.options.width;
+        if (this.options.leftSidebar.visibleSidebar === true)
             w -= 200;
-        var h = this.options.height();
+        var h = this.options.height;
         topLeft.x += bboxOffset;
         topLeft.y -= bboxOffset;
         botRight.x -= bboxOffset;
@@ -2500,7 +2473,7 @@ export default class Graph {
         var cx = 0.5 * w,
             cy = 0.5 * h;
 
-        if (this.options.leftSidebar().visibleSidebar === true)
+        if (this.options.leftSidebar.visibleSidebar === true)
             cx += 200;
         var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, this.zoomFactor);
 
@@ -2542,10 +2515,10 @@ export default class Graph {
         var topLeft = this.getWorldPosFromScreen(bbox.left, bbox.top, this.graphTranslation, this.zoomFactor);
         var botRight = this.getWorldPosFromScreen(bbox.right, bbox.bottom, this.graphTranslation, this.zoomFactor);
 
-        var w = this.options.width();
-        if (this.options.leftSidebar().visibleSidebar === true)
+        var w = this.options.width;
+        if (this.options.leftSidebar.visibleSidebar === true)
             w -= 200;
-        var h = this.options.height();
+        var h = this.options.height;
         topLeft.x += bboxOffset;
         topLeft.y -= bboxOffset;
         botRight.x -= bboxOffset;
@@ -2560,7 +2533,7 @@ export default class Graph {
         var cx = 0.5 * w,
             cy = 0.5 * h;
 
-        if (this.options.leftSidebar().visibleSidebar === true)
+        if (this.options.leftSidebar.visibleSidebar === true)
             cx += 200;
         var cp = this.getWorldPosFromScreen(cx, cy, this.graphTranslation, this.zoomFactor);
 
@@ -2613,7 +2586,7 @@ export default class Graph {
                 this.graphContainer.attr("transform", "translate(" + this.graphTranslation + ")scale(" + this.zoomFactor + ")");
                 this.zoom.translate(this.graphTranslation);
                 this.zoom.scale(this.zoomFactor);
-                this.options.zoomSlider().updateZoomSliderValue(this.zoomFactor);
+                this.options.zoomSlider.updateZoomSliderValue(this.zoomFactor);
 
 
             });
@@ -2638,11 +2611,11 @@ export default class Graph {
 
         if (graph.classesSanityCheck(element, typeString) === false) {
             // call reselection to restore previous type selection
-            this.options.editSidebar().updateSelectionInformation(element);
+            this.options.editSidebar.updateSelectionInformation(element);
             return;
         }
 
-        var prototype = this.NodePrototypeMap.get(typeString.toLowerCase());
+        var prototype = nodeClassMap.get(typeString.toLowerCase());
         var aNode = new prototype(this);
         aNode.x = element.x;
         aNode.y = element.y;
@@ -2702,7 +2675,7 @@ export default class Graph {
         // very important thing for selection!;
         this.addNewNodeElement(aNode);
         // handle focuser!
-        this.options.focuserModule().handle(aNode);
+        this.options.focuserModule.handle(aNode);
         this.generateDictionary(this.unfilteredData);
         this.graph.getUpdateDictionary();
         element = null;
@@ -2717,7 +2690,7 @@ export default class Graph {
             return false;
         }
 
-        var propPrototype = PropertyPrototypeMap.get(typeString.toLowerCase());
+        var propPrototype = propertyClassMap.get(typeString.toLowerCase());
         var aProp = new propPrototype(graph);
         aProp.copyInformation(element);
         aProp.id = element.id;
@@ -2742,7 +2715,7 @@ export default class Graph {
         }
 
         if (this.propertyCheckExistenceChecker(aProp, element.domain, element.range) === false) {
-            this.options.editSidebar().updateSelectionInformation(element);
+            this.options.editSidebar.updateSelectionInformation(element);
             return;
         }
         // // TODO: change its base IRI to proper value
@@ -2773,7 +2746,7 @@ export default class Graph {
             aProp.labelObject.py = element.labelObject.py;
         }
 
-        options.focuserModule().handle(aProp);
+        options.focuserModule.handle(aProp);
         element = null;
     }
 
@@ -2795,14 +2768,14 @@ export default class Graph {
 
         if (hoveredNodeElement) {
             if (hoveredNodeElement.pinned === false) {
-                hoveredNodeElement.locked = graph.paused();
-                hoveredNodeElement.frozen = graph.paused();
+                hoveredNodeElement.locked = graph._paused;
+                hoveredNodeElement.frozen = graph._paused;
             }
         }
         if (hoveredPropertyElement) {
             if (hoveredPropertyElement.pinned === false) {
-                hoveredPropertyElement.locked = graph.paused();
-                hoveredPropertyElement.frozen = graph.paused();
+                hoveredPropertyElement.locked = graph._paused;
+                hoveredPropertyElement.frozen = graph._paused;
             }
         }
     }
@@ -2813,8 +2786,8 @@ export default class Graph {
         var modeOfOpString = d3.select("#modeOfOperationString").node();
 
         if (!arguments.length) {
-            create_entry.node().checked = editMode;
-            if (editMode === false) {
+            create_entry.node().checked = isEditorMode;
+            if (isEditorMode === false) {
                 create_container.node().title = "Enable editing in modes menu to create a new ontology";
                 create_entry.node().title = "Enable editing in modes menu to create a new ontology";
                 create_entry.style("pointer-events", "none");
@@ -2827,19 +2800,19 @@ export default class Graph {
                 create_entry.style("pointer-events", "auto");
             }
 
-            return editMode;
+            return isEditorMode;
         }
         this.options.setEditorModeForDefaultObject(val);
 
         // if (seenEditorHint===false  && val===true){
         //     seenEditorHint=true;
-        //     this.options.warningModule().showEditorHint();
+        //     this.options.warningModule.showEditorHint();
         // }
-        editMode = val;
+        isEditorMode = val;
 
         if (create_entry) {
-            create_entry.classed("disabled", !editMode);
-            if (!editMode) {
+            create_entry.classed("disabled", !isEditorMode);
+            if (!isEditorMode) {
                 create_container.node().title = "Enable editing in modes menu to create a new ontology";
                 create_entry.node().title = "Enable editing in modes menu to create a new ontology";
                 create_entry.node().disabled = true;
@@ -2860,14 +2833,14 @@ export default class Graph {
         // box =ModuleCheckbox
         var compactNotationContainer = d3.select("#compactnotationModuleCheckbox");
         if (compactNotationContainer) {
-            compactNotationContainer.classed("disabled", !editMode);
-            if (!editMode) {
+            compactNotationContainer.classed("disabled", !isEditorMode);
+            if (!isEditorMode) {
                 compactNotationContainer.node().title = "";
                 compactNotationContainer.node().disabled = false;
                 compactNotationContainer.style("pointer-events", "auto");
                 d3.select("#compactNotationOption").style("color", "");
                 d3.select("#compactNotationOption").node().title = "";
-                options.literalFilter().enabled = true;
+                options.literalFilter.enabled = true;
                 graph.update();
             } else {
                 // if editor Mode
@@ -2875,8 +2848,8 @@ export default class Graph {
                 d3.select("#compactNotationOption").node().title = "Compact notation can only be used in view mode";
                 compactNotationContainer.node().disabled = true;
                 compactNotationContainer.node().checked = false;
-                options.compactNotationModule().enabled = false;
-                options.literalFilter().enabled = false;
+                options.compactNotationModule.enabled = false;
+                options.literalFilter.enabled = false;
                 graph.executeCompactNotationModule();
                 graph.executeEmptyLiteralFilter();
                 graph.lazyRefresh();
@@ -2894,22 +2867,22 @@ export default class Graph {
         }
         var svgGraph = d3.selectAll(".vowlGraph");
 
-        if (editMode === true) {
-            options.leftSidebar().showSidebar(options.leftSidebar().getSidebarVisibility(), true);
-            options.leftSidebar().hideCollapseButton(false);
-            this.options.editSidebar().updatePrefixUi();
-            this.options.editSidebar().updateElementWidth();
+        if (isEditorMode === true) {
+            options.leftSidebar.showSidebar(options.leftSidebar.getSidebarVisibility(), true);
+            options.leftSidebar.hideCollapseButton(false);
+            this.options.editSidebar.updatePrefixUi();
+            this.options.editSidebar.updateElementWidth();
             svgGraph.on("dblclick.zoom", this.modified_dblClickFunction);
 
         } else {
             svgGraph.on("dblclick.zoom", originalD3_dblClickFunction);
-            options.leftSidebar().showSidebar(0);
-            options.leftSidebar().hideCollapseButton(true);
+            options.leftSidebar.showSidebar(0);
+            options.leftSidebar.hideCollapseButton(true);
             // hide hovered edit elements
             removeEditElements();
         }
-        options.sidebar().updateShowedInformation();
-        options.editSidebar().updateElementWidth();
+        options.sidebar.updateShowedInformation();
+        options.editSidebar.updateElementWidth();
 
     }
 
@@ -2925,7 +2898,7 @@ export default class Graph {
         // create a node of that id;
 
         var typeToCreate = d3.select("#defaultClass").node().title;
-        prototype = NodePrototypeMap.get(typeToCreate.toLowerCase());
+        prototype = nodeClassMap.get(typeToCreate.toLowerCase());
         aNode = new prototype(graph);
         var autoEditElement = false;
         if (typeToCreate === "owl:Thing") {
@@ -2940,14 +2913,14 @@ export default class Graph {
         aNode.px = aNode.x;
         aNode.py = aNode.y;
         aNode.id = "Class" + eN++;
-        // aNode.paused(true);
+        // aNode._paused=true;
 
         aNode.baseIri = d3.select("#iriEditor").node().value;
         aNode.iri = aNode.baseIri + aNode.id;
         addNewNodeElement(aNode, forceUpdate);
-        options.focuserModule().handle(aNode, true);
-        aNode.frozen = graph.paused();
-        aNode.locked = graph.paused();
+        options.focuserModule.handle(aNode, true);
+        aNode.frozen = graph._paused;
+        aNode.locked = graph._paused;
         aNode.enableEditing(autoEditElement);
     }
 
@@ -2996,7 +2969,7 @@ export default class Graph {
 
     genericPropertySanityCheck(domain, range, typeString, header, action) {
         if (domain === range && typeString === "rdfs:subClassOf") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 header,
                 "rdfs:subClassOf can not be created as loops (domain == range)",
                 action,
@@ -3006,7 +2979,7 @@ export default class Graph {
             return false;
         }
         if (domain === range && typeString === "owl:disjointWith") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 header,
                 "owl:disjointWith  can not be created as loops (domain == range)",
                 action,
@@ -3018,7 +2991,7 @@ export default class Graph {
         // allProps[i].type==="owl:allValuesFrom"  ||
         // allProps[i].type==="owl:someValuesFrom"
         if (domain.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 header,
                 "owl:allValuesFrom can not originate from owl:Thing",
                 action,
@@ -3028,7 +3001,7 @@ export default class Graph {
             return false;
         }
         if (domain.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 header,
                 "owl:someValuesFrom can not originate from owl:Thing",
                 action,
@@ -3039,7 +3012,7 @@ export default class Graph {
         }
 
         if (range.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 header,
                 "owl:allValuesFrom can not be connected to owl:Thing",
                 action,
@@ -3049,7 +3022,7 @@ export default class Graph {
             return false;
         }
         if (range.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 header,
                 "owl:someValuesFrom can not be connected to owl:Thing",
                 action,
@@ -3095,7 +3068,7 @@ export default class Graph {
                 if (allProps[i].range === classElement || allProps[i].domain === classElement) {
                     // check for the type of that property
                     if (allProps[i].type === "owl:someValuesFrom") {
-                        this.options.warningModule().showWarning(
+                        this.options.warningModule.showWarning(
                             "Can not change class type",
                             "The element has a property that is of type owl:someValuesFrom",
                             "Element type not changed!",
@@ -3105,7 +3078,7 @@ export default class Graph {
                         return false;
                     }
                     if (allProps[i].type === "owl:allValuesFrom") {
-                        this.options.warningModule().showWarning(
+                        this.options.warningModule.showWarning(
                             "Can not change class type",
                             "The element has a property that is of type owl:allValuesFrom",
                             "Element type not changed!",
@@ -3128,7 +3101,7 @@ export default class Graph {
             for (i = 0; i < allProps.length; i++) {
                 if (allProps[i] === property) continue;
                 if (allProps[i].domain === domain && allProps[i].range === range && allProps[i].type === property.type) {
-                    this.options.warningModule().showWarning(
+                    this.options.warningModule.showWarning(
                         "Warning",
                         "This triple already exist!",
                         "Element not created!",
@@ -3138,7 +3111,7 @@ export default class Graph {
                     return false;
                 }
                 if (allProps[i].domain === range && allProps[i].range === domain && allProps[i].type === property.type) {
-                    this.options.warningModule().showWarning(
+                    this.options.warningModule.showWarning(
                         "Warning",
                         "Inverse assignment already exist! ",
                         "Element not created!",
@@ -3164,7 +3137,7 @@ export default class Graph {
     //     console.log("test range results in "+ b1);
 
     //     if (b1  && b2 ){
-    //         this.options.warningModule().showWarning(
+    //         this.options.warningModule.showWarning(
     //             "Warning",
     //             "This triple already exist!",
     //             "Element not created!",
@@ -3178,8 +3151,8 @@ export default class Graph {
 
     sanityCheckProperty(domain, range, typeString) {
         // check for duplicate triple in the element;
-        if (typeString === "owl:objectProperty" && this.options.objectPropertyFilter().enabled === true) {
-            this.options.warningModule().showWarning(
+        if (typeString === "owl:objectProperty" && this.options.objectPropertyFilter.enabled) {
+            this.options.warningModule.showWarning(
                 "Warning",
                 "Object properties are filtered out in the visualization!",
                 "Element not created!",
@@ -3189,8 +3162,8 @@ export default class Graph {
             return false;
         }
 
-        if (typeString === "owl:disjointWith" && this.options.disjointPropertyFilter().enabled === true) {
-            this.options.warningModule().showWarning(
+        if (typeString === "owl:disjointWith" && this.options.disjointPropertyFilter.enabled) {
+            this.options.warningModule.showWarning(
                 "Warning",
                 "owl:disjointWith properties are filtered out in the visualization!",
                 "Element not created!",
@@ -3202,7 +3175,7 @@ export default class Graph {
 
 
         if (domain === range && typeString === "rdfs:subClassOf") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 "Warning",
                 "rdfs:subClassOf can not be created as loops (domain == range)",
                 "Element not created!",
@@ -3212,7 +3185,7 @@ export default class Graph {
             return false;
         }
         if (domain === range && typeString === "owl:disjointWith") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 "Warning",
                 "owl:disjointWith  can not be created as loops (domain == range)",
                 "Element not created!",
@@ -3223,7 +3196,7 @@ export default class Graph {
         }
 
         if (domain.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 "Warning",
                 "owl:someValuesFrom can not originate from owl:Thing",
                 "Element not created!",
@@ -3233,7 +3206,7 @@ export default class Graph {
             return false;
         }
         if (domain.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 "Warning",
                 "owl:allValuesFrom can not originate from owl:Thing",
                 "Element not created!",
@@ -3244,7 +3217,7 @@ export default class Graph {
         }
 
         if (range.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 "Warning",
                 "owl:allValuesFrom can not be connected to owl:Thing",
                 "Element not created!",
@@ -3254,7 +3227,7 @@ export default class Graph {
             return false;
         }
         if (range.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            this.options.warningModule().showWarning(
+            this.options.warningModule.showWarning(
                 "Warning",
                 "owl:someValuesFrom can not be connected to owl:Thing",
                 "Element not created!",
@@ -3275,7 +3248,7 @@ export default class Graph {
             return false;
         }
 
-        var propPrototype = PropertyPrototypeMap.get(defaultPropertyName.toLowerCase());
+        var propPrototype = propertyClassMap.get(defaultPropertyName.toLowerCase());
         var aProp = new propPrototype(graph);
         aProp.id = "objectProperty" + eP++;
         aProp.domain = domain;
@@ -3334,17 +3307,17 @@ export default class Graph {
         aProp.labelObject.y = pY;
         aProp.labelObject.py = pY;
 
-        aProp.frozen = graph.paused();
-        aProp.locked = graph.paused();
-        domain.frozen = graph.paused();
-        domain.locked = graph.paused();
-        range.frozen = graph.paused();
-        range.locked = graph.paused();
+        aProp.frozen = graph._paused;
+        aProp.locked = graph._paused;
+        domain.frozen = graph._paused;
+        domain.locked = graph._paused;
+        range.frozen = graph._paused;
+        range.locked = graph._paused;
 
         generateDictionary(unfilteredData);
         graph.getUpdateDictionary();
 
-        options.focuserModule().handle(aProp);
+        options.focuserModule.handle(aProp);
         graph.activateHoverElementsForProperties(true, aProp, false, touchDevice);
         aProp.labelObject.increasedLoopAngle = true;
         aProp.enableEditing(autoEditElement);
@@ -3354,8 +3327,8 @@ export default class Graph {
         // random postion issues;
         clearTimeout(nodeFreezer);
         // tells user when element is filtered out
-        if (this.options.datatypeFilter().enabled === true) {
-            this.options.warningModule().showWarning(
+        if (this.options.datatypeFilter.enabled) {
+            this.options.warningModule.showWarning(
                 "Warning",
                 "Datatype properties are filtered out in the visualization!",
                 "Element not created!",
@@ -3365,19 +3338,18 @@ export default class Graph {
             return;
         }
 
-
         var aNode, prototype;
 
         // create a default datatype Node >> HERE LITERAL;
         var defaultDatatypeName = d3.select("#defaultDatatype").node().title;
         if (defaultDatatypeName === "rdfs:Literal") {
-            prototype = NodePrototypeMap.get("rdfs:literal");
+            prototype = nodeClassMap.get("rdfs:literal");
             aNode = new prototype(graph);
             aNode.label = "Literal";
             aNode.iri = "http://www.w3.org/2000/01/rdf-schema#Literal";
             aNode.baseIri = "http://www.w3.org/2000/01/rdf-schema#";
         } else {
-            prototype = NodePrototypeMap.get("rdfs:datatype");
+            prototype = nodeClassMap.get("rdfs:datatype");
             aNode = new prototype(graph);
             var identifier = "";
             if (defaultDatatypeName === "undefined") {
@@ -3409,7 +3381,7 @@ export default class Graph {
             classNodes.push(aNode);
 
         // add also the datatype Property to it
-        var propPrototype = PropertyPrototypeMap.get("owl:datatypeproperty");
+        var propPrototype = propertyClassMap.get("owl:datatypeproperty");
         var aProp = new propPrototype(graph);
         aProp.id = "datatypeProperty" + eP++;
 
@@ -3431,12 +3403,12 @@ export default class Graph {
         graph.getUpdateDictionary();
 
         nodeFreezer = setTimeout(function () {
-            if (node && node.frozen === true && node.pinned === false && graph.paused() === false) {
-                node.frozen = graph.paused();
-                node.locked = graph.paused();
+            if (node && node.frozen === true && node.pinned === false && graph._paused === false) {
+                node.frozen = graph._paused;
+                node.locked = graph._paused;
             }
         }, 1000);
-        options.focuserModule().handle(undefined);
+        options.focuserModule.handle(undefined);
         if (node) {
             node.frozen = true;
             node.locked = true;
@@ -3468,7 +3440,7 @@ export default class Graph {
         graph.fastUpdate();
         generateDictionary(unfilteredData);
         graph.getUpdateDictionary();
-        options.focuserModule().handle(undefined);
+        options.focuserModule.handle(undefined);
         nodesToRemove = null;
         propsToRemove = null;
 
@@ -3500,7 +3472,7 @@ export default class Graph {
             }
 
 
-            this.options.warningModule().responseWarning(
+            this.options.warningModule.responseWarning(
                 "Removing elements",
                 text,
                 "Awaiting response!",
@@ -3538,7 +3510,7 @@ export default class Graph {
             graph.fastUpdate();
             generateDictionary(unfilteredData);
             graph.getUpdateDictionary();
-            options.focuserModule().handle(undefined);
+            options.focuserModule.handle(undefined);
             nodesToRemove = null;
             propsToRemove = null;
         }
@@ -3573,25 +3545,21 @@ export default class Graph {
         graph.fastUpdate();
         generateDictionary(unfilteredData);
         graph.getUpdateDictionary();
-        options.focuserModule().handle(undefined);
+        options.focuserModule.handle(undefined);
         property = null;
-    }
-
-    executeColorExternalsModule() {
-        options.colorExternalsModule().filter(unfilteredData.nodes, unfilteredData.properties);
     }
 
     executeCompactNotationModule() {
         if (unfilteredData) {
-            options.compactNotationModule().filter(unfilteredData.nodes, unfilteredData.properties);
+            options.compactNotationModule.filter(unfilteredData.nodes, unfilteredData.properties);
         }
     }
 
     executeEmptyLiteralFilter() {
         if (unfilteredData && unfilteredData.nodes.length > 1) {
-            options.literalFilter().filter(unfilteredData.nodes, unfilteredData.properties);
-            unfilteredData.nodes = options.literalFilter().filteredNodes();
-            unfilteredData.properties = options.literalFilter().filteredProperties();
+            options.literalFilter.filter(unfilteredData.nodes, unfilteredData.properties);
+            unfilteredData.nodes = options.literalFilter.filteredNodes();
+            unfilteredData.properties = options.literalFilter.filteredProperties();
         }
     }
 
@@ -3612,7 +3580,7 @@ export default class Graph {
         d3.event.stopPropagation();
         d3.event.preventDefault();
         // get position where we want to add the node;
-        var grPos = getClickedScreenCoords(d3.event.clientX, d3.event.clientY, graph.translation(), graph.scaleFactor());
+        var grPos = getClickedScreenCoords(d3.event.clientX, d3.event.clientY, graph.getTranslation(), graph.getScaleFactor());
         createNewNodeAtPosition(grPos);
     }
 
@@ -3624,7 +3592,7 @@ export default class Graph {
 
         if (touch_time - last_touch_time < 300 && numTouchers === 1) {
             d3.event.stopPropagation();
-            if (editMode === true) {
+            if (isEditorMode === true) {
                 //graph.modified_dblClickFunction();
                 d3.event.preventDefault();
                 d3.event.stopPropagation();
@@ -3645,7 +3613,7 @@ export default class Graph {
         if (touch_time - last_touch_time < 300 && d3.event.touches.length === 1) {
             d3.event.stopPropagation();
 
-            if (editMode === true) {
+            if (isEditorMode === true) {
                 //graph.modified_dblClickFunction();
                 d3.event.preventDefault();
                 d3.event.stopPropagation();
@@ -3671,10 +3639,10 @@ export default class Graph {
         d3.event.stopPropagation();
         d3.event.preventDefault();
         var xy;
-        if (editMode === true) {
+        if (isEditorMode === true) {
             xy = d3.touches(d3.selectAll(".vowlGraph").node());
         }
-        var grPos = getClickedScreenCoords(xy[0][0], xy[0][1], graph.translation(), graph.scaleFactor());
+        var grPos = getClickedScreenCoords(xy[0][0], xy[0][1], graph.getTranslation(), graph.getScaleFactor());
         createNewNodeAtPosition(grPos);
     }
 
@@ -3697,7 +3665,7 @@ export default class Graph {
                 deleteGroupElement.classed("hidden", true);
                 addDataPropertyGroupElement.classed("hidden", true);
                 classDragger.hideDragger(true);
-                if (hoveredNodeElement && hoveredNodeElement.pinned === false && graph.paused() === false && hoveredNodeElement.editingTextElement === false) {
+                if (hoveredNodeElement && hoveredNodeElement.pinned === false && graph._paused === false && hoveredNodeElement.editingTextElement === false) {
                     hoveredNodeElement.frozen = false;
                     hoveredNodeElement.locked = false;
                 }
@@ -3712,13 +3680,13 @@ export default class Graph {
                 rangeDragger.hideDragger(true);
                 domainDragger.hideDragger(true);
                 shadowClone.hideClone(true);
-                if (hoveredPropertyElement && hoveredPropertyElement.focused === true && this.options.drawPropertyDraggerOnHover() === true) {
+                if (hoveredPropertyElement && hoveredPropertyElement.focused === true && this.options.drawPropertyDraggerOnHover === true) {
                     hoveredPropertyElement.labelObject.increasedLoopAngle = false;
                     // lazy update
                     recalculatePositions();
                 }
 
-                if (hoveredPropertyElement && hoveredPropertyElement.pinned === false && graph.paused() === false && hoveredPropertyElement.editingTextElement === false) {
+                if (hoveredPropertyElement && hoveredPropertyElement.pinned === false && graph._paused === false && hoveredPropertyElement.editingTextElement === false) {
                     hoveredPropertyElement.frozen = false;
                     hoveredPropertyElement.locked = false;
                 }
@@ -3767,7 +3735,7 @@ export default class Graph {
                 deleteGroupElement.classed("hidden", true);
                 addDataPropertyGroupElement.classed("hidden", true);
                 classDragger.hideDragger(true);
-                if (hoveredNodeElement && hoveredNodeElement.pinned === false && graph.paused() === false) {
+                if (hoveredNodeElement && hoveredNodeElement.pinned === false && graph._paused === false) {
                     hoveredNodeElement.frozen = false;
                     hoveredNodeElement.locked = false;
                 }
@@ -3780,7 +3748,7 @@ export default class Graph {
                 deleteGroupElement.classed("hidden", true);
                 addDataPropertyGroupElement.classed("hidden", true);
                 classDragger.hideDragger(true);
-                if (hoveredPropertyElement && hoveredPropertyElement.pinned === false && graph.paused() === false) {
+                if (hoveredPropertyElement && hoveredPropertyElement.pinned === false && graph._paused === false) {
                     hoveredPropertyElement.frozen = false;
                     hoveredPropertyElement.locked = false;
                 }
@@ -3789,7 +3757,7 @@ export default class Graph {
     }
 
     activateHoverElementsForProperties(val, property, inversed, touchBehaviour) {
-        if (editMode === false) return; // nothing to do;
+        if (isEditorMode === false) return; // nothing to do;
 
         if (touchBehaviour === undefined)
             touchBehaviour = false;
@@ -3804,7 +3772,7 @@ export default class Graph {
             }
 
             hoveredPropertyElement = property;
-            if (this.options.drawPropertyDraggerOnHover() === true) {
+            if (this.options.drawPropertyDraggerOnHover === true) {
 
 
                 if (property.type !== "owl:DatatypeProperty") {
@@ -3832,7 +3800,7 @@ export default class Graph {
                 }
             }
             else { // hide when we dont want that option
-                if (this.options.drawPropertyDraggerOnHover() === true) {
+                if (this.options.drawPropertyDraggerOnHover === true) {
                     rangeDragger.hideDragger(true);
                     domainDragger.hideDragger(true);
                     shadowClone.hideClone(true);
@@ -3844,7 +3812,7 @@ export default class Graph {
             }
 
             if (hoveredNodeElement) {
-                if (hoveredNodeElement && hoveredNodeElement.pinned === false && graph.paused() === false) {
+                if (hoveredNodeElement && hoveredNodeElement.pinned === false && graph._paused === false) {
                     hoveredNodeElement.frozen = false;
                     hoveredNodeElement.locked = false;
                 }
@@ -3854,7 +3822,7 @@ export default class Graph {
             setDeleteHoverElementPositionProperty(property, inversed);
             deleteGroupElement.selectAll("*").on("click", function () {
                 if (touchBehaviour && property.focused === false) {
-                    this.options.focuserModule().handle(property);
+                    this.options.focuserModule.handle(property);
                     return;
                 }
                 graph.removePropertyViaEditor(property);
@@ -3871,15 +3839,15 @@ export default class Graph {
 
         // set opacity style for all elements
 
-        rangeDragger.draggerObject.classed("superOpacityElement", !this.options.showDraggerObject());
-        domainDragger.draggerObject.classed("superOpacityElement", !this.options.showDraggerObject());
-        classDragger.draggerObject.classed("superOpacityElement", !this.options.showDraggerObject());
+        rangeDragger.draggerObject.classed("superOpacityElement", !this.options.showDraggerObject);
+        domainDragger.draggerObject.classed("superOpacityElement", !this.options.showDraggerObject);
+        classDragger.draggerObject.classed("superOpacityElement", !this.options.showDraggerObject);
 
-        nodeContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject());
-        labelContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject());
+        nodeContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject);
+        labelContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject);
 
-        deleteGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject());
-        addDataPropertyGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject());
+        deleteGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject);
+        addDataPropertyGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !this.options.showDraggerObject);
 
 
     }
@@ -3934,14 +3902,14 @@ export default class Graph {
 
     activateHoverElements(val, node, touchBehaviour) {
 
-        if (editMode === false) {
+        if (isEditorMode === false) {
             return; // nothing to do;
         }
         if (touchBehaviour === undefined) {
             touchBehaviour = false;
         }
         if (val === true) {
-            if (this.options.drawPropertyDraggerOnHover() === true) {
+            if (this.options.drawPropertyDraggerOnHover === true) {
                 rangeDragger.hideDragger(true);
                 domainDragger.hideDragger(true);
                 shadowClone.hideClone(true);
@@ -3949,7 +3917,7 @@ export default class Graph {
             // make them visible
             clearTimeout(delayedHider);
             clearTimeout(nodeFreezer);
-            if (hoveredNodeElement && node.pinned === false && graph.paused() === false) {
+            if (hoveredNodeElement && node.pinned === false && graph._paused === false) {
                 hoveredNodeElement.frozen = false;
                 hoveredNodeElement.locked = false;
             }
@@ -3969,7 +3937,7 @@ export default class Graph {
 
             deleteGroupElement.selectAll("*").on("click", function () {
                 if (touchBehaviour && node.focused === false) {
-                    this.options.focuserModule().handle(node);
+                    this.options.focuserModule.handle(node);
                     return;
                 }
                 graph.removeNodeViaEditor(node);
@@ -3997,7 +3965,7 @@ export default class Graph {
                 setAddDataPropertyHoverElementPosition(node);
                 addDataPropertyGroupElement.selectAll("*").on("click", function () {
                     if (touchBehaviour && node.focused === false) {
-                        this.options.focuserModule().handle(node);
+                        this.options.focuserModule.handle(node);
                         return;
                     }
                     graph.createDataTypeProperty(node);
