@@ -128,15 +128,15 @@ export class BaseProperty extends RectangularElementToolsMixin(BaseElement) {
      * @param {any[] | any} args
      */
     set labelObject(args) {
-        let lo = args,
-            once;
+        let lo = args;
+        let once;
         if (args instanceof Array) {
             [lo, once] = args;
         }
 
         this.parent_labelObject = lo;
-        if (this.inverse && once !== true) {
-            this.inverse.labelObject([lo, true]);
+        if (this.inverse && !once) {
+            this.inverse.labelObject = [lo, true];
         }
     }
 
