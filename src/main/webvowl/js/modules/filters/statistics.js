@@ -3,7 +3,7 @@ import { BaseNode } from '../../elements/nodes/BaseNode';
 import { OwlNothing } from '../../elements/nodes/implementations/OwlNothing';
 import { SetOperatorNode } from '../../elements/nodes/SetOperatorNode';
 import { BaseProperty } from '../../elements/properties/BaseProperty';
-import { ElementTools } from '../../util/elementTools';
+import ElementTools from '../../util/elementTools';
 import { AbstractFilter } from './abstractFilter';
 
 
