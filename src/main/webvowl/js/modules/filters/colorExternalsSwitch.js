@@ -24,26 +24,19 @@ export class ColorExternalsSwitch extends AbstractFilter {
      * @param {BaseProperty[]} properties
      */
     filter(nodes, properties) {
-        const nodeLength = nodes.length
-        const propLength = properties.length
         let externalElementMap = new Map() // Maps baseIri to BaseElement[]
-        let i = 0
-        while (i < nodeLength || i < propLength) {
-            if (i < nodeLength) {
-                const node = nodes[i]
-                if (this.#isExternalElement(node)) {
-                    this.#mapExternalsToBaseUri(node, externalElementMap)
-                }
+
+        for (const node of nodes) {
+            if (this.#isExternalElement(node)) {
+                this.#mapExternalsToBaseUri(node, externalElementMap)
             }
-            if (i < propLength) {
-                const property = properties[i]
+        }
+        for (const property of properties) {
+            // @ts-ignore
+            if (this.#isExternalElement(property)) {
                 // @ts-ignore
-                if (this.#isExternalElement(property)) {
-                    // @ts-ignore
-                    this.#mapExternalsToBaseUri(property, externalElementMap)
-                }
+                this.#mapExternalsToBaseUri(property, externalElementMap)
             }
-            i++
         }
 
         if (this.enabled) {

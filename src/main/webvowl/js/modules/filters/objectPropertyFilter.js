@@ -30,26 +30,20 @@ export class ObjectPropertyFilter extends AbstractFilter {
      * @param {BaseProperty[]} properties
      */
     #removeObjectProperties(nodes, properties) {
-        const nodeLength = nodes.length
-        const propLength = properties.length
         let filteredProperties = []
         let filteredNodes = []
-        let i = 0
-        while (i < nodeLength || i < propLength) {
-            if (i < nodeLength) {
-                const node = nodes[i]
-                if (this.#isNoFloatingThing(node) || this.#hasPropertiesOtherThanObjectProperties(node)) {
-                    filteredNodes.push(node)
-                }
+
+        for (const node of nodes) {
+            if (this.#isNoFloatingThing(node) || this.#hasPropertiesOtherThanObjectProperties(node)) {
+                filteredNodes.push(node)
             }
-            if (i < propLength) {
-                const property = properties[i]
-                if (this.#isNoObjectProperty(property)) {
-                    filteredProperties.push(property)
-                }
-            }
-            i++
         }
+        for (const property of properties) {
+            if (this.#isNoObjectProperty(property)) {
+                filteredProperties.push(property)
+            }
+        }
+
         return {
             nodes: nodes.filter(this.#isNoFloatingThing),
             properties: properties.filter(this.#isNoObjectProperty)
