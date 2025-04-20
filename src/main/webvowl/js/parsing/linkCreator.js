@@ -12,6 +12,7 @@ import { SetOperatorProperty } from '../elements/properties/implementations/SetO
 export default class LinkCreator {
     /**
      * Creates links from the passed properties.
+     * @note This mutates `properties`
      * @param {BaseProperty[]} properties
      */
     static createLinks(properties) {
@@ -50,6 +51,7 @@ export default class LinkCreator {
 
     /**
      * Creates links of properties and - if existing - their inverses.
+     * @note This mutates `properties`
      * @param {BaseProperty[]} properties the properties
      */
     static #groupPropertiesToLinks(properties) {
