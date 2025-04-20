@@ -49,10 +49,9 @@ export class SubclassFilter extends AbstractFilter {
         for (const subclass of subclasses) {
             connectedProperties = this.#findRelevantConnectedProperties(subclass, properties);
 
-            // Only remove the node and its properties, if they're all subclassOf properties
+            // Only remove the node and its properties if they're all subclassOf properties
             if (this.#areOnlySubclassProperties(connectedProperties) &&
                 this.#doesNotInheritFromMultipleClasses(subclass, connectedProperties)) {
-
                 unneededProperties = unneededProperties.concat(connectedProperties);
                 unneededClasses.push(subclass);
             }
