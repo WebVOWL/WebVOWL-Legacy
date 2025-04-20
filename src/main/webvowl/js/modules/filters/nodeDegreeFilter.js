@@ -1,7 +1,7 @@
 import { PlainLink } from '../../elements/links/PlainLink';
 import { BaseNode } from '../../elements/nodes/BaseNode';
 import { BaseProperty } from '../../elements/properties/BaseProperty';
-import { ElementTools } from '../../util/elementTools';
+import ElementTools from '../../util/elementTools';
 import { FilterTools } from '../../util/filterTools';
 import { AbstractFilter } from './abstractFilter';
 
@@ -57,7 +57,7 @@ export class NodeDegreeFilter extends AbstractFilter {
      * @param {BaseNode[]} nodes
      * @param {BaseProperty[]} properties
      * @param {number} maxDegree
-     * @param {any[]} linkCounts
+     * @param {number[]} linkCounts
      */
     #findAutoDefaultDegree(nodes, properties, maxDegree, linkCounts) {
         //checks if an array of integers in descending order representing how many nodes a node has is less than count limit. If not it takes
