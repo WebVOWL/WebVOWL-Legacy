@@ -1,6 +1,6 @@
 import { CenteringTextElement } from '../util/CenteringTextElement';
-import { ElementTools } from '../util/elementTools';
-import { MathUtils } from '../util/math';
+import ElementTools from '../util/elementTools';
+import MathUtils from '../util/math';
 import { AbstractDragger } from './abstractDragger';
 
 
@@ -23,11 +23,11 @@ export class ShadowClone extends AbstractDragger {
      * @param {d3.Selection<any, any, null, undefined>} parentProperty A property selection
      * @param {boolean} inverted
      */
-    setParentProperty(parentProperty, inverted) {
+    setParentProperty(parentProperty, inverted = false) {
         this.invertedProperty = inverted;
         this.parent = parentProperty;
         let renElment;
-        if (inverted === true) {
+        if (inverted) {
             renElment = parentProperty.inverse.labelObject;
             if (renElment.linkRangeIntersection && renElment.linkDomainIntersection) {
                 const iiP_range = renElment.linkDomainIntersection;
@@ -37,8 +37,7 @@ export class ShadowClone extends AbstractDragger {
                 this.e_x = iiP_range.x;
                 this.e_y = iiP_range.y;
             }
-        }
-        else {
+        } else {
             renElment = parentProperty.labelObject;
             if (renElment.linkRangeIntersection && renElment.linkDomainIntersection) {
                 const iP_range = renElment.linkRangeIntersection;
