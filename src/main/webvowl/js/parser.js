@@ -675,20 +675,20 @@ export class Parser {
      * @param {BaseNode[]} nodes
      */
     mergeRangesOfEquivalentProperties(properties, nodes) {
-        let domainIds = new Set()
-        let rangeIds = new Set()
+        let domainIDs = new Set()
+        let rangeIDs = new Set()
         let nodeIdsToHide = new Set()
-        let processedPropertyIds = new Set()
+        let processedPropertyIDs = new Set()
         let mergeNodes = []
 
         for (const property of properties) {
-            domainIds.add(property.domain.id)
-            rangeIds.add(property.range.id)
+            domainIDs.add(property.domain.id)
+            rangeIDs.add(property.range.id)
         }
 
         for (const property of properties) {
             let propertyWithEquivalents = [property]
-            if (processedPropertyIds.has(property.id)) {
+            if (processedPropertyIDs.has(property.id)) {
                 continue
             } else {
                 // Add the equivalent property instances from their ID
@@ -707,10 +707,10 @@ export class Parser {
                     const oldRangeId = equivalentProperty.range.id;
                     equivalentProperty.range.id = mergeNode.id;
                     // isDomainOrRangeOfOtherProperty
-                    if (!(domainIds.has(oldRangeId) || rangeIds.has(oldRangeId))) {
+                    if (!(domainIDs.has(oldRangeId) || rangeIDs.has(oldRangeId))) {
                         nodeIdsToHide.add(oldRangeId);
                     }
-                    processedPropertyIds.add(equivalentProperty.id);
+                    processedPropertyIDs.add(equivalentProperty.id);
                 }
             }
         }
