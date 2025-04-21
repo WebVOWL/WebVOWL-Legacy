@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "release": "mvn -B package --file pom.xml -P production",
-    "webserver": "mvn -B package --file pom.xml -P devserver"
+    "webserver": "mvn -B package --file pom.xml -P devserver",
+    "prodserver": "mvn -B package --file pom.xml -P prodserver"
   },
   "dependencies": {
     "@npm/collections": "^5.1.13",
