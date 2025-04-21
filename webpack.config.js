@@ -1,13 +1,14 @@
 "use strict";
 const paths = require("./paths.js").path_func;
 const path = require('path');
-const webpack = require("webpack");
-const MergeWebPackPlugin = require('webpack-merge');
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
-const TerserPlugin = require("terser-webpack-plugin");
-const WasmPackPlugin = require('@wasm-tool/wasm-pack-plugin');
+const webpack = require("@npm/webpack");
+const MergeWebPackPlugin = require('@npm/webpack-merge');
+const CopyWebpackPlugin = require("@npm/copy-webpack-plugin");
+const MiniCssExtractPlugin = require("@npm/mini-css-extract-plugin");
+const CssMinimizerPlugin = require("@npm/css-minimizer-webpack-plugin");
+const TerserPlugin = require("@npm/terser-webpack-plugin");
+const WasmPackPlugin = require("@webvowl/@wasm-tool/wasm-pack-plugin");
+
 
 function getConfig(args) {
 	const isProdEnabled = args.mode === "production" ? true : false;
@@ -22,12 +23,6 @@ function getConfig(args) {
 				import: [
 					`./${paths.frontendPath}/js/entry.js`
 				],
-				dependOn: "webvowl"
-			},
-			webvowl: {
-				import: [
-					`./${paths.backendPath}/js/entry.js`
-				],
 			},
 		},
 		output: {
@@ -35,7 +30,7 @@ function getConfig(args) {
 			publicPath: 'auto',
 			filename: "js/[name].js",
 			chunkFilename: "js/[chunkhash].js",
-			// webassemblyModuleFilename: 'wasm/[id].[hash].wasm',
+			webassemblyModuleFilename: 'wasm/[id].[hash].wasm',
 			// enabledWasmLoadingTypes: ['fetch'],
 			// workerChunkLoading: "universal",
 			// globalObject: 'this',
@@ -49,7 +44,8 @@ function getConfig(args) {
 			// futureDefaults: true,
 			// css: false,
 			// outputModule: true,
-			// asyncWebAssembly: true
+			asyncWebAssembly: true,
+			// syncWebAssembly: true,
 		},
 		optimization: {
 			// splitChunks: {
@@ -136,10 +132,10 @@ function getConfig(args) {
 			new WasmPackPlugin({
 				crateDirectory: path.resolve(__dirname, paths.rustPath),
 				// For available set of arguments check:
-				// https://rustwasm.github.io/wasm-pack/book/commands/build.html
+				// https://rustwasm.github.io/docs/wasm-pack/
 				// https://github.com/wasm-tool/wasm-pack-plugin
 				args: '--verbose',
-				extraArgs: '--no-typescript --target web --mode normal',
+				extraArgs: '--no-typescript --target bundler --mode normal',
 				forceMode: "production",
 				outDir: path.resolve(__dirname, paths.pkgPath),
 				pluginLogLevel: 'info'
