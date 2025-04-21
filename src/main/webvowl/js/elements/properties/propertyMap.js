@@ -1,18 +1,19 @@
-import { BaseElement } from "../BaseElement";
-import { OwlAllValuesFromProperty } from "./implementations/OwlAllValuesFromProperty";
-import { OwlDatatypeProperty } from "./implementations/OwlDatatypeProperty";
-import { OwlDeprecatedProperty } from "./implementations/OwlDeprecatedProperty";
-import { OwlDisjointWith } from "./implementations/OwlDisjointWith";
-import { OwlEquivalentProperty } from "./implementations/OwlEquivalentProperty";
-import { OwlFunctionalProperty } from "./implementations/OwlFunctionalProperty";
-import { OwlInverseFunctionalProperty } from "./implementations/OwlInverseFunctionalProperty";
-import { OwlObjectProperty } from "./implementations/OwlObjectProperty";
-import { OwlSomeValuesFromProperty } from "./implementations/OwlSomeValuesFromProperty";
-import { OwlSymmetricProperty } from "./implementations/OwlSymmetricProperty";
-import { OwlTransitiveProperty } from "./implementations/OwlTransitiveProperty";
-import { RdfProperty } from "./implementations/RdfProperty";
-import { RdfsSubClassOf } from "./implementations/RdfsSubClassOf";
-import { SetOperatorProperty } from "./implementations/SetOperatorProperty";
+import BaseProperty from "./BaseProperty"
+import OwlAllValuesFromProperty from "./implementations/OwlAllValuesFromProperty"
+import OwlDatatypeProperty from "./implementations/OwlDatatypeProperty"
+import OwlDeprecatedProperty from "./implementations/OwlDeprecatedProperty"
+import OwlDisjointWith from "./implementations/OwlDisjointWith"
+import OwlEquivalentProperty from "./implementations/OwlEquivalentProperty"
+import OwlFunctionalProperty from "./implementations/OwlFunctionalProperty"
+import OwlInverseFunctionalProperty from "./implementations/OwlInverseFunctionalProperty"
+import OwlObjectProperty from "./implementations/OwlObjectProperty"
+import OwlSomeValuesFromProperty from "./implementations/OwlSomeValuesFromProperty"
+import OwlSymmetricProperty from "./implementations/OwlSymmetricProperty"
+import OwlTransitiveProperty from "./implementations/OwlTransitiveProperty"
+import RdfProperty from "./implementations/RdfProperty"
+import RdfsSubClassOf from "./implementations/RdfsSubClassOf"
+import SetOperatorProperty from "./implementations/SetOperatorProperty"
+
 
 const properties = [
     OwlAllValuesFromProperty,
@@ -32,7 +33,7 @@ const properties = [
 ]
 
 /**
- * @type {Map<string, new (graph: any) => BaseElement>}
+ * @type {Map<string, new (graph: any) => BaseProperty>}
  */
 let propertyClassMap = new Map()
 for (const propertyCls of properties) {

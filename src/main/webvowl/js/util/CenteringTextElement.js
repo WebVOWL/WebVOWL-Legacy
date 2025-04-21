@@ -1,7 +1,8 @@
-import { AbstractTextElement } from "./AbstractTextElement";
-import { TextTools } from "./textTools";
+import AbstractTextElement from "./AbstractTextElement";
+import TextTools from "./textTools";
 
-export class CenteringTextElement extends AbstractTextElement {
+
+export default class CenteringTextElement extends AbstractTextElement {
     /**
      * @param {d3.Selection<any,any,null,undefined>} container
      * @param {string} backgroundColor
@@ -84,7 +85,7 @@ export class CenteringTextElement extends AbstractTextElement {
 
     updateAllTextElements() {
         // TODO : TEST THIS postPrefix >>>  _applyPreAndPostFix
-        for (var i = 0; i < this.storedSpanArrays.length; i++) {
+        for (let i = 0; i < this.storedSpanArrays.length; i++) {
             const truncatedText = TextTools.truncate(
                 this.storedFullTextLines[i],
                 this.textBlock.datum().textWidth(),

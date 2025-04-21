@@ -1,8 +1,12 @@
-import { BaseElement } from "../elements/BaseElement";
-import { ElementTools } from "../util/elementTools";
+import BaseElement from "../elements/BaseElement";
+import Graph from "../graph";
+import ElementTools from "../util/elementTools";
 
 
-export class Focuser {
+export default class Focuser {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         this.graph = graph
         /**
@@ -35,14 +39,14 @@ export class Focuser {
         if (this.focusedElement && this.focusedElement.focused) {
             this.graph.options.editSidebar.updateSelectionInformation(this.focusedElement);
             if (ElementTools.isProperty(selectedElement) === true) {
-                var inversed = false;
+                const inversed = false;
                 if (selectedElement.inverse) {
                     inversed = true;
                 }
-                this.graph.activateHoverElementsForProperties(true, selectedElement, inversed, this.graph.isTouchDevice());
+                this.graph.activateHoverElementsForProperties(true, selectedElement, inversed, this.graph.touchDevice);
             }
             else {
-                this.graph.activateHoverElements(true, selectedElement, this.graph.isTouchDevice());
+                this.graph.activateHoverElements(true, selectedElement, this.graph.touchDevice);
             }
         }
         else {

@@ -61,4 +61,7 @@ function showBrowserWarningIfRequired() {
 export default {
     showBrowserWarningIfRequired
 }
+export {
+    getInternetExplorerVersion
+};
 showBrowserWarningIfRequired();

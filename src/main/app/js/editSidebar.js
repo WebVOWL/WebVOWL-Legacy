@@ -1,21 +1,27 @@
-import { BaseElement } from "../../webvowl/js/elements/BaseElement";
-import { RdfsDataType } from "../../webvowl/js/elements/nodes/implementations/RdfsDatatype";
-import { BaseProperty } from "../../webvowl/js/elements/properties/BaseProperty";
-import graph from "../../webvowl/js/graph";
-import { ElementTools } from "../../webvowl/js/util/elementTools";
-import { LanguageTools } from "../../webvowl/js/util/languageTools";
-import { PrefixTools } from "../../webvowl/js/util/prefixTools";
+import BaseElement from "../../webvowl/js/elements/BaseElement"
+import RdfsDataType from "../../webvowl/js/elements/nodes/implementations/RdfsDatatype"
+import BaseProperty from "../../webvowl/js/elements/properties/BaseProperty"
+import Graph from "../../webvowl/js/graph"
+import ElementTools from "../../webvowl/js/util/elementTools"
+import LanguageTools from "../../webvowl/js/util/languageTools"
+import PrefixTools from "../../webvowl/js/util/prefixTools"
 
 
-export class EditSidebar {
+export default class EditSidebar {
     /**
      * Contains the logic for the sidebar.
-     * @param {any} graph the graph that belongs to these controls
+     * @param {Graph} graph the graph that belongs to these controls
      */
     constructor(graph) {
         this.graph = graph
         this.selectedElementForCharacteristics = undefined
+        /**
+         * @type {string | undefined}
+         */
         this.oldPrefix = undefined
+        /**
+         * @type {string | undefined}
+         */
         this.oldPrefixURL = undefined
         this.prefix_editMode = false
         this.supportedDatatypes = ["undefined", "xsd:boolean", "xsd:double", "xsd:integer", "xsd:string"];
@@ -46,10 +52,10 @@ export class EditSidebar {
         this.#setupSupportedDatatypes();
 
         d3.select("#titleEditor")
-            .on("change", function () {
+            .on("change", () => {
                 this.graph.options.addOrUpdateGeneralObjectEntry("title", d3.select("#titleEditor").node().value);
             })
-            .on("keydown", function () {
+            .on("keydown", () => {
                 d3.event.stopPropagation();
                 if (d3.event.keyCode === 13) {
                     d3.event.preventDefault();
@@ -57,27 +63,27 @@ export class EditSidebar {
                 }
             });
         d3.select("#iriEditor")
-            .on("change", function () {
-                if (this.graph.options.addOrUpdateGeneralObjectEntry("iri", d3.select("#iriEditor").node().value) === false) {
+            .on("change", () => {
+                if (!this.graph.options.addOrUpdateGeneralObjectEntry("iri", d3.select("#iriEditor").node().value)) {
                     // restore value
                     d3.select("#iriEditor").node().value = this.graph.options.getGeneralMetaObjectProperty('iri');
                 }
             })
-            .on("keydown", function () {
+            .on("keydown", () => {
                 d3.event.stopPropagation();
                 if (d3.event.keyCode === 13) {
                     d3.event.preventDefault();
-                    if (this.graph.options.addOrUpdateGeneralObjectEntry("iri", d3.select("#iriEditor").node().value) === false) {
+                    if (!this.graph.options.addOrUpdateGeneralObjectEntry("iri", d3.select("#iriEditor").node().value)) {
                         // restore value
                         d3.select("#iriEditor").node().value = this.graph.options.getGeneralMetaObjectProperty('iri');
                     }
                 }
             });
         d3.select("#versionEditor")
-            .on("change", function () {
+            .on("change", () => {
                 this.graph.options.addOrUpdateGeneralObjectEntry("version", d3.select("#versionEditor").node().value);
             })
-            .on("keydown", function () {
+            .on("keydown", () => {
                 d3.event.stopPropagation();
                 if (d3.event.keyCode === 13) {
                     d3.event.preventDefault();
@@ -85,10 +91,10 @@ export class EditSidebar {
                 }
             });
         d3.select("#authorsEditor")
-            .on("change", function () {
+            .on("change", () => {
                 this.graph.options.addOrUpdateGeneralObjectEntry("author", d3.select("#authorsEditor").node().value);
             })
-            .on("keydown", function () {
+            .on("keydown", () => {
                 d3.event.stopPropagation();
                 if (d3.event.keyCode === 13) {
                     d3.event.preventDefault();
@@ -96,7 +102,7 @@ export class EditSidebar {
                 }
             });
         d3.select("#descriptionEditor")
-            .on("change", function () {
+            .on("change", () => {
                 this.graph.options.addOrUpdateGeneralObjectEntry("description", d3.select("#descriptionEditor").node().value);
             });
         this.updateElementWidth();
@@ -137,7 +143,7 @@ export class EditSidebar {
         if (element.type === "rdfs:subClassOf" || element.type === "owl:disjointWith") {
             console.log("ignore this for now, already handled in the type and domain range changer");
         } else {
-            for (const property of this.graph.UnfilteredData.properties) {
+            for (const property of this.graph.unfilteredData.properties) {
                 if (property === element) {
                     continue
                 }
@@ -308,8 +314,9 @@ export class EditSidebar {
             // title has language to it -.-
             if (typeof generalMetaObj.title === "object") {
                 d3.select("#titleEditor").node().value = LanguageTools.textInLanguage(generalMetaObj.title, preferredLanguage);
-            } else
+            } else {
                 d3.select("#titleEditor").node().value = generalMetaObj.title;
+            }
         }
         if (generalMetaObj.hasOwnProperty("iri")) {
             d3.select("#iriEditor").node().value = generalMetaObj.iri;
@@ -387,7 +394,7 @@ export class EditSidebar {
         console.log("Element changed Label");
         const url = this.#getURLFROMPrefixedVersion(element);
         if (element.iri !== url) {
-            if (ElementTools.isProperty(element) === true) {
+            if (ElementTools.isProperty(element)) {
                 const sanityCheckResult = this.checkProperIriChange(element, url);
                 if (sanityCheckResult !== false) {
                     this.graph.options.warningModule.showWarning(
@@ -401,8 +408,7 @@ export class EditSidebar {
                     return;
                 }
             }
-
-            if (ElementTools.isNode(element) === true) {
+            if (ElementTools.isNode(element)) {
                 const sanityCheckResult = this.graph.checkIfIriClassAlreadyExist(url);
                 if (sanityCheckResult !== false) {
                     this.graph.options.warningModule.showWarning(
@@ -446,7 +452,7 @@ export class EditSidebar {
         const deletePath = d3.select("#del_pathFor_" + name);
         const deleteRect = d3.select("#del_rectFor_" + name);
 
-        if (enable === false) {
+        if (!enable) {
             deletePath.node().style = "stroke: #f00;";
             deleteRect.style("cursor", "auto");
         } else {
@@ -464,7 +470,7 @@ export class EditSidebar {
         const editPath = d3.select("#pathFor_" + name);
         const editRect = d3.select("#rectFor_" + name);
 
-        if (enable === false) {
+        if (!enable) {
             if (fill) {
                 editPath.node().style = "fill: #fff; stroke : #fff; stroke-width : 1px";
             } else {
@@ -484,7 +490,7 @@ export class EditSidebar {
         const btn = d3.select("#addPrefixButton");
         btn.on("click", function () {
             // check if we are still in editMode
-            if (_this.prefix_editMode === false) {
+            if (!_this.prefix_editMode) {
                 // create new line entry;
                 const name = "emptyPrefixEntry";
                 const prefixListContainer = d3.select("#prefixURL_Container");
@@ -591,7 +597,6 @@ export class EditSidebar {
                     _this.#highlightDeleteButton(false, this.selectorName);
                 });
 
-
                 // connect the buttons;
                 editButton.on("click", _this.#enablePrefixEdit);
                 deleteButton.on("click", _this.#deletePrefixLine);
@@ -609,7 +614,7 @@ export class EditSidebar {
     }
 
     #setupPrefixList() {
-        if (this.graph.isEditorMode === false) {
+        if (!this.graph.isEditorMode) {
             return;
         }
         const prefixListContainer = d3.select("#prefixURL_Container");
@@ -624,7 +629,7 @@ export class EditSidebar {
             const f_editPath = d3.select("#pathFor_" + sender.selectorName);
             const f_editRect = d3.select("#rectFor_" + sender.selectorName);
 
-            if (enable === false) {
+            if (!enable) {
                 if (fill) {
                     f_editPath.node().style = "fill: #fff; stroke : #fff; stroke-width : 1px";
                 } else {
@@ -647,7 +652,7 @@ export class EditSidebar {
             const f_deletePath = d3.select("#del_pathFor_" + sender.selectorName);
             const f_deleteRect = d3.select("#del_rectFor_" + sender.selectorName);
 
-            if (enable === false) {
+            if (!enable) {
                 f_deletePath.node().style = "stroke: #f00;";
                 f_deleteRect.style("cursor", "auto");
             } else {
@@ -656,7 +661,7 @@ export class EditSidebar {
             }
         }
 
-        for (const name of prefixElements) {
+        for (const name in prefixElements) {
             if (prefixElements.hasOwnProperty(name)) {
                 const prefixEditContainer = prefixListContainer.append("div");
                 prefixEditContainer.classed("prefixIRIElements", true);
@@ -764,11 +769,11 @@ export class EditSidebar {
                 deleteButton.on("click", this.#deletePrefixLine);
 
                 // EXPERIMENTAL
-                if (name === "rdf" ||
-                    name === "rdfs" ||
-                    name === "xsd" ||
-                    name === "dc" ||
-                    name === "owl"
+                if (name === "rdf"
+                    || name === "rdfs"
+                    || name === "xsd"
+                    || name === "dc"
+                    || name === "owl"
                 ) {
                     // make them invis so the spacing does not change
                     IconContainer.classed("hidden", true);
@@ -782,7 +787,7 @@ export class EditSidebar {
      * @param {any} item
      */
     #deletePrefixLine(item) {
-        if (item.disabled === true) {
+        if (item.disabled) {
             return;
         }
         d3.select("#addPrefixButton").node().innerHTML = "Add Prefix";
@@ -796,7 +801,7 @@ export class EditSidebar {
      * @param {any} item
      */
     #enablePrefixEdit(item) {
-        if (item.disabled === true) {
+        if (item.disabled) {
             return;
         }
         const selector = item.id.split("_")[1];
@@ -907,7 +912,7 @@ export class EditSidebar {
     #getURLFROMPrefixedVersion(element) {
         let url = d3.select("#element_iriEditor").node().value;
         const base = this.graph.options.getGeneralMetaObjectProperty("iri");
-        if (PrefixTools.validURL(url) === false) {
+        if (!PrefixTools.validURL(url)) {
             // make better usability
             // try to split element;
             const tokens = url.split(":");
@@ -973,8 +978,8 @@ export class EditSidebar {
         const url = this.#getURLFROMPrefixedVersion(element);
         const base = this.graph.options.getGeneralMetaObjectProperty("iri");
         if (ElementTools.isNode(element)) {
-            const sanityCheckResult = graph.checkIfIriClassAlreadyExist(url);
-            if (sanityCheckResult === false) {
+            const sanityCheckResult = this.graph.checkIfIriClassAlreadyExist(url);
+            if (!sanityCheckResult) {
                 element.iri = url;
             } else {
                 this.graph.options.warningModule.showWarning(
@@ -988,9 +993,9 @@ export class EditSidebar {
                 return;
             }
         }
-        if (ElementTools.isProperty(element) === true) {
+        if (ElementTools.isProperty(element)) {
             const sanityCheckResult = this.checkProperIriChange(element, url);
-            if (sanityCheckResult !== false) {
+            if (sanityCheckResult) {
                 this.graph.options.warningModule.showWarning(
                     "Already seen this property",
                     "Input IRI: " + url + " for element: " + element.labelForCurrentLanguage() + " already been set",
@@ -1020,7 +1025,7 @@ export class EditSidebar {
         // }
 
         element.iri = url;
-        if (this.#identifyExternalCharacteristicForElement(base, url) === true) {
+        if (this.#identifyExternalCharacteristicForElement(base, url)) {
             this.#addAttribute(element, "external");
             // background color for external element;
             element.backgroundColor = "#36C";
@@ -1098,7 +1103,7 @@ export class EditSidebar {
             filterCheckbox.on("click", this.#handleCheckBoxClick);
         }
 
-        if (ElementTools.isNode(element) === true) {
+        if (ElementTools.isNode(element)) {
             // add the deprecated characteristic;
             const arrayOfNodeChars = ["deprecated"];
             for (let i = 0; i < arrayOfNodeChars.length; i++) {
@@ -1130,7 +1135,7 @@ export class EditSidebar {
      */
     #handleCheckBoxClick(item) {
         const char = item.getAttribute("characteristics");
-        if (item.checked === true) {
+        if (item.checked) {
             this.#addAttribute(this.selectedElementForCharacteristics, char);
         } else {
             this.#removeAttribute(this.selectedElementForCharacteristics, char);
@@ -1159,7 +1164,9 @@ export class EditSidebar {
         if (selectedElement.visualAttributes.indexOf(char) === -1) {
             selectedElement.visualAttributes.push(char);
         }
-        if (this.#getPresentAttribute(selectedElement, "external") && this.#getPresentAttribute(selectedElement, "deprecated")) {
+        if (this.#getPresentAttribute(selectedElement, "external")
+            && this.#getPresentAttribute(selectedElement, "deprecated")
+        ) {
             let visAttr = selectedElement.visualAttributes;
             const visInd = visAttr.indexOf("external");
             if (visInd > -1) {
@@ -1216,11 +1223,11 @@ export class EditSidebar {
      */
     #elementNeedsCharacteristics(element) {
         //TODO: Add more types
-        if (element.type === "owl:Thing" ||
-            element.type === "rdfs:subClassOf" ||
-            element.type === "rdfs:Literal" ||
-            element.type === "rdfs:Datatype" ||
-            element.type === "rdfs:disjointWith"
+        if (element.type === "owl:Thing"
+            || element.type === "rdfs:subClassOf"
+            || element.type === "rdfs:Literal"
+            || element.type === "rdfs:Datatype"
+            || element.type === "rdfs:disjointWith"
         ) {
             return false;
         }
@@ -1235,13 +1242,13 @@ export class EditSidebar {
      */
     #elementTypeSelectionChanged(element) {
         if (ElementTools.isNode(element)) {
-            if (this.graph.changeNodeType(element) === false) {
+            if (!this.graph.changeNodeType(element)) {
                 //restore old value
                 this.updateSelectionInformation(element);
             }
         }
         if (ElementTools.isProperty(element)) {
-            if (this.graph.changePropertyType(element) === false) {
+            if (!this.graph.changePropertyType(element)) {
                 //restore old value
                 this.updateSelectionInformation(element);
             }

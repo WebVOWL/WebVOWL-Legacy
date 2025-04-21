@@ -1,13 +1,11 @@
-import { BaseProperty } from "../properties/BaseProperty";
-import { PlainLink } from "./PlainLink";
+import BaseProperty from "../properties/BaseProperty";
+import PlainLink from "./PlainLink";
 
-/**
- * A label represents the element(s) which further describe a link.
- * It encapsulates the property and its inverse property.
- */
-export class Label {
+
+export default class Label {
     /**
-     *
+     * A label represents the element(s) which further describe a link.
+     * It encapsulates the property and its inverse property.
      * @param {BaseProperty} property the property; the inverse is inferred
      * @param {PlainLink} link the link this label belongs to
      */
@@ -50,17 +48,17 @@ export class Label {
      * @param {Label} other
      */
     equals(other) {
-        if (!other) {
+        if (!other
+            || !(other instanceof Label)
+            || !this.property.equals(other.property)) {
             return false;
         }
-        const isInstance = other instanceof Label;
-        const equalProperty = this.property.equals(other.property);
-        var equalInverse = false;
+        let equalInverse = false;
         if (this.property.inverse) {
             equalInverse = this.property.inverse.equals(other.property.inverse);
         } else if (!other.property.inverse) {
             equalInverse = true;
         }
-        return isInstance && equalProperty && equalInverse;
+        return equalInverse;
     }
 }

@@ -1,9 +1,10 @@
-import d3 from "d3";
+import Graph from "../../../webvowl/js/graph";
+
 
 export default class PauseMenu {
     /**
      * Contains the logic for the pause and resume button.
-     * @param {any} graph the associated webvowl graph
+     * @param {Graph} graph the associated webvowl graph
      */
     constructor(graph) {
         this.graph = graph;
@@ -15,9 +16,9 @@ export default class PauseMenu {
      */
     setup() {
         const _this = this;
-        var menuEntry = d3.select("#pauseOption");
+        const menuEntry = d3.select("#pauseOption");
         menuEntry.on("mouseover", function () {
-            var searchMenu = _this.graph.options.searchMenu;
+            const searchMenu = _this.graph.options.searchMenu;
             searchMenu.hideSearchEntries();
         });
         this.pauseButton = d3.select("#pause-button")
@@ -30,17 +31,17 @@ export default class PauseMenu {
             });
         // Set these properties the first time manually
         this.updatePauseButton();
-    };
+    }
 
     /**
-     * @param {any} value
+     * @param {boolean} value
      */
     setPauseValue(value) {
         this.pauseButton.datum().paused = value;
         this.graph.paused = value;
         this.pauseButton.classed("highlighted", value);
         this.updatePauseButton();
-    };
+    }
 
     updatePauseButton() {
         this.updatePauseButtonClass();
@@ -64,5 +65,5 @@ export default class PauseMenu {
     reset() {
         // resuming
         this.setPauseValue(false);
-    };
-};
+    }
+}

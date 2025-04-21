@@ -1,6 +1,9 @@
-export class DirectInputModule {
+import Graph from "../../webvowl/js/graph";
+
+
+export default class DirectInputModule {
     /**
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         this.graph = graph

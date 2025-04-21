@@ -1,7 +1,12 @@
-import { CenteringTextElement } from '../../../util/CenteringTextElement';
-import { BaseProperty } from '../BaseProperty';
+import Graph from "../../../graph"
+import CenteringTextElement from "../../../util/CenteringTextElement"
+import BaseProperty from "../BaseProperty"
 
-export class OwlDisjointWith extends BaseProperty {
+
+export default class OwlDisjointWith extends BaseProperty {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 
@@ -42,7 +47,7 @@ export class OwlDisjointWith extends BaseProperty {
             .attr("cx", 12.5)
             .attr("r", 10);
 
-        var textElement = new CenteringTextElement(labelContainer, this.backgroundColor);
+        const textElement = new CenteringTextElement(labelContainer, this.backgroundColor);
         if (!this.graph.options.compactNotation) {
             textElement.addSubText("disjoint");
         }

@@ -1,4 +1,4 @@
-export class AbstractTextElement {
+export default class AbstractTextElement {
     static LINE_DISTANCE = 1
     static CSS_CLASSES = {
         default: "text",
@@ -60,7 +60,7 @@ export class AbstractTextElement {
             return AbstractTextElement.DARK_TEXT_COLOR;
         }
 
-        var backgroundColor = d3.rgb(rawBackgroundColor);
+        const backgroundColor = d3.rgb(rawBackgroundColor);
         if (this.#calculateLuminance(backgroundColor) > 0.5) {
             return AbstractTextElement.DARK_TEXT_COLOR;
         } else {

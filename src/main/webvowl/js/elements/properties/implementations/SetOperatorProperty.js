@@ -1,6 +1,11 @@
-import { BaseProperty } from "../BaseProperty";
+import Graph from "../../../graph"
+import BaseProperty from "../BaseProperty"
 
-export class SetOperatorProperty extends BaseProperty {
+
+export default class SetOperatorProperty extends BaseProperty {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 

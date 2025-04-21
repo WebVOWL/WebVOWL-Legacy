@@ -1,9 +1,9 @@
-import d3 from "d3";
+import Graph from "../../../webvowl/js/graph";
 
-/** The zoom Slider **/
+
 export default class ZoomSlider {
     /**
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         this.graph = graph;
@@ -13,12 +13,23 @@ export default class ZoomSlider {
         this.t_zoomOut = undefined;
         this.t_zoomIn = undefined;
         this.zoomValue = undefined;
-        // @ts-ignore
-        this.showSlider = true;
+        this._showSlider = true;
         this.w = graph.options.width;
         this.h = graph.options.height;
         this.slider = undefined;
         this.defZoom = Math.min(this.w, this.h) / 1000;
+    }
+
+    get showSlider() {
+        return this._showSlider
+    }
+
+    /**
+     * @param {boolean} val
+     */
+    set showSlider(val) {
+        d3.select("#zoomSlider").classed("hidden", !val);
+        this._showSlider = val;
     }
 
     clearAllTimers() {
@@ -60,7 +71,6 @@ export default class ZoomSlider {
             .on("input", function () {
                 _this.zooming();
             });
-
         d3.select("#zoomOutButton").on("mousedown", function () {
             _this.graph.options.navigationMenu.hideAllMenus();
             _this.zoomValue = _this.graph.getScaleFactor();
@@ -75,7 +85,6 @@ export default class ZoomSlider {
             .on("touchend", this.clearAllTimers)
             .on("touchcancel", this.clearAllTimers)
             .attr("title", "zoom out");
-
         d3.select("#zoomInButton").on("mousedown", function () {
             _this.graph.options.navigationMenu.hideAllMenus();
             _this.zoomValue = _this.graph.getScaleFactor();
@@ -90,38 +99,26 @@ export default class ZoomSlider {
             .on("touchend", this.clearAllTimers)
             .on("touchcancel", this.clearAllTimers)
             .attr("title", "zoom in");
-
         d3.select("#centerGraphButton").on("click", function () {
             _this.graph.options.navigationMenu.hideAllMenus();
             _this.graph.forceRelocationEvent();
         }).attr("title", "center graph");
-
-    };
-
-    /**
-     * @param {any} val
-     */
-    // @ts-ignore
-    showSlider(val) {
-        if (!arguments.length) return this.showSlider;
-        d3.select("#zoomSlider").classed("hidden", !val);
-        this.showSlider = val;
-    };
+    }
 
     zooming() {
         this.graph.options.navigationMenu.hideAllMenus();
-        var zoomValue = this.slider.property("value");
+        const zoomValue = this.slider.property("value");
         this.slider.attr("value", zoomValue);
         this.graph.setSliderZoom(zoomValue);
-    };
+    }
 
     /**
-     * @param {any} val
+     * @param {number} val
      */
     updateZoomSliderValue(val) {
         if (this.slider) {
             this.slider.attr("value", val);
             this.slider.property("value", val);
         }
-    };
-};
+    }
+}

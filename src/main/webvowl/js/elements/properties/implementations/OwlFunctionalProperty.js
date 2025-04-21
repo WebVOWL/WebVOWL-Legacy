@@ -1,6 +1,11 @@
-import { BaseProperty } from "../BaseProperty";
+import Graph from "../../../graph"
+import BaseProperty from "../BaseProperty"
 
-export class OwlFunctionalProperty extends BaseProperty {
+
+export default class OwlFunctionalProperty extends BaseProperty {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 

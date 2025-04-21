@@ -1,6 +1,7 @@
-import { AbstractDomainRangeDragger } from "./abstractDomainRangeDragger";
+import AbstractDomainRangeDragger from "./abstractDomainRangeDragger";
 
-export class ClassDragger extends AbstractDomainRangeDragger {
+
+export default class ClassDragger extends AbstractDomainRangeDragger {
     /**
      * @param {any} graph
      */
@@ -8,7 +9,6 @@ export class ClassDragger extends AbstractDomainRangeDragger {
         super(graph)
 
         this.id = 10001
-        this.type = "Class_dragger"
     }
 
     /**

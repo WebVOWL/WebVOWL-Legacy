@@ -10,7 +10,7 @@ export const RectangularElementToolsMixin = (Base) =>
          * @param {number} dy
          */
         distanceToBorder(dx, dy) {
-            var innerDistance;
+            const innerDistance;
             const width = this.labelWidth;
             const height = this.height;
             const m_link = Math.abs(dy / dx);
@@ -37,7 +37,7 @@ export const RectangularElementToolsMixin = (Base) =>
             if (!textStyle) {
                 textStyle = "text";
             }
-            var d = d3.select("body")
+            const d = d3.select("body")
                 .append("div")
                 .attr("class", textStyle)
                 .attr("id", "width-test") // tag this element to identify it
@@ -66,7 +66,7 @@ export const RectangularElementToolsMixin = (Base) =>
             this.removeHalo();
             const _this = this
             if (dynamic === true) {
-                this.labelWidth = Math.min(this.getMyWidth(), graph.options.maxLabelWidth);
+                this.labelWidth = Math.min(this.getMyWidth(), this.graph.options.maxLabelWidth);
                 this.shapeElement.transition().tween("attr", function () {
                 })
                     .ease('linear')

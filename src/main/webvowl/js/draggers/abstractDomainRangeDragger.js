@@ -1,6 +1,11 @@
-import { AbstractDragger } from "./abstractDragger";
+import Graph from "../graph"
+import AbstractDragger from "./abstractDragger"
 
-export class AbstractDomainRangeDragger extends AbstractDragger {
+
+export default class AbstractDomainRangeDragger extends AbstractDragger {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 
@@ -151,7 +156,7 @@ export class AbstractDomainRangeDragger extends AbstractDragger {
     }
 
     onMouseOut() {
-        if (this.mouseButtonPressed === true) {
+        if (this.mouseButtonPressed) {
             return;
         }
         this.nodeElement.classed("classDraggerNodeHovered", false);

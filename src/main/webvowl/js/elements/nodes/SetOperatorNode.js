@@ -1,9 +1,14 @@
-import { AbsoluteTextElement } from '../../util/AbsoluteTextElement';
-import { DrawTools } from '../drawTools';
-import { BoxArrowLink } from '../links/BoxArrowLink';
-import { RoundNode } from './RoundNode';
+import Graph from "../../graph";
+import AbsoluteTextElement from "../../util/AbsoluteTextElement";
+import DrawTools from "../drawTools";
+import BoxArrowLink from "../links/BoxArrowLink";
+import RoundNode from "./RoundNode";
 
-export class SetOperatorNode extends RoundNode {
+
+export default class SetOperatorNode extends RoundNode {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
     }
@@ -39,7 +44,7 @@ export class SetOperatorNode extends RoundNode {
         super.postDrawActions();
         this.textBlock.remove();
 
-        var textElement = new AbsoluteTextElement(this.nodeElement, this.backgroundColor);
+        const textElement = new AbsoluteTextElement(this.nodeElement, this.backgroundColor);
         const equivalentsString = this.equivalentsString();
         const offsetForFollowingEquivalents = equivalentsString ? -30 : -17;
         const suffixForFollowingEquivalents = equivalentsString ? "," : "";

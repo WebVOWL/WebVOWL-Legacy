@@ -1,6 +1,6 @@
 const ADDITIONAL_TEXT_SPACE = 4;
 
-export class TextTools {
+export default class TextTools {
     /**
      * @param {string} text
      * @param {string} textStyle
@@ -10,7 +10,7 @@ export class TextTools {
         if (!textStyle) {
             textStyle = "text";
         }
-        var d = d3.select("body")
+        const d = d3.select("body")
             .append("div")
             .attr("class", textStyle)
             .attr("id", "width-test") // tag this element to identify it
@@ -33,7 +33,7 @@ export class TextTools {
             return text;
         }
 
-        var truncatedText = text
+        let truncatedText = text
         while (true) {
             const textWidth = this.#measureTextWidth(truncatedText, textStyle);
             if (textWidth <= maxWidth) {

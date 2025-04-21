@@ -1,9 +1,8 @@
+import AbstractTextElement from "./AbstractTextElement";
+import TextTools from "./textTools";
 
-import { AbstractTextElement } from './AbstractTextElement';
-import { TextTools } from './textTools';
 
-
-export class AbsoluteTextElement extends AbstractTextElement {
+export default class AbsoluteTextElement extends AbstractTextElement {
     /**
      * @param {d3.Selection<any, any, null, undefined>} container
      * @param {string} backgroundColor

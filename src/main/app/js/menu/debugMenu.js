@@ -1,31 +1,31 @@
-import d3 from "d3";
+import Graph from "../../../webvowl/js/graph";
+
 
 export default class DebugMenu {
     /**
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         this.graph = graph;
         /**
-         * @type {any[]}
+         * @type {d3.Selection<HTMLInputElement, any, HTMLElement, any>[]}
          */
         this.checkboxes = [];
         this.hoverFlag = false;
         /**
-         * @type {any}
+         * @type {d3.Selection<HTMLInputElement, any, HTMLElement, any> | null}
          */
         this.specialCbx = null;
     }
 
     setup() {
         const menuEntry = d3.select("#debugMenuHref");
-
         menuEntry.on("mouseover", () => {
-            if (this.hoverFlag === false) {
+            if (!this.hoverFlag) {
                 const searchMenu = this.graph.options.searchMenu;
                 searchMenu.hideSearchEntries();
                 this.specialCbx.node().click();
-                if (this.graph.editorMode() === false) {
+                if (this.graph.editorMode === false) {
                     d3.select("#useAccuracyHelper").style("color", "#979797");
                     d3.select("#useAccuracyHelper").style("pointer-events", "none");
 
@@ -47,8 +47,13 @@ export default class DebugMenu {
             "useAccuracyHelper",
             "Use accuracy helper",
             "#useAccuracyHelper",
-            this.graph.options.useAccuracyHelper,
-            (/** @type {any} */ enabled, /** @type {boolean} */ silent) => {
+            (val) => {
+                if (!arguments.length)
+                    return this.graph.options.useAccuracyHelper
+                else
+                    this.graph.options.useAccuracyHelper = val
+            },
+            (/** @type {boolean} */ enabled, /** @type {boolean} */ silent) => {
                 if (!enabled) {
                     d3.select("#showDraggerObject").style("color", "#979797");
                     d3.select("#showDraggerObject").style("pointer-events", "none");
@@ -59,30 +64,42 @@ export default class DebugMenu {
                     d3.select("#showDraggerObject").style("pointer-events", "auto");
                 }
 
-                if (silent === true) return;
+                if (silent) {
+                    return;
+                }
                 this.graph.lazyRefresh();
                 this.graph.updateDraggerElements();
             }
         );
-
         this.addCheckBox(
             "showDraggerObject",
             "Show accuracy helper",
             "#showDraggerObject",
-            this.graph.options.showDraggerObject,
-            (/** @type {any} */ _enabled, /** @type {boolean} */ silent) => {
-                if (silent === true) return;
+            (val) => {
+                if (!arguments.length)
+                    return this.graph.options.showDraggerObject
+                else
+                    this.graph.options.showDraggerObject = val
+            },
+            (/** @type {boolean} */ _enabled, /** @type {boolean} */ silent) => {
+                if (silent) {
+                    return;
+                }
                 this.graph.lazyRefresh();
                 this.graph.updateDraggerElements();
             }
         );
-
         this.addCheckBox(
             "showFPS_Statistics",
             "Show rendering statistics",
             "#showFPS_Statistics",
-            this.graph.options.showRenderingStatistic,
-            (/** @type {any} */ enabled, /** @type {any} */ _silent) => {
+            (val) => {
+                if (!arguments.length)
+                    return this.graph.options.showRenderingStatistic
+                else
+                    this.graph.options.showRenderingStatistic = val
+            },
+            (/** @type {boolean} */ enabled, /** @type {any} */ _silent) => {
                 if (!this.graph.options.hideDebugOptions) {
                     d3.select("#FPS_Statistics").classed("hidden", !enabled);
                 } else {
@@ -90,13 +107,17 @@ export default class DebugMenu {
                 }
             }
         );
-
         this.addCheckBox(
             "showModeOfOperation",
             "Show input modality",
             "#showModeOfOperation",
-            this.graph.options.showInputModality,
-            (/** @type {any} */ enabled) => {
+            (val) => {
+                if (!arguments.length)
+                    return this.graph.options.showInputModality
+                else
+                    this.graph.options.showInputModality = val
+            },
+            (enabled) => {
                 if (!this.graph.options.hideDebugOptions) {
                     d3.select("#modeOfOperationString").classed("hidden", !enabled);
                 } else {
@@ -108,24 +129,22 @@ export default class DebugMenu {
 
     /**
      * @param {string} identifier
-     * @param {string | number | boolean | import("d3-selection").ValueFn<HTMLLabelElement, any, string | number | boolean>} modeName
+     * @param {any} modeName
      * @param {string} selector
      * @param {(arg0: undefined) => void} onChangeFunc
-     * @param {{ (enabled: any, silent: boolean): void; (_enabled: any, silent: boolean): void; (enabled: any, _silent: any): void; (enabled: any): void; (arg0: any, arg1: any): void; }} callbackFunction
+     * @param {(enabled: boolean, silent: boolean) => void} callbackFunction
      */
     addCheckBox(identifier, modeName, selector, onChangeFunc, callbackFunction) {
         const configOptionContainer = d3
             .select(selector)
             .append("div")
             .classed("checkboxContainer", true);
-
         const configCheckbox = configOptionContainer
             .append("input")
             .classed("moduleCheckbox", true)
             .attr("id", identifier + "ConfigCheckbox")
             .attr("type", "checkbox")
             .property("checked", onChangeFunc());
-
         configCheckbox.on("click", (silent) => {
             const isEnabled = configCheckbox.property("checked");
             onChangeFunc(isEnabled);
@@ -133,18 +152,16 @@ export default class DebugMenu {
         });
 
         this.checkboxes.push(configCheckbox);
-
         configOptionContainer
             .append("label")
             .attr("for", identifier + "ConfigCheckbox")
             .text(modeName);
-
         return configCheckbox;
     }
 
     /**
      * @param {string} identifier
-     * @param {any} value
+     * @param {boolean} value
      */
     setCheckBoxValue(identifier, value) {
         for (const checkbox of this.checkboxes) {
@@ -157,7 +174,7 @@ export default class DebugMenu {
     }
 
     /**
-     * @param {any} id
+     * @param {string} id
      */
     getCheckBoxValue(id) {
         for (const checkbox of this.checkboxes) {
@@ -179,7 +196,7 @@ export default class DebugMenu {
             checkbox.on("click")(silent);
         });
 
-        if (this.graph.editorMode() === false) {
+        if (!this.graph.editorMode) {
             d3.select("#useAccuracyHelper").style("color", "#979797");
             d3.select("#useAccuracyHelper").style("pointer-events", "none");
 

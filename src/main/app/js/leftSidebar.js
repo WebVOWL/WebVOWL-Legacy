@@ -1,7 +1,9 @@
-export class LeftSideBar {
+import Graph from "../../webvowl/js/graph"
+
+export default class LeftSideBar {
     /**
      * Contains the logic for the sidebar.
-     * @param {any} graph the graph that belongs to these controls
+     * @param {Graph} graph the graph that belongs to these controls
      */
     constructor(graph) {
         this.graph = graph

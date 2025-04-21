@@ -1,14 +1,13 @@
-import { BaseNode } from "../nodes/BaseNode";
-import { BaseProperty } from "../properties/BaseProperty";
-import { Label } from "./Label";
-import { LinkPart } from "./linkPart";
+import BaseNode from "../nodes/BaseNode"
+import BaseProperty from "../properties/BaseProperty"
+import Label from "./Label"
+import LinkPart from "./linkPart"
 
-/**
- * A link connects at least two VOWL nodes.
- * The properties connecting the VOWL nodes are stored separately into the label.
- */
-export class PlainLink {
+
+export default class PlainLink {
     /**
+     * A link connects at least two VOWL nodes.
+     * The properties connecting the VOWL nodes are stored separately into the label.
      * @param {BaseNode} domain
      * @param {BaseNode} range
      * @param {BaseProperty} property
@@ -46,15 +45,15 @@ export class PlainLink {
      * @param {d3.Selection<any,any,null,undefined>} linkGroup
      */
     draw(linkGroup) {
-        var property = this.label.property;
-        var inverse = property.inverse;
+        const property = this.label.property;
+        const inverse = property.inverse;
 
         property.linkGroup = linkGroup;
         if (inverse) {
             inverse.linkGroup = linkGroup;
         }
 
-        var pathElement = linkGroup.append("path");
+        const pathElement = linkGroup.append("path");
         pathElement.classed("link-path", true)
             .classed(this.domain.cssClassOfNode(), true)
             .classed(this.range.cssClassOfNode(), true)

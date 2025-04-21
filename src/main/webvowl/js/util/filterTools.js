@@ -1,9 +1,9 @@
-import { BaseNode } from "../elements/nodes/BaseNode";
-import { BaseProperty } from "../elements/properties/BaseProperty";
-import { ElementTools } from "./elementTools";
+import BaseNode from "../elements/nodes/BaseNode";
+import BaseProperty from "../elements/properties/BaseProperty";
+import ElementTools from "./elementTools";
 
 
-export class FilterTools {
+export default class FilterTools {
     /**
      * Filters the passed nodes and removes dangling properties.
      * @param {BaseNode[]} nodes

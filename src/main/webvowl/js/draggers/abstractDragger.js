@@ -1,6 +1,10 @@
+import Graph from "../graph"
 
 
-export class AbstractDragger {
+export default class AbstractDragger {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         if (this.constructor === AbstractDragger) {
             throw new Error("Abstract classes can't be instantiated")

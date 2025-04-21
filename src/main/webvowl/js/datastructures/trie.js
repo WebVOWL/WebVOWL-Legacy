@@ -83,7 +83,7 @@ export class Trie {
     /**
      * Find word/data pairs that contains `prefix`
      * @param {string} prefix
-     * @returns {Array} Array of arrays where a[i][0] is a word and a[i][1] is the word's data
+     * @returns {any[][]} Array of arrays where a[i][0] is a word and a[i][1] is the word's data
      * Ordered by word relevance such that more relevant words have a lower index i
      */
     find(prefix) {
@@ -108,7 +108,7 @@ export class Trie {
                 output.push([node.getWord(), node.data]);
             }
             // iterate through each children, call recursive findAllWords
-            for (var child in node.children) {
+            for (const child in node.children) {
                 stack.push(node.children[child]);
             }
         }

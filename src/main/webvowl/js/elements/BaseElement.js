@@ -1,27 +1,27 @@
-import { AbsoluteTextElement } from "../util/AbsoluteTextElement";
-import { CenteringTextElement } from "../util/CenteringTextElement";
-import { LanguageTools } from "../util/languageTools";
-import { BaseNode } from "./nodes/BaseNode";
-import { BaseProperty } from "./properties/BaseProperty";
+import Graph from "../graph"
+import AbsoluteTextElement from "../util/AbsoluteTextElement"
+import CenteringTextElement from "../util/CenteringTextElement"
+import LanguageTools from "../util/languageTools"
+import BaseNode from "./nodes/BaseNode"
+import BaseProperty from "./properties/BaseProperty"
 
-/**
- * The base element for all visual elements of webvowl.
- */
-export class BaseElement {
+
+export default class BaseElement {
     /**
-     * @param {any} graph
+     * The base element for all visual elements of webvowl
+     * @param {Graph} graph
      */
     constructor(graph) {
-        if (this.constructor === BaseNode) {
+        if (this.constructor === BaseElement) {
             throw new Error("Abstract classes can't be instantiated")
         }
 
-        this.graph = graph // TODO: This must be a global reference to save memory.
+        this.graph = graph
 
         // Basic attributes
         /**
          * ID of equivalent elements
-         * @type {string[] | BaseElement[]}
+         * @type {BaseElement[]} // Can also be a string[] during parser.js, but is omitted here as it causes the TS compiler to complain too much
          */
         this.equivalents = []
         /**

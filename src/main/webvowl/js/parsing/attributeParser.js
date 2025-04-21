@@ -1,5 +1,5 @@
-import { BaseElement } from "../elements/BaseElement"
-import { BaseProperty } from "../elements/properties/BaseProperty"
+import BaseElement from "../elements/BaseElement"
+import BaseProperty from "../elements/properties/BaseProperty"
 
 // Style
 const ANONYMOUS = "anonymous"
@@ -37,12 +37,9 @@ const PROPERTY_INDICATIONS = [
 ]
 
 
-/**
- * Parses the attributes an element has and sets the corresponding attributes.
- * @returns {Function}
- */
-export class AttributeParser {
+export default class AttributeParser {
     /**
+     * Parses the attributes an element has and sets the corresponding attributes
      * @param {BaseElement} property
      */
     static #parsePropertyIndications(property) {

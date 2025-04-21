@@ -1,9 +1,9 @@
-var OwlClass = require("../../../src/webvowl/js/elements/nodes/implementations/OwlClass");
-var RdfsDatatype = require("../../../src/webvowl/js/elements/nodes/implementations/RdfsDatatype");
-var DatatypeProperty = require("../../../src/webvowl/js/elements/properties/implementations/OwlDatatypeProperty");
+const OwlClass = require("../../../src/webvowl/js/elements/nodes/implementations/OwlClass");
+const RdfsDatatype = require("../../../src/webvowl/js/elements/nodes/implementations/RdfsDatatype");
+const DatatypeProperty = require("../../../src/webvowl/js/elements/properties/implementations/OwlDatatypeProperty");
 
 describe("Collapsing of datatypes", function () {
-	var filter;
+	const filter;
 
 	beforeEach(function () {
 		jasmine.addMatchers({
@@ -26,7 +26,7 @@ describe("Collapsing of datatypes", function () {
 
 
 	it("should remove datatypes with their properties", function () {
-		var domain = new OwlClass(),
+		const domain = new OwlClass(),
 			datatypeProperty = new DatatypeProperty(),
 			datatypeClass = new RdfsDatatype();
 

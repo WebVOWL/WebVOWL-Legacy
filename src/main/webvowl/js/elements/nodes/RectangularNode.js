@@ -1,10 +1,16 @@
-import CenteringTextElement from '../../util/CenteringTextElement';
-import { DrawTools } from '../drawTools';
-import { RectangularElementToolsMixin } from '../rectangularElementTools';
-import { BaseNode } from './BaseNode';
+import Graph from "../../graph"
+import CenteringTextElement from "../../util/CenteringTextElement"
+import DrawTools from "../drawTools"
+import { RectangularElementToolsMixin } from "../rectangularElementTools"
+import BaseNode from "./BaseNode"
 
-export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
+
+export default class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
+        // @ts-ignore
         super(graph)
 
         // Size attributes
@@ -49,7 +55,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
         this.nodeElement.selectAll("rect").classed("hovered", enable);
         const haloGroup = this.haloGroupElement;
         if (haloGroup) {
-            var test = haloGroup.selectAll(".searchResultA");
+            const test = haloGroup.selectAll(".searchResultA");
             test.classed("searchResultA", false);
             test.classed("searchResultB", true);
         }
@@ -78,7 +84,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
      * @param {string[]} additionalCssClasses additional css classes
      */
     draw(parentElement, additionalCssClasses) {
-        var cssClasses = this.collectCssClasses();
+        const cssClasses = this.collectCssClasses();
         this.nodeElement = parentElement;
 
         if (additionalCssClasses instanceof Array) {
@@ -143,7 +149,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
         this.haloGroupElement = DrawTools.drawRectHalo(this.nodeElement, this.width, this.height, offset);
 
         if (pulseAnimation === false) {
-            var pulseItem = this.haloGroupElement.selectAll(".searchResultA");
+            const pulseItem = this.haloGroupElement.selectAll(".searchResultA");
             pulseItem.classed("searchResultA", false);
             pulseItem.classed("searchResultB", true);
             pulseItem.attr("animationRunning", false);
@@ -151,7 +157,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
 
         if (this.pinned) {
             const selectedNode = this.pinGroupElement.node();
-            var nodeContainer = selectedNode.parentNode;
+            const nodeContainer = selectedNode.parentNode;
             nodeContainer.appendChild(selectedNode);
         }
     }
@@ -182,6 +188,7 @@ export class RectangularNode extends RectangularElementToolsMixin(BaseNode) {
                 .ease('linear')
                 .duration(100)
                 .attr({ x: -_this.labelWidth / 2, y: -_this.height / 2, width: _this.labelWidth, height: _this.height })
+                // @ts-ignore
                 .each("end", function () {
                     _this.updateTextElement();
                 });

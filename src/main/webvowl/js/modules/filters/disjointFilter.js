@@ -1,10 +1,10 @@
-import { BaseNode } from '../../elements/nodes/BaseNode';
-import { BaseProperty } from '../../elements/properties/BaseProperty';
-import { OwlDisjointWith } from '../../elements/properties/implementations/OwlDisjointWith';
-import { AbstractFilter } from './abstractFilter';
+import BaseNode from "../../elements/nodes/BaseNode";
+import BaseProperty from "../../elements/properties/BaseProperty";
+import OwlDisjointWith from "../../elements/properties/implementations/OwlDisjointWith";
+import AbstractFilter from "./abstractFilter";
 
 
-export class DisjointFilter extends AbstractFilter {
+export default class DisjointFilter extends AbstractFilter {
     constructor() {
         super(true)
     }

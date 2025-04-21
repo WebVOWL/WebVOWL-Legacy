@@ -1,12 +1,13 @@
-import { BaseNode } from "../../webvowl/js/elements/nodes/BaseNode";
-import { BaseProperty } from "../../webvowl/js/elements/properties/BaseProperty";
-import { Statistics } from "../../webvowl/js/modules/filters/statistics";
-import { Constants } from "../../webvowl/js/util/constants";
-import { ElementTools } from "../../webvowl/js/util/elementTools";
-import { LanguageTools } from "../../webvowl/js/util/languageTools";
+import d3 from "d3"
+import BaseNode from "../../webvowl/js/elements/nodes/BaseNode"
+import BaseProperty from "../../webvowl/js/elements/properties/BaseProperty"
+import Statistics from "../../webvowl/js/modules/filters/statistics"
+import Constants from "../../webvowl/js/util/constants"
+import LanguageTools from "../../webvowl/js/util/languageTools"
 
 
-export class SideBar {
+
+export default class SideBar {
     /**
      * Contains the logic for the sidebar.
      * @param {any} graph the graph that belongs to these controls
@@ -115,7 +116,7 @@ export class SideBar {
     }
 
     /**
-     * @param {Array<any>} languages
+     * @param {string[]} languages
      */
     #setLanguages(languages) {
         languages = languages || [];
@@ -506,7 +507,7 @@ export class SideBar {
      * @param {boolean} isVisible
      * @param {boolean} init
      */
-    #showSidebar(isVisible, init = false) {
+    showSidebar(isVisible, init = false) {
         if (isVisible) {
             this.visibleSidebar = true;
             this.collapseButton.node().innerHTML = ">";
@@ -573,7 +574,7 @@ export class SideBar {
      * @param {boolean} init
      */
     updateSideBarVis(init) {
-        this.#showSidebar(this.getSidebarVisibility(), init);
+        this.showSidebar(this.getSidebarVisibility(), init);
     }
 
     /**
@@ -599,12 +600,12 @@ export class SideBar {
         this.collapseButton.on("click", () => {
             this.graph.options.navigationMenu.hideAllMenus();
             const isVisible = this.getSidebarVisibility()
-            this.#showSidebar(!isVisible)
+            this.showSidebar(!isVisible)
         });
     }
 
     updateShowedInformation() {
-        const editMode = this.graph.editorMode();
+        const editMode = this.graph.editorMode;
         d3.select("#generalDetails").classed("hidden", editMode);
         d3.select("#generalDetailsEdit").classed("hidden", !editMode);
 

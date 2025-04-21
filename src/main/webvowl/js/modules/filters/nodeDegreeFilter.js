@@ -1,14 +1,17 @@
-import { PlainLink } from '../../elements/links/PlainLink';
-import { BaseNode } from '../../elements/nodes/BaseNode';
-import { BaseProperty } from '../../elements/properties/BaseProperty';
-import ElementTools from '../../util/elementTools';
-import { FilterTools } from '../../util/filterTools';
-import { AbstractFilter } from './abstractFilter';
+import FilterMenu from '../../../../app/js/menu/filterMenu';
+import PlainLink from '../../elements/links/PlainLink';
+import BaseNode from '../../elements/nodes/BaseNode';
+import BaseProperty from '../../elements/properties/BaseProperty';
+import FilterTools from '../../util/filterTools';
+import AbstractFilter from './abstractFilter';
 
 
-export class NodeDegreeFilter extends AbstractFilter {
+export default class NodeDegreeFilter extends AbstractFilter {
     NODE_COUNT_LIMIT_FOR_AUTO_ENABLING = 50;
 
+    /**
+     * @param {FilterMenu} menu
+     */
     constructor(menu) {
         super(true)
         this.menu = menu
@@ -40,13 +43,13 @@ export class NodeDegreeFilter extends AbstractFilter {
             this.maxDegreeSetter(maxLinkCount);
         }
 
-        this.menu.setDefaultDegreeValue(this.#findAutoDefaultDegree(nodes, properties, maxLinkCount, linkCounts));
+        this.menu.defaultDegreeValue = this.#findAutoDefaultDegree(nodes, properties, maxLinkCount, linkCounts);
         if (this.degreeSetter instanceof Function) {
             const defaultDegree = this.#findDefaultDegree(maxLinkCount);
             this.degreeSetter(defaultDegree);
             if (defaultDegree > 0) {
                 this.menu.highlightForDegreeSlider(true);
-                this.menu.getGraphObject().setFilterWarning(true);
+                this.menu.graph.setFilterWarning(true);
             }
         } else {
             console.error("No degree setter function set.");
@@ -87,16 +90,16 @@ export class NodeDegreeFilter extends AbstractFilter {
      * @param {number} maxDegree
      */
     #findDefaultDegree(maxDegree) {
-        const globalDegOfFilter = this.menu.getGraphObject().getGlobalDOF();
+        const globalDegOfFilter = this.menu.graph.getGlobalDOF();
         if (globalDegOfFilter >= 0) {
             if (globalDegOfFilter <= maxDegree) {
                 return globalDegOfFilter;
             } else {
-                this.menu.getGraphObject().setGlobalDOF(maxDegree);
+                this.menu.graph.setGlobalDOF(maxDegree);
                 return maxDegree;
             }
         }
-        return this.menu.getDefaultDegreeValue();
+        return this.menu.defaultDegreeValue;
     }
 
     /**

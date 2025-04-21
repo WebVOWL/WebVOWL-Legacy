@@ -1,10 +1,11 @@
-import { BaseNode } from '../../elements/nodes/BaseNode';
-import { SetOperatorNode } from '../../elements/nodes/SetOperatorNode';
-import { BaseProperty } from '../../elements/properties/BaseProperty';
-import { FilterTools } from '../../util/filterTools';
-import { AbstractFilter } from './abstractFilter';
+import BaseNode from "../../elements/nodes/BaseNode";
+import SetOperatorNode from "../../elements/nodes/SetOperatorNode";
+import BaseProperty from "../../elements/properties/BaseProperty";
+import FilterTools from "../../util/filterTools";
+import AbstractFilter from "./abstractFilter";
 
-export class SetOperatorFilter extends AbstractFilter {
+
+export default class SetOperatorFilter extends AbstractFilter {
     constructor() {
         super(false)
     }

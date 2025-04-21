@@ -1,9 +1,9 @@
-var OwlClass = require("../../../src/webvowl/js/elements/nodes/implementations/OwlClass");
-var RdfsSubClassOf = require("../../../src/webvowl/js/elements/properties/implementations/RdfsSubClassOf");
-var ObjectProperty = require("../../../src/webvowl/js/elements/properties/implementations/OwlObjectProperty");
+const OwlClass = require("../../../src/webvowl/js/elements/nodes/implementations/OwlClass");
+const RdfsSubClassOf = require("../../../src/webvowl/js/elements/properties/implementations/RdfsSubClassOf");
+const ObjectProperty = require("../../../src/webvowl/js/elements/properties/implementations/OwlObjectProperty");
 
 describe("Collapsing of subclassOf properties", function () {
-	var collapser;
+	const collapser;
 
 	beforeEach(function () {
 		jasmine.addMatchers({
@@ -26,7 +26,7 @@ describe("Collapsing of subclassOf properties", function () {
 
 
 	it("should remove subclasses and their properties", function () {
-		var superClass = new OwlClass(),
+		const superClass = new OwlClass(),
 			subProperty = new RdfsSubClassOf(),
 			subclass = new OwlClass();
 
@@ -41,7 +41,7 @@ describe("Collapsing of subclassOf properties", function () {
 	});
 
 	it("should remove nested subclasses and their properties", function () {
-		var superClass = new OwlClass(),
+		const superClass = new OwlClass(),
 			subProperty = new RdfsSubClassOf(),
 			subclass = new OwlClass(),
 			subSubProperty = new RdfsSubClassOf(),
@@ -60,7 +60,7 @@ describe("Collapsing of subclassOf properties", function () {
 	});
 
 	it("should not remove if a subclass is domain of another property", function () {
-		var superClass = new OwlClass(),
+		const superClass = new OwlClass(),
 			subProperty = new RdfsSubClassOf(),
 			subclass = new OwlClass(),
 			otherProperty = new ObjectProperty(),
@@ -80,7 +80,7 @@ describe("Collapsing of subclassOf properties", function () {
 	});
 
 	it("should not remove if a subclass is range of another property", function () {
-		var superClass = new OwlClass(),
+		const superClass = new OwlClass(),
 			subProperty = new RdfsSubClassOf(),
 			subclass = new OwlClass(),
 			otherProperty = new ObjectProperty(),
@@ -99,7 +99,7 @@ describe("Collapsing of subclassOf properties", function () {
 	});
 
 	it("should not collapse if a subclass has a subclass with non-subclass properties", function () {
-		var superClass = new OwlClass(),
+		const superClass = new OwlClass(),
 			subProperty = new RdfsSubClassOf(),
 			subclass = new OwlClass(),
 			subSubclassProperty = new RdfsSubClassOf(),
@@ -123,7 +123,7 @@ describe("Collapsing of subclassOf properties", function () {
 	});
 
 	it("should not collapse if a subclass has multiple superclasses", function () {
-		var superClass1 = new OwlClass(),
+		const superClass1 = new OwlClass(),
 			subProperty1 = new RdfsSubClassOf(),
 			superClass2 = new OwlClass(),
 			subProperty2 = new RdfsSubClassOf(),
@@ -143,7 +143,7 @@ describe("Collapsing of subclassOf properties", function () {
 	});
 
 	it("should be able to handle circles", function () {
-		var loopSubClass = new OwlClass(),
+		const loopSubClass = new OwlClass(),
 			subProperty = new RdfsSubClassOf(),
 			nodes = [loopSubClass],
 			properties = [subProperty];

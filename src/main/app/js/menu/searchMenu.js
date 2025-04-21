@@ -1,15 +1,19 @@
-import d3 from 'd3';
-import { Trie } from '../../../webvowl/js/datastructures/trie';
-import { PrefixTools } from '../../../webvowl/js/util/prefixTools';
+import { Trie } from "../../../webvowl/js/datastructures/trie";
+import Graph from "../../../webvowl/js/graph";
+import PrefixTools from "../../../webvowl/js/util/prefixTools";
+
 
 export default class SearchMenu {
     /**
      * Contains the search "engine"
-     * @param {any} graph the associated webvowl graph
+     * @param {Graph} graph the associated webvowl graph
      */
     constructor(graph) {
         this.graph = graph;
 
+        /**
+         * @type {Trie | undefined}
+         */
         this.trie = undefined;
         this.searchLineEdit = undefined;
         this.maxEntries = 6;
@@ -29,7 +33,7 @@ export default class SearchMenu {
     updateSearchDictionary() {
         this.dictionaryUpdateRequired = false;
         this.trie = new Trie();
-        let dict = this.graph.getUpdateDictionary();
+        let dict = this.graph.dictionary;
 
         for (let i = 0; i < dict.length; i++) {
             let item = dict[i];
@@ -46,30 +50,26 @@ export default class SearchMenu {
     }
 
     setup() {
-        const _this = this;
         this.searchLineEdit = d3.select("#search-input-text");
         this.searchLineEdit.on("input", this.userInput);
         this.searchLineEdit.on("keydown", this.userNavigation);
         this.searchLineEdit.on("click", this.toggleSearchEntryView);
         this.searchLineEdit.on("mouseover", this.hoverSearchEntryView);
 
-        this.c_locate.on("click", function () {
-            _this.graph.locateSearchResult();
+        this.c_locate.on("click", () => {
+            this.graph.locateSearchResult();
         });
-
-        this.c_locate.on("mouseover", function () {
-            _this.hideSearchEntries();
+        this.c_locate.on("mouseover", () => {
+            this.hideSearchEntries();
         });
 
         // Initialize dictionary
         this.updateSearchDictionary();
         // Reset text from previous searches
         this.clearText()
-
-    };
+    }
 
     hoverSearchEntryView() {
-        // @ts-ignore
         if (this.m_search.node().children === 0) {
             this.createDropDownElements();
         }
@@ -99,11 +99,10 @@ export default class SearchMenu {
             this.updateSearchDictionary();
         }
 
-        // @ts-ignore
-        var htmlCollection = this.m_search.node().children;
-        var numEntries = htmlCollection.length;
-        var move = 0;
-        var selectedEntry = -1;
+        const htmlCollection = this.m_search.node().children;
+        const numEntries = htmlCollection.length;
+        let move = 0;
+        let selectedEntry = -1;
         for (let i = 0; i < numEntries; i++) {
             let atr = htmlCollection[i].getAttribute('class');
             if (atr === "dbEntrySelected") {
@@ -111,7 +110,6 @@ export default class SearchMenu {
             }
         }
         // Enter
-        // @ts-ignore
         if (d3.event.keyCode === 13) {
             if (selectedEntry >= 0 && selectedEntry < numEntries) {
                 // simulate onClick event
@@ -122,7 +120,7 @@ export default class SearchMenu {
                 let inputText = this.getSearchString();
                 // check if input text ends or begins with with space
                 // remove first spaces
-                var clearedText = inputText.replace(/%20/g, " ");
+                let clearedText = inputText.replace(/%20/g, " ");
                 while (clearedText.startsWith(" ")) {
                     clearedText = clearedText.substr(1, clearedText.length);
                 }
@@ -130,14 +128,13 @@ export default class SearchMenu {
                 while (clearedText.endsWith(" ")) {
                     clearedText = clearedText.substr(0, clearedText.length - 1);
                 }
-                var iri = clearedText.replace(/ /g, "%20");
+                const iri = clearedText.replace(/ /g, "%20");
 
-                var valid = PrefixTools.validURL(iri);
+                const valid = PrefixTools.validURL(iri);
                 // validate url:
                 if (valid) {
-                    var ontM = this.graph.options.ontologyMenu;
+                    const ontM = this.graph.options.ontologyMenu;
                     ontM.setIriText(iri);
-                    // @ts-ignore
                     this.searchLineEdit.node().value = "";
                 }
                 else {
@@ -146,13 +143,11 @@ export default class SearchMenu {
             }
         }
         // ArrowUp
-        // @ts-ignore
         if (d3.event.keyCode === 38) {
             move = -1;
             this.showSearchEntries();
         }
         // ArrowDown
-        // @ts-ignore
         if (d3.event.keyCode === 40) {
             move = +1;
             this.showSearchEntries();
@@ -174,13 +169,14 @@ export default class SearchMenu {
         }
     }
 
+    /**
+     * @returns {string}
+     */
     getSearchString() {
-        // @ts-ignore
         return this.searchLineEdit.node().value.toLowerCase().trim();
-    };
+    }
 
     clearSearchEntries() {
-        // @ts-ignore
         let htmlCollection = this.m_search.node().children;
         for (let i = 0; i < htmlCollection.length; i++) {
             htmlCollection[0].remove();
@@ -188,8 +184,8 @@ export default class SearchMenu {
     }
 
     /**
-     * @param {string | number | boolean | d3.ValueFn<HTMLDivElement, any, string | number | boolean>} text
-     * @param {string | number | boolean | readonly (string | number)[] | d3.ValueFn<HTMLDivElement, any, string | number | boolean | readonly (string | number)[]>} textStyle
+     * @param {string} text
+     * @param {string} textStyle
      */
     measureTextWidth(text, textStyle) {
         // Set a default value
@@ -211,19 +207,17 @@ export default class SearchMenu {
      * @param {string} input
      */
     cropText(input) {
-        var maxWidth = 250;
-        var textStyle = "dbEntry";
-        var truncatedText = input;
-        var textWidth;
-        var ratio;
-        var newTruncatedTextLength;
+        const maxWidth = 250;
+        const textStyle = "dbEntry";
+        let truncatedText = input;
+        let textWidth;
         while (true) {
             textWidth = this.measureTextWidth(truncatedText, textStyle);
             if (textWidth <= maxWidth) {
                 break;
             }
-            ratio = textWidth / maxWidth;
-            newTruncatedTextLength = Math.floor(truncatedText.length / ratio);
+            const ratio = textWidth / maxWidth;
+            const newTruncatedTextLength = Math.floor(truncatedText.length / ratio);
 
             // detect if nothing changes
             if (truncatedText.length === newTruncatedTextLength) {
@@ -239,7 +233,6 @@ export default class SearchMenu {
     }
 
     createDropDownElements() {
-        const _this = this;
         const searchString = this.getSearchString();
         const searchMatches = this.trie.find(searchString);
 
@@ -252,7 +245,7 @@ export default class SearchMenu {
         for (let i = 0; i < numEntries; i++) {
             const nodeString = searchMatches[i][0]
             const nodeIDs = searchMatches[i][1]
-            let nodeMap = this.graph.nodeMap;
+            const nodeMap = this.graph.nodeMap;
 
             // TODO: Figure out how to show nodes in nodeIDs
             // Showing all of them (as is done below) causes nodeString to be repeated nodeIDs.length times
@@ -267,13 +260,13 @@ export default class SearchMenu {
 
                 let croppedText = this.cropText(nodeString);
                 let searchEntryNode = d3.select(testEntry);
-                if (nodeMap[nodeID] === undefined) {
+                if (nodeMap.has(nodeID)) {
                     searchEntryNode.style("color", "#979797");
-                    testEntry.onclick = function () {
+                    testEntry.onclick = () => {
                         try {
-                            _this.graph.loadSearchData(nodeID);
-                            _this.requestDictionaryUpdate();
-                            _this.handleClick(nodeString, nodeIDs)();
+                            this.graph.loadSearchData(nodeID);
+                            this.requestDictionaryUpdate();
+                            this.handleClick(nodeString, nodeIDs)();
                         } catch (error) {
                             console.error(error);
                         }
@@ -281,7 +274,6 @@ export default class SearchMenu {
                     d3.select(testEntry).style("cursor", "default");
                 }
                 searchEntryNode.node().innerHTML = croppedText;
-                // @ts-ignore
                 this.m_search.node().appendChild(testEntry);
             }
         }
@@ -289,7 +281,6 @@ export default class SearchMenu {
 
     userInput() {
         this.c_locate.classed("highlighted", false);
-        // @ts-ignore
         this.c_locate.node().title = "Nothing to locate";
 
         if (this.dictionaryUpdateRequired) {
@@ -306,33 +297,27 @@ export default class SearchMenu {
     /**
      * Autocomplete searched text and highlight relevant nodes in the d3 graph
      * @param {string} nodeString A string related to `nodeIDs`
-     * @param {Set<any>} nodeIDs All node IDs that map to `nodeString`
-     * @returns
+     * @param {Set<string>} nodeIDs All node IDs that map to `nodeString`
      */
     handleClick(nodeString, nodeIDs) {
-        const _this = this;
-        return function () {
-            const inputText = _this.getSearchString();
-            // @ts-ignore
-            _this.searchLineEdit.node().value = nodeString;
-            _this.graph.resetSearchHighlight();
-            _this.graph.highLightNodes(Array.from(nodeIDs.values()));
-            // @ts-ignore
-            _this.c_locate.node().title = "Locate search term";
+        return () => {
+            const inputText = this.getSearchString();
+            this.searchLineEdit.node().value = nodeString;
+            this.graph.resetSearchHighlight();
+            this.graph.highLightNodes(Array.from(nodeIDs.values()));
+            this.c_locate.node().title = "Locate search term";
             if (nodeString !== inputText) {
-                _this.clearSearchEntries();
-                _this.createDropDownElements();
+                this.clearSearchEntries();
+                this.createDropDownElements();
             }
-            _this.hideSearchEntries();
+            this.hideSearchEntries();
         };
     }
 
     clearText() {
-        // @ts-ignore
         this.searchLineEdit.node().value = "";
         this.c_locate.classed("highlighted", false);
-        // @ts-ignore
         this.c_locate.node().title = "Nothing to locate";
         this.clearSearchEntries()
-    };
-};
+    }
+}

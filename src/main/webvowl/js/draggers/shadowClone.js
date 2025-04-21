@@ -1,12 +1,13 @@
-import { CenteringTextElement } from '../util/CenteringTextElement';
-import ElementTools from '../util/elementTools';
-import MathUtils from '../util/math';
-import { AbstractDragger } from './abstractDragger';
+import Graph from "../graph"
+import CenteringTextElement from "../util/CenteringTextElement"
+import ElementTools from "../util/elementTools"
+import MathUtils from "../util/math"
+import AbstractDragger from "./abstractDragger"
 
 
-export class ShadowClone extends AbstractDragger {
+export default class ShadowClone extends AbstractDragger {
     /**
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         super(graph)
@@ -16,7 +17,6 @@ export class ShadowClone extends AbstractDragger {
         this.s_y = 0
         this.e_x = 0
         this.e_y = 0
-        this.type = "shadowClone"
     }
 
     /**
@@ -175,7 +175,7 @@ export class ShadowClone extends AbstractDragger {
     setPositionDomain(e_x, e_y) {
         const rex = this.parent.range.x;
         const rey = this.parent.range.y;
-        if (ElementTools.isDatatype(this.parent.range) === true) {
+        if (ElementTools.isDatatype(this.parent.range)) {
             const intersection = MathUtils.calculateIntersection({ x: e_x, y: e_y }, this.parent.range, 0);
             this.s_x = intersection.x;
             this.s_y = intersection.y;

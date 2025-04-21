@@ -1,7 +1,11 @@
-import { RoundNode } from "../RoundNode"
+import Graph from "../../../graph"
+import RoundNode from "../RoundNode"
 
 
-export class OwlThing extends RoundNode {
+export default class OwlThing extends RoundNode {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 

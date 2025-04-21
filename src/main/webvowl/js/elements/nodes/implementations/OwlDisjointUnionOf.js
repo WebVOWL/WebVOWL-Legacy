@@ -1,6 +1,11 @@
-import { SetOperatorNode } from "../SetOperatorNode";
+import Graph from "../../../graph";
+import SetOperatorNode from "../SetOperatorNode";
 
-export class OwlDisjointUnionOf extends SetOperatorNode {
+
+export default class OwlDisjointUnionOf extends SetOperatorNode {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 
@@ -13,7 +18,7 @@ export class OwlDisjointUnionOf extends SetOperatorNode {
      */
     draw(element) {
         super.draw(element);
-        var symbol = element.append("g").classed("embedded", true);
+        const symbol = element.append("g").classed("embedded", true);
         const symbolRadius = 10;
 
         symbol.append("circle")

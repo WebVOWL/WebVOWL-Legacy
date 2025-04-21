@@ -1,8 +1,11 @@
-import { BaseNode } from "../../elements/nodes/BaseNode"
-import { BaseProperty } from "../../elements/properties/BaseProperty"
+import BaseNode from "../../elements/nodes/BaseNode"
+import BaseProperty from "../../elements/properties/BaseProperty"
 
 
-export class AbstractFilter {
+export default class AbstractFilter {
+    /**
+     * @param {boolean} defaultState
+     */
     constructor(defaultState) {
         if (this.constructor === AbstractFilter) {
             throw new Error("Abstract classes can't be instantiated")

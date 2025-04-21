@@ -1,24 +1,25 @@
-import { BaseElement } from './elements/BaseElement';
-import { BaseNode } from './elements/nodes/BaseNode';
-import { OwlThing } from './elements/nodes/implementations/OwlThing';
-import { RdfsLiteral } from './elements/nodes/implementations/RdfsLiteral';
-import nodeClassMap from './elements/nodes/nodeMap';
-import { BaseProperty } from './elements/properties/BaseProperty';
-import { OwlDisjointWith } from './elements/properties/implementations/OwlDisjointWith';
-import propertyClassMap from './elements/properties/propertyMap';
-import { AttributeParser } from './parsing/attributeParser';
-import { ElementTools } from './util/elementTools';
-import { LanguageTools } from './util/languageTools';
+import BaseElement from "./elements/BaseElement"
+import BaseNode from "./elements/nodes/BaseNode"
+import OwlThing from "./elements/nodes/implementations/OwlThing"
+import RdfsLiteral from "./elements/nodes/implementations/RdfsLiteral"
+import nodeClassMap from "./elements/nodes/nodeMap"
+import BaseProperty from "./elements/properties/BaseProperty"
+import OwlDisjointWith from "./elements/properties/implementations/OwlDisjointWith"
+import propertyClassMap from "./elements/properties/propertyMap"
+import Graph from "./graph"
+import AttributeParser from "./parsing/attributeParser"
+import ElementTools from "./util/elementTools"
+import LanguageTools from "./util/languageTools"
 
 
-export class Parser {
+export default class Parser {
     PREFIX = "GENERATED-MERGED_RANGE-"
     OBJECT_PROPERTY_DEFAULT_RANGE_TYPE = "owl:Thing"
     DATA_PROPERTY_DEFAULT_RANGE_TYPE = "rdfs:Literal"
 
     /**
      * Encapsulates the parsing and preparation logic of the input data.
-     * @param {any} graph the graph object that will be passed to the elements
+     * @param {Graph} graph the graph object that will be passed to the elements
      */
     constructor(graph) {
         this.graph = graph
@@ -140,6 +141,7 @@ export class Parser {
             [unparsedProperties],
             [ontologyData.propertyAttribute],
             ontologyData.namespace,
+            // @ts-ignore
             propertyClassMap,
             // @ts-ignore
             this.#combineProperties
@@ -157,10 +159,10 @@ export class Parser {
 
     /**
      * Parse `jsonObject` and ensure the graph data is valid
-     * @param {{}} jsonObject
+     * @param {{ header?: any; class?: any[]; }} jsonObject
      * @param {string} filename
      * @param {string} alternativeFilename
-     * @returns {[{} | undefined, boolean]} Whether `jsonObject` is valid graph data
+     * @returns {[{ header?: any; class?: any[]; } | undefined, boolean]} Whether `jsonObject` is valid graph data
      */
     parseOntologyFromText(jsonObject, filename, alternativeFilename) {
         let isValidData = false;
@@ -781,7 +783,7 @@ export class Parser {
      * @param {Set<string>} nodeIdsToHide
      */
     #filterVisibleNodes(nodes, nodeIdsToHide) {
-        var filteredNodes = [];
+        const filteredNodes = [];
         for (const node of nodes) {
             if (!nodeIdsToHide.has(node.id)) {
                 filteredNodes.push(node);

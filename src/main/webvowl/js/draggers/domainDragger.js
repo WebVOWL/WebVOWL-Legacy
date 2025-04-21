@@ -1,7 +1,7 @@
-import { AbstractDomainRangeDragger } from "./abstractDomainRangeDragger";
+import AbstractDomainRangeDragger from "./abstractDomainRangeDragger";
 
 
-export class DomainDragger extends AbstractDomainRangeDragger {
+export default class DomainDragger extends AbstractDomainRangeDragger {
     /**
      * @param {any} graph
      */
@@ -9,42 +9,38 @@ export class DomainDragger extends AbstractDomainRangeDragger {
         super(graph)
 
         this.id = 10002 // Sharing ID with RangeDragger
-        this.type = "Domain_dragger"
     }
 
     /**
      * @param {d3.Selection<any,any,null,undefined>} newDomain A node selection
      */
     updateDomain(newDomain) {
-        if (this.graph.genericPropertySanityCheck(
+        if (!this.graph.genericPropertySanityCheck(
             this.parent.range,
             newDomain,
             this.parent.type,
             "Could not update domain",
             "Restoring previous domain"
-        ) === false
-        ) {
+        )) {
             this.updateElement();
             return;
         }
 
         // check for triple duplicates!
-        if (this.graph.propertyCheckExistenceChecker(this.parent, newDomain, this.parent.range) === false)
+        if (!this.graph.propertyCheckExistenceChecker(this.parent, newDomain, this.parent.range)) {
             return;
-
+        }
         if (this.parent.labelElement === undefined) {
             this.updateElement();
             return;
         }
-
-        if (this.parent.labelElement.attr("transform") === "translate(0,15)" ||
-            this.parent.labelElement.attr("transform") === "translate(0,-15)"
+        if (this.parent.labelElement.attr("transform") === "translate(0,15)"
+            || this.parent.labelElement.attr("transform") === "translate(0,-15)"
         ) {
             this.parent.inverse.inverse = null;
             this.parent.inverse = null;
             this.parent.domain = newDomain;
-        }
-        else {
+        } else {
             this.parent.domain = newDomain;
         }
 
@@ -116,7 +112,7 @@ export class DomainDragger extends AbstractDomainRangeDragger {
     }
 
     updateElement() {
-        if (this.mouseButtonPressed === true || this.parent === undefined) {
+        if (this.mouseButtonPressed || this.parent === undefined) {
             return;
         }
 

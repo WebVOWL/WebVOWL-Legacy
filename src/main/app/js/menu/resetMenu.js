@@ -1,9 +1,11 @@
-import d3 from "d3";
+import Graph from "../../../webvowl/js/graph";
+import Options from "../../../webvowl/js/options";
+
 
 export default class ResetMenu {
     /**
      * Contains the logic for the reset button.
-     * @param {any} graph the associated webvowl graph
+     * @param {Graph} graph the associated webvowl graph
      */
     constructor(graph) {
         this.graph = graph;
@@ -13,7 +15,7 @@ export default class ResetMenu {
          * @type {any[] | undefined}
          */
         this.resettableModules = undefined;
-        this.untouchedOptions = webvowl.options();
+        this.untouchedOptions = new Options(); // FIXME: We don't want a full options here
     }
 
     /**
@@ -35,7 +37,7 @@ export default class ResetMenu {
         this.graph.options.searchMenu.clearText();
         this.options.classDistance = this.untouchedOptions.classDistance;
         this.options.datatypeDistance = this.untouchedOptions.datatypeDistance;
-        this.options.charge(this.untouchedOptions.charge);
+        this.options.charge = this.untouchedOptions.charge;
         this.options.gravity = this.untouchedOptions.gravity;
         this.options.linkStrength = this.untouchedOptions.linkStrength;
         this.graph.reset();

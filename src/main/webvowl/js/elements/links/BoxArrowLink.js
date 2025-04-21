@@ -1,8 +1,9 @@
-import { BaseNode } from "../nodes/BaseNode";
-import { BaseProperty } from "../properties/BaseProperty";
-import { PlainLink } from "./PlainLink";
+import BaseNode from "../nodes/BaseNode";
+import BaseProperty from "../properties/BaseProperty";
+import PlainLink from "./PlainLink";
 
-export class BoxArrowLink extends PlainLink {
+
+export default class BoxArrowLink extends PlainLink {
     /**
      * @param {BaseNode} domain
      * @param {BaseNode} range
@@ -17,7 +18,7 @@ export class BoxArrowLink extends PlainLink {
      * @param {BaseProperty} inverse
      */
     #createPropertyMarker(markerContainer, inverse) {
-        var inverseMarker = this.#appendBasicMarker(markerContainer, inverse);
+        const inverseMarker = this.#appendBasicMarker(markerContainer, inverse);
         inverseMarker.attr("refX", -8);
         inverseMarker.append("path")
             .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
@@ -30,7 +31,7 @@ export class BoxArrowLink extends PlainLink {
      * @param {BaseProperty} property
      */
     #createInverseMarker(markerContainer, property) {
-        var marker = this.#appendBasicMarker(markerContainer, property);
+        const marker = this.#appendBasicMarker(markerContainer, property);
         marker.attr("refX", 8);
         marker.append("path")
             .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
@@ -59,8 +60,8 @@ export class BoxArrowLink extends PlainLink {
      */
     // @ts-ignore
     draw(linkGroup, markerContainer) {
-        var property = this.label.property;
-        var inverse = property.inverse;
+        const property = this.label.property;
+        const inverse = property.inverse;
 
         this.#createPropertyMarker(markerContainer, property);
         if (inverse) {

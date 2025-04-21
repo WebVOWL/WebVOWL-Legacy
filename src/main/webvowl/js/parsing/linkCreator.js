@@ -1,14 +1,11 @@
-import { ArrowLink } from '../elements/links/ArrowLink';
-import { BoxArrowLink } from '../elements/links/BoxArrowLink';
-import { PlainLink } from '../elements/links/PlainLink';
-import { BaseProperty } from '../elements/properties/BaseProperty';
-import { OwlDisjointWith } from '../elements/properties/implementations/OwlDisjointWith';
-import { SetOperatorProperty } from '../elements/properties/implementations/SetOperatorProperty';
+import ArrowLink from "../elements/links/ArrowLink";
+import BoxArrowLink from "../elements/links/BoxArrowLink";
+import PlainLink from "../elements/links/PlainLink";
+import BaseProperty from "../elements/properties/BaseProperty";
+import OwlDisjointWith from "../elements/properties/implementations/OwlDisjointWith";
+import SetOperatorProperty from "../elements/properties/implementations/SetOperatorProperty";
 
-/**
- * Stores the passed properties in links.
- * @returns {Function}
- */
+
 export default class LinkCreator {
     /**
      * Creates links from the passed properties.

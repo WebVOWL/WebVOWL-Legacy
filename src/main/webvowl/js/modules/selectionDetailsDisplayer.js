@@ -1,4 +1,4 @@
-export class SelectionDetailsDisplayer {
+export default class SelectionDetailsDisplayer {
     /**
      * @param {Function} handlerFunction
      */

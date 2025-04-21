@@ -1,11 +1,11 @@
-import { BaseNode } from '../../elements/nodes/BaseNode';
-import { BaseProperty } from '../../elements/properties/BaseProperty';
-import { ElementTools } from '../../util/elementTools';
-import { FilterTools } from '../../util/filterTools';
-import { AbstractFilter } from './abstractFilter';
+import BaseNode from "../../elements/nodes/BaseNode";
+import BaseProperty from "../../elements/properties/BaseProperty";
+import ElementTools from "../../util/elementTools";
+import FilterTools from "../../util/filterTools";
+import AbstractFilter from "./abstractFilter";
 
 
-export class DataTypeFilter extends AbstractFilter {
+export default class DataTypeFilter extends AbstractFilter {
     constructor() {
         super(false)
     }

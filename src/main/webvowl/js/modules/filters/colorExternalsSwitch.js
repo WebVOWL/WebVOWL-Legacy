@@ -1,11 +1,11 @@
 import _ from "lodash";
-import { BaseElement } from "../../elements/BaseElement";
-import { BaseNode } from "../../elements/nodes/BaseNode";
-import { BaseProperty } from "../../elements/properties/BaseProperty";
-import { AbstractFilter } from "./abstractFilter";
+import BaseElement from "../../elements/BaseElement";
+import BaseNode from "../../elements/nodes/BaseNode";
+import BaseProperty from "../../elements/properties/BaseProperty";
+import AbstractFilter from "./abstractFilter";
 
 
-export class ColorExternalsSwitch extends AbstractFilter {
+export default class ColorExternalsSwitch extends AbstractFilter {
     COLOR_MODES = [
         { type: "same", range: [d3.rgb("#36C"), d3.rgb("#36C")] },
         { type: "gradient", range: [d3.rgb("#36C"), d3.rgb("#EE2867")] } // taken from LD-VOWL

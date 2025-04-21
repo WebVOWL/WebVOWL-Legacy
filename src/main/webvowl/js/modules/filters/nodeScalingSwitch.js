@@ -1,9 +1,13 @@
-import { BaseNode } from "../../elements/nodes/BaseNode";
-import { BaseProperty } from "../../elements/properties/BaseProperty";
-import { AbstractFilter } from "./abstractFilter";
+import BaseNode from "../../elements/nodes/BaseNode";
+import BaseProperty from "../../elements/properties/BaseProperty";
+import Graph from "../../graph";
+import AbstractFilter from "./abstractFilter";
 
 
-export class NodeScalingSwitch extends AbstractFilter {
+export default class NodeScalingSwitch extends AbstractFilter {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(true)
         this.graph = graph

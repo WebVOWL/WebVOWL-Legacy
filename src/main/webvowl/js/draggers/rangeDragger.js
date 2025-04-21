@@ -1,11 +1,15 @@
-import { AbstractDomainRangeDragger } from "./abstractDomainRangeDragger";
+import Graph from "../graph";
+import AbstractDomainRangeDragger from "./abstractDomainRangeDragger";
 
-export class RangeDragger extends AbstractDomainRangeDragger {
+
+export default class RangeDragger extends AbstractDomainRangeDragger {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 
         this.id = 10002 // Sharing ID with DomainDragger
-        this.type = "Range_dragger"
     }
 
     /**
@@ -115,7 +119,7 @@ export class RangeDragger extends AbstractDomainRangeDragger {
     }
 
     updateElement() {
-        if (this.mouseButtonPressed === true || this.parentNode === undefined) {
+        if (this.mouseButtonPressed || this.parentNode === undefined) {
             return;
         }
 

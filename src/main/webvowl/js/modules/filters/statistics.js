@@ -1,13 +1,13 @@
-import { BaseElement } from '../../elements/BaseElement';
-import { BaseNode } from '../../elements/nodes/BaseNode';
-import { OwlNothing } from '../../elements/nodes/implementations/OwlNothing';
-import { SetOperatorNode } from '../../elements/nodes/SetOperatorNode';
-import { BaseProperty } from '../../elements/properties/BaseProperty';
-import ElementTools from '../../util/elementTools';
-import { AbstractFilter } from './abstractFilter';
+import BaseElement from "../../elements/BaseElement"
+import BaseNode from "../../elements/nodes/BaseNode"
+import OwlNothing from "../../elements/nodes/implementations/OwlNothing"
+import SetOperatorNode from "../../elements/nodes/SetOperatorNode"
+import BaseProperty from "../../elements/properties/BaseProperty"
+import ElementTools from "../../util/elementTools"
+import AbstractFilter from "./abstractFilter"
 
 
-export class Statistics extends AbstractFilter {
+export default class Statistics extends AbstractFilter {
     constructor() {
         super(true)
 
@@ -32,6 +32,7 @@ export class Statistics extends AbstractFilter {
         this.#resetStoredData();
 
         this.#storeTotalCounts(classesAndDatatypes, properties);
+        // @ts-ignore
         this.#storeClassAndDatatypeCount(classesAndDatatypes);
         this.#storePropertyCount(properties);
 

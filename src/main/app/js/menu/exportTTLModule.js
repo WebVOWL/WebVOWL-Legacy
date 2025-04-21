@@ -1,7 +1,15 @@
+import BaseElement from "../../../webvowl/js/elements/BaseElement";
+import BaseNode from "../../../webvowl/js/elements/nodes/BaseNode";
+import BaseProperty from "../../../webvowl/js/elements/properties/BaseProperty";
+import WebVOWL from "../../../webvowl/js/entry";
+import Graph from "../../../webvowl/js/graph";
+import PrefixTools from "../../../webvowl/js/util/prefixTools";
+
+
 export default class ExportTTLModule {
     /**
      * Contains the logic for the export button.
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         this.graph = graph;
@@ -9,25 +17,26 @@ export default class ExportTTLModule {
         this.currentNodes = undefined;
         this.currentProperties = undefined;
         this.currentAxioms = undefined;
-        this.Map_ID2Node = {};
-        this.Map_ID2Prop = {};
-        // @ts-ignore
-        this.prefixModule = webvowl.util.prefixTools(graph);
+        /**
+         * @type {Map<string,BaseNode>}
+         */
+        this.Map_ID2Node = new Map();
+        /**
+         * @type {Map<string,BaseProperty>}
+         */
+        this.Map_ID2Prop = new Map();
     }
 
     requestExport() {
         this.resultingTTLContent = "";
         this.currentNodes = this.graph.getClassDataForTtlExport();
-        var i;
-        for (i = 0; i < this.currentNodes.length; i++) {
-            // @ts-ignore
-            this.Map_ID2Node[this.currentNodes[i].id] = this.currentNodes[i];
+        for (let i = 0; i < this.currentNodes.length; i++) {
+            this.Map_ID2Node.set(this.currentNodes[i].id, this.currentNodes[i]);
         }
         this.currentProperties = this.graph.getPropertyDataForTtlExport();
 
-        for (i = 0; i < this.currentProperties.length; i++) {
-            // @ts-ignore
-            this.Map_ID2Prop[this.currentProperties[i].id] = this.currentProperties[i];
+        for (let i = 0; i < this.currentProperties.length; i++) {
+            this.Map_ID2Prop.set(this.currentProperties[i].id, this.currentProperties[i]);
         }
 
         this.prepareHeader();
@@ -35,44 +44,49 @@ export default class ExportTTLModule {
         this.prepareOntologyDef();
         this.resultingTTLContent += "#################################################################\r\n\r\n";
         this.preparePrefixRepresentation();
-        var property_success = this.exportProperties();
-        var class_success = this.exportClasses();
+        const property_success = this.exportProperties();
+        const class_success = this.exportClasses();
         this.currentNodes = null;
         this.currentProperties = null;
-        this.Map_ID2Node = {};
-        this.Map_ID2Prop = {};
-        if (property_success === false || class_success === false)
-            return false;
-        return true;
-    };
+        this.Map_ID2Node.clear();
+        this.Map_ID2Prop.clear();
+        return property_success || class_success
+    }
 
+    /**
+     * @note This mutates `graph.unfilteredData`
+     */
     preparePrefixRepresentation() {
-        var i;
-        var allNodes = this.graph.UnfilteredData.nodes;
-        var allProps = this.graph.UnfilteredData.properties;
-        for (i = 0; i < allNodes.length; i++) {
-            var nodeIRI = this.prefixModule.getPrefixRepresentationForFullURI(allNodes[i].iri);
-            if (this.prefixModule.validURL(nodeIRI) === true)
-                allNodes[i].prefixRepresentation = "<" + nodeIRI + ">";
-            else
-                allNodes[i].prefixRepresentation = nodeIRI;
+        const allNodes = this.graph.unfilteredData.nodes;
+        for (let i = 0; i < allNodes.length; i++) {
+            const node = allNodes[i]
+            const nodeIRI = PrefixTools.getPrefixRepresentationForFullURI(node.iri);
+            if (PrefixTools.validURL(nodeIRI)) {
+                node.prefixRepresentation = "<" + nodeIRI + ">";
+            } else {
+                node.prefixRepresentation = nodeIRI;
+            }
         }
-        for (i = 0; i < allProps.length; i++) {
-            var propIRI = this.prefixModule.getPrefixRepresentationForFullURI(allProps[i].iri);
-            if (this.prefixModule.validURL(propIRI) === true)
-                allProps[i].prefixRepresentation = "<" + propIRI + ">";
-            else
-                allProps[i].prefixRepresentation = propIRI;
+        const allProps = this.graph.unfilteredData.properties;
+        for (let i = 0; i < allProps.length; i++) {
+            const property = allProps[i]
+            const propIRI = PrefixTools.getPrefixRepresentationForFullURI(property.iri);
+            if (PrefixTools.validURL(propIRI)) {
+                property.prefixRepresentation = "<" + propIRI + ">";
+            } else {
+                property.prefixRepresentation = propIRI;
+            }
         }
     }
 
     exportProperties() {
-        if (this.currentProperties.length === 0) return; // we dont need to write that
+        if (this.currentProperties.length === 0) {
+            return undefined; // we dont need to write that
+        }
         this.resultingTTLContent += "###  Property Definitions (Number of Property) " + this.currentProperties.length + " ###\r\n";
-        for (var i = 0; i < this.currentProperties.length; i++) {
-
+        for (let i = 0; i < this.currentProperties.length; i++) {
             this.resultingTTLContent += "#  --------------------------- Property " + i + "------------------------- \r\n";
-            var addedElement = this.extractPropertyDescription(this.currentProperties[i]);
+            const addedElement = this.extractPropertyDescription(this.currentProperties[i]);
             this.resultingTTLContent += addedElement;
             //@ workaround for not supported elements
             if (addedElement.indexOf("WHYEMPTYNAME") !== -1) {
@@ -82,14 +96,15 @@ export default class ExportTTLModule {
         return true;
     }
 
-
     exportClasses() {
-        if (this.currentNodes.length === 0) return; // we dont need to write that
+        if (this.currentNodes.length === 0) {
+            return undefined; // we dont need to write that
+        }
         this.resultingTTLContent += "###  Class Definitions (Number of Classes) " + this.currentNodes.length + " ###\r\n";
-        for (var i = 0; i < this.currentNodes.length; i++) {
+        for (let i = 0; i < this.currentNodes.length; i++) {
             // check for node type here and return false
             this.resultingTTLContent += "#  --------------------------- Class  " + i + "------------------------- \r\n";
-            var addedElement = this.extractClassDescription(this.currentNodes[i]);
+            const addedElement = this.extractClassDescription(this.currentNodes[i]);
             this.resultingTTLContent += addedElement;
 
             if (addedElement.indexOf("WHYEMPTYNAME") !== -1) {
@@ -100,61 +115,59 @@ export default class ExportTTLModule {
     }
 
     /**
-     * @param {{ attributes: any; }} selectedElement
-     * @param {any} element
+     * @param {BaseElement} selectedElement
+     * @param {string} element
      */
     getPresentAttribute(selectedElement, element) {
-        var attr = selectedElement.attributes;
+        const attr = selectedElement.attributes;
         return (attr.indexOf(element) >= 0);
     }
 
     /**
-     * @param {any} node
+     * @param {BaseNode} node
      */
     extractClassDescription(node) {
-        var subject = node.prefixRepresentation;
-        var predicate = "rdf:type";
-        var object = node.type;
+        const subject = node.prefixRepresentation;
+        const predicate = "rdf:type";
+        let object = node.type;
         if (node.type === "owl:equivalentClass")
             object = "owl:Class";
         if (node.type === "owl:disjointUnionOf")
             object = "owl:Class";
         if (node.type === "owl:unionOf")
             object = "owl:Class";
-        var arrayOfNodes = [];
-        var arrayOfUnionNodes = [];
+        const arrayOfNodes = [];
+        const arrayOfUnionNodes = [];
 
         if (node.union) {
-            var union = node.union;
-            for (var u = 0; u < union.length; u++) {
-                // @ts-ignore
-                var u_node = this.Map_ID2Node[union[u]];
+            const union = node.union;
+            for (let u = 0; u < union.length; u++) {
+                const u_node = this.Map_ID2Node.get(union[u]);
                 arrayOfUnionNodes.push(u_node);
             }
         }
 
         if (node.disjointUnion) {
-            var distUnion = node.disjointUnion;
-            for (var du = 0; du < distUnion.length; du++) {
-                // @ts-ignore
-                var du_node = this.Map_ID2Node[distUnion[du]];
+            const distUnion = node.disjointUnion;
+            for (let du = 0; du < distUnion.length; du++) {
+                const du_node = this.Map_ID2Node.get(distUnion[du]);
                 arrayOfNodes.push(du_node);
             }
         }
 
-        var objectDef = subject + " " + predicate + " " + object;
-        if (this.getPresentAttribute(node, "deprecated") === true) {
+        let objectDef = subject + " " + predicate + " " + object;
+        if (this.getPresentAttribute(node, "deprecated")) {
             objectDef += ", owl:DeprecatedProperty";
         }
         // equivalent class handeled using type itself!
 
         // check for equivalent classes;
-        var indent = this.getIndent(subject);
+        const indent = this.getIndent(subject);
         objectDef += "; \r\n";
-        for (var e = 0; e < node.equivalents.length; e++) {
-            var eqIRI = this.prefixModule.getPrefixRepresentationForFullURI(node.equivalents[e].iri);
-            var eqNode_prefRepresentation = "";
-            if (this.prefixModule.validURL(eqIRI) === true)
+        for (let e = 0; e < node.equivalents.length; e++) {
+            const eqIRI = PrefixTools.getPrefixRepresentationForFullURI(node.equivalents[e].iri);
+            let eqNode_prefRepresentation = "";
+            if (PrefixTools.validURL(eqIRI) === true)
                 eqNode_prefRepresentation = "<" + eqIRI + ">";
             else
                 eqNode_prefRepresentation = eqIRI;
@@ -166,20 +179,18 @@ export default class ExportTTLModule {
         // }
 
         // add Comments
-
         if (node.commentForCurrentLanguage()) {
-
             objectDef += indent + " rdfs:comment \"" + node.commentForCurrentLanguage() + "\" ;\r\n";
         }
 
         if (node.annotations) {
-            var annotations = node.annotations;
-            for (var an in annotations) {
+            const annotations = node.annotations;
+            for (const an in annotations) {
                 if (annotations.hasOwnProperty(an)) {
-                    var anArrayObj = annotations[an];
-                    var anObj = anArrayObj[0];
-                    var an_ident = anObj.identifier;
-                    var an_val = anObj.value;
+                    const anArrayObj = annotations[an];
+                    const anObj = anArrayObj[0];
+                    const an_ident = anObj.identifier;
+                    const an_val = anObj.value;
 
                     if (an_ident === "isDefinedBy") {
                         objectDef += indent + " rdfs:isDefinedBy <" + an_val + "> ;\r\n";
@@ -191,14 +202,13 @@ export default class ExportTTLModule {
             }
         }
 
-
         if (arrayOfNodes.length > 0) {
             // add disjoint unionOf
             objectDef += indent + " owl:disjointUnionOf (";
-            for (var duE = 0; duE < arrayOfNodes.length; duE++) {
-                var duIri = this.prefixModule.getPrefixRepresentationForFullURI(arrayOfNodes[duE].iri);
-                var duNode_prefRepresentation = "";
-                if (this.prefixModule.validURL(duIri) === true)
+            for (let duE = 0; duE < arrayOfNodes.length; duE++) {
+                const duIri = PrefixTools.getPrefixRepresentationForFullURI(arrayOfNodes[duE].iri);
+                let duNode_prefRepresentation = "";
+                if (PrefixTools.validURL(duIri) === true)
                     duNode_prefRepresentation = "<" + duIri + ">";
                 else
                     duNode_prefRepresentation = duIri;
@@ -211,13 +221,11 @@ export default class ExportTTLModule {
             // add disjoint unionOf
             objectDef += indent + " rdfs:subClassOf [ rdf:type owl:Class ; \r\n";
             objectDef += indent + indent + " owl:unionOf ( ";
-
-            for (var uE = 0; uE < arrayOfUnionNodes.length; uE++) {
-
+            for (let uE = 0; uE < arrayOfUnionNodes.length; uE++) {
                 if (arrayOfUnionNodes[uE] && arrayOfUnionNodes[uE].iri) {
-                    var uIri = this.prefixModule.getPrefixRepresentationForFullURI(arrayOfUnionNodes[uE].iri);
-                    var uNode_prefRepresentation = "";
-                    if (this.prefixModule.validURL(uIri) === true)
+                    const uIri = PrefixTools.getPrefixRepresentationForFullURI(arrayOfUnionNodes[uE].iri);
+                    let uNode_prefRepresentation = "";
+                    if (PrefixTools.validURL(uIri) === true)
                         uNode_prefRepresentation = "<" + uIri + ">";
                     else
                         uNode_prefRepresentation = uIri;
@@ -225,99 +233,89 @@ export default class ExportTTLModule {
                 }
             }
             objectDef += ") ;\r\n";
-
-
         }
 
-
-        var allProps = this.graph.UnfilteredData.properties;
-        var myProperties = [];
-        var i;
-        for (i = 0; i < allProps.length; i++) {
-            if (allProps[i].domain === node &&
-                (allProps[i].type === "rdfs:subClassOf" ||
-                    allProps[i].type === "owl:allValuesFrom" ||
-                    allProps[i].type === "owl:someValuesFrom")
+        const allProps = this.graph.unfilteredData.properties;
+        const myProperties = [];
+        for (let i = 0; i < allProps.length; i++) {
+            const property = allProps[i]
+            if (property.domain === node && (
+                property.type === "rdfs:subClassOf" ||
+                property.type === "owl:allValuesFrom" ||
+                property.type === "owl:someValuesFrom"
+            )
             ) {
-                myProperties.push(allProps[i]);
+                myProperties.push(property);
             }
             // special case disjoint with>> both domain and range get that property
-            if ((allProps[i].domain === node) &&
-                allProps[i].type === "owl:disjointWith") {
-                myProperties.push(allProps[i]);
+            if ((property.domain === node) && property.type === "owl:disjointWith") {
+                myProperties.push(property);
             }
-
         }
-        for (i = 0; i < myProperties.length; i++) {
+        for (let i = 0; i < myProperties.length; i++) {
+            const property = myProperties[i]
             // depending on the property we have to do some things;
 
             // special case
-            if (myProperties[i].type === "owl:someValuesFrom") {
+            if (property.type === "owl:someValuesFrom") {
                 objectDef += indent + " rdfs:subClassOf [ rdf:type owl:Restriction ; \r\n";
-                objectDef += indent + "                   owl:onProperty " + myProperties[i].prefixRepresentation + ";\r\n";
-                if (myProperties[i].range.type !== "owl:Thing") {
-                    objectDef += indent + "                   owl:someValuesFrom " + myProperties[i].range.prefixRepresentation + "\r\n";
+                objectDef += indent + "                   owl:onProperty " + property.prefixRepresentation + ";\r\n";
+                if (property.range.type !== "owl:Thing") {
+                    objectDef += indent + "                   owl:someValuesFrom " + property.range.prefixRepresentation + "\r\n";
                 }
                 objectDef += indent + "                 ];\r\n";
                 continue;
             }
 
-            if (myProperties[i].type === "owl:allValuesFrom") {
+            if (property.type === "owl:allValuesFrom") {
                 objectDef += indent + " rdfs:subClassOf [ rdf:type owl:Restriction ; \r\n";
-                objectDef += indent + "                   owl:onProperty " + myProperties[i].prefixRepresentation + ";\r\n";
-                if (myProperties[i].range.type !== "owl:Thing") {
-                    objectDef += indent + "                   owl:allValuesFrom " + myProperties[i].range.prefixRepresentation + "\r\n";
+                objectDef += indent + "                   owl:onProperty " + property.prefixRepresentation + ";\r\n";
+                if (property.range.type !== "owl:Thing") {
+                    objectDef += indent + "                   owl:allValuesFrom " + property.range.prefixRepresentation + "\r\n";
                 }
                 objectDef += indent + "                 ];\r\n";
                 continue;
             }
 
-            if (myProperties[i].range.type !== "owl:Thing") {
-                objectDef += indent + " " + myProperties[i].prefixRepresentation +
-                    " " + myProperties[i].range.prefixRepresentation + " ;\r\n";
-
-
+            if (property.range.type !== "owl:Thing") {
+                objectDef += indent + " " + property.prefixRepresentation +
+                    " " + property.range.prefixRepresentation + " ;\r\n";
             }
         }
-
-
-        objectDef += this.general_Label_languageExtractor(indent, node.label, "rdfs:label", true);
+        objectDef += this.generalLabelLanguageExtractor(indent, node.label, "rdfs:label", true);
         return objectDef;
-
     }
 
     /**
      * @param {any} property
      */
     extractPropertyDescription(property) {
-        var subject = property.prefixRepresentation;
+        const subject = property.prefixRepresentation;
         if (subject.length === 0) {
             console.log("THIS SHOULD NOT HAPPEN");
-            var propIRI = this.prefixModule.getPrefixRepresentationForFullURI(property.iri);
+            const propIRI = PrefixTools.getPrefixRepresentationForFullURI(property.iri);
             console.log("FOUND " + propIRI);
-
-
         }
-        var predicate = "rdf:type";
-        var object = property.type;
+        const predicate = "rdf:type";
+        const object = property.type;
 
-        var objectDef = subject + " " + predicate + " " + object;
-        if (this.getPresentAttribute(property, "deprecated") === true) {
+        let objectDef = subject + " " + predicate + " " + object;
+        if (this.getPresentAttribute(property, "deprecated")) {
             objectDef += ", owl:DeprecatedProperty";
         }
-        if (this.getPresentAttribute(property, "functional") === true) {
+        if (this.getPresentAttribute(property, "functional")) {
             objectDef += ", owl:FunctionalProperty";
         }
-        if (this.getPresentAttribute(property, "inverse functional") === true) {
+        if (this.getPresentAttribute(property, "inverse functional")) {
             objectDef += ", owl:InverseFunctionalProperty";
         }
-        if (this.getPresentAttribute(property, "symmetric") === true) {
+        if (this.getPresentAttribute(property, "symmetric")) {
             objectDef += ", owl:SymmetricProperty";
         }
-        if (this.getPresentAttribute(property, "transitive") === true) {
+        if (this.getPresentAttribute(property, "transitive")) {
             objectDef += ", owl:TransitiveProperty";
         }
-        var indent = this.getIndent(subject);
+        const indent = this.getIndent(subject);
 
         if (property.inverse) {
             objectDef += "; \r\n";
@@ -325,33 +323,27 @@ export default class ExportTTLModule {
         }
 
         // check for domain and range;
-
-
-        var closeStatement = false;
-        var domain = property.domain;
-        var range = property.range;
-
-
+        let closeStatement = false;
+        const domain = property.domain;
+        const range = property.range;
         objectDef += " ;\r\n";
 
-
         if (property.commentForCurrentLanguage()) {
-
             objectDef += indent + " rdfs:comment \"" + property.commentForCurrentLanguage() + "\" ;\r\n";
         }
 
         if (property.superproperties) {
-            var superProps = property.superproperties;
-            for (var sP = 0; sP < superProps.length; sP++) {
-                var sPelement = superProps[sP];
+            const superProps = property.superproperties;
+            for (let sP = 0; sP < superProps.length; sP++) {
+                const sPelement = superProps[sP];
                 objectDef += indent + "rdfs:subPropertyOf " + sPelement.prefixRepresentation + ";\r\n";
             }
-            // for (var an in annotations){
+            // for (const an in annotations){
             //     if (annotations.hasOwnProperty(an)){
-            //         var anArrayObj=annotations[an];
-            //         var anObj=anArrayObj[0];
-            //         var an_ident=anObj.identifier;
-            //         var an_val=anObj.value;
+            //         const anArrayObj=annotations[an];
+            //         const anObj=anArrayObj[0];
+            //         const an_ident=anObj.identifier;
+            //         const an_val=anObj.value;
             //         console.log(an_ident + " "+ an_val);
             //
             //         if (an_ident==="isDefinedBy"){
@@ -362,18 +354,15 @@ export default class ExportTTLModule {
             //         }
             //     }
             // }
-
         }
-
         if (property.annotations) {
-            var annotations = property.annotations;
-            for (var an in annotations) {
+            const annotations = property.annotations;
+            for (const an in annotations) {
                 if (annotations.hasOwnProperty(an)) {
-                    var anArrayObj = annotations[an];
-                    var anObj = anArrayObj[0];
-                    var an_ident = anObj.identifier;
-                    var an_val = anObj.value;
-
+                    const anArrayObj = annotations[an];
+                    const anObj = anArrayObj[0];
+                    const an_ident = anObj.identifier;
+                    const an_val = anObj.value;
                     if (an_ident === "isDefinedBy") {
                         objectDef += indent + " rdfs:isDefinedBy <" + an_val + "> ;\r\n";
                     }
@@ -384,7 +373,6 @@ export default class ExportTTLModule {
             }
         }
 
-
         if (domain.type === "owl:Thing" && range.type === "owl:Thing") {
             // we do not write domain and range
             if (typeof property.label !== "object" && property.label.length === 0) {
@@ -392,24 +380,21 @@ export default class ExportTTLModule {
             }
         }
 
-
-        if (closeStatement === true) {
-            var uobjectDef = objectDef.substring(0, objectDef.length - 2);
+        if (closeStatement) {
+            const uobjectDef = objectDef.substring(0, objectDef.length - 2);
             objectDef = uobjectDef + " . \r\n";
             return objectDef;
         }
+
         // objectDef+="; \r\n";
-        var labelDescription;
-
-
+        let labelDescription;
         if (domain.type === "owl:Thing" && range.type === "owl:Thing") {
-            labelDescription = this.general_Label_languageExtractor(indent, property.label, "rdfs:label", true);
+            labelDescription = this.generalLabelLanguageExtractor(indent, property.label, "rdfs:label", true);
             objectDef += labelDescription;
         }
         else {
             // do not close the statement;
-            // @ts-ignore
-            labelDescription = this.general_Label_languageExtractor(indent, property.label, "rdfs:label");
+            labelDescription = this.generalLabelLanguageExtractor(indent, property.label, "rdfs:label");
             objectDef += labelDescription;
             if (domain.type !== "owl:Thing") {
                 objectDef += indent + " rdfs:domain " + domain.prefixRepresentation + ";\r\n";
@@ -417,16 +402,12 @@ export default class ExportTTLModule {
             if (range.type !== "owl:Thing") {
                 objectDef += indent + " rdfs:range " + range.prefixRepresentation + ";\r\n";
             }
-
             // close statement now;
-
-            var s_needUpdate = objectDef;
-            var s_lastPtr = s_needUpdate.lastIndexOf(";");
+            const s_needUpdate = objectDef;
+            const s_lastPtr = s_needUpdate.lastIndexOf(";");
             objectDef = s_needUpdate.substring(0, s_lastPtr) + " . \r\n";
         }
-
         return objectDef;
-
     }
 
     /**
@@ -441,32 +422,29 @@ export default class ExportTTLModule {
 
     prepareHeader() {
         this.resultingTTLContent += "#################################################################\r\n";
-        this.resultingTTLContent += "###  Generated with the experimental alpha version of the TTL exporter of WebVOWL (version 1.1.7) " +
-            " http://visualdataweb.de/webvowl/   ###\r\n";
+        this.resultingTTLContent += `### Generated with the experimental alpha version of the TTL exporter of WebVOWL (version ${WebVOWL.version}), ${WebVOWL.link} ###\r\n`;
         this.resultingTTLContent += "#################################################################\r\n\r\n";
-
     }
 
     preparePrefixList() {
-        var ontoIri = this.graph.options.getGeneralMetaObjectProperty('iri');
-        var prefixList = this.graph.options.prefixList;
-        var prefixDef = [];
+        const ontoIri = this.graph.options.getGeneralMetaObjectProperty('iri');
+        const prefixList = this.graph.options.prefixList;
+        const prefixDef = [];
         prefixDef.push('@prefix : \t\t<' + ontoIri + '> .');
-        for (var name in prefixList) {
+        for (const name in prefixList) {
             if (prefixList.hasOwnProperty(name)) {
                 prefixDef.push('@prefix ' + name + ': \t\t<' + prefixList[name] + '> .');
             }
         }
         prefixDef.push('@base \t\t\t<' + ontoIri + '> .\r\n');
-
-        for (var i = 0; i < prefixDef.length; i++) {
+        for (let i = 0; i < prefixDef.length; i++) {
             this.resultingTTLContent += prefixDef[i] + '\r\n';
         }
     }
 
     prepareOntologyDef() {
-        var ontoIri = this.graph.options.getGeneralMetaObjectProperty('iri');
-        var indent = this.getIndent('<' + ontoIri + '>');
+        const ontoIri = this.graph.options.getGeneralMetaObjectProperty('iri');
+        const indent = this.getIndent('<' + ontoIri + '>');
         this.resultingTTLContent += '<' + ontoIri + '> rdf:type owl:Ontology ;\r\n' +
             this.getOntologyTitle(indent) +
             this.getOntologyDescription(indent) +
@@ -474,46 +452,46 @@ export default class ExportTTLModule {
             this.getOntologyAuthor(indent);
 
         // close the statement;
-        var s_needUpdate = this.resultingTTLContent;
-        var s_lastPtr = s_needUpdate.lastIndexOf(";");
+        const s_needUpdate = this.resultingTTLContent;
+        const s_lastPtr = s_needUpdate.lastIndexOf(";");
         this.resultingTTLContent = s_needUpdate.substring(0, s_lastPtr) + " . \r\n";
     }
 
     /**
-     * @param {any} indent
+     * @param {string} indent
      */
     getOntologyTitle(indent) {
-        return this.general_languageExtractor(indent, "title", "dc:title");
+        return this.generalLanguageExtractor(indent, "title", "dc:title");
     }
 
     /**
      * @param {string} indent
      */
     getOntologyDescription(indent) {
-        return this.general_languageExtractor(indent, "description", "dc:description");
+        return this.generalLanguageExtractor(indent, "description", "dc:description");
     }
 
     /**
      * @param {string} indent
      */
     getOntologyAuthor(indent) {
-        var languageElement = this.graph.options.getGeneralMetaObjectProperty('author');
+        const languageElement = this.graph.options.getGeneralMetaObjectProperty('author');
         if (languageElement) {
             if (typeof languageElement !== "object") {
-                if (languageElement.length === 0)
-                    return ""; // an empty string
-                var aString = indent + " dc:creator " + '"' + languageElement + '";\r\n';
-                return aString;
+                if (languageElement.length === 0) {
+                    return "";
+                }
+                return indent + " dc:creator " + '"' + languageElement + '";\r\n';;
             }
             // we assume this thing is an array;
-            var authorString = indent + " dc:creator " + '"';
-            for (var i = 0; i < languageElement.length - 1; i++) {
+            let authorString = indent + " dc:creator " + '"';
+            for (let i = 0; i < languageElement.length - 1; i++) {
                 authorString += languageElement[i] + ", ";
             }
             authorString += languageElement[languageElement.length - 1] + '";\r\n';
             return authorString;
         } else {
-            return ""; // an empty string
+            return "";
         }
     }
 
@@ -521,14 +499,17 @@ export default class ExportTTLModule {
      * @param {string} indent
      */
     getOntologyVersion(indent) {
-        var languageElement = this.graph.options.getGeneralMetaObjectProperty('version');
+        const languageElement = this.graph.options.getGeneralMetaObjectProperty('version');
         if (languageElement) {
             if (typeof languageElement !== "object") {
-                if (languageElement.length === 0)
-                    return ""; // an empty string
+                if (languageElement.length === 0) {
+                    return "";
+                }
             }
-            return this.general_languageExtractor(indent, "version", "owl:versionInfo");
-        } else return ""; // an empty string
+            return this.generalLanguageExtractor(indent, "version", "owl:versionInfo");
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -537,15 +518,13 @@ export default class ExportTTLModule {
      * @param {string} annotationDescription
      * @param {boolean} [endStatement]
      */
-    general_languageExtractor(indent, metaObjectDescription, annotationDescription, endStatement) {
-        var languageElement = this.graph.options.getGeneralMetaObjectProperty(metaObjectDescription);
-
+    generalLanguageExtractor(indent, metaObjectDescription, annotationDescription, endStatement = false) {
+        const languageElement = this.graph.options.getGeneralMetaObjectProperty(metaObjectDescription);
         if (typeof languageElement === 'object') {
-
-            var resultingLanguages = [];
-            for (var name in languageElement) {
+            const resultingLanguages = [];
+            for (const name in languageElement) {
                 if (languageElement.hasOwnProperty(name)) {
-                    var content = languageElement[name];
+                    const content = languageElement[name];
                     if (name === "undefined") {
                         resultingLanguages.push(indent + " " + annotationDescription + ' "' + content + '"@en; \r\n');
                     }
@@ -555,23 +534,21 @@ export default class ExportTTLModule {
                 }
             }
             // create resulting titles;
-
-            var resultingString = "";
-            for (var i = 0; i < resultingLanguages.length; i++) {
+            let resultingString = "";
+            for (let i = 0; i < resultingLanguages.length; i++) {
                 resultingString += resultingLanguages[i];
             }
-            if (endStatement && endStatement === true) {
-                var needUpdate = resultingString;
-                var lastPtr = needUpdate.lastIndexOf(";");
+            if (endStatement) {
+                const needUpdate = resultingString;
+                const lastPtr = needUpdate.lastIndexOf(";");
                 return needUpdate.substring(0, lastPtr) + ". \r\n";
             } else {
                 return resultingString;
             }
-
         } else {
-            if (endStatement && endStatement === true) {
-                var s_needUpdate = indent + " " + annotationDescription + ' "' + languageElement + '"@en; \r\n';
-                var s_lastPtr = s_needUpdate.lastIndexOf(";");
+            if (endStatement) {
+                const s_needUpdate = indent + " " + annotationDescription + ' "' + languageElement + '"@en; \r\n';
+                const s_lastPtr = s_needUpdate.lastIndexOf(";");
                 return s_needUpdate.substring(0, s_lastPtr) + " . \r\n";
             }
             return indent + " " + annotationDescription + ' "' + languageElement + '"@en;\r\n';
@@ -584,14 +561,13 @@ export default class ExportTTLModule {
      * @param {string} annotationDescription
      * @param {boolean} endStatement
      */
-    general_Label_languageExtractor(indent, label, annotationDescription, endStatement) {
-        var languageElement = label;
-
+    generalLabelLanguageExtractor(indent, label, annotationDescription, endStatement = false) {
+        const languageElement = label;
         if (typeof languageElement === 'object') {
-            var resultingLanguages = [];
-            for (var name in languageElement) {
+            const resultingLanguages = [];
+            for (const name in languageElement) {
                 if (languageElement.hasOwnProperty(name)) {
-                    var content = languageElement[name];
+                    const content = languageElement[name];
                     if (name === "undefined") {
                         resultingLanguages.push(indent + " " + annotationDescription + ' "' + content + '"@en; \r\n');
                     }
@@ -601,25 +577,24 @@ export default class ExportTTLModule {
                 }
             }
             // create resulting titles;
-            var resultingString = "";
-            for (var i = 0; i < resultingLanguages.length; i++) {
+            let resultingString = "";
+            for (let i = 0; i < resultingLanguages.length; i++) {
                 resultingString += resultingLanguages[i];
             }
-            if (endStatement && endStatement === true) {
-                var needUpdate = resultingString;
-                var lastPtr = needUpdate.lastIndexOf(";");
+            if (endStatement) {
+                const needUpdate = resultingString;
+                const lastPtr = needUpdate.lastIndexOf(";");
                 return needUpdate.substring(0, lastPtr) + " . \r\n";
             } else {
                 return resultingString;
             }
-
         } else {
-            if (endStatement && endStatement === true) {
-                var s_needUpdate = indent + " " + annotationDescription + ' "' + languageElement + '"@en; \r\n';
-                var s_lastPtr = s_needUpdate.lastIndexOf(";");
+            if (endStatement) {
+                const s_needUpdate = indent + " " + annotationDescription + ' "' + languageElement + '"@en; \r\n';
+                const s_lastPtr = s_needUpdate.lastIndexOf(";");
                 return s_needUpdate.substring(0, s_lastPtr) + " . \r\n";
             }
             return indent + " " + annotationDescription + ' "' + languageElement + '"@en; \r\n';
         }
     }
-};
+}

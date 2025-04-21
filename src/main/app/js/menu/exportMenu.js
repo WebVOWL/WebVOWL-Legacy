@@ -1,10 +1,14 @@
-import d3 from "d3";
+import BaseNode from "../../../webvowl/js/elements/nodes/BaseNode";
+import WebVOWL from "../../../webvowl/js/entry";
+import Graph from "../../../webvowl/js/graph";
+import MathUtils from "../../../webvowl/js/util/math";
 import ExportTTLModule from "./exportTTLModule";
+
 
 export default class ExportMenu {
     /**
      * Contains the logic for the export button.
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         this.graph = graph;
@@ -33,13 +37,13 @@ export default class ExportMenu {
         });
     }
     exportTurtle() {
-        var success = this.exportTTLModule.requestExport();
-        var result = this.exportTTLModule.resultingTTLContent;
-        var ontoTitle = "NewOntology";
+        const success = this.exportTTLModule.requestExport();
+        const result = this.exportTTLModule.resultingTTLContent;
+        const ontoTitle = "NewOntology";
         console.log("Exporter was successful: " + success);
         if (success) {
             // console.log("The result is : " + result);
-            // var ontoTitle=graph.options.getGeneralMetaObjectProperty('title');
+            // const ontoTitle=graph.options.getGeneralMetaObjectProperty('title');
             // if (ontoTitle===undefined || ontoTitle.length===0)
             // 	ontoTitle="NewOntology";
             // else{
@@ -49,13 +53,10 @@ export default class ExportMenu {
 
             // TODO: show TEXT in warning module?
 
-
             // // write the data
-            var dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(result);
-
+            const dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(result);
             this.exportTurtleButton.attr("href", dataURI)
                 .attr("download", ontoTitle + ".ttl");
-
             // okay restore old href?
             //  exportTurtleButton.attr("href", oldHref);
         } else {
@@ -73,14 +74,14 @@ export default class ExportMenu {
      */
     setFilename(filename) {
         this.exportFilename = filename || "export";
-    };
+    }
 
     /**
-     * @param {any} jsonText
+     * @param {string} jsonText
      */
     setJsonText(jsonText) {
         this.exportableJsonText = jsonText;
-    };
+    }
 
     copyUrl() {
         // @ts-ignore
@@ -98,14 +99,14 @@ export default class ExportMenu {
      * @param {{ [x: string]: any; }} currOpts
      */
     prepareOptionString(defOpts, currOpts) {
-        var setOptions = 0;
-        var optsString = "opts=";
+        let setOptions = 0;
+        let optsString = "opts=";
 
-        for (var name in defOpts) {
+        for (const name in defOpts) {
             // define key and value ;
             if (defOpts.hasOwnProperty(name)) {// for travis warning
-                var def_value = defOpts[name];
-                var cur_value = currOpts[name];
+                const def_value = defOpts[name];
+                const cur_value = currOpts[name];
                 if (def_value !== cur_value) {
                     optsString += name + "=" + cur_value + ";";
                     setOptions++;
@@ -120,13 +121,13 @@ export default class ExportMenu {
     }
 
     exportAsUrl() {
-        var currObj = {};
+        const currObj = {};
         currObj.sidebar = this.graph.options.sidebar.getSidebarVisibility();
 
         // identify default value given by ontology;
-        var defOntValue = this.graph.options.filterMenu.getDefaultDegreeValue();
-        var currentValue = this.graph.options.filterMenu.getDegreeSliderValue();
-        if (parseInt(defOntValue) === parseInt(currentValue)) {
+        const defOntValue = this.graph.options.filterMenu.defaultDegreeValue;
+        const currentValue = this.graph.options.filterMenu.getDegreeSliderValue();
+        if (defOntValue === parseInt(currentValue)) {
             currObj.doc = -1;
         } else {
             currObj.doc = currentValue;
@@ -134,7 +135,7 @@ export default class ExportMenu {
 
         currObj.cd = this.graph.options.classDistance;
         currObj.dd = this.graph.options.datatypeDistance;
-        if (this.graph.editorMode() === true) {
+        if (this.graph.editorMode) {
             currObj.editorMode = "true";
         } else {
             currObj.editorMode = "false";
@@ -148,50 +149,45 @@ export default class ExportMenu {
         currObj.mode_scaling = String(this.graph.options.modeMenu.getCheckBoxValue("nodescalingModuleCheckbox"));
         currObj.mode_compact = String(this.graph.options.modeMenu.getCheckBoxValue("compactnotationModuleCheckbox"));
         currObj.mode_colorExt = String(this.graph.options.modeMenu.getCheckBoxValue("colorexternalsModuleCheckbox"));
-        currObj.mode_multiColor = String(this.graph.options.modeMenu.colorModeState());
+        currObj.mode_multiColor = String(this.graph.options.modeMenu.colorModeState);
         currObj.mode_pnp = String(this.graph.options.modeMenu.getCheckBoxValue("pickandpinModuleCheckbox"));
         currObj.debugFeatures = String(!this.graph.options.hideDebugOptions);
         currObj.rect = 0;
 
-        var defObj = this.graph.options.initialConfig;
-        var optsString = this.prepareOptionString(defObj, currObj);
-        var urlString = String(location);
-        var htmlElement;
+        const defObj = this.graph.options.initialConfig;
+        const optsString = this.prepareOptionString(defObj, currObj);
+        let urlString = String(location);
+        let htmlElement;
         // when everything is default then there is nothing to write
         if (optsString.length === 0) {
             // building up parameter list;
 
             // remove the all options form location
-            var hashCode = location.hash;
+            const hashCode = location.hash;
             urlString = urlString.split(hashCode)[0];
 
-            var lPos = hashCode.lastIndexOf("#");
+            const lPos = hashCode.lastIndexOf("#");
             if (lPos === -1) {
                 htmlElement = d3.select("#exportedUrl").node();
-                // @ts-ignore
                 htmlElement.value = String(location);
-                // @ts-ignore
                 htmlElement.title = String(location);
                 return;  // nothing to change in the location String
             }
-            var newURL = hashCode.slice(lPos, hashCode.length);
+            const newURL = hashCode.slice(lPos, hashCode.length);
             htmlElement = d3.select("#exportedUrl").node();
-            // @ts-ignore
             htmlElement.value = urlString + newURL;
-            // @ts-ignore
             htmlElement.title = urlString + newURL;
             return;
         }
 
         // generate the options string;
-        var numParameters = (urlString.match(/#/g) || []).length;
-        var newUrlString;
+        const numParameters = (urlString.match(/#/g) || []).length;
+        let newUrlString;
         if (numParameters === undefined || numParameters === 0) {
             newUrlString = urlString + "#" + optsString;
         }
         if (numParameters > 0) {
-            var tokens = urlString.split("#");
-            var i;
+            const tokens = urlString.split("#");
             if (tokens[1].indexOf("opts=") >= 0) {
                 tokens[1] = optsString;
                 newUrlString = tokens[0];
@@ -200,7 +196,7 @@ export default class ExportMenu {
                 newUrlString += optsString;
             }
             // append parameters
-            for (i = 1; i < tokens.length; i++) {
+            for (let i = 1; i < tokens.length; i++) {
                 if (tokens[i].length > 0) {
                     newUrlString += "#" + tokens[i];
                 }
@@ -208,17 +204,14 @@ export default class ExportMenu {
         }
         // building up parameter list;
         htmlElement = d3.select("#exportedUrl").node();
-        // @ts-ignore
         htmlElement.value = newUrlString;
-        // @ts-ignore
         htmlElement.title = newUrlString;
-
     };
 
     exportSvg() {
         this.graph.options.navigationMenu.hideAllMenus();
         // Get the d3js SVG element
-        var graphSvg = d3.select(this.graph.options.graphContainerSelector).select("svg"),
+        let graphSvg = d3.select(this.graph.options.graphContainerSelector).select("svg"),
             graphSvgCode,
             escapedGraphSvgCode,
             dataURI;
@@ -229,18 +222,14 @@ export default class ExportMenu {
 
         graphSvgCode = graphSvg.attr("version", 1.1)
             .attr("xmlns", "http://www.w3.org/2000/svg")
-            // @ts-ignore
             .node().parentNode.innerHTML;
 
         // Insert the reference to VOWL
-        // @ts-ignore
-        graphSvgCode = "<!-- Created with WebVOWL (version " + webvowl.version + ")" +
-            ", http://vowl.visualdataweb.org -->\n" + graphSvgCode;
+        graphSvgCode = `<!-- Created with WebVOWL (version ${WebVOWL.version}), ${WebVOWL.link} -->\n" ${graphSvgCode}`;
 
         escapedGraphSvgCode = this.escapeUnicodeCharacters(graphSvgCode);
         //btoa(); Creates a base-64 encoded ASCII string from a "string" of binary data.
         dataURI = "data:image/svg+xml;base64," + btoa(escapedGraphSvgCode);
-
 
         this.exportSvgButton.attr("href", dataURI)
             .attr("download", this.exportFilename + ".svg");
@@ -255,14 +244,11 @@ export default class ExportMenu {
      * @param {string} text
      */
     escapeUnicodeCharacters(text) {
-        var textSnippets = [],
-            i, textLength = text.length,
-            character,
-            charCode;
+        const textSnippets = []
 
-        for (i = 0; i < textLength; i++) {
-            character = text.charAt(i);
-            charCode = character.charCodeAt(0);
+        for (let i = 0; i < text.length; i++) {
+            const character = text.charAt(i);
+            const charCode = character.charCodeAt(0);
 
             if (charCode < 128) {
                 textSnippets.push(character);
@@ -270,7 +256,6 @@ export default class ExportMenu {
                 textSnippets.push("&#" + charCode + ";");
             }
         }
-
         return textSnippets.join("");
     }
 
@@ -319,20 +304,20 @@ export default class ExportMenu {
      * @param {any[]} styles
      */
     setStyleSensitively(selector, styles) {
-        var elements = d3.selectAll(selector);
+        const elements = d3.selectAll(selector);
         if (elements.empty()) {
             return;
         }
 
         const _this = this;
-        styles.forEach(function (style) {
+        for (const style of styles) {
             elements.each(function () {
-                var element = d3.select(this);
+                const element = d3.select(this);
                 if (!_this.shouldntChangeInlineCss(element, style.name)) {
                     element.style(style.name, style.value);
                 }
             });
-        });
+        }
     }
 
     /**
@@ -347,7 +332,7 @@ export default class ExportMenu {
      * @param {{ datum: () => any; }} element
      */
     hasBackgroundColorSet(element) {
-        var data = element.datum();
+        const data = element.datum();
         if (data === undefined) {
             return false;
         }
@@ -365,11 +350,9 @@ export default class ExportMenu {
         const _this = this;
         d3.selectAll(".text, .subtext, .text.instance-count, .external + text .instance-count, .cardinality, .text, .embedded, .class, .object, .disjoint, .objectproperty, .disjointwith, .equivalentproperty, .transitiveproperty, .functionalproperty, .inversefunctionalproperty, .symmetricproperty, .allvaluesfromproperty, .somevaluesfromproperty, .label .datatype, .datatypeproperty, .rdf, .rdfproperty, .literal, .node .datatype, .deprecated, .deprecatedproperty, .external, .externalproperty, path, .nofill, .symbol, .values-from.filled, marker path, .class, path, line, .fineline, .white, .subclass, .subclassproperty, .external + text, .class.hovered, .property.hovered, .cardinality.hovered, .cardinality.focused, circle.pin, .filled.hovered, .filled.focused, .focused, path.hovered, .indirect-highlighting, .feature:hover, .values-from, .class, path, line, .fineline, .dashed, .anonymous, .dotted, rect.focused, circle.focused, .nostroke, marker path")
             .each(function () {
-                var element = d3.select(this);
-
-                // @ts-ignore
-                var inlineStyles = element.node().style;
-                for (var styleName in inlineStyles) {
+                const element = d3.select(this);
+                const inlineStyles = element.node().style;
+                for (const styleName in inlineStyles) {
                     if (inlineStyles.hasOwnProperty(styleName)) {
                         if (_this.shouldntChangeInlineCss(element, styleName)) {
                             continue;
@@ -377,7 +360,6 @@ export default class ExportMenu {
                         element.style(styleName, null);
                     }
                 }
-
                 if (element.datum && element.datum() !== undefined && element.datum().type) {
                     if (element.datum().type === "rdfs:subClassOf") {
                         element.style("fill", null);
@@ -386,20 +368,17 @@ export default class ExportMenu {
             });
 
         // repair svg icons in the menu;
-        var scrollContainer = d3.select("#menuElementContainer").node();
-        // @ts-ignore
-        var controlElements = scrollContainer.children;
-        var numEntries = controlElements.length;
+        const scrollContainer = d3.select("#menuElementContainer").node();
+        const controlElements = scrollContainer.children;
+        const numEntries = controlElements.length;
 
-        for (var i = 0; i < numEntries; i++) {
-            var currentMenu = controlElements[i].id;
+        for (let i = 0; i < numEntries; i++) {
+            const currentMenu = controlElements[i].id;
             d3.select("#" + currentMenu).select("path").style("stroke-width", "0");
             d3.select("#" + currentMenu).select("path").style("fill", "#fff");
         }
-
         d3.select("#magnifyingGlass").style("stroke-width", "0");
         d3.select("#magnifyingGlass").style("fill", "#666");
-
     }
 
     showNonExportableElements() {
@@ -407,15 +386,15 @@ export default class ExportMenu {
     }
 
     createJSON_exportObject() {
-        var i, j, k; // an index variable for the for-loops
-
         /** get data for exporter **/
-        if (!this.graph.options.data) { return {}; } // return an empty json object
+        if (!this.graph.options.data) {
+            return {}; // return an empty json object
+        }
         // extract onotology information;
-        var unfilteredData = this.graph.UnfilteredData;
-        var ontologyComment = this.graph.options.data._comment;
-        var metaObj = this.graph.options.generalOntologyMetaData;
-        var header = this.graph.options.data.header;
+        const unfilteredData = this.graph.unfilteredData;
+        const ontologyComment = this.graph.options.data._comment;
+        const metaObj = this.graph.options.generalOntologyMetaData;
+        const header = this.graph.options.data.header;
 
         if (metaObj.iri && metaObj.iri !== header.iri) {
             header.iri = metaObj.iri;
@@ -433,9 +412,7 @@ export default class ExportMenu {
             header.description = metaObj.description;
         }
 
-
-        var exportText = {};
-        // @ts-ignore
+        const exportText = {};
         exportText._comment = ontologyComment;
         exportText.header = header;
         exportText.namespace = this.graph.options.data.namespace;
@@ -447,15 +424,13 @@ export default class ExportMenu {
         }
         // we do have now the unfiltered data which needs to be transfered to class/classAttribute and property/propertyAttribute
 
-
-        // var classAttributeString='classAttribute:[ \n';
-        var nodes = unfilteredData.nodes;
-        var nLen = nodes.length; // hope for compiler unroll
-        var classObjects = [];
-        var classAttributeObjects = [];
-        for (i = 0; i < nLen; i++) {
-            var classObj = {};
-            var classAttr = {};
+        // const classAttributeString='classAttribute:[ \n';
+        const nodes = unfilteredData.nodes;
+        const classObjects = [];
+        const classAttributeObjects = [];
+        for (let i = 0; i < nodes.length; i++) {
+            const classObj = {};
+            const classAttr = {};
             classObj.id = nodes[i].id;
             classObj.type = nodes[i].type;
             classObjects.push(classObj);
@@ -479,12 +454,11 @@ export default class ExportMenu {
                 classAttr.description = nodes[i].description;
             }
 
-
             if (nodes[i].individuals.length > 0) {
-                var classIndividualElements = [];
-                var nIndividuals = nodes[i].individuals;
-                for (j = 0; j < nIndividuals.length; j++) {
-                    var indObj = {};
+                const classIndividualElements = [];
+                const nIndividuals = nodes[i].individuals;
+                for (let j = 0; j < nIndividuals.length; j++) {
+                    const indObj = {};
                     indObj.iri = nIndividuals[j].iri;
                     indObj.baseIri = nIndividuals[j].baseIri;
                     indObj.labels = nIndividuals[j].label;
@@ -502,13 +476,12 @@ export default class ExportMenu {
                 classAttr.individuals = classIndividualElements;
             }
 
-            var equalsForAttributes = undefined;
+            const equalsForAttributes = [];
             if (nodes[i].equivalents.length > 0) {
-                equalsForAttributes = [];
-                var equals = nodes[i].equivalents;
-                for (j = 0; j < equals.length; j++) {
-                    var eqObj = {};
-                    var eqAttr = {};
+                const equals = nodes[i].equivalents;
+                for (let j = 0; j < equals.length; j++) {
+                    const eqObj = {};
+                    const eqAttr = {};
                     eqObj.id = equals[j].id;
                     equalsForAttributes.push(equals[j].id);
                     eqObj.type = equals[j].type;
@@ -536,10 +509,10 @@ export default class ExportMenu {
                     }
 
                     if (equals[j].individuals.length > 0) {
-                        var e_classIndividualElements = [];
-                        var e_nIndividuals = equals[i].individuals;
-                        for (k = 0; k < e_nIndividuals.length; k++) {
-                            var e_indObj = {};
+                        const e_classIndividualElements = [];
+                        const e_nIndividuals = equals[i].individuals;
+                        for (let k = 0; k < e_nIndividuals.length; k++) {
+                            const e_indObj = {};
                             e_indObj.iri = e_nIndividuals[k].iri;
                             e_indObj.baseIri = e_nIndividuals[k].baseIri;
                             e_indObj.labels = e_nIndividuals[k].label;
@@ -557,17 +530,14 @@ export default class ExportMenu {
                         }
                         eqAttr.individuals = e_classIndividualElements;
                     }
-
                     classAttributeObjects.push(eqAttr);
                 }
             }
-            if (equalsForAttributes && equalsForAttributes.length > 0) {
+            if (equalsForAttributes.length > 0) {
                 classAttr.equivalent = equalsForAttributes;
             }
-
             // classAttr.subClasses=nodes[i].subClasses(); // not needed
             // classAttr.instances=nodes[i].instances();
-
             //
             // .complement=element.complement
             // .disjointUnion=element.disjointUnion
@@ -579,20 +549,19 @@ export default class ExportMenu {
             classAttributeObjects.push(classAttr);
         }
 
-        /** -- properties -- **/
-        var properties = unfilteredData.properties;
-        var pLen = properties.length; // hope for compiler unroll
-        var propertyObjects = [];
-        var propertyAttributeObjects = [];
+        //** -- properties -- **/
+        const properties = unfilteredData.properties;
+        const propertyObjects = [];
+        const propertyAttributeObjects = [];
 
-        for (i = 0; i < pLen; i++) {
-            var pObj = {};
-            var pAttr = {};
+        for (let i = 0; i < properties.length; i++) {
+            const pObj = {};
+            const pAttr = {};
             pObj.id = properties[i].id;
             pObj.type = properties[i].type;
             propertyObjects.push(pObj);
 
-            // // define the attributes object
+            // define the attributes object
             pAttr.id = properties[i].id;
             pAttr.iri = properties[i].iri;
             pAttr.baseIri = properties[i].baseIri;
@@ -604,7 +573,6 @@ export default class ExportMenu {
             if (properties[i].comment) {
                 pAttr.comment = properties[i].comment;
             }
-
             if (properties[i].annotations) {
                 pAttr.annotations = properties[i].annotations;
             }
@@ -625,30 +593,33 @@ export default class ExportMenu {
             pAttr.range = properties[i].range.id;
             // sub properties;
             if (properties[i].subproperties) {
-                var subProps = properties[i].subproperties;
-                var subPropsIdArray = [];
-                for (j = 0; j < subProps.length; j++) {
-                    if (subProps[j].id)
+                const subProps = properties[i].subproperties;
+                const subPropsIdArray = [];
+                for (let j = 0; j < subProps.length; j++) {
+                    if (subProps[j].id) {
                         subPropsIdArray.push(subProps[j].id);
+                    }
                 }
                 pAttr.subproperty = subPropsIdArray;
             }
 
             // super properties
             if (properties[i].superproperties) {
-                var superProps = properties[i].superproperties;
-                var superPropsIdArray = [];
-                for (j = 0; j < superProps.length; j++) {
-                    if (superProps[j].id)
+                const superProps = properties[i].superproperties;
+                const superPropsIdArray = [];
+                for (let j = 0; j < superProps.length; j++) {
+                    if (superProps[j].id) {
                         superPropsIdArray.push(superProps[j].id);
+                    }
                 }
                 pAttr.superproperty = superPropsIdArray;
             }
 
             // check for inverse element
             if (properties[i].inverse) {
-                if (properties[i].inverse.id)
+                if (properties[i].inverse.id) {
                     pAttr.inverse = properties[i].inverse.id;
+                }
             }
             propertyAttributeObjects.push(pAttr);
         }
@@ -658,65 +629,55 @@ export default class ExportMenu {
         exportText.property = propertyObjects;
         exportText.propertyAttribute = propertyAttributeObjects;
 
-
-        var nodeElements = this.graph.getVisibleNodeElements();  // get visible nodes
-        var propElements = this.graph.getVisibleLabelNodes(); // get visible labels
-        // var jsonObj = JSON.parse(exportableJsonText);	   // reparse the original input json
+        const nodeElements = this.graph.getVisibleNodeElements();  // get visible nodes
+        const propElements = this.graph.getVisibleLabelNodes(); // get visible labels
+        // const jsonObj = JSON.parse(exportableJsonText);	   // reparse the original input json
 
         /** modify comment **/
-        // @ts-ignore
-        var comment = exportText._comment;
-        var additionalString = " [Additional Information added by WebVOWL Exporter Version: " + "@@WEBVOWL_VERSION" + "]";
+        const comment = exportText._comment;
+        const additionalString = ` [Additional Information added by WebVOWL Exporter Version: ${WebVOWL.version}]`;
         // adding new string to comment only if it does not exist
         if (comment !== undefined && comment.indexOf(additionalString) === -1) {
-            exportText._comment = comment + " [Additional Information added by WebVOWL Exporter Version: " + "@@WEBVOWL_VERSION" + "]";
+            exportText._comment = comment + ` [Additional Information added by WebVOWL Exporter Version: ${WebVOWL.version}]`;
         }
 
-        var classAttribute = exportText.classAttribute;
-        var propAttribute = exportText.propertyAttribute;
-        /**  remove previously stored variables **/
-        for (i = 0; i < classAttribute.length; i++) {
-            var classObj_del = classAttribute[i];
-            // @ts-ignore
+        const classAttribute = exportText.classAttribute;
+        const propAttribute = exportText.propertyAttribute;
+        //**  remove previously stored variables **/
+        for (let i = 0; i < classAttribute.length; i++) {
+            const classObj_del = classAttribute[i];
             delete classObj_del.pos;
-            // @ts-ignore
             delete classObj_del.pinned;
         }
-        var propertyObj;
-        for (i = 0; i < propAttribute.length; i++) {
-            propertyObj = propAttribute[i];
-            // @ts-ignore
+        for (let i = 0; i < propAttribute.length; i++) {
+            const propertyObj = propAttribute[i];
             delete propertyObj.pos;
-            // @ts-ignore
             delete propertyObj.pinned;
         }
         /**  add new variables to jsonObj  **/
         // class attribute variables
-        nodeElements.each(function (/** @type {{ id: any; x: number; y: number; pinned: any; }} */ node) {
-            var nodeId = node.id;
-            for (i = 0; i < classAttribute.length; i++) {
-                var classObj = classAttribute[i];
+        nodeElements.each(function (/** @type {BaseNode} */ node) {
+            const nodeId = node.id;
+            for (let i = 0; i < classAttribute.length; i++) {
+                const classObj = classAttribute[i];
                 if (classObj.id === nodeId) {
                     // store relative positions
-                    // @ts-ignore
                     classObj.pos = [parseFloat(node.x.toFixed(2)), parseFloat(node.y.toFixed(2))];
-                    if (node.pinned)
-                        // @ts-ignore
+                    if (node.pinned) {
                         classObj.pinned = true;
+                    }
                     break;
                 }
             }
         });
         // property attribute variables
-        for (j = 0; j < propElements.length; j++) {
-            var correspondingProp = propElements[j].property;
-            for (i = 0; i < propAttribute.length; i++) {
-                propertyObj = propAttribute[i];
+        for (let j = 0; j < propElements.length; j++) {
+            const correspondingProp = propElements[j].property;
+            for (let i = 0; i < propAttribute.length; i++) {
+                const propertyObj = propAttribute[i];
                 if (propertyObj.id === correspondingProp.id) {
-                    // @ts-ignore
                     propertyObj.pos = [parseFloat(propElements[j].x.toFixed(2)), parseFloat(propElements[j].y.toFixed(2))];
                     if (propElements[j].pinned)
-                        // @ts-ignore
                         propertyObj.pinned = true;
                     break;
                 }
@@ -726,65 +687,60 @@ export default class ExportMenu {
         exportText.settings = {};
 
         // Global Settings
-        var zoom = this.graph.getScaleFactor();
-        var paused = this.graph.paused;
-        var translation = [parseFloat(this.graph.getTranslation()[0].toFixed(2)), parseFloat(this.graph.getTranslation()[1].toFixed(2))];
+        const zoom = this.graph.getScaleFactor();
+        const paused = this.graph.paused;
+        const translation = [parseFloat(this.graph.getTranslation()[0].toFixed(2)), parseFloat(this.graph.getTranslation()[1].toFixed(2))];
         exportText.settings.global = {};
         exportText.settings.global.zoom = zoom.toFixed(2);
         exportText.settings.global.translation = translation;
         exportText.settings.global.paused = paused;
 
-        // shared variable declaration
-        var cb_text;
-        var isEnabled;
-        var cb_obj;
-
         // Gravity Settings
-        var classDistance = this.graph.options.classDistance;
-        var datatypeDistance = this.graph.options.datatypeDistance;
+        const classDistance = this.graph.options.classDistance;
+        const datatypeDistance = this.graph.options.datatypeDistance;
         exportText.settings.gravity = {};
         exportText.settings.gravity.classDistance = classDistance;
         exportText.settings.gravity.datatypeDistance = datatypeDistance;
 
         // Filter Settings
-        var fMenu = this.graph.options.filterMenu;
-        var fContainer = fMenu.getCheckBoxContainer();
-        var cbCont = [];
-        for (i = 0; i < fContainer.length; i++) {
-            cb_text = fContainer[i].checkbox.attr("id");
-            isEnabled = fContainer[i].checkbox.property("checked");
-            cb_obj = {};
+        const fMenu = this.graph.options.filterMenu;
+        const fContainer = fMenu.getCheckBoxContainer();
+        const cbCont = [];
+        for (let i = 0; i < fContainer.length; i++) {
+            const cb_text = fContainer[i].checkbox.attr("id");
+            const isEnabled = fContainer[i].checkbox.property("checked");
+            const cb_obj = {};
             // @ts-ignore
             cb_obj.id = cb_text;
             // @ts-ignore
             cb_obj.checked = isEnabled;
             cbCont.push(cb_obj);
         }
-        var degreeSliderVal = fMenu.getDegreeSliderValue();
+        const degreeSliderVal = fMenu.getDegreeSliderValue();
         exportText.settings.filter = {};
         exportText.settings.filter.checkBox = cbCont;
         exportText.settings.filter.degreeSliderValue = degreeSliderVal;
 
         // Modes Settings
-        var mMenu = this.graph.options.modeMenu;
-        var mContainer = mMenu.getCheckBoxContainer();
-        var cb_modes = [];
-        for (i = 0; i < mContainer.length; i++) {
-            cb_text = mContainer[i].attr("id");
-            isEnabled = mContainer[i].property("checked");
-            cb_obj = {};
+        const mMenu = this.graph.options.modeMenu;
+        const mContainer = mMenu.getCheckBoxContainer();
+        const cb_modes = [];
+        for (let i = 0; i < mContainer.length; i++) {
+            const cb_text = mContainer[i].attr("id");
+            const isEnabled = mContainer[i].property("checked");
+            const cb_obj = {};
             // @ts-ignore
             cb_obj.id = cb_text;
             // @ts-ignore
             cb_obj.checked = isEnabled;
             cb_modes.push(cb_obj);
         }
-        var colorSwitchState = mMenu.colorModeState();
+        const colorSwitchState = mMenu.colorModeState;
         exportText.settings.modes = {};
         exportText.settings.modes.checkBox = cb_modes;
         exportText.settings.modes.colorSwitchState = colorSwitchState;
 
-        var exportObj = {};
+        const exportObj = {};
         // todo: [ ] find better way for ordering the objects
         // hack for ordering of objects, so settings is after metrics
         exportObj._comment = exportText._comment;
@@ -797,9 +753,8 @@ export default class ExportMenu {
         exportObj.classAttribute = exportText.classAttribute;
         exportObj.property = exportText.property;
         exportObj.propertyAttribute = exportText.propertyAttribute;
-
         return exportObj;
-    };
+    }
 
     exportJson() {
         this.graph.options.navigationMenu.hideAllMenus();
@@ -811,27 +766,25 @@ export default class ExportMenu {
             d3.event.preventDefault();
             return;
         }
-
-        var exportObj = this.createJSON_exportObject();
+        const exportObj = this.createJSON_exportObject();
 
         // make a string again;
-        var exportText = JSON.stringify(exportObj, null, '  ');
+        const exportText = JSON.stringify(exportObj, null, '  ');
         // write the data
-        var dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(exportText);
-        var jsonExportFileName = this.exportFilename;
+        const dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(exportText);
+        let jsonExportFileName = this.exportFilename;
 
-        if (!jsonExportFileName.endsWith(".json"))
+        if (!jsonExportFileName.endsWith(".json")) {
             jsonExportFileName += ".json";
+        }
         this.exportJsonButton.attr("href", dataURI)
             .attr("download", jsonExportFileName);
     }
 
     exportTex() {
-        var zoom = this.graph.getScaleFactor();
-        var grTranslate = this.graph.getTranslation();
-        var bbox = this.graph.getBoundingBoxForTex();
-        var comment = " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
-        comment += " %        Generated with the experimental alpha version of the TeX exporter of WebVOWL (version 1.1.3) %%% \n";
+        const bbox = this.graph.getBoundingBoxForTex();
+        let comment = " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
+        comment += ` %        Generated with the experimental alpha version of the TeX exporter of WebVOWL (version ${WebVOWL.version}), ${WebVOWL.link} %%% \n`;
         comment += " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n";
         comment += " %   The content can be used as import in other TeX documents. \n";
         comment += " %   Parent document has to use the following packages   \n";
@@ -855,8 +808,7 @@ export default class ExportMenu {
         comment += " %\\end{document} \n";
         comment += " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n";
 
-
-        var texString = comment + "\\definecolor{imageBGCOLOR}{HTML}{FFFFFF} \n" +
+        let texString = comment + "\\definecolor{imageBGCOLOR}{HTML}{FFFFFF} \n" +
             "\\definecolor{owlClassColor}{HTML}{AACCFF}\n" +
             "\\definecolor{owlObjectPropertyColor}{HTML}{AACCFF}\n" +
             "\\definecolor{owlExternalClassColor}{HTML}{AACCFF}\n" +
@@ -875,14 +827,10 @@ export default class ExportMenu {
             "\\tikzstyle{dotted}=[dash pattern=on 2pt off 2pt] \n" +
             "\\fontfamily{sans-serif}{\\fontsize{12}{12}\\selectfont}\n \n";
 
-
         texString += "\\tikzset{triangleBlack/.style = {fill=black, draw=black, line width=1pt,scale=0.7,regular polygon, regular polygon sides=3} }\n";
         texString += "\\tikzset{triangleWhite/.style = {fill=white, draw=black, line width=1pt,scale=0.7,regular polygon, regular polygon sides=3} }\n";
         texString += "\\tikzset{triangleBlue/.style  = {fill=valuesFrom, draw=valuesFrom, line width=1pt,scale=0.7,regular polygon, regular polygon sides=3} }\n";
-
         texString += "\\tikzset{Diamond/.style = {fill=white, draw=black, line width=2pt,scale=1.2,regular polygon, regular polygon sides=4} }\n";
-
-
         texString += "\\tikzset{Literal/.style={rectangle,align=center,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "black, draw=black, dashed, line width=1pt, fill=owlDatatypeColor, minimum width=80pt,\n" +
@@ -893,7 +841,6 @@ export default class ExportMenu {
             "black, draw=black, line width=1pt, fill=owlDatatypeColor, minimum width=80pt,\n" +
             "minimum height = 20pt}}\n\n";
 
-
         texString += "\\tikzset{owlClass/.style={circle, inner sep=0mm,align=center, \n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "black, draw=black, line width=1pt, fill=owlClassColor, minimum size=101pt}}\n\n";
@@ -902,11 +849,9 @@ export default class ExportMenu {
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "black, dashed, draw=black, line width=1pt, fill=owlClassColor, minimum size=101pt}}\n\n";
 
-
         texString += "\\tikzset{owlThing/.style={circle, inner sep=0mm,align=center,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "black, dashed, draw=black, line width=1pt, fill=owlThingColor, minimum size=62pt}}\n\n";
-
 
         texString += "\\tikzset{owlObjectProperty/.style={rectangle,align=center,\n" +
             "inner sep=0mm,\n" +
@@ -919,7 +864,6 @@ export default class ExportMenu {
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "fill=rdfPropertyColor, minimum width=80pt,\n" +
             "minimum height = 25pt}}\n\n";
-
 
         texString += "\\tikzset{owlDatatypeProperty/.style={rectangle,align=center,\n" +
             "fill=owlDatatypePropertyColor, minimum width=80pt,\n" +
@@ -949,52 +893,38 @@ export default class ExportMenu {
             "postaction = {draw,line width=1pt, white}}}\n\n";
 
         // draw a bounding box;
-
         // get bbox coordinates;
-
-
         this.graph.options.navigationMenu.hideAllMenus();
         /**  check if there is data **/
         if (!this.exportableJsonText) {
             alert("No graph data available.");
             // Stop the redirection to the path of the href attribute
-            // @ts-ignore
             d3.event.preventDefault();
             return;
         }
 
-        var i = 0, identifier;
-
         /** get data for exporter **/
-        var nodeElements = this.graph.getVisibleNodeElements();  // get visible nodes
-        var propElements = this.graph.getVisibleLabelNodes(); // get visible labels
-        var links = this.graph.getVisibleLinks();
+        const nodeElements = this.graph.getVisibleNodeElements();  // get visible nodes
+        const propElements = this.graph.getVisibleLabelNodes(); // get visible labels
+        const links = this.graph.getVisibleLinks();
 
         // export only nodes;
         // draw Links;
-        for (i = 0; i < links.length; i++) {
-            var link = links[i];
-            // console.log("\n****************\nInverstigating Link for property "+link.property.labelForCurrentLanguage());
+        let i = 0 // Variable scope intended
+        for (; i < links.length; i++) {
+            const link = links[i];
+            const prop = link.property;
+            let dx, dy, px, py, rx, ry;
+            let colorStr = "black";
+            let linkStyle = "";
+            let isLoop = "";
+            let curvePoint;
+            let pathStart;
+            let pathEnd;
+            const markerOffset = 7;
 
-            var prop = link.property;
-            var dx, dy, px, py, rx, ry;
-            var colorStr = "black";
-            var linkDomainIntersection;
-            var linkRangeIntersection;
-            var center;
-            var linkStyle = "";
-            var isLoop = "";
-            var curvePoint;
-            var pathStart;
-            var pathEnd;
-            var controlPoints;
-            var len;
-            var ahAngle;
-            var pathLen;
-            var markerOffset = 7;
-
-            var arrowType = "triangleBlack";
-            var linkWidth = ",line width=2pt";
+            let arrowType = "triangleBlack";
+            const linkWidth = ",line width=2pt";
             if (prop.linkType) {
                 if (prop.linkType === "dotted") {
                     //stroke-dasharray: 3;
@@ -1009,16 +939,13 @@ export default class ExportMenu {
                 if (prop.linkType === "values-from") {
                     colorStr = "valuesFrom";
                 }
-
             }
 
-            var startX, startY, endX, endY, normX, normY, lg;
-
+            let lg;
             if (link.layers === 1 && !link.loops) {
-
-                linkDomainIntersection = this.graph.math().calculateIntersection(link.range, link.domain, 1);
-                linkRangeIntersection = this.graph.math().calculateIntersection(link.domain, link.range, 1);
-                center = this.graph.math().calculateCenter(linkDomainIntersection, linkRangeIntersection);
+                const linkDomainIntersection = MathUtils.calculateIntersection(link.range, link.domain, 1);
+                const linkRangeIntersection = MathUtils.calculateIntersection(link.domain, link.range, 1);
+                const center = MathUtils.calculateCenter(linkDomainIntersection, linkRangeIntersection);
                 dx = linkDomainIntersection.x;
                 dy = -linkDomainIntersection.y;
                 px = center.x;
@@ -1026,35 +953,32 @@ export default class ExportMenu {
                 rx = linkRangeIntersection.x;
                 ry = -linkRangeIntersection.y;
 
-
                 pathStart = linkDomainIntersection;
                 curvePoint = center;
                 pathEnd = linkRangeIntersection;
 
-                var nx = rx - px;
-                var ny = ry - py;
+                let nx = rx - px;
+                let ny = ry - py;
 
                 // normalize ;
-                len = Math.sqrt(nx * nx + ny * ny);
+                const len = Math.sqrt(nx * nx + ny * ny);
 
                 nx = nx / len;
                 ny = ny / len;
 
-                ahAngle = Math.atan2(ny, nx) * (180 / Math.PI);
-                normX = nx;
-                normY = ny;
+                const ahAngle = Math.atan2(ny, nx) * (180 / Math.PI);
             }
             else {
                 if (link.isLoop()) {
                     isLoop = ", tension=3";
-                    controlPoints = this.graph.math().calculateLoopPoints(link);
+                    const controlPoints = MathUtils.calculateLoopPoints(link);
                     pathStart = controlPoints[0];
                     curvePoint = controlPoints[1];
                     pathEnd = controlPoints[2];
                 } else {
                     curvePoint = link.label;
-                    pathStart = this.graph.math().calculateIntersection(curvePoint, link.domain, 1);
-                    pathEnd = this.graph.math().calculateIntersection(curvePoint, link.range, 1);
+                    pathStart = MathUtils.calculateIntersection(curvePoint, link.domain, 1);
+                    pathEnd = MathUtils.calculateIntersection(curvePoint, link.range, 1);
                 }
                 dx = pathStart.x;
                 dy = -pathStart.y;
@@ -1067,22 +991,18 @@ export default class ExportMenu {
             texString += "\\draw [" + colorStr + linkStyle + linkWidth + isLoop + "] plot [smooth] coordinates {(" +
                 dx + "pt, " + dy + "pt) (" + px + "pt, " + py + "pt)  (" + rx + "pt, " + ry + "pt)};\n";
 
-
             if (link.property.markerElement === undefined) continue;
 
             // add arrow head;
-
-
             if (link.property.type === "owl:someValuesFrom" || link.property.type === "owl:allValuesFrom") {
                 arrowType = "triangleBlue";
             }
 
             lg = link.pathElement;
-            pathLen = Math.floor(lg.node().getTotalLength());
-            var p1 = lg.node().getPointAtLength(pathLen - 4);
-            var p2 = lg.node().getPointAtLength(pathLen);
-            var markerCenter = lg.node().getPointAtLength(pathLen - 6);
-
+            const pathLen = Math.floor(lg.node().getTotalLength());
+            let p1 = lg.node().getPointAtLength(pathLen - 4);
+            let p2 = lg.node().getPointAtLength(pathLen);
+            let markerCenter = lg.node().getPointAtLength(pathLen - 6);
             if (link.property.type === "setOperatorProperty") {
                 p1 = lg.node().getPointAtLength(4);
                 p2 = lg.node().getPointAtLength(0);
@@ -1090,17 +1010,17 @@ export default class ExportMenu {
                 arrowType = "Diamond";
             }
 
-            startX = p1.x;
-            startY = p1.y;
-            endX = p2.x;
-            endY = p2.y;
-            normX = endX - startX;
-            normY = endY - startY;
-            len = Math.sqrt(normX * normX + normY * normY);
+            const startX = p1.x;
+            const startY = p1.y;
+            const endX = p2.x;
+            const endY = p2.y;
+            let normX = endX - startX;
+            let normY = endY - startY;
+            const len = Math.sqrt(normX * normX + normY * normY);
             normX = normX / len;
             normY = normY / len;
 
-            ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
+            let ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
             ahAngle -= 90;
             if (link.property.type === "setOperatorProperty") {
                 ahAngle -= 45;
@@ -1122,13 +1042,13 @@ export default class ExportMenu {
             // }
 
             // add cardinality;
-            var cardinalityText = link.property.generateCardinalityText();
+            let cardinalityText = link.property.generateCardinalityText();
             if (cardinalityText && cardinalityText.length > 0) {
-                var cardinalityCenter = lg.node().getPointAtLength(pathLen - 18);
-                var cx = cardinalityCenter.x - (10 * normY);
-                var cy = cardinalityCenter.y + (10 * normX); // using orthonormal y Coordinate
+                const cardinalityCenter = lg.node().getPointAtLength(pathLen - 18);
+                const cx = cardinalityCenter.x - (10 * normY);
+                let cy = cardinalityCenter.y + (10 * normX); // using orthonormal y Coordinate
                 cy *= -1.0;
-                var textColor = "black";
+                const textColor = "black";
                 if (cardinalityText.indexOf("A") > -1) {
                     cardinalityText = "$\\forall$";
                 }
@@ -1140,21 +1060,21 @@ export default class ExportMenu {
 
             if (link.property.inverse) {
                 lg = link.pathElement;
-                pathLen = Math.floor(lg.node().getTotalLength());
-                var p1_inv = lg.node().getPointAtLength(4);
-                var p2_inv = lg.node().getPointAtLength(0);
-                var markerCenter_inv = lg.node().getPointAtLength(6);
-                startX = p1_inv.x;
-                startY = p1_inv.y;
-                endX = p2_inv.x;
-                endY = p2_inv.y;
-                normX = endX - startX;
-                normY = endY - startY;
-                len = Math.sqrt(normX * normX + normY * normY);
+                const pathLen = Math.floor(lg.node().getTotalLength());
+                const p1_inv = lg.node().getPointAtLength(4);
+                const p2_inv = lg.node().getPointAtLength(0);
+                const markerCenter_inv = lg.node().getPointAtLength(6);
+                const startX = p1_inv.x;
+                const startY = p1_inv.y;
+                const endX = p2_inv.x;
+                const endY = p2_inv.y;
+                let normX = endX - startX;
+                let normY = endY - startY;
+                const len = Math.sqrt(normX * normX + normY * normY);
                 normX = normX / len;
                 normY = normY / len;
 
-                ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
+                let ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
                 ahAngle -= 90;
                 //   console.log("INV>>\n "+link.property.inverse.labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
                 rx = markerCenter_inv.x;
@@ -1168,43 +1088,38 @@ export default class ExportMenu {
                     texString += "\\node[" + arrowType + ", rotate=" + ahAngle + "] at (" + rx + "pt, " + ry + "pt)   (INV_marker" + i + ") {};\n ";
                 }
             }
-
-
         }
 
-
-        nodeElements.each(function (/** @type {{ x: any; y: number; labelForCurrentLanguage: () => any; type: string; textBlock: { textBlock: { style: (arg0: string) => any; node: () => { (): any; new (): any; children: any; }; }; }; individuals: string | any[]; attributes: string | string[]; labelWidth: any; smallestRadius: number; backgroundColor: any; }} */ node) {
-
-            px = node.x;
-            py = -node.y;
-            identifier = node.labelForCurrentLanguage();
-            // console.log("Writing : "+ identifier);
-            if (identifier === undefined) identifier = "";
-            var qType = "owlClass";
+        nodeElements.each(function (/** @type {BaseNode} */ node) {
+            const px = node.x;
+            const py = -node.y;
+            let identifier = node.labelForCurrentLanguage();
+            if (identifier === undefined) {
+                identifier = "";
+            }
+            let qType = "owlClass";
             if (node.type === "owl:Thing" || node.type === "owl:Nothing")
                 qType = "owlThing";
 
             if (node.type === "owl:equivalentClass") {
                 qType = "owlEquivalentClass";
             }
-            var textColorStr = "";
+            let textColorStr = "";
             if (node.textBlock) {
-                var txtColor = node.textBlock.textBlock.style("fill");
+                const txtColor = node.textBlock.textBlock.style("fill");
                 if (txtColor === "rgb(0, 0, 0)") {
                     textColorStr = ", text=black";
                 }
                 if (txtColor === "rgb(255, 255, 255)") {
                     textColorStr = ", text=white";
                 }
-
-
-                var tspans = node.textBlock.textBlock.node().children;
+                const tspans = node.textBlock.textBlock.node().children;
                 if (tspans[0]) {
                     identifier = tspans[0].innerHTML;
                     if (node.individuals && node.individuals.length === parseInt(tspans[0].innerHTML)) {
                         identifier = "{\\color{gray} " + tspans[0].innerHTML + " }";
                     }
-                    for (var t = 1; t < tspans.length; t++) {
+                    for (let t = 1; t < tspans.length; t++) {
                         if (node.individuals && node.individuals.length === parseInt(tspans[t].innerHTML)) {
                             identifier += "\\\\ {\\color{gray} " + tspans[t].innerHTML + " }";
                         } else {
@@ -1222,24 +1137,21 @@ export default class ExportMenu {
             if (node.attributes.indexOf("anonymous") !== -1) {
                 qType = "anonymousClass";
             }
-
-
-            if (node.type === "owl:unionOf" || node.type === "owl:complementOf" || node.type === "owl:disjointUnionOf" || node.type === "owl:intersectionOf")
+            if (node.type === "owl:unionOf" || node.type === "owl:complementOf" || node.type === "owl:disjointUnionOf" || node.type === "owl:intersectionOf") {
                 qType = "owlClass";
+            }
 
-            var bgColorStr = "";
-            var widthString = "";
-
+            let bgColorStr = "";
+            let widthString = "";
             if (node.type === "rdfs:Literal" || node.type === "rdfs:Datatype") {
-                var width = node.labelWidth;
+                const width = node.labelWidth;
                 widthString = ",minimum width=" + width + "pt";
             }
             else {
                 widthString = ",minimum size=" + 2 * node.smallestRadius + "pt";
-
             }
             if (node.backgroundColor) {
-                var bgColor = node.backgroundColor;
+                let bgColor = node.backgroundColor;
                 bgColor.toUpperCase();
                 bgColor = bgColor.slice(1, bgColor.length);
                 texString += "\\definecolor{Node" + i + "_COLOR}{HTML}{" + bgColor + "} \n ";
@@ -1250,9 +1162,9 @@ export default class ExportMenu {
                 bgColorStr = ", fill=Node" + i + "_COLOR ";
             }
 
-            var leftPos = px - 7;
-            var rightPos = px + 7;
-            var txtOffset = py + 20;
+            const leftPos = px - 7;
+            const rightPos = px + 7;
+            const txtOffset = py + 20;
             // @ts-ignore
             if (node.type !== "owl:unionOf" || node.type !== "owl:disjointUnionOf") {
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
@@ -1296,22 +1208,20 @@ export default class ExportMenu {
                 // add texts
                 texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + py + "pt)  (intersectionText" + i + ") {$\\cap$};\n";
                 texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
-
             }
-
-
             i++;
-
         });
-        for (i = 0; i < propElements.length; i++) {
-            var correspondingProp = propElements[i].property;
-            var p_px = propElements[i].x;
-            var p_py = -propElements[i].y;
-            identifier = correspondingProp.labelForCurrentLanguage();
-            if (identifier === undefined) identifier = "";
-            var textColorStr = "";
+        for (let i = 0; i < propElements.length; i++) {
+            const correspondingProp = propElements[i].property;
+            const p_px = propElements[i].x;
+            const p_py = -propElements[i].y;
+            let identifier = correspondingProp.labelForCurrentLanguage();
+            if (identifier === undefined) {
+                identifier = "";
+            }
+            let textColorStr = "";
             if (correspondingProp.textBlock && correspondingProp.textBlock) {
-                var txtColor = correspondingProp.textBlock.textBlock.style("fill");
+                const txtColor = correspondingProp.textBlock.textBlock.style("fill");
                 //  console.log("PropertyTextColor="+txtColor);
                 if (txtColor === "rgb(0, 0, 0)") {
                     textColorStr = ", text=black";
@@ -1319,15 +1229,15 @@ export default class ExportMenu {
                 if (txtColor === "rgb(255, 255, 255)") {
                     textColorStr = ", text=white";
                 }
-                var tspans = correspondingProp.textBlock.textBlock.node().children;
+                const tspans = correspondingProp.textBlock.textBlock.node().children;
 
                 // identifier=node.textBlock.textBlock.text();
                 // console.log(tspans);
                 if (tspans[0]) {
                     identifier = tspans[0].innerHTML;
 
-                    for (var t = 1; t < tspans.length; t++) {
-                        var spanText = tspans[t].innerHTML;
+                    for (let t = 1; t < tspans.length; t++) {
+                        const spanText = tspans[t].innerHTML;
                         if (spanText.indexOf("(") > -1) {
                             identifier += "\\\\ {\\small " + tspans[t].innerHTML + " }";
                         }
@@ -1336,13 +1246,11 @@ export default class ExportMenu {
                         }
                     }
                 }
-                else {
-                }
             }
             if (correspondingProp.type === "setOperatorProperty") {
                 continue; // this property does not have a label
             }
-            var qType = "owlObjectProperty";
+            let qType = "owlObjectProperty";
             if (correspondingProp.type === "owl:DatatypeProperty") {
                 qType = "owlDatatypeProperty";
             }
@@ -1353,12 +1261,9 @@ export default class ExportMenu {
                 qType = "rdfProperty";
             }
 
-
-            var bgColorStr = "";
+            let bgColorStr = "";
             if (correspondingProp.backgroundColor) {
-                // console.log("Found backGround color");
-                var bgColor = correspondingProp.backgroundColor;
-                //console.log(bgColor);
+                let bgColor = correspondingProp.backgroundColor;
                 bgColor.toUpperCase();
                 bgColor = bgColor.slice(1, bgColor.length);
                 texString += "\\definecolor{property" + i + "_COLOR}{HTML}{" + bgColor + "} \n ";
@@ -1369,40 +1274,36 @@ export default class ExportMenu {
                 bgColorStr = ", fill=property" + i + "_COLOR ";
             }
 
-            var widthString = "";
-            var width = correspondingProp.textWidth();
-            widthString = ",minimum width=" + width + "pt";
-
+            const width = correspondingProp.textWidth();
+            const widthString = ",minimum width=" + width + "pt";
 
             // OWL INTERSECTION OF
             if (correspondingProp.type === "owl:disjointWith") {
-                var leftPos = p_px - 12;
-                var rightPos = p_px + 12;
-                var txtOffset = p_py - 20;
+                const leftPos = p_px - 12;
+                const rightPos = p_px + 12;
+                const txtOffset = p_py - 20;
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + p_px + "pt, " + p_py + "pt)   (Node" + i + ") {};\n";
                 texString += "\\node[disjointWith , text=black] at (" + leftPos + "pt, " + p_py + "pt)   (SymbolNode" + i + ") {};\n";
                 texString += "\\node[disjointWith , text=black] at (" + rightPos + "pt, " + p_py + "pt)   (SymbolNode" + i + ") {};\n";
                 texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + p_px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {";
-                if (this.graph.options.compactNotation === false) {
+                if (!this.graph.options.compactNotation) {
                     texString += "(disjoint)";
                 }
                 texString += "};\n";
                 continue;
             }
 
-
             if (correspondingProp.inverse) {
-                var inv_correspondingProp = correspondingProp.inverse;
+                const inv_correspondingProp = correspondingProp.inverse;
                 // create the rendering element for the inverse property;
-                var inv_identifier = inv_correspondingProp.labelForCurrentLanguage();
-                if (inv_identifier === undefined) inv_identifier = "";
-                var inv_textColorStr = "";
-                //console.log(inv_correspondingProp);
-                //console.log(inv_correspondingProp.textBlock);
+                let inv_identifier = inv_correspondingProp.labelForCurrentLanguage();
+                if (inv_identifier === undefined) {
+                    inv_identifier = "";
+                }
 
+                let inv_textColorStr = "";
                 if (inv_correspondingProp.textBlock && inv_correspondingProp.textBlock) {
-
-                    var inv_txtColor = inv_correspondingProp.textBlock.textBlock.style("fill");
+                    const inv_txtColor = inv_correspondingProp.textBlock.textBlock.style("fill");
                     //  console.log("PropertyTextColor="+inv_txtColor);
                     if (inv_txtColor === "rgb(0, 0, 0)") {
                         inv_textColorStr = ", text=black";
@@ -1410,15 +1311,13 @@ export default class ExportMenu {
                     if (inv_txtColor === "rgb(255, 255, 255)") {
                         inv_textColorStr = ", text=white";
                     }
-                    var inv_tspans = inv_correspondingProp.textBlock.textBlock.node().children;
+                    const inv_tspans = inv_correspondingProp.textBlock.textBlock.node().children;
 
                     // identifier=node.textBlock.textBlock.text();
-                    //  console.log(inv_tspans);
                     if (inv_tspans[0]) {
                         inv_identifier = inv_tspans[0].innerHTML;
-
-                        for (var inv_t = 1; inv_t < inv_tspans.length; inv_t++) {
-                            var ispanText = inv_tspans[inv_t].innerHTML;
+                        for (let inv_t = 1; inv_t < inv_tspans.length; inv_t++) {
+                            const ispanText = inv_tspans[inv_t].innerHTML;
                             if (ispanText.indexOf("(") > -1) {
                                 inv_identifier += "\\\\ {\\small " + inv_tspans[inv_t].innerHTML + " }";
                             } else {
@@ -1427,13 +1326,11 @@ export default class ExportMenu {
                         }
                     }
                 }
-                var inv_qType = "owlObjectProperty";
-                var inv_bgColorStr = "";
+                const inv_qType = "owlObjectProperty";
+                let inv_bgColorStr = "";
 
                 if (inv_correspondingProp.backgroundColor) {
-                    //  console.log("Found backGround color");
-                    var inv_bgColor = inv_correspondingProp.backgroundColor;
-                    //   console.log(inv_bgColor);
+                    let inv_bgColor = inv_correspondingProp.backgroundColor;
                     inv_bgColor.toUpperCase();
                     inv_bgColor = inv_bgColor.slice(1, inv_bgColor.length);
                     texString += "\\definecolor{inv_property" + i + "_COLOR}{HTML}{" + inv_bgColor + "} \n ";
@@ -1444,31 +1341,27 @@ export default class ExportMenu {
                     inv_bgColorStr = ", fill=inv_property" + i + "_COLOR ";
                 }
 
-                var inv_widthString = "";
-                var inv_width = inv_correspondingProp.textWidth();
+                const inv_width = inv_correspondingProp.textWidth();
+                const pOY1 = p_py - 14;
+                const pOY2 = p_py + 14;
+                const inv_widthString = ",minimum width=" + inv_width + "pt";
 
-                var pOY1 = p_py - 14;
-                var pOY2 = p_py + 14;
-                inv_widthString = ",minimum width=" + inv_width + "pt";
                 texString += "% Createing Inverse Property \n";
                 texString += "\\node[" + inv_qType + " " + inv_widthString + " " + inv_bgColorStr + " " + inv_textColorStr + "] at (" + p_px + "pt, " + pOY1 + "pt)   (property" + i + ") {" + inv_identifier.replaceAll("_", "\\_ ") + "};\n";
                 texString += "% " + inv_qType + " vs " + qType + "\n";
                 texString += "% " + inv_widthString + " vs " + widthString + "\n";
                 texString += "% " + inv_bgColorStr + " vs " + bgColorStr + "\n";
                 texString += "% " + inv_textColorStr + " vs " + textColorStr + "\n";
-
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + p_px + "pt, " + pOY2 + "pt)   (property" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
-
             } else {
                 texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + p_px + "pt, " + p_py + "pt)   (property" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
             }
         }
-
         texString += "\\end{tikzpicture}\n}\n \\end{center}\n";
 
         //   console.log("Tex Output\n"+ texString);
-        var dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(texString);
+        const dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(texString);
         this.exportTexButton.attr("href", dataURI)
             .attr("download", this.exportFilename + ".tex");
     }
-};
+}

@@ -1,10 +1,11 @@
-import { BaseElement } from "../../elements/BaseElement";
-import { BaseNode } from "../../elements/nodes/BaseNode";
-import { BaseProperty } from "../../elements/properties/BaseProperty";
-import { ElementTools } from "../../util/elementTools";
-import { AbstractFilter } from "./abstractFilter";
+import BaseElement from "../../elements/BaseElement";
+import BaseNode from "../../elements/nodes/BaseNode";
+import BaseProperty from "../../elements/properties/BaseProperty";
+import ElementTools from "../../util/elementTools";
+import AbstractFilter from "./abstractFilter";
 
-export class SubclassFilter extends AbstractFilter {
+
+export default class SubclassFilter extends AbstractFilter {
     constructor() {
         super(false)
     }

@@ -1,8 +1,13 @@
-import CenteringTextElement from '../../util/CenteringTextElement';
-import { DrawTools } from '../drawTools';
-import { BaseNode } from './BaseNode';
+import Graph from "../../graph"
+import CenteringTextElement from "../../util/CenteringTextElement"
+import DrawTools from "../drawTools"
+import BaseNode from "./BaseNode"
 
-export class RoundNode extends BaseNode {
+
+export default class RoundNode extends BaseNode {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 
@@ -45,11 +50,11 @@ export class RoundNode extends BaseNode {
      */
     // @ts-ignore
     textWidth(yOffset) {
-        var availableWidth = this.actualRadius() * 2;
+        const availableWidth = this.actualRadius() * 2;
         // if the text is not placed in the center of the circle, it can't have the full width
         if (yOffset) {
-            var relativeOffset = Math.abs(yOffset) / this.actualRadius();
-            var isOffsetInsideOfNode = relativeOffset <= 1;
+            const relativeOffset = Math.abs(yOffset) / this.actualRadius();
+            const isOffsetInsideOfNode = relativeOffset <= 1;
 
             if (isOffsetInsideOfNode) {
                 availableWidth = Math.cos(relativeOffset) * availableWidth;
@@ -76,7 +81,7 @@ export class RoundNode extends BaseNode {
             return this.radius;
         } else {
             // we could "listen" for radius and individualCount changes, but this is easier
-            var MULTIPLIER = 8, additionalRadius = Math.log(this.individuals.length + 1) * MULTIPLIER + 5;
+            const MULTIPLIER = 8, additionalRadius = Math.log(this.individuals.length + 1) * MULTIPLIER + 5;
             return this.radius + additionalRadius;
         }
     }
@@ -96,7 +101,7 @@ export class RoundNode extends BaseNode {
             this.haloGroupElement = DrawTools.drawHalo(this.nodeElement, this.actualRadius());
         }
         if (pulseAnimation === false) {
-            var pulseItem = this.haloGroupElement.selectAll(".searchResultA");
+            const pulseItem = this.haloGroupElement.selectAll(".searchResultA");
             pulseItem.classed("searchResultA", false);
             pulseItem.classed("searchResultB", true);
             pulseItem.attr("animationRunning", false);
@@ -126,7 +131,7 @@ export class RoundNode extends BaseNode {
             .append("g")
             .classed("hidden-in-export", true)
             .attr("transform", function () {
-                var dx = (-2 / 5) * _this.actualRadius(), dy = (1 / 2) * _this.actualRadius();
+                const dx = (-2 / 5) * _this.actualRadius(), dy = (1 / 2) * _this.actualRadius();
                 return "translate(" + dx + "," + dy + ")";
             });
         this.collapsingGroupElement.append("rect")
@@ -153,9 +158,9 @@ export class RoundNode extends BaseNode {
      * @param {Array<string>} additionalCssClasses additional css classes
      */
     draw(parentElement, additionalCssClasses) {
-        var cssClasses = this.collectCssClasses();
+        const cssClasses = this.collectCssClasses();
         this.nodeElement = parentElement;
-        var bgColor = this.backgroundColor;
+        const bgColor = this.backgroundColor;
 
         if (bgColor === null) {
             bgColor = undefined;
@@ -190,12 +195,12 @@ export class RoundNode extends BaseNode {
     redrawElement() {
         this.renderingElement.remove();
         this.textBlock.remove();
-        var bgColor = this.backgroundColor;
+        const bgColor = this.backgroundColor;
         if (this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined;
         }
 
-        var cssClasses = this.collectCssClasses();
+        const cssClasses = this.collectCssClasses();
         if (this.rectangularRepresentation === true) {
             this.renderingElement = DrawTools.appendRectangularClass(
                 this.nodeElement,
@@ -241,11 +246,11 @@ export class RoundNode extends BaseNode {
     }
 
     #createTextBlock() {
-        var bgColor = this.backgroundColor;
+        const bgColor = this.backgroundColor;
         if (this.attributes.indexOf("deprecated") > -1)
             bgColor = undefined;
 
-        var textBlock = new CenteringTextElement(this.nodeElement, bgColor);
+        const textBlock = new CenteringTextElement(this.nodeElement, bgColor);
         const equivalentsString = this.equivalentsString();
         const suffixForFollowingEquivalents = equivalentsString ? "," : "";
 
@@ -259,7 +264,7 @@ export class RoundNode extends BaseNode {
     }
 
     equivalentsString() {
-        var equivalentClasses = this.equivalents;
+        const equivalentClasses = this.equivalents;
         if (!equivalentClasses) {
             return "";
         }

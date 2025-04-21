@@ -1,7 +1,7 @@
 import { BaseElement } from "../../webvowl/js/elements/BaseElement";
 
 
-export class Warnings {
+export default class Warnings {
     /**
      * @param {any} graph
      */

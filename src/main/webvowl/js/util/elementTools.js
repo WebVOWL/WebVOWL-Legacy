@@ -1,11 +1,12 @@
-import { Label } from '../elements/links/Label';
-import { BaseNode } from '../elements/nodes/BaseNode';
-import { DatatypeNode } from '../elements/nodes/DatatypeNode';
-import { OwlThing } from '../elements/nodes/implementations/OwlThing';
-import { BaseProperty } from '../elements/properties/BaseProperty';
-import { OwlDatatypeProperty } from '../elements/properties/implementations/OwlDatatypeProperty';
-import { OwlObjectProperty } from '../elements/properties/implementations/OwlObjectProperty';
-import { RdfsSubClassOf } from '../elements/properties/implementations/RdfsSubClassOf';
+import Label from "../elements/links/Label";
+import BaseNode from "../elements/nodes/BaseNode";
+import DatatypeNode from "../elements/nodes/DatatypeNode";
+import OwlThing from "../elements/nodes/implementations/OwlThing";
+import BaseProperty from "../elements/properties/BaseProperty";
+import OwlDatatypeProperty from "../elements/properties/implementations/OwlDatatypeProperty";
+import OwlObjectProperty from "../elements/properties/implementations/OwlObjectProperty";
+import RdfsSubClassOf from "../elements/properties/implementations/RdfsSubClassOf";
+
 
 export default class ElementTools {
     /**

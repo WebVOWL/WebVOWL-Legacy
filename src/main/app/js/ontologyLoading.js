@@ -1,7 +1,12 @@
 // const wasm = require("../../../../target/pkg/index.js");
 
+import WebVOWL from "../../webvowl/js/entry"
+import Graph from "../../webvowl/js/graph"
+import Statistics from "../../webvowl/js/modules/filters/statistics"
+import OntologyMenu from "./menu/ontologyMenu"
 
-export class OnologyLoading {
+
+export default class OntologyLoading {
     /** some constants **/
     PREDEFINED = 0
     FILE_UPLOAD = 1
@@ -13,10 +18,9 @@ export class OnologyLoading {
     PROGRESS_BAR_PERCENT = 2
 
     DEFAULT_JSON_NAME = "foaf" // This file is loaded by default
-    URL_PREFIX = "o2v/" // Path to the OWL2VOWL converter
 
     /**
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         this.graph = graph
@@ -28,16 +32,30 @@ export class OnologyLoading {
         this.showLoadingDetails = false
         this.visibilityStatus = true
 
+        /**
+         * @type {number | undefined}
+         */
         this.conversion_sessionId = undefined
-        this.jsonText = undefined
+        /**
+         * @type {Statistics | undefined}
+         */
         this.statistics = undefined
+        /**
+         * @type {Function | undefined}
+         */
         this.adjustSizeCallable = undefined
 
         this.menuContainer = d3.select("#loading-info")
         this.loadingInfoContainer = d3.select("#loadingInfo-container")
         this.detailsButton = d3.select("#show-loadingInfo-button")
         this.closeButton = d3.select("#loadingIndicator_closeButton")
+        /**
+         * @type {OntologyMenu | undefined}
+         */
         this.ontologyMenu = undefined
+        /**
+         * @type {string | undefined}
+         */
         this.ontologyIdentifierFromURL = undefined
     }
 
@@ -105,11 +123,10 @@ export class OnologyLoading {
     showLoadingIndicator() {
         d3.select("#loading-info").classed("hidden", false);
         this.visibilityStatus = true;
-
     }
 
     /**
-     * @param {[any, any]} args
+     * @param {[Statistics, Function]} args
      */
     setup(args) {
         [this.statistics, this.adjustSizeCallable] = args;
@@ -194,15 +211,15 @@ export class OnologyLoading {
     /**
      * @param {boolean} storeCache
      */
-    initializeLoader(storeCache) {
-        if (storeCache === true && this.graph.getCachedJsonObj() !== null) {
+    initializeLoader(storeCache = false) {
+        if (storeCache && this.graph.cachedJsonOBJ !== null) {
             // save cached ontology;
-            const cachedContent = JSON.stringify(this.graph.getCachedJsonObj());
+            const cachedContent = JSON.stringify(this.graph.cachedJsonOBJ);
             const cachedName = this.ontologyIdentifierFromURL;
             this.ontologyMenu.setCachedOntology(cachedName, cachedContent);
         }
         this.conversion_sessionId = -10000;
-        this.ontologyMenu.setConversionID(this.conversion_sessionId);
+        this.ontologyMenu.conversion_sessionId = this.conversion_sessionId;
         this.ontologyMenu.stopLoadingTimer();
         this.graph.clearGraphData();
         this.setBusyMode();
@@ -217,12 +234,8 @@ export class OnologyLoading {
     /**
      * @param {boolean} storeCache
      */
-    parseUrlAndLoadOntology(storeCache) {
-        let autoStore = true;
-        if (storeCache === false) {
-            autoStore = false;
-        }
-
+    parseUrlAndLoadOntology(storeCache = false) {
+        const autoStore = storeCache;
         this.graph.clearAllGraphData();
         this.initializeLoader(autoStore);
         const urlString = String(location);
@@ -262,12 +275,13 @@ export class OnologyLoading {
         const filename = decodeURIComponent(fileName.slice("url=".length));
         this.ontologyIdentifierFromURL = filename;
 
-        if (this.ontologyMenu.cachedOntology(filename)) {
+        const cached = this.ontologyMenu.cachedOntology(filename)
+        if (cached) {
             this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
             this.loadingWasSuccessFul = true; // cached Ontology should be true;
-            this.#loadOntologyContent(this.#parseOntologyContent(this.ontologyMenu.cachedOntology(filename)));
+            this.loadOntologyContent(this.#parseOntologyContent(cached));
         } else {
-            // involve the o2v conveter;
+            // involve the o2v converter;
             this.ontologyMenu.append_message("Retrieving ontology from JSON URL " + filename);
             this.#requestServerTimeStampForJSON_URL(this.ontologyMenu.callbackLoad_JSON_FromURL, ["read?json=" + filename, filename]);
         }
@@ -278,14 +292,14 @@ export class OnologyLoading {
      * @param {any[]} parameter
      */
     #requestServerTimeStampForJSON_URL(callback, parameter) {
-        d3.xhr(this.URL_PREFIX + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
+        d3.xhr(WebVOWL.url_prefix + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
             if (error) {
                 // could not get server timestamp -> no connection to owl2vowl
                 this.ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
                 this.#fallbackForJSON_URL(callback, parameter);
             } else {
                 this.conversion_sessionId = request.responseText;
-                this.ontologyMenu.setConversionID(this.conversion_sessionId);
+                this.ontologyMenu.conversion_sessionId = this.conversion_sessionId;
                 parameter.push(this.conversion_sessionId);
                 callback(parameter);
             }
@@ -297,7 +311,7 @@ export class OnologyLoading {
      * @param {string} text
      */
     requestServerTimeStampForDirectInput(callback, text) {
-        d3.xhr(this.URL_PREFIX + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
+        d3.xhr(WebVOWL.url_prefix + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
             if (error) {
                 // could not get server timestamp -> no connection to owl2vowl
                 this.ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
@@ -309,7 +323,7 @@ export class OnologyLoading {
                 d3.select("#progressBarValue").text("0%");
             } else {
                 this.conversion_sessionId = request.responseText;
-                this.ontologyMenu.setConversionID(this.conversion_sessionId);
+                this.ontologyMenu.conversion_sessionId = this.conversion_sessionId;
                 callback(text, ["conversionID" + this.conversion_sessionId, this.conversion_sessionId]);
             }
         });
@@ -323,10 +337,11 @@ export class OnologyLoading {
         const filename = decodeURIComponent(fileName.slice("iri=".length));
         this.ontologyIdentifierFromURL = filename;
 
-        if (this.ontologyMenu.cachedOntology(filename)) {
+        const cached = this.ontologyMenu.cachedOntology(filename)
+        if (cached) {
             this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
             this.loadingWasSuccessFul = true; // cached Ontology should be true;
-            this.#loadOntologyContent(this.#parseOntologyContent(this.ontologyMenu.cachedOntology(filename)));
+            this.loadOntologyContent(this.#parseOntologyContent(cached));
         } else {
             // involve the o2v conveter;
             const encoded = encodeURIComponent(filename);
@@ -347,9 +362,9 @@ export class OnologyLoading {
         // two options here
         //1] Direct Json Upload
         if (fileName.match(/\.json$/)) {
-            this.ontologyMenu.setConversionID(-10000);
+            this.ontologyMenu.conversion_sessionId = -10000;
             this.ontologyIdentifierFromURL = fileName;
-            this.#loadOntologyContent(this.#parseOntologyContent(await wasm.parse_json(file))); // FIXME
+            this.loadOntologyContent(this.#parseOntologyContent(await wasm.parse_json(file))); // FIXME
         } else {
             //2] File Upload to OWL2VOWL Converter
             // 1) check if we can get a timeStamp;
@@ -366,10 +381,11 @@ export class OnologyLoading {
         let filename = decodeURIComponent(fileName.slice("file=".length));
         this.ontologyIdentifierFromURL = filename;
 
-        if (this.ontologyMenu.cachedOntology(filename)) {
+        const cached = this.ontologyMenu.cachedOntology(filename)
+        if (cached) {
             this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
             this.loadingWasSuccessFul = true; // cached Ontology should be true;
-            this.#loadOntologyContent(this.#parseOntologyContent(this.ontologyMenu.cachedOntology(filename)));
+            this.loadOntologyContent(this.#parseOntologyContent(cached));
         } else {
             // d3.select("#currentLoadingStep").node().innerHTML="Loading ontology from file "+ filename;
             this.ontologyMenu.append_bulletPoint("Retrieving ontology from file: " + filename);
@@ -388,9 +404,9 @@ export class OnologyLoading {
             // two options here
             //1] Direct Json Upload
             if (filename.match(/\.json$/)) {
-                this.ontologyMenu.setConversionID(-10000);
+                this.ontologyMenu.conversion_sessionId = -10000;
                 this.ontologyIdentifierFromURL = filename;
-                this.#loadOntologyContent(this.#parseOntologyContent(await wasm.parse_json(selectedFile))); // FIXME
+                this.loadOntologyContent(this.#parseOntologyContent(await wasm.parse_json(selectedFile))); // FIXME
             } else {
                 //2] File Upload to OWL2VOWL Converter
                 // 1) check if we can get a timeStamp;
@@ -420,16 +436,16 @@ export class OnologyLoading {
         formData.append("ontology", file);
 
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", this.URL_PREFIX + "convert", true);
+        xhr.open("POST", WebVOWL.url_prefix + "convert", true);
         xhr.onload = () => {
             if (xhr.status === 200) {
-                const ontologyContent = xhr.responseText; // Memory leak as text is only garbage collected when this function returns (thus only when the graph, is loaded). This can be several GB if the ontology is large
+                const ontologyContent = xhr.responseText; // FIXME: Memory leak as text is only garbage collected when this function returns (thus only when the graph, is loaded). This can be several GB if the ontology is large
                 this.ontologyMenu.setCachedOntology(name, ontologyContent);
                 this.ontologyIdentifierFromURL = name;
                 this.missingImportsWarning = true; // using this variable for warnings
                 this.ontologyMenu.append_message_toLastBulletPoint("<br>Success, <span style='color:yellow'>but you are using a deprecated OWL2VOWL service!<span>");
                 const parseResult = this.#parseOntologyContent(ontologyContent);
-                this.#loadOntologyContent(parseResult);
+                this.loadOntologyContent(parseResult);
             }
         };
 
@@ -451,7 +467,7 @@ export class OnologyLoading {
      * @param {any[]} parameterArray
      */
     #requestServerTimeStampForIRI_Converte(callback, parameterArray) {
-        d3.xhr(this.URL_PREFIX + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
+        d3.xhr(WebVOWL.url_prefix + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
             this.setBusyMode();
             if (error) {
                 // could not get server timestamp -> no connection to owl2vowl
@@ -462,7 +478,7 @@ export class OnologyLoading {
                 this.showErrorDetailsMessage();
             } else {
                 this.conversion_sessionId = request.responseText;
-                this.ontologyMenu.setConversionID(this.conversion_sessionId);
+                this.ontologyMenu.conversion_sessionId = this.conversion_sessionId;
                 // update paramater for new communication paradigm
                 parameterArray[0] = parameterArray[0] + "&sessionId=" + this.conversion_sessionId;
                 parameterArray.push(this.conversion_sessionId);
@@ -476,14 +492,14 @@ export class OnologyLoading {
      * @param {any[]} parameterArray
      */
     #requestServerTimeStamp(callback, parameterArray) {
-        d3.xhr(this.URL_PREFIX + "serverTimeStamp", "application/text", (/** @type {any} */ error, /** @type {{ responseText: any; }} */ request) => {
+        d3.xhr(WebVOWL.url_prefix + "serverTimeStamp", "application/text", (error, request) => {
             if (error) {
                 // could not get server timestamp -> no connection to owl2vowl
                 this.ontologyMenu.append_bulletPoint("Could not establish connection to OWL2VOWL service");
                 this.#fallbackConversion(parameterArray); // tries o2v version0.3.4 communication
             } else {
                 this.conversion_sessionId = request.responseText;
-                this.ontologyMenu.setConversionID(this.conversion_sessionId);
+                this.ontologyMenu.conversion_sessionId = this.conversion_sessionId;
                 console.log("Request Session ID:" + this.conversion_sessionId);
                 callback(parameterArray[0], parameterArray[1], this.conversion_sessionId);
             }
@@ -497,7 +513,7 @@ export class OnologyLoading {
      */
     directInput(text) {
         this.ontologyMenu.clearDetailInformation();
-        this.#loadOntologyContent(this.#parseOntologyContent(text));
+        this.loadOntologyContent(this.#parseOntologyContent(text));
     };
 
     /**
@@ -505,16 +521,16 @@ export class OnologyLoading {
      */
     loadFromOWL2VOWL(filename) {
         this.loadingWasSuccessFul = false;
-
         const old = d3.select("#bulletPoint_container").node().innerHTML;
         if (old.indexOf("(with warnings)") !== -1) {
             this.missingImportsWarning = true;
         }
-        if (this.ontologyMenu.cachedOntology(this.jsonText)) {
+
+        const cached = this.ontologyMenu.cachedOntology(filename)
+        if (cached) {
             this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + filename);
         }
-        const parseResult = this.#parseOntologyContent(this.jsonText);
-        this.jsonText = ""; // Nuke reference to save memory
+        const parseResult = this.#parseOntologyContent(cached);
         return parseResult;
     }
 
@@ -540,11 +556,13 @@ export class OnologyLoading {
             loadingNewOntologyForEditor = true;
         }
         this.loadingWasSuccessFul = false;
-        if (this.ontologyMenu.cachedOntology(ontology)) {
+
+        const cached = this.ontologyMenu.cachedOntology(ontology)
+        if (cached) {
             this.ontologyMenu.append_bulletPoint("Loading already cached ontology: " + ontology);
             this.loadingWasSuccessFul = true; // cached Ontology should be true;
             this.showLoadingIndicator();
-            this.#loadOntologyContent(this.#parseOntologyContent(this.ontologyMenu.cachedOntology(ontology)));
+            this.loadOntologyContent(this.#parseOntologyContent(cached));
         } else {
             // read the file name
             let fileToRead = "./data/" + ontology + ".json";
@@ -556,10 +574,8 @@ export class OnologyLoading {
             d3.xhr(fileToRead, "application/json", (/** @type {{ status: string | number; }} */ error, /** @type {{ responseText: string; }} */ request) => {
                 const loadingSuccessful = !error;
                 if (loadingSuccessful) {
-                    const parseResult = this.#parseOntologyContent(request.responseText);
-                    request = undefined
-                    error = undefined // Nuke references to save memory
-                    this.#loadOntologyContent(parseResult);
+                    const parseResult = this.#parseOntologyContent(request.responseText); // FIXME: We need a a JSON parser over here!
+                    this.loadOntologyContent(parseResult);
                 } else {
                     if (loadingNewOntologyForEditor) {
                         const ontologyContent = '{\n' +
@@ -590,7 +606,7 @@ export class OnologyLoading {
                             '    "individualCount": 0\n' +
                             '  }\n' +
                             '}\n';
-                        this.#loadOntologyContent(this.#parseOntologyContent(ontologyContent));
+                        this.loadOntologyContent(this.#parseOntologyContent(ontologyContent)); // FIXME: We need a a JSON parser over here!
                     } else {
                         // some error occurred
                         this.ontologyMenu.append_bulletPoint("Failed to load: " + ontology);
@@ -616,24 +632,23 @@ export class OnologyLoading {
 
     /**
      * Parse JSON content
-     * @param {string} content
+     * @param {{ header?: any; class?: any[]; }} content
      */
     #parseOntologyContent(content) {
         this.ontologyMenu.append_bulletPoint("Reading ontology graph ... ");
-        const _parser = this.graph.parser().parseOntologyFromText;
-        return _parser(content, this.ontologyIdentifierFromURL, "noAlternativeNameYet")
+        return this.graph.parser.parseOntologyFromText(content, this.ontologyIdentifierFromURL, "noAlternativeNameYet");
     }
 
     /**
      * Load parsed JSON object
-     * @param {[{} | undefined, boolean]} parseResult
+     * @param {[{ header?: any; class?: any[]; } | undefined, boolean]} parseResult
      */
-    #loadOntologyContent(parseResult) {
+    loadOntologyContent(parseResult) {
         const [data, isValidData] = parseResult;
         d3.select("#reloadCachedOntology").classed("hidden", true);
         this.graph.options.pauseMenu.reset();
         this.graph.options.navigationMenu.hideAllMenus();
-        this.graph.editorMode(); // updates the checkbox
+        this.graph.editorMode; // updates the checkbox
 
         let loadEmptyOntologyForEditing = false;
         if (location.hash.indexOf("#new_ontology") !== -1) {
@@ -641,13 +656,13 @@ export class OnologyLoading {
             this.newOntologyCounter++;
             d3.select("#empty").node().href = "#opts=editorMode=true;#new_ontology" + this.newOntologyCounter;
         }
-        if (!isValidData && this.graph.editorMode() === false && loadEmptyOntologyForEditing === false) {
+        if (!(isValidData && this.graph.editorMode && loadEmptyOntologyForEditing)) {
             // generate message for the user;
             this.emptyGraphContentError();
         } else {
-            this.graph.options.this().setPercentMode();
-            if (loadEmptyOntologyForEditing === true) {
-                this.graph.editorMode(true);
+            this.setPercentMode();
+            if (loadEmptyOntologyForEditing) {
+                this.graph.editorMode = true;
             }
             this.graph.load();
             this.graph.options.sidebar.updateOntologyInformation(data, this.statistics);
@@ -655,7 +670,7 @@ export class OnologyLoading {
             this.adjustSizeCallable();
 
             const flagOfCheckBox = d3.select("#editorModeModuleCheckbox").node().checked;
-            this.graph.editorMode(flagOfCheckBox);// update gui
+            this.graph.editorMode = flagOfCheckBox;// update gui
         }
     }
 
@@ -706,7 +721,7 @@ export class OnologyLoading {
         const _this = this
 
         function loadDefaultConfig() {
-            _this.graph.options.setOptionsFromURL(_this.graph.options.defaultConfig(), false);
+            _this.graph.options.setOptionsFromURL(_this.graph.options.defaultConfig, false);
         }
 
         /**
@@ -714,13 +729,13 @@ export class OnologyLoading {
          */
         function loadCustomConfig(opts) {
             let changeEditingFlag = false;
-            const defObj = _this.graph.options.defaultConfig();
+            const defObj = _this.graph.options.defaultConfig;
             for (let i = 0; i < opts.length; i++) {
                 const keyVal = opts[i].split('=');
                 if (keyVal[0] === "editorMode") {
                     changeEditingFlag = true;
                 }
-                defObj[keyVal[0]] = keyVal[1];
+                Object.defineProperty(defObj, keyVal[0], keyVal[1]);
             }
             _this.graph.options.setOptionsFromURL(defObj, changeEditingFlag);
         }

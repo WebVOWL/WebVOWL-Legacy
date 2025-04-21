@@ -1,5 +1,5 @@
-import { SetOperatorNode } from "../SetOperatorNode";
-
+import Graph from "../../../graph";
+import SetOperatorNode from "../SetOperatorNode";
 
 function createIntersectionPath() {
     const height = 18;
@@ -21,7 +21,10 @@ function createIntersectionPath() {
 const INTERSECTION_BACKGROUND_PATH = createIntersectionPath();
 
 
-export class OwlIntersectionOf extends SetOperatorNode {
+export default class OwlIntersectionOf extends SetOperatorNode {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 
@@ -34,7 +37,7 @@ export class OwlIntersectionOf extends SetOperatorNode {
      */
     draw(element) {
         super.draw(element);
-        var symbol = element.append("g").classed("embedded", true);
+        const symbol = element.append("g").classed("embedded", true);
         const symbolRadius = 10;
 
         symbol.append("path")

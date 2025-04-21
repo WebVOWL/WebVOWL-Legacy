@@ -1,11 +1,15 @@
-// @ts-nocheck
-import { BaseElement } from "../BaseElement"
-import { PlainLink } from "../links/PlainLink"
-import { BaseProperty } from "../properties/BaseProperty"
+import Graph from "../../graph"
+import PrefixTools from "../../util/prefixTools"
+import BaseElement from "../BaseElement"
+import ArrowLink from "../links/ArrowLink"
+import BoxArrowLink from "../links/BoxArrowLink"
+import PlainLink from "../links/PlainLink"
+import BaseProperty from "../properties/BaseProperty"
 
-export class BaseNode extends BaseElement {
+
+export default class BaseNode extends BaseElement {
     /**
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         super(graph)
@@ -39,13 +43,13 @@ export class BaseNode extends BaseElement {
          */
         this.union = undefined
         /**
-         * @type {PlainLink[]}
+         * @type {(PlainLink | BoxArrowLink | ArrowLink)[]}
          */
         this.links = []
         /**
          * @type {string}
          */
-        this.rendertype = "round"
+        this.renderType = "round"
 
 
         // Element containers
@@ -170,14 +174,14 @@ export class BaseNode extends BaseElement {
         this.graph.options.focuserModule.handle(undefined);
         this.graph.options.focuserModule.handle(this);
         // add again the editing elements to this one
-        if (this.graph.isTouchDevice() === true) {
+        if (this.graph.touchDevice) {
             this.graph.activateHoverElements(true, this, true);
         }
         this.editingTextElement = true;
         this.ignoreLocalHoverEvents = true;
         this.nodeElement.selectAll("circle").classed("hoveredForEditing", true);
         this.graph.killDelayedTimer();
-        this.graph.ignoreOtherHoverEvents(false);
+        this.graph.ignoreOtherHoverEvents = false;
         const textWidth = this.textWidth()
         this.foreignerObject = this.nodeElement.append("foreignObject")
             .attr("x", -0.5 * (textWidth - 2))
@@ -190,7 +194,7 @@ export class BaseNode extends BaseElement {
             })
             .attr("width", textWidth - 2);
 
-        var editText = this.foreignerObject.append("xhtml:input")
+        const editText = this.foreignerObject.append("xhtml:input")
             .attr("class", "nodeEditSpan")
             .attr("id", this.id)
             .attr("align", "center")
@@ -199,6 +203,7 @@ export class BaseNode extends BaseElement {
             .on("dragstart", function () {
                 return false;
             });
+        // @ts-ignore
         editText.style({
             'align': 'center',
             'color': 'black',
@@ -207,13 +212,14 @@ export class BaseNode extends BaseElement {
             'background-color': '#f00',
             'border-bottom': '2px solid black'
         });
-        var txtNode = editText.node();
+        const txtNode = editText.node();
         txtNode.value = this.labelForCurrentLanguage();
         txtNode.focus();
         txtNode.select();
         this.frozen = true; // << releases the not after selection
         this.locked = true;
 
+        const _this = this
         d3.event.stopPropagation();
         // ignoreNodeHoverEvent=true;
         // add some events this relate to this object
@@ -230,54 +236,54 @@ export class BaseNode extends BaseElement {
             .on("keydown", function () {
                 d3.event.stopPropagation();
                 if (d3.event.keyCode === 13) {
-                    this.blur();
-                    this.frozen = false; // << releases the not after selection
-                    this.locked = false;
+                    this.blur(); // REVIEW: Check how this should be called
+                    _this.frozen = false; // << releases the not after selection
+                    _this.locked = false;
                 }
             })
             .on("keyup", function () {
                 if (forceIRISync) {
-                    var labelName = editText.node().value;
-                    var resourceName = labelName.replaceAll(" ", "_");
-                    var syncedIRI = this.baseIri + resourceName;
-                    this.backupFullIri = syncedIRI;
+                    const labelName = editText.node().value;
+                    const resourceName = labelName.replaceAll(" ", "_");
+                    const syncedIRI = _this.baseIri + resourceName;
+                    _this.backupFullIri = syncedIRI;
 
                     d3.select("#element_iriEditor").node().title = syncedIRI;
-                    d3.select("#element_iriEditor").node().value = this.graph.options.prefixModule.getPrefixRepresentationForFullURI(syncedIRI);
+                    d3.select("#element_iriEditor").node().value = PrefixTools.getPrefixRepresentationForFullURI(syncedIRI);
                 }
                 d3.select("#element_labelEditor").node().value = editText.node().value;
             })
             .on("blur", function () { // add a foreiner element to this thing;
-                this.editingTextElement = false;
-                this.ignoreLocalHoverEvents = false;
-                this.nodeElement.selectAll("circle").classed("hoveredForEditing", false);
-                var newLabel = editText.node().value;
-                this.nodeElement.selectAll(".foreignelements").remove();
+                _this.editingTextElement = false;
+                _this.ignoreLocalHoverEvents = false;
+                _this.nodeElement.selectAll("circle").classed("hoveredForEditing", false);
+                const newLabel = editText.node().value;
+                _this.nodeElement.selectAll(".foreignelements").remove();
                 // this.setLabelForCurrentLanguage(classNameConvention(editText.node().value));
-                this.label = newLabel;
-                this.backupLabel = newLabel;
-                this.redrawLabelText();
-                this.frozen = this.graph.paused;
-                this.locked = this.graph.paused;
-                this.graph.ignoreOtherHoverEvents(false);
-                if (this.backupFullIri) {
-                    const sanityCheckResult = this.graph.checkIfIriClassAlreadyExist(this.backupFullIri);
-                    if (sanityCheckResult === false) {
-                        this.iri = this.backupFullIri;
+                _this.label = newLabel;
+                _this.backupLabel = newLabel;
+                _this.redrawLabelText();
+                _this.frozen = _this.graph.paused;
+                _this.locked = _this.graph.paused;
+                _this.graph.ignoreOtherHoverEvents = false;
+                if (_this.backupFullIri) {
+                    const sanityCheckResult = _this.graph.checkIfIriClassAlreadyExist(_this.backupFullIri);
+                    if (!sanityCheckResult) {
+                        _this.iri = _this.backupFullIri;
                     } else {
                         // throw warning
-                        this.graph.options.warningModule.showWarning(
+                        _this.graph.options.warningModule.showWarning(
                             "Already seen this class",
-                            "Input IRI: " + this.backupFullIri + " for element: " + this.labelForCurrentLanguage() + " already been set",
-                            "Restoring previous IRI for Element : " + this.iri,
+                            "Input IRI: " + _this.backupFullIri + " for element: " + _this.labelForCurrentLanguage() + " already been set",
+                            "Restoring previous IRI for Element : " + _this.iri,
                             2,
                             this
                         );
                     }
                 }
-                if (this.graph.isADraggerActive() === false) {
-                    this.graph.options.focuserModule.handle(undefined);
-                    this.graph.options.focuserModule.handle(this);
+                if (!_this.graph.isADraggerActive()) {
+                    _this.graph.options.focuserModule.handle(undefined);
+                    _this.graph.options.focuserModule.handle(this);
                 }
             });
     }
@@ -294,7 +300,7 @@ export class BaseNode extends BaseElement {
      * @returns {string[]}
      */
     collectCssClasses() {
-        var cssClasses = [];
+        let cssClasses = [];
         if (typeof this.styleClass === "string") {
             cssClasses.push(this.styleClass);
         }
@@ -315,10 +321,10 @@ export class BaseNode extends BaseElement {
     }
 
     animationProcess() {
-        var animRuns = false;
+        let animRuns = false;
         if (this.haloGroupElement) {
-            var haloGr = this.haloGroupElement;
-            var haloEls = haloGr.selectAll(".searchResultA");
+            const haloGr = this.haloGroupElement;
+            const haloEls = haloGr.selectAll(".searchResultA");
             const animRunsString = haloGr.attr("animationRunning");
             if (typeof animRunsString !== "boolean") {
                 // parse this to a boolean value
@@ -336,14 +342,14 @@ export class BaseNode extends BaseElement {
         const selectedNode = this.nodeElement.node();
         const nodeContainer = selectedNode.parentNode;
         // check if the halo is present and an animation is running
-        if (this.animationProcess() === false) {
+        if (!this.animationProcess()) {
             // Append hovered element as last child to the container list.
             nodeContainer.appendChild(selectedNode);
         }
     }
 
     #onMouseOver() {
-        if (this.mouseEntered || this.ignoreLocalHoverEvents === true) {
+        if (this.mouseEntered || this.ignoreLocalHoverEvents) {
             return;
         }
 
@@ -353,14 +359,14 @@ export class BaseNode extends BaseElement {
         if (this.animationProcess() === false) {
             nodeContainer.appendChild(selectedNode);
         }
-        if (this.graph.isTouchDevice() === false) {
+        if (!this.graph.touchDevice) {
             this.setHoverHighlighting(true);
             this.mouseEntered = true;
-            if (this.graph.editorMode() === true && this.graph.ignoreOtherHoverEvents() === false) {
-                this.graph.activateHoverElements(true, this);
+            if (this.graph.editorMode && !this.graph.ignoreOtherHoverEvents) {
+                this.graph.activateHoverElements(true, this, false);
             }
         } else {
-            if (this.graph.editorMode() === true && this.graph.ignoreOtherHoverEvents() === false) {
+            if (this.graph.editorMode && !this.graph.ignoreOtherHoverEvents) {
                 this.graph.activateHoverElements(true, this, true);
             }
         }
@@ -369,8 +375,8 @@ export class BaseNode extends BaseElement {
     #onMouseOut() {
         this.setHoverHighlighting(false);
         this.mouseEntered = false;
-        if (this.graph.editorMode() === true && this.graph.ignoreOtherHoverEvents() === false) {
-            this.graph.activateHoverElements(false);
+        if (this.graph.editorMode && !this.graph.ignoreOtherHoverEvents) {
+            this.graph.activateHoverElements(false, undefined, false);
         }
     }
 }

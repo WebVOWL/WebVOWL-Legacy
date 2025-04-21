@@ -1,4 +1,4 @@
-export class PrefixTools {
+export default class PrefixTools {
     /**
      * @param {string} fullURL
      * @param {any} graph
@@ -27,17 +27,16 @@ export class PrefixTools {
      * @param {any} graph
      */
     static #splitURLIntoBaseAndResource(fullURL, graph) {
-        var splitedURL = { base: "", resource: "" };
+        let splitedURL = { base: "", resource: "" };
         if (fullURL === undefined) {
             splitedURL = { base: "ERROR", resource: "NOT FOUND" };
             return splitedURL;
         }
 
-        var resource, base;
         // check if there is a last hashTag
         if (fullURL.indexOf("#") > -1) {
-            resource = fullURL.substring(fullURL.lastIndexOf('#') + 1);
-            base = fullURL.substring(0, fullURL.length - resource.length);
+            const resource = fullURL.substring(fullURL.lastIndexOf('#') + 1);
+            let base = fullURL.substring(0, fullURL.length - resource.length);
             // overwrite base if it is ontologyIri;
             if (base === graph.options.getGeneralMetaObjectProperty('iri')) {
                 base = ":";
@@ -45,8 +44,8 @@ export class PrefixTools {
             splitedURL.base = base;
             splitedURL.resource = resource;
         } else {
-            resource = fullURL.substring(fullURL.lastIndexOf('/') + 1);
-            base = fullURL.substring(0, fullURL.length - resource.length);
+            const resource = fullURL.substring(fullURL.lastIndexOf('/') + 1);
+            let base = fullURL.substring(0, fullURL.length - resource.length);
             // overwrite base if it is ontologyIri;
             if (base === graph.options.getGeneralMetaObjectProperty('iri')) {
                 base = ":";

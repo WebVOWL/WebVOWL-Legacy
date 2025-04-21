@@ -1,9 +1,13 @@
-import { DrawTools } from '../../drawTools';
-import { RoundNode } from '../RoundNode';
+import Graph from "../../../graph";
+import DrawTools from "../../drawTools";
+import RoundNode from "../RoundNode";
 
 const CIRCLE_SIZE_DIFFERENCE = 4;
 
-export class OwlEquivalentClass extends RoundNode {
+export default class OwlEquivalentClass extends RoundNode {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 
@@ -19,7 +23,7 @@ export class OwlEquivalentClass extends RoundNode {
     redrawElement() {
         this.renderingElement.remove();
         this.textBlock.remove();
-        var bgColor = this.backgroundColor;
+        const bgColor = this.backgroundColor;
 
         if (this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined;
@@ -66,7 +70,7 @@ export class OwlEquivalentClass extends RoundNode {
         const cssClasses = this.collectCssClasses();
         this.nodeElement = parentElement;
         this.renderingElement = parentElement.append("g");
-        var bgColor = this.backgroundColor;
+        const bgColor = this.backgroundColor;
 
         if (this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined;

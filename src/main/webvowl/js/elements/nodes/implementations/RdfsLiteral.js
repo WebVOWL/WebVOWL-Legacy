@@ -1,7 +1,11 @@
-import { DatatypeNode } from "../DatatypeNode";
+import Graph from "../../../graph";
+import DatatypeNode from "../DatatypeNode";
 
 
-export class RdfsLiteral extends DatatypeNode {
+export default class RdfsLiteral extends DatatypeNode {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 

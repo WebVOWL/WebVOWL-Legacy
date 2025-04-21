@@ -1,61 +1,85 @@
-import { PrefixTools } from "./util/prefixTools"
+import DirectInputModule from "../../app/js/directInputModule"
+import EditSidebar from "../../app/js/editSidebar"
+import LeftSideBar from "../../app/js/leftSidebar"
+import DebugMenu from "../../app/js/menu/debugMenu"
+import ExportMenu from "../../app/js/menu/exportMenu"
+import FilterMenu from "../../app/js/menu/filterMenu"
+import GravityMenu from "../../app/js/menu/gravityMenu"
+import ModeMenu from "../../app/js/menu/modeMenu"
+import NavigationMenu from "../../app/js/menu/navigationMenu"
+import OntologyMenu from "../../app/js/menu/ontologyMenu"
+import PauseMenu from "../../app/js/menu/pauseMenu"
+import ResetMenu from "../../app/js/menu/resetMenu"
+import SearchMenu from "../../app/js/menu/searchMenu"
+import ZoomSlider from "../../app/js/menu/zoomSlider"
+import OntologyLoading from "../../app/js/ontologyLoading"
+import SideBar from "../../app/js/sidebar"
+import Warnings from "../../app/js/warningModule"
+import Graph from "./graph"
+import ColorExternalsSwitch from "./modules/filters/colorExternalsSwitch"
+import CompactNotationSwitch from "./modules/filters/compactNotationSwitch"
+import DataTypeFilter from "./modules/filters/datatypeFilter"
+import DisjointFilter from "./modules/filters/disjointFilter"
+import EmptyLiteralFilter from "./modules/filters/emptyLiteralFilter"
+import NodeDegreeFilter from "./modules/filters/nodeDegreeFilter"
+import ObjectPropertyFilter from "./modules/filters/objectPropertyFilter"
+import SetOperatorFilter from "./modules/filters/setOperatorFilter"
+import SubclassFilter from "./modules/filters/subclassFilter"
+import Focuser from "./modules/focuser"
+import PickAndPin from "./modules/pickAndPin"
+import PrefixTools from "./util/prefixTools"
 
-
-class InitialConfig {
-    constructor() {
-        this.sidebar = "1"
-        this.doc = -1
-        this.cd = 200
-        this.dd = 120
-        this.editorMode = "false"
-        this.filter_datatypes = "false"
-        this.filter_objectProperties = "false"
-        this.filter_sco = "false"
-        this.filter_disjoint = "true"
-        this.filter_setOperator = "false"
-        this.mode_dynamic = "true"
-        this.mode_scaling = "true"
-        this.mode_compact = "false"
-        this.mode_colorExt = "true"
-        this.mode_multiColor = "false"
-        this.mode_pnp = "false"
-        this.debugFeatures = "false"
-        this.rect = 0
-    }
-}
 
 class DefaultOptionsConfig {
     constructor() {
-        this.sidebar = "1"
-        this.doc = -1
+        this.sidebar = false
+        this.doc = -1 // Degree of collapse
         this.cd = 200
         this.dd = 120
-        this.editorMode = "false"
-        this.filter_datatypes = "false"
-        this.filter_objectProperties = "false"
-        this.filter_sco = "false"
-        this.filter_disjoint = "true"
-        this.filter_setOperator = "false"
-        this.mode_dynamic = "true"
-        this.mode_scaling = "true"
-        this.mode_compact = "false"
-        this.mode_colorExt = "true"
-        this.mode_multiColor = "false"
-        this.mode_pnp = "false"
-        this.debugFeatures = "false"
+        this.editorMode = false
+        this.filter_datatypes = false
+        this.filter_objectProperties = false
+        this.filter_sco = false
+        this.filter_disjoint = true
+        this.filter_setOperator = false
+        this.mode_dynamic = true
+        this.mode_scaling = true
+        this.mode_compact = false
+        this.mode_colorExt = true
+        this.mode_multiColor = false
+        this.mode_pnp = false
+        this.debugFeatures = false
         this.rect = 0
     }
 }
 
-export class Options {
+class InitialConfig extends DefaultOptionsConfig {
+    constructor() {
+        super()
+    }
+}
+
+export default class Options {
     /**
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         this.graph = graph
-        this.metadataObject = {}
-        this.generalOntologyMetaData = {}
+        /**
+         * @type {Map<PropertyKey,string>}
+         */
+        this.metadataObject = new Map()
+        /**
+         * @type {Map<PropertyKey,string>}
+         */
+        this.generalOntologyMetaData = new Map()
+        /**
+         * @type {any}
+         */
         this.data = undefined
+        /**
+         * @type {string | undefined}
+         */
         this.graphContainerSelector = undefined
         this.classDistance = 200
         this.datatypeDistance = 120
@@ -76,7 +100,7 @@ export class Options {
         this.showRenderingStatistic = true
         this.showInputModality = false
         this.hideDebugOptions = true
-        this.rectangularRep = false
+        this.rectangularRepresentation = false
         this.drawPropertyDraggerOnHover = true
         this.showDraggerObject = false
 
@@ -86,43 +110,116 @@ export class Options {
 
         // Filters
         this.filterModules = []
-        this.literalFilter = undefined
-        this.datatypeFilter = undefined
-        this.subclassFilter = undefined
-        this.setOperatorFilter = undefined
-        this.disjointPropertyFilter = undefined
-        this.objectPropertyFilter = undefined
-        this.nodeDegreeFilter = undefined
+        this.literalFilter = new EmptyLiteralFilter()
+        this.datatypeFilter = new DataTypeFilter()
+        this.subclassFilter = new SubclassFilter()
+        this.setOperatorFilter = new SetOperatorFilter()
+        this.disjointPropertyFilter = new DisjointFilter()
+        this.objectPropertyFilter = new ObjectPropertyFilter()
+        this.nodeDegreeFilter = new NodeDegreeFilter()
+        /**
+         * @type {ColorExternalsSwitch | undefined}
+         */
         this.colorExternalsModule = undefined
+        /**
+         * @type {CompactNotationSwitch | undefined}
+         */
         this.compactNotationModule = undefined
 
         // Menus
+        /**
+         * @type {GravityMenu | undefined}
+         */
         this.gravityMenu = undefined
+        /**
+         * @type {FilterMenu | undefined}
+         */
         this.filterMenu = undefined
+        /**
+         * @type {OntologyLoading | undefined}
+         */
         this.loadingModule = undefined
+        /**
+         * @type {ModeMenu | undefined}
+         */
         this.modeMenu = undefined
+        /**
+         * @type {PauseMenu | undefined}
+         */
         this.pauseMenu = undefined
+        /**
+         * @type {ResetMenu | undefined}
+         */
         this.resetMenu = undefined
+        /**
+         * @type {SearchMenu | undefined}
+         */
         this.searchMenu = undefined
+        /**
+         * @type {OntologyMenu | undefined}
+         */
         this.ontologyMenu = undefined
+        /**
+         * @type {SideBar | undefined}
+         */
         this.sidebar = undefined
+        /**
+         * @type {LeftSideBar | undefined}
+         */
         this.leftSidebar = undefined
+        /**
+         * @type {EditSidebar | undefined}
+         */
         this.editSidebar = undefined
+        /**
+         * @type {NavigationMenu | undefined}
+         */
         this.navigationMenu = undefined
+        /**
+         * @type {ExportMenu | undefined}
+         */
         this.exportMenu = undefined
+        /**
+         * @type {ZoomSlider | undefined}
+         */
         this.zoomSlider = undefined
+        /**
+         * @type {Warnings | undefined}
+         */
         this.warningModule = undefined
+        /**
+         * @type {DirectInputModule | undefined}
+         */
         this.directInputModule = undefined
+        /**
+         * @type {DebugMenu | undefined}
+         */
         this.debugMenu = undefined
 
         // Misc
-        this.prefixModule = undefined
+        /**
+         * @type {Focuser | undefined}
+         */
         this.focuserModule = undefined
+        /**
+         * @type {PickAndPin | undefined}
+         */
         this.pickAndPinModule = undefined
 
         // Supported types
-        this.supportedDatatypes = ["rdfs:Literal", "xsd:boolean", "xsd:double", "xsd:integer", "xsd:string", "undefined"]
-        this.supportedClasses = ["owl:Thing", "owl:Class", "owl:DeprecatedClass"]
+        this.supportedDatatypes = [
+            "rdfs:Literal",
+            "xsd:boolean",
+            "xsd:double",
+            "xsd:integer",
+            "xsd:string",
+            "undefined"
+        ]
+        this.supportedClasses = [
+            "owl:Thing",
+            "owl:Class",
+            "owl:DeprecatedClass"
+        ]
         this.supportedProperties = [
             "owl:objectProperty",
             "rdfs:subClassOf",
@@ -130,7 +227,7 @@ export class Options {
             "owl:allValuesFrom",
             "owl:someValuesFrom"
         ]
-        this.prefixList = {
+        const prefixes = {
             rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
             rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
             owl: 'http://www.w3.org/2002/07/owl#',
@@ -138,6 +235,7 @@ export class Options {
             dc: 'http://purl.org/dc/elements/1.1/#',
             xml: 'http://www.w3.org/XML/1998/namespace'
         }
+        this.prefixList = new Map(Object.entries(prefixes))
     }
 
     get defaultConfig() {
@@ -145,16 +243,8 @@ export class Options {
         return this._defaultConfig;
     }
 
-    get rectangularRepresentation() {
-        return this.rectangularRep
-    }
-
-    set rectangularRepresentation(val) {
-        this.rectangularRep = Boolean(parseInt(val))
-    }
-
     clearGeneralMetaObject() {
-        this.generalOntologyMetaData = {};
+        this.generalOntologyMetaData.clear();
     }
 
     executeHiddenDebugFeatuers() {
@@ -177,7 +267,7 @@ export class Options {
      * @param {string} value
      */
     addOrUpdateGeneralObjectEntry(property, value) {
-        if (this.generalOntologyMetaData.hasOwnProperty(property)) {
+        if (this.generalOntologyMetaData.has(property)) {
             //console.log("Updating Property:"+ property);
             if (property === "iri") {
                 if (!PrefixTools.validURL(value)) {
@@ -191,10 +281,8 @@ export class Options {
                     return false;
                 }
             }
-            this.generalOntologyMetaData[property] = value;
-        } else {
-            this.generalOntologyMetaData[property] = value;
         }
+        this.generalOntologyMetaData.set(property, value);
         return true;
     }
 
@@ -202,44 +290,36 @@ export class Options {
      * @param {PropertyKey} property
      */
     getGeneralMetaObjectProperty(property) {
-        if (this.generalOntologyMetaData.hasOwnProperty(property)) {
-            return this.generalOntologyMetaData[property];
-        }
+        return this.generalOntologyMetaData.get(property)
     }
 
     /**
      * @param {PropertyKey} property
-     * @param {any} value
+     * @param {string} value
      */
     addOrUpdateMetaObjectEntry(property, value) {
-        if (this.metadataObject.hasOwnProperty(property)) {
-            this.metadataObject[property] = value;
-        } else {
-            this.metadataObject[property] = value;
-        }
+        this.metadataObject.set(property, value)
     }
 
     /**
      * @param {PropertyKey} property
      */
     getMetaObjectProperty(property) {
-        if (this.metadataObject.hasOwnProperty(property)) {
-            return this.metadataObject[property];
-        }
+        return this.metadataObject.get(property)
     }
 
     /**
-     * @param {string | number} prefix
-     * @param {any} url
+     * @param {string} prefix
+     * @param {string} url
      */
     addPrefix(prefix, url) {
-        this.prefixList[prefix] = url;
+        this.prefixList.set(prefix, url);
     }
 
     /**
-     * @param {string | number} oldPrefix
-     * @param {PropertyKey} newPrefix
-     * @param {any} oldURL
+     * @param {string} oldPrefix
+     * @param {string} newPrefix
+     * @param {string} oldURL
      * @param {string} newURL
      */
     updatePrefix(oldPrefix, newPrefix, oldURL, newURL) {
@@ -247,7 +327,7 @@ export class Options {
             return true;
         }
         if (oldPrefix === newPrefix && oldURL !== newURL && PrefixTools.validURL(newURL)) {
-            this.prefixList[oldPrefix] = newURL;
+            this.prefixList.set(oldPrefix, newURL);
         } else if (oldPrefix === newPrefix && oldURL !== newURL && !PrefixTools.validURL(newURL)) {
             if (!PrefixTools.validURL(newURL)) {
                 this.warningModule.showWarning(
@@ -263,7 +343,7 @@ export class Options {
         }
         if (oldPrefix !== newPrefix && PrefixTools.validURL(newURL)) {
             // sanity check
-            if (this.prefixList.hasOwnProperty(newPrefix)) {
+            if (this.prefixList.has(newPrefix)) {
                 //  console.log("Already have this prefix!");
                 this.warningModule.showWarning(
                     "Prefix Already Exist",
@@ -292,147 +372,147 @@ export class Options {
     }
 
     /**
-     * @param {string | number} prefix
+     * @param {string} prefix
      */
     removePrefix(prefix) {
-        delete this.prefixList[prefix];
+        this.prefixList.delete(prefix);
     }
 
     /**
-     * @param {any} val
+     * @param {boolean} val
      */
     setEditorModeForDefaultObject(val) {
-        this._defaultConfig.editorMode = String(val);
+        this._defaultConfig.editorMode = val;
     }
 
     /**
      * @param {boolean} val
      */
     setHideDebugFeaturesForDefaultObject(val) {
-        this._defaultConfig.debugFeatures = String(!val);
+        this._defaultConfig.debugFeatures = !val;
     }
 
     #updateConfigObject() {
-        this._defaultConfig.sidebar = this.sidebar.getSidebarVisibility();
+        this._defaultConfig.sidebar = this.sidebar.getSidebarVisibility()
         this._defaultConfig.cd = this.classDistance;
         this._defaultConfig.dd = this.datatypeDistance;
-        this._defaultConfig.filter_datatypes = String(this.filterMenu.getCheckBoxValue("datatypeFilterCheckbox"));
-        this._defaultConfig.filter_sco = String(this.filterMenu.getCheckBoxValue("subclassFilterCheckbox"));
-        this._defaultConfig.filter_disjoint = String(this.filterMenu.getCheckBoxValue("disjointFilterCheckbox"));
-        this._defaultConfig.filter_setOperator = String(this.filterMenu.getCheckBoxValue("setoperatorFilterCheckbox"));
-        this._defaultConfig.filter_objectProperties = String(this.filterMenu.getCheckBoxValue("objectPropertyFilterCheckbox"));
-        this._defaultConfig.mode_dynamic = String(this.dynamicLabelWidth);
-        this._defaultConfig.mode_scaling = String(this.modeMenu.getCheckBoxValue("nodescalingModuleCheckbox"));
-        this._defaultConfig.mode_compact = String(this.modeMenu.getCheckBoxValue("compactnotationModuleCheckbox"));
-        this._defaultConfig.mode_colorExt = String(this.modeMenu.getCheckBoxValue("colorexternalsModuleCheckbox"));
-        this._defaultConfig.mode_multiColor = String(this.modeMenu.colorModeState());
-        this._defaultConfig.mode_pnp = String(this.modeMenu.getCheckBoxValue("pickandpinModuleCheckbox"));
+        this._defaultConfig.filter_datatypes = this.filterMenu.getCheckBoxValue("datatypeFilterCheckbox");
+        this._defaultConfig.filter_sco = this.filterMenu.getCheckBoxValue("subclassFilterCheckbox");
+        this._defaultConfig.filter_disjoint = this.filterMenu.getCheckBoxValue("disjointFilterCheckbox");
+        this._defaultConfig.filter_setOperator = this.filterMenu.getCheckBoxValue("setoperatorFilterCheckbox");
+        this._defaultConfig.filter_objectProperties = this.filterMenu.getCheckBoxValue("objectPropertyFilterCheckbox");
+        this._defaultConfig.mode_dynamic = this.dynamicLabelWidth;
+        this._defaultConfig.mode_scaling = this.modeMenu.getCheckBoxValue("nodescalingModuleCheckbox");
+        this._defaultConfig.mode_compact = this.modeMenu.getCheckBoxValue("compactnotationModuleCheckbox");
+        this._defaultConfig.mode_colorExt = this.modeMenu.getCheckBoxValue("colorexternalsModuleCheckbox");
+        this._defaultConfig.mode_multiColor = this.modeMenu.colorModeState;
+        this._defaultConfig.mode_pnp = this.modeMenu.getCheckBoxValue("pickandpinModuleCheckbox");
         this._defaultConfig.rect = 0;
     }
 
     /**
-     * define url loadable options and update all set values in the default object
+     * Define url loadable options and update all set values in the default object
      * @param {DefaultOptionsConfig} opts
      * @param {boolean} changeEditFlag
      */
     setOptionsFromURL(opts, changeEditFlag) {
         if (opts.sidebar !== undefined) {
-            this.sidebar.showSidebar(parseInt(opts.sidebar), true);
+            this.sidebar.showSidebar(opts.sidebar, true);
         }
         if (opts.doc) {
-            var asInt = parseInt(opts.doc);
-            this.filterMenu.setDegreeSliderValue(asInt);
-            this.graph.setGlobalDOF(asInt);
+            this.filterMenu.setDegreeSliderValue(opts.doc);
+            this.graph.global_dof = opts.doc;
             // reset the value to be -1;
             this.defaultConfig.doc = -1;
         }
         if (opts.editorMode) {
-            const settingFlag = opts.editorMode === "true"
+            const settingFlag = opts.editorMode
             d3.select("#editorModeModuleCheckbox").node().checked = settingFlag;
             if (changeEditFlag) {
-                this.graph.editorMode(settingFlag);
+                this.graph.editorMode = settingFlag;
             }
+            // REVIEW: Check if we need to set values on this.defaultConfig
             // update config object
-            this.defaultConfig.editorMode = opts.editorMode;
+            // this.defaultConfig.editorMode = opts.editorMode;
         }
         if (opts.cd) { // class distance
             this.classDistance = opts.cd; // class distance
-            this.defaultConfig.cd = opts.cd;
+            // this.defaultConfig.cd = opts.cd;
         }
         if (opts.dd) { // data distance
             this.datatypeDistance = opts.dd;
-            this.defaultConfig.cd = opts.cd;
+            // this.defaultConfig.cd = opts.cd;
         }
         if (opts.cd || opts.dd) {
             this.gravityMenu.reset(); // reset the values so the slider is updated;
         }
         if (opts.filter_datatypes) {
-            const settingFlag = opts.filter_datatypes === "true"
+            const settingFlag = opts.filter_datatypes
             this.filterMenu.setCheckBoxValue("datatypeFilterCheckbox", settingFlag);
-            this.defaultConfig.filter_datatypes = opts.filter_datatypes;
+            // this.defaultConfig.filter_datatypes = opts.filter_datatypes;
         }
         if (opts.debugFeatures) {
-            this.hideDebugOptions = opts.debugFeatures === "true";
+            this.hideDebugOptions = opts.debugFeatures;
             if (!this.hideDebugOptions) {
                 this.executeHiddenDebugFeatuers();
             }
-            this.defaultConfig.debugFeatures = opts.debugFeatures;
+            // this.defaultConfig.debugFeatures = opts.debugFeatures;
         }
         if (opts.filter_objectProperties) {
-            const settingFlag = opts.filter_objectProperties === "true"
+            const settingFlag = opts.filter_objectProperties
             this.filterMenu.setCheckBoxValue("objectPropertyFilterCheckbox", settingFlag);
-            this.defaultConfig.filter_objectProperties = opts.filter_objectProperties;
+            // this.defaultConfig.filter_objectProperties = opts.filter_objectProperties;
         }
         if (opts.filter_sco) {
-            const settingFlag = opts.filter_sco === "true"
+            const settingFlag = opts.filter_sco
             this.filterMenu.setCheckBoxValue("subclassFilterCheckbox", settingFlag);
-            this.defaultConfig.filter_sco = opts.filter_sco;
+            // this.defaultConfig.filter_sco = opts.filter_sco;
         }
         if (opts.filter_disjoint) {
-            const settingFlag = opts.filter_disjoint === "true"
+            const settingFlag = opts.filter_disjoint
             this.filterMenu.setCheckBoxValue("disjointFilterCheckbox", settingFlag);
-            this.defaultConfig.filter_disjoint = opts.filter_disjoint;
+            // this.defaultConfig.filter_disjoint = opts.filter_disjoint;
         }
         if (opts.filter_setOperator) {
-            const settingFlag = opts.filter_setOperator === "true"
+            const settingFlag = opts.filter_setOperator
             this.filterMenu.setCheckBoxValue("setoperatorFilterCheckbox", settingFlag);
-            this.defaultConfig.filter_setOperator = opts.filter_setOperator;
+            // this.defaultConfig.filter_setOperator = opts.filter_setOperator;
         }
         this.filterMenu.updateSettings();
 
         // modesMenu
         if (opts.mode_dynamic) {
-            const settingFlag = opts.mode_dynamic === "true"
+            const settingFlag = opts.mode_dynamic
             this.modeMenu.setDynamicLabelWidth(settingFlag);
             this.dynamicLabelWidth = settingFlag;
-            this.defaultConfig.mode_dynamic = opts.mode_dynamic;
+            // this.defaultConfig.mode_dynamic = opts.mode_dynamic;
         }
         if (opts.mode_pnp) {
-            const settingFlag = opts.mode_pnp === "true"
+            const settingFlag = opts.mode_pnp
             this.modeMenu.setCheckBoxValue("pickandpinModuleCheckbox", settingFlag);
-            this.defaultConfig.mode_pnp = opts.mode_pnp;
+            // this.defaultConfig.mode_pnp = opts.mode_pnp;
         }
         if (opts.mode_scaling) {
-            const settingFlag = opts.mode_scaling === "true"
+            const settingFlag = opts.mode_scaling
             this.modeMenu.setCheckBoxValue("nodescalingModuleCheckbox", settingFlag);
-            this.defaultConfig.mode_scaling = opts.mode_scaling;
+            // this.defaultConfig.mode_scaling = opts.mode_scaling;
         }
         if (opts.mode_compact) {
-            const settingFlag = opts.mode_compact === "true"
+            const settingFlag = opts.mode_compact
             this.modeMenu.setCheckBoxValue("compactnotationModuleCheckbox", settingFlag);
-            this.defaultConfig.mode_compact = opts.mode_compact;
+            // this.defaultConfig.mode_compact = opts.mode_compact;
         }
         if (opts.mode_colorExt) {
-            const settingFlag = opts.mode_colorExt === "true"
+            const settingFlag = opts.mode_colorExt
             this.modeMenu.setCheckBoxValue("colorexternalsModuleCheckbox", settingFlag);
-            this.defaultConfig.mode_colorExt = opts.mode_colorExt;
+            // this.defaultConfig.mode_colorExt = opts.mode_colorExt;
         }
         if (opts.mode_multiColor) {
-            const settingFlag = opts.mode_multiColor === "true"
+            const settingFlag = opts.mode_multiColor
             this.modeMenu.setColorSwitchStateUsingURL(settingFlag);
-            this.defaultConfig.mode_multiColor = opts.mode_multiColor;
+            // this.defaultConfig.mode_multiColor = opts.mode_multiColor;
         }
         this.modeMenu.updateSettingsUsingURL();
-        this.rectangularRepresentation = opts.rect;
+        this.rectangularRepresentation = Boolean(opts.rect);
     }
 }

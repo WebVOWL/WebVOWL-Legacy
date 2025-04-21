@@ -1,6 +1,11 @@
-import { OwlThing } from "./OwlThing"
+import Graph from "../../../graph"
+import OwlThing from "./OwlThing"
 
-export class OwlNothing extends OwlThing {
+
+export default class OwlNothing extends OwlThing {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 

@@ -1,7 +1,7 @@
 /**
- * Contains reusable function for drawing nodes.
+ * Contains reusable function for drawing nodes
  */
-export class DrawTools {
+export default class DrawTools {
     /**
      * Append a circular class node with the passed attributes.
      * @param {d3.Selection<any, any, null, undefined>} parent the parent element to which the circle will be appended
@@ -11,7 +11,7 @@ export class DrawTools {
      * @param {string} backgroundColor
      */
     static appendCircularClass(parent, radius, cssClasses, tooltip = undefined, backgroundColor = undefined) {
-        var circle = parent.append("circle")
+        const circle = parent.append("circle")
             .classed("class", true)
             .attr("r", radius);
         this.#addCssClasses(circle, cssClasses);
@@ -63,7 +63,7 @@ export class DrawTools {
      * @param {string} backgroundColor
      */
     static appendRectangularClass(parent, width, height, cssClasses, tooltip = undefined, backgroundColor = undefined) {
-        var rectangle = parent.append("rect")
+        const rectangle = parent.append("rect")
             .classed("class", true)
             .attr("x", -width / 2)
             .attr("y", -height / 2)
@@ -84,12 +84,12 @@ export class DrawTools {
      * @param {boolean} useAccuracyHelper
      */
     static drawPin(container, dx, dy, onClick, accuraciesHelperFunction, useAccuracyHelper) {
-        var pinGroupElement = container
+        const pinGroupElement = container
             .append("g")
             .classed("hidden-in-export", true)
             .attr("transform", "translate(" + dx + "," + dy + ")");
 
-        var base = pinGroupElement.append("circle")
+        const base = pinGroupElement.append("circle")
             .classed("class pin feature", true)
             .attr("r", 12)
             .on("click", function () {
@@ -138,7 +138,7 @@ export class DrawTools {
             return undefined;
         }
 
-        var haloGroupElement = container
+        const haloGroupElement = container
             .append("g")
             .classed("hidden-in-export", true);
 
@@ -151,14 +151,14 @@ export class DrawTools {
         haloGroupElement.attr("animationRunning", true);
 
         haloGroupElement.node().addEventListener("webkitAnimationEnd", () => {
-            var test = haloGroupElement.selectAll(".searchResultA");
+            const test = haloGroupElement.selectAll(".searchResultA");
             test.classed("searchResultA", false)
                 .classed("searchResultB", true);
             haloGroupElement.attr("animationRunning", false);
         });
 
         haloGroupElement.node().addEventListener("animationend", () => {
-            var test = haloGroupElement.selectAll(".searchResultA");
+            const test = haloGroupElement.selectAll(".searchResultA");
             test.classed("searchResultA", false)
                 .classed("searchResultB", true);
             haloGroupElement.attr("animationRunning", false);
@@ -177,7 +177,7 @@ export class DrawTools {
             // this means the node was not rendered previously
         }
 
-        var haloGroupElement = container
+        const haloGroupElement = container
             .append("g")
             .classed("hidden-in-export", true);
 
@@ -187,7 +187,7 @@ export class DrawTools {
         haloGroupElement.attr("animationRunning", true);
 
         haloGroupElement.node().addEventListener("webkitAnimationEnd", () => {
-            var test = haloGroupElement.selectAll(".searchResultA");
+            const test = haloGroupElement.selectAll(".searchResultA");
             test.classed("searchResultA", false)
                 .classed("searchResultB", true)
                 .attr("animationRunning", false);
@@ -195,7 +195,7 @@ export class DrawTools {
         });
 
         haloGroupElement.node().addEventListener("animationend", () => {
-            var test = haloGroupElement.selectAll(".searchResultA");
+            const test = haloGroupElement.selectAll(".searchResultA");
             test.classed("searchResultA", false)
                 .classed("searchResultB", true)
                 .attr("animationRunning", false);

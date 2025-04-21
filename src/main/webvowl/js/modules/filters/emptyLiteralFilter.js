@@ -2,12 +2,12 @@
  * clears empty literals that are provided by owl2vowl: 0.2.2x
 */
 
-import { BaseNode } from "../../elements/nodes/BaseNode";
-import { BaseProperty } from "../../elements/properties/BaseProperty";
-import { AbstractFilter } from "./abstractFilter";
+import BaseNode from "../../elements/nodes/BaseNode";
+import BaseProperty from "../../elements/properties/BaseProperty";
+import AbstractFilter from "./abstractFilter";
 
 
-export class EmptyLiteralFilter extends AbstractFilter {
+export default class EmptyLiteralFilter extends AbstractFilter {
     constructor() {
         super(true)
         /**
@@ -21,7 +21,7 @@ export class EmptyLiteralFilter extends AbstractFilter {
      * @param {BaseProperty[]} properties
      */
     filter(nodes, properties) {
-        if (this.enabled === false) {
+        if (!this.enabled) {
             this.filteredNodes = nodes;
             this.filteredProperties = properties;
             this.removedNodes = new Set();
@@ -29,41 +29,40 @@ export class EmptyLiteralFilter extends AbstractFilter {
         }
 
         /**
-         * @type {any[]}
+         * @type {Set<string>}
          */
-        let literalUsageMap = [];
+        let literalUsageSet = new Set();
         /**
-         * @type {any[]}
+         * @type {Set<string>}
          */
-        let thingUsageMap = [];
+        let thingUsageSet = new Set();
+
         for (const property of properties) {
             // checking for owl:Thing and rdfs:Literal across domain and range
             if (property.range) {
                 const node = property.range;
                 if (node.type === "rdfs:Literal") {
-                    literalUsageMap[node.id] = 1;
+                    literalUsageSet.add(node.id);
                 } else if (node.type === "owl:Thing") {
-                    thingUsageMap[node.id] = 1;
+                    thingUsageSet.add(node.id);
                 }
             }
             if (property.domain) {
                 const node = property.domain;
                 if (node.type === "owl:Thing") {
-                    thingUsageMap[node.id] = 1;
+                    thingUsageSet.add(node.id);
                 }
             }
         }
-
-        // REVIEW: Check if it is necessary to loop through properties. Maybe doing the check on nodes is enough?
         let nodeIDsToRemove = new Set();
-        var newNodes = [];
+        const newNodes = [];
         for (const node of nodes) {
             const nodeId = node.id;
             const nodeType = node.type;
             if (nodeType === "rdfs:Literal") {
-                nodeIDsToRemove.add(nodeId) ? literalUsageMap[nodeId] === undefined : newNodes.push(node);
+                literalUsageSet.has(nodeId) ? newNodes.push(node) : nodeIDsToRemove.add(nodeId);
             } else if (nodeType === "owl:Thing") {
-                nodeIDsToRemove.add(nodeId) ? thingUsageMap[nodeId] === undefined : newNodes.push(node);
+                thingUsageSet.has(nodeId) ? newNodes.push(node) : nodeIDsToRemove.add(nodeId);
             } else {
                 newNodes.push(node);
             }

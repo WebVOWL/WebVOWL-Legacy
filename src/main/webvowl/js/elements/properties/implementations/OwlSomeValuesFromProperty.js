@@ -1,6 +1,11 @@
-import { BaseProperty } from "../BaseProperty";
+import Graph from "../../../graph"
+import BaseProperty from "../BaseProperty"
 
-export class OwlSomeValuesFromProperty extends BaseProperty {
+
+export default class OwlSomeValuesFromProperty extends BaseProperty {
+    /**
+     * @param {Graph} graph
+     */
     constructor(graph) {
         super(graph)
 
@@ -11,7 +16,7 @@ export class OwlSomeValuesFromProperty extends BaseProperty {
     }
 
     generateCardinalityText() {
-        var cardinalityText = "E";
+        let cardinalityText = "E";
         const superCardinalityText = super.generateCardinalityText();
 
         if (superCardinalityText) {

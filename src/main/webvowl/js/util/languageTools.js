@@ -1,9 +1,10 @@
-import { Constants } from "./constants";
+import Constants from "./constants";
+
 
 /**
  * Encapsulates methods which return a label in a specific language for a preferred language.
  */
-export class LanguageTools {
+export default class LanguageTools {
     /**
      * @param {object | string | undefined} textObject
      * @param {string | null} preferredLanguage
@@ -22,7 +23,7 @@ export class LanguageTools {
             return textObject[preferredLanguage];
         }
 
-        var textForLanguage = this.#searchLanguage(textObject, "en");
+        const textForLanguage = this.#searchLanguage(textObject, "en");
         if (textForLanguage) {
             return textForLanguage;
         }
@@ -34,7 +35,7 @@ export class LanguageTools {
     }
 
     /**
-     * @param {object | string | undefined} textObject
+     * @param {object} textObject
      * @param {string | null} preferredLanguage
      * @returns {string | void}
      */

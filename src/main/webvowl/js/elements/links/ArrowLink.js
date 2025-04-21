@@ -1,8 +1,9 @@
-import { BaseNode } from "../nodes/BaseNode";
-import { BaseProperty } from "../properties/BaseProperty";
-import { PlainLink } from "./PlainLink";
+import BaseNode from "../nodes/BaseNode";
+import BaseProperty from "../properties/BaseProperty";
+import PlainLink from "./PlainLink";
 
-export class ArrowLink extends PlainLink {
+
+export default class ArrowLink extends PlainLink {
     /**
      * @param {BaseNode} domain
      * @param {BaseNode} range
@@ -68,8 +69,8 @@ export class ArrowLink extends PlainLink {
      */
     // @ts-ignore
     draw(linkGroup, markerContainer) {
-        var property = this.label.property;
-        var inverse = property.inverse;
+        const property = this.label.property;
+        const inverse = property.inverse;
 
         this.#createPropertyMarker(markerContainer, property);
         if (inverse) {

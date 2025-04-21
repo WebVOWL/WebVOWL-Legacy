@@ -1,10 +1,10 @@
 import _ from 'lodash/array';
-import { BaseElement } from '../elements/BaseElement';
-import { BaseProperty } from '../elements/properties/BaseProperty';
-import { ElementTools } from '../util/elementTools';
+import BaseElement from '../elements/BaseElement';
+import BaseProperty from '../elements/properties/BaseProperty';
+import ElementTools from '../util/elementTools';
 
 
-export class PickAndPin {
+export default class PickAndPin {
     constructor() {
         this.enabled = false
         /**
