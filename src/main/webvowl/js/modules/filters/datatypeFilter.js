@@ -1,9 +1,8 @@
-import BaseNode from "../../elements/nodes/BaseNode";
-import BaseProperty from "../../elements/properties/BaseProperty";
-import ElementTools from "../../util/elementTools";
-import FilterTools from "../../util/filterTools";
-import AbstractFilter from "./abstractFilter";
-
+import BaseNode from "../../elements/nodes/BaseNode"
+import BaseProperty from "../../elements/properties/BaseProperty"
+import ElementTools from "../../util/elementTools"
+import FilterTools from "../../util/filterTools"
+import AbstractFilter from "./abstractFilter"
 
 export default class DataTypeFilter extends AbstractFilter {
     constructor() {
@@ -18,12 +17,16 @@ export default class DataTypeFilter extends AbstractFilter {
      */
     filter(nodes, properties) {
         if (this.enabled) {
-            const filteredData = FilterTools.filterNodesAndTidy(nodes, properties, this.#isNoDatatypeOrLiteral);
+            const filteredData = FilterTools.filterNodesAndTidy(
+                nodes,
+                properties,
+                this.#isNoDatatypeOrLiteral,
+            )
             this.filteredNodes = filteredData.nodes
             this.filteredProperties = filteredData.properties
         } else {
-            this.filteredNodes = nodes;
-            this.filteredProperties = properties;
+            this.filteredNodes = nodes
+            this.filteredProperties = properties
         }
     }
 
@@ -31,6 +34,6 @@ export default class DataTypeFilter extends AbstractFilter {
      * @param {any} node
      */
     #isNoDatatypeOrLiteral(node) {
-        return !ElementTools.isDatatype(node);
+        return !ElementTools.isDatatype(node)
     }
 }

@@ -1,7 +1,6 @@
 import Graph from "../graph"
 import AbstractDragger from "./abstractDragger"
 
-
 export default class AbstractDomainRangeDragger extends AbstractDragger {
     /**
      * @param {Graph} graph
@@ -28,7 +27,7 @@ export default class AbstractDomainRangeDragger extends AbstractDragger {
      */
     set svgRoot(root) {
         super.svgRoot = root
-        this.addMouseEvents();
+        this.addMouseEvents()
     }
 
     /**
@@ -36,13 +35,13 @@ export default class AbstractDomainRangeDragger extends AbstractDragger {
      */
     hideDragger(val) {
         if (this.pathElement) {
-            this.pathElement.classed("hidden", val);
+            this.pathElement.classed("hidden", val)
         }
         if (this.nodeElement) {
-            this.nodeElement.classed("hidden", val);
+            this.nodeElement.classed("hidden", val)
         }
         if (this.draggerObject) {
-            this.draggerObject.classed("hidden", val);
+            this.draggerObject.classed("hidden", val)
         }
     }
 
@@ -53,35 +52,44 @@ export default class AbstractDomainRangeDragger extends AbstractDragger {
      * @param {d3.Selection<any,any,null,undefined>} [upperElement] A node selection
      * @param {d3.Selection<any,any,null,undefined>} [singleElement] A node selection
      */
-    setParentProperty(parentProperty, inversed, lowerElement, upperElement, singleElement) {
-        this.parentNode = parentProperty;
-        this.isLoopProperty = false;
+    setParentProperty(
+        parentProperty,
+        inversed,
+        lowerElement,
+        upperElement,
+        singleElement,
+    ) {
+        this.parentNode = parentProperty
+        this.isLoopProperty = false
         if (parentProperty.domain === parentProperty.range) {
-            this.isLoopProperty = true;
+            this.isLoopProperty = true
         }
         if (inversed === true) {
-            if (parentProperty.labelElement && parentProperty.labelElement.attr("transform") === "translate(0,15)") {
+            if (
+                parentProperty.labelElement &&
+                parentProperty.labelElement.attr("transform") ===
+                    "translate(0,15)"
+            ) {
                 // This is the lower element
                 if (lowerElement) {
-                    this.x = lowerElement.x;
-                    this.y = lowerElement.y;
+                    this.x = lowerElement.x
+                    this.y = lowerElement.y
                 }
             } else {
                 // This is the upper  element
                 if (upperElement) {
-                    this.x = upperElement.x;
-                    this.y = upperElement.y;
+                    this.x = upperElement.x
+                    this.y = upperElement.y
                 }
             }
-        }
-        else {
+        } else {
             // This is single element
             if (singleElement) {
-                this.x = singleElement.x;
-                this.y = singleElement.y;
+                this.x = singleElement.x
+                this.y = singleElement.y
             }
         }
-        this.updateElement();
+        this.updateElement()
     }
 
     redrawEverything() {
@@ -92,76 +100,78 @@ export default class AbstractDomainRangeDragger extends AbstractDragger {
      * @param {string} pathData
      */
     drawNode(pathData) {
-        this.pathElement = this.pathLayer.append('line')
-            .classed("classNodeDragPath", true);
-        this.pathElement.attr("x1", 0)
-            .attr("y1", 0)
-            .attr("x2", 0)
-            .attr("y2", 0);
+        this.pathElement = this.pathLayer
+            .append("line")
+            .classed("classNodeDragPath", true)
+        this.pathElement.attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 0)
 
-        this.nodeElement = this.rootNodeLayer.append('path').attr("d", pathData);
-        this.nodeElement.classed("classDraggerNode", true);
+        this.nodeElement = this.rootNodeLayer.append("path").attr("d", pathData)
+        this.nodeElement.classed("classDraggerNode", true)
         // this.draggerObject = this.rootNodeLayer.append("circle"); // REVIEW: Check if it should be before or after (classDragger uses this)
         if (this.graph.options.useAccuracyHelper) {
-            this.draggerObject = this.rootNodeLayer.append("circle"); // REVIEW: Check if it should be before or after (domainDragger & rangeDragger uses this)
-            this.draggerObject.attr("r", 40)
+            this.draggerObject = this.rootNodeLayer.append("circle") // REVIEW: Check if it should be before or after (domainDragger & rangeDragger uses this)
+            this.draggerObject
+                .attr("r", 40)
                 .attr("cx", 0)
                 .attr("cy", 0)
-                .classed("superHiddenElement", true);
-            this.draggerObject.classed("superOpacityElement", !this.graph.options.showDraggerObject);
+                .classed("superHiddenElement", true)
+            this.draggerObject.classed(
+                "superOpacityElement",
+                !this.graph.options.showDraggerObject,
+            )
         }
     }
 
     addMouseEvents() {
-        this.rootNodeLayer.selectAll("*").on("mouseover", this.onMouseOver)
+        this.rootNodeLayer
+            .selectAll("*")
+            .on("mouseover", this.onMouseOver)
             .on("mouseout", this.onMouseOut)
-            .on("click", function () {
-            })
-            .on("dblclick", function () {
-            })
+            .on("click", function () {})
+            .on("dblclick", function () {})
             .on("mousedown", this.mouseDown)
-            .on("mouseup", this.mouseUp);
+            .on("mouseup", this.mouseUp)
     }
 
     mouseDown() {
-        this.nodeElement.style("cursor", "move");
-        this.nodeElement.classed("classDraggerNodeHovered", true);
-        this.mouseButtonPressed = true;
+        this.nodeElement.style("cursor", "move")
+        this.nodeElement.classed("classDraggerNodeHovered", true)
+        this.mouseButtonPressed = true
     }
 
     mouseUp() {
-        this.nodeElement.style("cursor", "auto");
-        this.nodeElement.classed("classDraggerNodeHovered", false); // REVIEW: Check if this is needed. It's used on domainDragger & rangeDragger
-        this.mouseButtonPressed = false;
+        this.nodeElement.style("cursor", "auto")
+        this.nodeElement.classed("classDraggerNodeHovered", false) // REVIEW: Check if this is needed. It's used on domainDragger & rangeDragger
+        this.mouseButtonPressed = false
     }
 
     /**
      * @param {boolean} val
      */
     selectedViaTouch(val) {
-        this.nodeElement.classed("classDraggerNode", !val);
-        this.nodeElement.classed("classDraggerNodeHovered", val);
+        this.nodeElement.classed("classDraggerNode", !val)
+        this.nodeElement.classed("classDraggerNodeHovered", val)
     }
 
     onMouseOver() {
         if (this.mouseEntered) {
-            return;
+            return
         }
-        this.nodeElement.classed("classDraggerNode", false);
-        this.nodeElement.classed("classDraggerNodeHovered", true);
-        let selectedNode = this.rootElement.node();
-        let nodeContainer = selectedNode.parentNode;
-        nodeContainer.appendChild(selectedNode);
-        this.mouseEntered = true;
+        this.nodeElement.classed("classDraggerNode", false)
+        this.nodeElement.classed("classDraggerNodeHovered", true)
+        let selectedNode = this.rootElement.node()
+        let nodeContainer = selectedNode.parentNode
+        nodeContainer.appendChild(selectedNode)
+        this.mouseEntered = true
     }
 
     onMouseOut() {
         if (this.mouseButtonPressed) {
-            return;
+            return
         }
-        this.nodeElement.classed("classDraggerNodeHovered", false);
-        this.nodeElement.classed("classDraggerNode", true);
-        this.mouseEntered = false;
+        this.nodeElement.classed("classDraggerNodeHovered", false)
+        this.nodeElement.classed("classDraggerNode", true)
+        this.mouseEntered = false
     }
 
     // NOTE: Disabled to save memory while this method is not used

@@ -3,7 +3,7 @@ export default class AbstractTextElement {
     static CSS_CLASSES = {
         default: "text",
         subtext: "subtext",
-        instanceCount: "instance-count"
+        instanceCount: "instance-count",
     }
     static DARK_TEXT_COLOR = "#000"
     static LIGHT_TEXT_COLOR = "#fff"
@@ -16,7 +16,8 @@ export default class AbstractTextElement {
         if (this.constructor === AbstractTextElement) {
             throw new Error("Abstract classes can't be instantiated")
         }
-        this.textBlock = container.append("text")
+        this.textBlock = container
+            .append("text")
             .classed("text", true)
             .style("fill", this.#getTextColor(backgroundColor))
             .attr("text-anchor", "middle")
@@ -28,13 +29,13 @@ export default class AbstractTextElement {
      * @param {number} y
      */
     translation(x, y) {
-        this.textBlock.attr("transform", "translate(" + x + ", " + y + ")");
-        return this;
+        this.textBlock.attr("transform", "translate(" + x + ", " + y + ")")
+        return this
     }
 
     remove() {
-        this.textBlock.remove();
-        return this;
+        this.textBlock.remove()
+        return this
     }
 
     /**
@@ -44,12 +45,12 @@ export default class AbstractTextElement {
      */
     applyPreAndPostFix(text, prefix, postfix) {
         if (prefix) {
-            text = prefix + text;
+            text = prefix + text
         }
         if (postfix) {
-            text += postfix;
+            text += postfix
         }
-        return text;
+        return text
     }
 
     /**
@@ -57,14 +58,14 @@ export default class AbstractTextElement {
      */
     #getTextColor(rawBackgroundColor) {
         if (!rawBackgroundColor) {
-            return AbstractTextElement.DARK_TEXT_COLOR;
+            return AbstractTextElement.DARK_TEXT_COLOR
         }
 
-        const backgroundColor = d3.rgb(rawBackgroundColor);
+        const backgroundColor = d3.rgb(rawBackgroundColor)
         if (this.#calculateLuminance(backgroundColor) > 0.5) {
-            return AbstractTextElement.DARK_TEXT_COLOR;
+            return AbstractTextElement.DARK_TEXT_COLOR
         } else {
-            return AbstractTextElement.LIGHT_TEXT_COLOR;
+            return AbstractTextElement.LIGHT_TEXT_COLOR
         }
     }
 
@@ -72,6 +73,10 @@ export default class AbstractTextElement {
      * @param {{ r: number; g: number; b: number; }} color
      */
     #calculateLuminance(color) {
-        return 0.3 * (color.r / 255) + 0.59 * (color.g / 255) + 0.11 * (color.b / 255);
+        return (
+            0.3 * (color.r / 255) +
+            0.59 * (color.g / 255) +
+            0.11 * (color.b / 255)
+        )
     }
 }

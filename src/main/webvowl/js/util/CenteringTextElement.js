@@ -1,6 +1,5 @@
-import AbstractTextElement from "./AbstractTextElement";
-import TextTools from "./textTools";
-
+import AbstractTextElement from "./AbstractTextElement"
+import TextTools from "./textTools"
 
 export default class CenteringTextElement extends AbstractTextElement {
     /**
@@ -13,15 +12,15 @@ export default class CenteringTextElement extends AbstractTextElement {
         /**
          * @type {string[]}
          */
-        this.storedFullTextLines = [];
+        this.storedFullTextLines = []
         /**
          * @type {d3.Selection<SVGTSpanElement, any, null, undefined>[]}
          */
-        this.storedSpanArrays = [];
+        this.storedSpanArrays = []
         /**
          * @type {string[]}
          */
-        this.storedStyle = [];
+        this.storedStyle = []
     }
 
     /**
@@ -31,7 +30,12 @@ export default class CenteringTextElement extends AbstractTextElement {
      */
     addText(text, prefix, suffix) {
         if (text) {
-            this.addTextline(text, CenteringTextElement.CSS_CLASSES.default, prefix, suffix);
+            this.addTextline(
+                text,
+                CenteringTextElement.CSS_CLASSES.default,
+                prefix,
+                suffix,
+            )
         }
     }
 
@@ -40,7 +44,12 @@ export default class CenteringTextElement extends AbstractTextElement {
      */
     addSubText(text) {
         if (text) {
-            this.addTextline(text, CenteringTextElement.CSS_CLASSES.subtext, "(", ")");
+            this.addTextline(
+                text,
+                CenteringTextElement.CSS_CLASSES.subtext,
+                "(",
+                ")",
+            )
         }
     }
 
@@ -49,7 +58,7 @@ export default class CenteringTextElement extends AbstractTextElement {
      */
     addEquivalents(text) {
         if (text) {
-            this.addTextline(text, CenteringTextElement.CSS_CLASSES.default);
+            this.addTextline(text, CenteringTextElement.CSS_CLASSES.default)
         }
     }
 
@@ -58,7 +67,10 @@ export default class CenteringTextElement extends AbstractTextElement {
      */
     addInstanceCount(instanceCount) {
         if (instanceCount) {
-            this.addTextline(instanceCount.toString(), CenteringTextElement.CSS_CLASSES.instanceCount);
+            this.addTextline(
+                instanceCount.toString(),
+                CenteringTextElement.CSS_CLASSES.instanceCount,
+            )
         }
     }
 
@@ -66,21 +78,21 @@ export default class CenteringTextElement extends AbstractTextElement {
      * @param {d3.Selection<SVGTSpanElement, any, null, undefined>} correspondingSpan
      */
     saveCorrespondingSpan(correspondingSpan) {
-        this.storedSpanArrays.push(correspondingSpan);
+        this.storedSpanArrays.push(correspondingSpan)
     }
 
     /**
      * @param {string} fullText
      */
     saveFullTextLine(fullText) {
-        this.storedFullTextLines.push(fullText);
+        this.storedFullTextLines.push(fullText)
     }
 
     /**
      * @param {string} style
      */
     saveStyle(style) {
-        this.storedStyle.push(style);
+        this.storedStyle.push(style)
     }
 
     updateAllTextElements() {
@@ -90,9 +102,9 @@ export default class CenteringTextElement extends AbstractTextElement {
                 this.storedFullTextLines[i],
                 this.textBlock.datum().getTextWidth(),
                 this.storedStyle[i],
-                0
-            );
-            this.storedSpanArrays[i].text(truncatedText);
+                0,
+            )
+            this.storedSpanArrays[i].text(truncatedText)
         }
     }
 
@@ -107,42 +119,46 @@ export default class CenteringTextElement extends AbstractTextElement {
             text,
             this.textBlock.datum().getTextWidth(),
             style,
-            0
-        );
-        this.saveFullTextLine(text);
-        this.saveStyle(style);
-        const tspan = this.textBlock.append("tspan")
+            0,
+        )
+        this.saveFullTextLine(text)
+        this.saveStyle(style)
+        const tspan = this.textBlock
+            .append("tspan")
             .classed(CenteringTextElement.CSS_CLASSES.default, true)
             .classed(style, true)
             .text(this.applyPreAndPostFix(truncatedText, prefix, postfix))
-            .attr("x", 0);
-        this.#repositionTextLine(tspan);
-        this.saveCorrespondingSpan(tspan);
-        this.#repositionTextBlock();
+            .attr("x", 0)
+        this.#repositionTextLine(tspan)
+        this.saveCorrespondingSpan(tspan)
+        this.#repositionTextBlock()
     }
 
     /**
      * @param {{ node: () => Element; attr: (arg0: string, arg1: string) => void; }} tspan
      */
     #repositionTextLine(tspan) {
-        const fontSizeProperty = window.getComputedStyle(tspan.node()).getPropertyValue("font-size");
-        const fontSize = parseFloat(fontSizeProperty);
-        const siblingCount = this.#lineCount() - 1;
-        const lineDistance = siblingCount > 0 ? CenteringTextElement.LINE_DISTANCE : 0;
-        tspan.attr("dy", fontSize + lineDistance + "px");
+        const fontSizeProperty = window
+            .getComputedStyle(tspan.node())
+            .getPropertyValue("font-size")
+        const fontSize = parseFloat(fontSizeProperty)
+        const siblingCount = this.#lineCount() - 1
+        const lineDistance =
+            siblingCount > 0 ? CenteringTextElement.LINE_DISTANCE : 0
+        tspan.attr("dy", fontSize + lineDistance + "px")
     }
 
     #repositionTextBlock() {
         // Nothing to do if no child elements exist
         if (this.#lineCount() < 1) {
-            this.textBlock.attr("y", 0);
-            return;
+            this.textBlock.attr("y", 0)
+            return
         }
-        const textBlockHeight = this.textBlock.node().getBBox().height;
-        this.textBlock.attr("y", -textBlockHeight * 0.5 + "px");
+        const textBlockHeight = this.textBlock.node().getBBox().height
+        this.textBlock.attr("y", -textBlockHeight * 0.5 + "px")
     }
 
     #lineCount() {
-        return this.textBlock.property("childElementCount");
+        return this.textBlock.property("childElementCount")
     }
 }

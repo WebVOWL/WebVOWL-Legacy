@@ -22,7 +22,7 @@ const TRANSITIVE = "transitive"
 // Attribute groups
 const VISUAL_ATTRIBUTE_GROUPS = [
     [DEPRECATED, DATATYPE, OBJECT, RDF],
-    [ANONYMOUS]
+    [ANONYMOUS],
 ]
 const CLASS_INDICATIONS = [DEPRECATED, EXTERNAL]
 const PROPERTY_INDICATIONS = [
@@ -33,9 +33,8 @@ const PROPERTY_INDICATIONS = [
     KEY,
     REFLEXIVE,
     SYMMETRIC,
-    TRANSITIVE
+    TRANSITIVE,
 ]
-
 
 export default class AttributeParser {
     /**
@@ -45,7 +44,7 @@ export default class AttributeParser {
     static #parsePropertyIndications(property) {
         for (const indication of PROPERTY_INDICATIONS) {
             if (property.attributes.indexOf(indication) >= 0) {
-                property.indications.push(indication);
+                property.indications.push(indication)
             }
         }
     }
@@ -55,7 +54,7 @@ export default class AttributeParser {
      */
     static #parseVisualAttributes(element) {
         for (const attributeGroup of VISUAL_ATTRIBUTE_GROUPS) {
-            this.#setVisualAttributeOfGroup(element, attributeGroup);
+            this.#setVisualAttributeOfGroup(element, attributeGroup)
         }
     }
 
@@ -66,8 +65,8 @@ export default class AttributeParser {
     static #setVisualAttributeOfGroup(element, group) {
         for (const attribute of group) {
             if (element.attributes.indexOf(attribute) >= 0) {
-                element.visualAttributes.push(attribute);
-                break; // Just a single attribute is possible
+                element.visualAttributes.push(attribute)
+                break // Just a single attribute is possible
             }
         }
     }
@@ -78,7 +77,7 @@ export default class AttributeParser {
     static #parseClassIndications(element) {
         for (const indication of CLASS_INDICATIONS) {
             if (element.attributes.indexOf(indication) >= 0) {
-                element.indications.push(indication);
+                element.indications.push(indication)
             }
         }
     }
@@ -89,10 +88,10 @@ export default class AttributeParser {
      */
     static parseClassAttributes(element) {
         if (!(element.attributes instanceof Array)) {
-            return;
+            return
         }
-        this.#parseVisualAttributes(element);
-        this.#parseClassIndications(element);
+        this.#parseVisualAttributes(element)
+        this.#parseClassIndications(element)
     }
 
     /**
@@ -101,11 +100,11 @@ export default class AttributeParser {
      */
     static parsePropertyAttributes(property) {
         if (!(property.attributes instanceof Array)) {
-            return;
+            return
         }
         // @ts-ignore
-        this.#parseVisualAttributes(property);
+        this.#parseVisualAttributes(property)
         // @ts-ignore
-        this.#parsePropertyIndications(property);
+        this.#parsePropertyIndications(property)
     }
 }

@@ -14,7 +14,6 @@ import RdfsDataType from "./implementations/RdfsDatatype"
 import RdfsLiteral from "./implementations/RdfsLiteral"
 import RdfsResource from "./implementations/RdfsResource"
 
-
 const nodes = [
     ExternalClass,
     OwlClass,
@@ -29,7 +28,7 @@ const nodes = [
     RdfsClass,
     RdfsDataType,
     RdfsLiteral,
-    RdfsResource
+    RdfsResource,
 ]
 
 /**

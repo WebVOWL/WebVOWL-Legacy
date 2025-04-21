@@ -3,7 +3,6 @@ import AbsoluteTextElement from "../util/AbsoluteTextElement"
 import CenteringTextElement from "../util/CenteringTextElement"
 import LanguageTools from "../util/languageTools"
 
-
 export default class BaseElement {
     /**
      * The base element for all visual elements of webvowl
@@ -43,7 +42,6 @@ export default class BaseElement {
          */
         this.baseIri = undefined
 
-
         // Additional attributes
         /**
          * @type {{}[]}
@@ -82,7 +80,6 @@ export default class BaseElement {
          */
         this.backupFullIri = undefined
 
-
         // Element containers
         /**
          * @type {d3.Selection<any,any,null,undefined> | undefined}
@@ -96,7 +93,6 @@ export default class BaseElement {
          * @type {d3.Selection<any,any,null,undefined> | undefined}
          */
         this.foreignerObject = undefined // foreigner object for editing
-
 
         // Style attributes
         /**
@@ -142,7 +138,6 @@ export default class BaseElement {
          */
         this._pinned = false
 
-
         // Other
         /**
          * @type {CenteringTextElement | AbsoluteTextElement | undefined}
@@ -151,7 +146,7 @@ export default class BaseElement {
     }
 
     #applyFixedLocationAttributes() {
-        this.fixed = this.locked || this.frozen || this.pinned;
+        this.fixed = this.locked || this.frozen || this.pinned
     }
 
     redrawElement() {
@@ -200,89 +195,93 @@ export default class BaseElement {
     }
 
     get locked() {
-        return this._locked;
+        return this._locked
     }
 
     set locked(p) {
-        this._locked = p;
-        this.#applyFixedLocationAttributes();
+        this._locked = p
+        this.#applyFixedLocationAttributes()
     }
 
     get frozen() {
-        return this._frozen;
+        return this._frozen
     }
 
     set frozen(p) {
-        this._frozen = p;
-        this.#applyFixedLocationAttributes();
+        this._frozen = p
+        this.#applyFixedLocationAttributes()
     }
 
     get halo() {
-        return this._halo;
+        return this._halo
     }
 
     set halo(p) {
-        this._halo = p;
-        this.#applyFixedLocationAttributes();
+        this._halo = p
+        this.#applyFixedLocationAttributes()
     }
 
     get pinned() {
-        return this._pinned;
+        return this._pinned
     }
 
     set pinned(p) {
-        this._pinned = p;
-        this.#applyFixedLocationAttributes();
+        this._pinned = p
+        this.#applyFixedLocationAttributes()
     }
 
     /**
      * Removes the pin and refreshs the graph to update the force layout.
      */
     removePin() {
-        this.pinned = false;
+        this.pinned = false
         if (this.pinGroupElement) {
-            this.pinGroupElement.remove();
+            this.pinGroupElement.remove()
         }
-        this.graph.updateStyle();
+        this.graph.updateStyle()
     }
 
     removeHalo() {
-        this.halo = false;
+        this.halo = false
         if (this.haloGroupElement) {
-            this.haloGroupElement.remove();
-            this.haloGroupElement = undefined;
+            this.haloGroupElement.remove()
+            this.haloGroupElement = undefined
         }
     }
 
     commentForCurrentLanguage() {
-        return LanguageTools.textInLanguage(this.comment, this.graph.language);
+        return LanguageTools.textInLanguage(this.comment, this.graph.language)
     }
 
     descriptionForCurrentLanguage() {
-        return LanguageTools.textInLanguage(this.description, this.graph.language);
+        return LanguageTools.textInLanguage(
+            this.description,
+            this.graph.language,
+        )
     }
 
     defaultLabel() {
-        return LanguageTools.textInLanguage(this.label, "default");
+        return LanguageTools.textInLanguage(this.label, "default")
     }
 
     indicationString() {
-        return this.indications.join(", ");
+        return this.indications.join(", ")
     }
 
     labelForCurrentLanguage() {
-        const preferredLanguage = this.graph && this.graph.language ? this.graph.language : null;
-        return LanguageTools.textInLanguage(this.label, preferredLanguage);
+        const preferredLanguage =
+            this.graph && this.graph.language ? this.graph.language : null
+        return LanguageTools.textInLanguage(this.label, preferredLanguage)
     }
 
     /**
      * @param {any} other
      */
     equals(other) {
-        return other instanceof BaseElement && this.id === other.id;
+        return other instanceof BaseElement && this.id === other.id
     }
 
     toString() {
-        return this.labelForCurrentLanguage() + " (" + this.type + ")";
+        return this.labelForCurrentLanguage() + " (" + this.type + ")"
     }
 }

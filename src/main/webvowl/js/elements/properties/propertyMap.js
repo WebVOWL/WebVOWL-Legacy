@@ -14,7 +14,6 @@ import RdfProperty from "./implementations/RdfProperty"
 import RdfsSubClassOf from "./implementations/RdfsSubClassOf"
 import SetOperatorProperty from "./implementations/SetOperatorProperty"
 
-
 const properties = [
     OwlAllValuesFromProperty,
     OwlDatatypeProperty,
@@ -29,7 +28,7 @@ const properties = [
     OwlTransitiveProperty,
     RdfProperty,
     RdfsSubClassOf,
-    SetOperatorProperty
+    SetOperatorProperty,
 ]
 
 /**

@@ -2,7 +2,6 @@ import BaseNode from "../nodes/BaseNode"
 import Label from "./Label"
 import PlainLink from "./PlainLink"
 
-
 export default class LinkPart {
     /**
      * A linkPart connects two force layout nodes.

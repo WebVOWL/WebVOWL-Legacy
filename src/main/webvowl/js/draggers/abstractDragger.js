@@ -1,6 +1,5 @@
 import Graph from "../graph"
 
-
 export default class AbstractDragger {
     /**
      * @param {Graph} graph
@@ -61,18 +60,18 @@ export default class AbstractDragger {
      * @param {d3.Selection<any, any, null, undefined>} layer
      */
     svgPathLayer(layer) {
-        this.pathLayer = layer.append('g');
+        this.pathLayer = layer.append("g")
     }
 
     get svgRoot() {
-        return this.rootElement;
+        return this.rootElement
     }
 
     /**
      * @param {d3.Selection<any, any, null, undefined>} root
      */
     set svgRoot(root) {
-        this.rootElement = root;
-        this.rootNodeLayer = this.rootElement.append('g');
+        this.rootElement = root
+        this.rootNodeLayer = this.rootElement.append("g")
     }
 }

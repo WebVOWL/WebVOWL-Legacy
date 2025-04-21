@@ -16,28 +16,28 @@ export default class SelectionDetailsDisplayer {
     handle(selectedElement) {
         // Don't display details on a drag event, which will be prevented
         if (d3.event.defaultPrevented) {
-            return;
+            return
         }
 
-        let isSelection = true;
+        let isSelection = true
 
         // Deselection of the focused element
         if (this.lastSelectedElement === selectedElement) {
-            isSelection = false;
+            isSelection = false
         }
 
         if (this.handlerFunction instanceof Function) {
             if (isSelection) {
-                this.handlerFunction(selectedElement);
+                this.handlerFunction(selectedElement)
             } else {
-                this.handlerFunction(undefined);
+                this.handlerFunction(undefined)
             }
         }
 
         if (isSelection) {
-            this.lastSelectedElement = selectedElement;
+            this.lastSelectedElement = selectedElement
         } else {
-            this.lastSelectedElement = undefined;
+            this.lastSelectedElement = undefined
         }
     }
 
@@ -46,8 +46,8 @@ export default class SelectionDetailsDisplayer {
      */
     reset() {
         if (this.lastSelectedElement) {
-            this.handlerFunction(undefined);
-            this.lastSelectedElement = undefined;
+            this.handlerFunction(undefined)
+            this.lastSelectedElement = undefined
         }
     }
 }

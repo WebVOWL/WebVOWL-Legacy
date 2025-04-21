@@ -1,7 +1,6 @@
-import BaseElement from "../elements/BaseElement";
-import Graph from "../graph";
-import ElementTools from "../util/elementTools";
-
+import BaseElement from "../elements/BaseElement"
+import Graph from "../graph"
+import ElementTools from "../util/elementTools"
 
 export default class Focuser {
     /**
@@ -22,36 +21,45 @@ export default class Focuser {
     handle(selectedElement, forced = false) {
         // Don't display details on a drag event, which will be prevented
         if (d3.event && d3.event.defaultPrevented && !forced) {
-            return;
+            return
         }
 
         if (this.focusedElement !== undefined) {
-            this.focusedElement.toggleFocus();
+            this.focusedElement.toggleFocus()
         }
 
         if (selectedElement && this.focusedElement !== selectedElement) {
-            selectedElement.toggleFocus();
-            this.focusedElement = selectedElement;
+            selectedElement.toggleFocus()
+            this.focusedElement = selectedElement
         } else {
-            this.focusedElement = undefined;
+            this.focusedElement = undefined
         }
 
         if (this.focusedElement && this.focusedElement.focused) {
-            this.graph.options.editSidebar.updateSelectionInformation(this.focusedElement);
+            this.graph.options.editSidebar.updateSelectionInformation(
+                this.focusedElement,
+            )
             if (ElementTools.isProperty(selectedElement) === true) {
-                let inversed = false;
+                let inversed = false
                 if (selectedElement.inverse) {
-                    inversed = true;
+                    inversed = true
                 }
-                this.graph.activateHoverElementsForProperties(true, selectedElement, inversed, this.graph.touchDevice);
+                this.graph.activateHoverElementsForProperties(
+                    true,
+                    selectedElement,
+                    inversed,
+                    this.graph.touchDevice,
+                )
+            } else {
+                this.graph.activateHoverElements(
+                    true,
+                    selectedElement,
+                    this.graph.touchDevice,
+                )
             }
-            else {
-                this.graph.activateHoverElements(true, selectedElement, this.graph.touchDevice);
-            }
-        }
-        else {
-            this.graph.options.editSidebar.updateSelectionInformation(undefined);
-            this.graph.removeEditElements();
+        } else {
+            this.graph.options.editSidebar.updateSelectionInformation(undefined)
+            this.graph.removeEditElements()
         }
     }
 
@@ -60,8 +68,8 @@ export default class Focuser {
      */
     reset() {
         if (this.focusedElement) {
-            this.focusedElement.toggleFocus();
-            this.focusedElement = undefined;
+            this.focusedElement.toggleFocus()
+            this.focusedElement = undefined
         }
     }
 }

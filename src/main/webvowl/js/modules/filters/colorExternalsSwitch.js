@@ -1,14 +1,13 @@
-import _ from "@npm/lodash";
-import BaseElement from "../../elements/BaseElement";
-import BaseNode from "../../elements/nodes/BaseNode";
-import BaseProperty from "../../elements/properties/BaseProperty";
-import AbstractFilter from "./abstractFilter";
-
+import _ from "lodash"
+import BaseElement from "../../elements/BaseElement"
+import BaseNode from "../../elements/nodes/BaseNode"
+import BaseProperty from "../../elements/properties/BaseProperty"
+import AbstractFilter from "./abstractFilter"
 
 export default class ColorExternalsSwitch extends AbstractFilter {
     COLOR_MODES = [
         { type: "same", range: [d3.rgb("#36C"), d3.rgb("#36C")] },
-        { type: "gradient", range: [d3.rgb("#36C"), d3.rgb("#EE2867")] } // taken from LD-VOWL
+        { type: "gradient", range: [d3.rgb("#36C"), d3.rgb("#EE2867")] }, // taken from LD-VOWL
     ]
 
     constructor() {
@@ -40,12 +39,12 @@ export default class ColorExternalsSwitch extends AbstractFilter {
         }
 
         if (this.enabled) {
-            this.#setColorsForExternals(externalElementMap);
+            this.#setColorsForExternals(externalElementMap)
         } else {
-            this.#resetBackgroundColors(externalElementMap);
+            this.#resetBackgroundColors(externalElementMap)
         }
-        this.filteredNodes = nodes;
-        this.filteredProperties = properties;
+        this.filteredNodes = nodes
+        this.filteredProperties = properties
     }
 
     /**
@@ -53,7 +52,10 @@ export default class ColorExternalsSwitch extends AbstractFilter {
      */
     #isExternalElement(element) {
         // deprecated is the only attribute which has preference over external
-        if (!(element.visualAttributes.indexOf("deprecated") >= 0) && element.attributes.indexOf("external") >= 0) {
+        if (
+            !(element.visualAttributes.indexOf("deprecated") >= 0) &&
+            element.attributes.indexOf("external") >= 0
+        ) {
             return true
         }
         return false
@@ -64,15 +66,16 @@ export default class ColorExternalsSwitch extends AbstractFilter {
      */
     #setColorsForExternals(externalElementMap) {
         const mapSize = externalElementMap.size
-        const colorScale = d3.scale.linear()
+        const colorScale = d3.scale
+            .linear()
             .domain([0, mapSize - 1])
             .range(_.find(this.COLOR_MODES, { type: this.colorModeType }).range)
-            .interpolate(d3.interpolateHsl);
+            .interpolate(d3.interpolateHsl)
 
         let i = 0
         for (const groupedElements of externalElementMap.values()) {
             for (const element of groupedElements) {
-                element.backgroundColor = colorScale(i);
+                element.backgroundColor = colorScale(i)
             }
             i++
         }
@@ -83,11 +86,11 @@ export default class ColorExternalsSwitch extends AbstractFilter {
      * @param {Map<string, BaseElement[]>} map
      */
     #mapExternalsToBaseUri(element, map) {
-        const baseIri = element.baseIri;
+        const baseIri = element.baseIri
         if (!map.has(baseIri)) {
-            map.set(baseIri, []);
+            map.set(baseIri, [])
         }
-        map.get(baseIri).push(element);
+        map.get(baseIri).push(element)
         // return map; // REVIEW: Check if needed to return this
     }
 
@@ -97,7 +100,7 @@ export default class ColorExternalsSwitch extends AbstractFilter {
     #resetBackgroundColors(map) {
         for (const groupedElements of map.values()) {
             for (const element of groupedElements) {
-                element.backgroundColor = undefined;
+                element.backgroundColor = undefined
             }
         }
     }

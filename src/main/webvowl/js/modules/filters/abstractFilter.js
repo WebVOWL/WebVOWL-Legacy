@@ -1,7 +1,6 @@
 import BaseNode from "../../elements/nodes/BaseNode"
 import BaseProperty from "../../elements/properties/BaseProperty"
 
-
 export default class AbstractFilter {
     /**
      * @param {boolean} defaultState
@@ -31,6 +30,6 @@ export default class AbstractFilter {
     }
 
     reset() {
-        this.enabled = this._defaultState;
+        this.enabled = this._defaultState
     }
 }

@@ -1,8 +1,7 @@
-import BaseNode from "../../elements/nodes/BaseNode";
-import BaseProperty from "../../elements/properties/BaseProperty";
-import ElementTools from "../../util/elementTools";
-import AbstractFilter from "./abstractFilter";
-
+import BaseNode from "../../elements/nodes/BaseNode"
+import BaseProperty from "../../elements/properties/BaseProperty"
+import ElementTools from "../../util/elementTools"
+import AbstractFilter from "./abstractFilter"
 
 export default class Collapsing extends AbstractFilter {
     constructor() {
@@ -18,12 +17,12 @@ export default class Collapsing extends AbstractFilter {
      */
     filter(nodes, properties) {
         // Nothing is filtered, we just need to draw everywehere
-        this.filteredNodes = nodes;
-        this.filteredProperties = properties;
+        this.filteredNodes = nodes
+        this.filteredProperties = properties
         for (const node of nodes) {
             if (!ElementTools.isDatatype(node)) {
                 // FIXME: collapsible is assigned to all nodes even though it's only used on RoundNode (this wastes memory)
-                node.collapsible = this.enabled;
+                node.collapsible = this.enabled
             }
         }
     }

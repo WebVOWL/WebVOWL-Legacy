@@ -1,5 +1,5 @@
-import "../css/toolstyle.css";
-import "../css/vowl.css";
-import "./browserWarning";
+import "../css/toolstyle.css"
+import "../css/vowl.css"
+import "./browserWarning"
 
-export { default } from "./app";
+export { default } from "./app"

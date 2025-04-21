@@ -1,7 +1,6 @@
-import BaseNode from "../nodes/BaseNode";
-import BaseProperty from "../properties/BaseProperty";
-import PlainLink from "./PlainLink";
-
+import BaseNode from "../nodes/BaseNode"
+import BaseProperty from "../properties/BaseProperty"
+import PlainLink from "./PlainLink"
 
 export default class ArrowLink extends PlainLink {
     /**
@@ -18,17 +17,32 @@ export default class ArrowLink extends PlainLink {
      * @param {BaseProperty} property
      */
     #createPropertyMarker(markerContainer, property) {
-        let marker = this.#appendBasicMarker(markerContainer, property);
+        let marker = this.#appendBasicMarker(markerContainer, property)
         //marker.attr("refX", 12);
-        const m1X = -12;
-        const m1Y = 8;
-        const m2X = -12;
-        const m2Y = -8;
-        marker.append("path")
+        const m1X = -12
+        const m1Y = 8
+        const m2X = -12
+        const m2Y = -8
+        marker
+            .append("path")
             //.attr("d", "M0,-8L12,0L0,8Z")
-            .attr("d", "M0,0L " + m1X + "," + m1Y + "L" + m2X + "," + m2Y + "L" + 0 + "," + 0)
-            .classed(property.markerType, true);
-        property.markerElement = marker;
+            .attr(
+                "d",
+                "M0,0L " +
+                    m1X +
+                    "," +
+                    m1Y +
+                    "L" +
+                    m2X +
+                    "," +
+                    m2Y +
+                    "L" +
+                    0 +
+                    "," +
+                    0,
+            )
+            .classed(property.markerType, true)
+        property.markerElement = marker
     }
 
     /**
@@ -36,16 +50,31 @@ export default class ArrowLink extends PlainLink {
      * @param {BaseProperty} inverse
      */
     #createInverseMarker(markerContainer, inverse) {
-        const m1X = -12;
-        const m1Y = 8;
-        const m2X = -12;
-        const m2Y = -8;
-        let inverseMarker = this.#appendBasicMarker(markerContainer, inverse);
-        inverseMarker.append("path")
+        const m1X = -12
+        const m1Y = 8
+        const m2X = -12
+        const m2Y = -8
+        let inverseMarker = this.#appendBasicMarker(markerContainer, inverse)
+        inverseMarker
+            .append("path")
             //.attr("d", "M12,-8L0,0L12,8Z")
-            .attr("d", "M0,0L " + -m1X + "," + -m1Y + "L" + -m2X + "," + -m2Y + "L" + 0 + "," + 0)
-            .classed(inverse.markerType, true);
-        inverse.markerElement = inverseMarker;
+            .attr(
+                "d",
+                "M0,0L " +
+                    -m1X +
+                    "," +
+                    -m1Y +
+                    "L" +
+                    -m2X +
+                    "," +
+                    -m2Y +
+                    "L" +
+                    0 +
+                    "," +
+                    0,
+            )
+            .classed(inverse.markerType, true)
+        inverse.markerElement = inverseMarker
     }
 
     /**
@@ -53,14 +82,17 @@ export default class ArrowLink extends PlainLink {
      * @param {BaseProperty} property
      */
     #appendBasicMarker(markerContainer, property) {
-        return markerContainer.append("marker")
-            .datum(property)
-            .attr("id", property.markerId())
-            .attr("viewBox", "-14 -10 28 20")
-            .attr("markerWidth", 10)
-            .attr("markerHeight", 10)
-            //.attr("markerUnits", "userSpaceOnUse")
-            .attr("orient", "auto");
+        return (
+            markerContainer
+                .append("marker")
+                .datum(property)
+                .attr("id", property.markerId())
+                .attr("viewBox", "-14 -10 28 20")
+                .attr("markerWidth", 10)
+                .attr("markerHeight", 10)
+                //.attr("markerUnits", "userSpaceOnUse")
+                .attr("orient", "auto")
+        )
     }
 
     /**
@@ -69,20 +101,20 @@ export default class ArrowLink extends PlainLink {
      */
     // @ts-ignore
     draw(linkGroup, markerContainer) {
-        const property = this.label.property;
-        const inverse = property.inverse;
+        const property = this.label.property
+        const inverse = property.inverse
 
-        this.#createPropertyMarker(markerContainer, property);
+        this.#createPropertyMarker(markerContainer, property)
         if (inverse) {
-            this.#createInverseMarker(markerContainer, inverse);
+            this.#createInverseMarker(markerContainer, inverse)
         }
 
-        super.draw(linkGroup);
+        super.draw(linkGroup)
 
         // attach the markers to the link
-        linkGroup.attr("marker-end", "url(#" + property.markerId() + ")");
+        linkGroup.attr("marker-end", "url(#" + property.markerId() + ")")
         if (inverse) {
-            linkGroup.attr("marker-start", "url(#" + inverse.markerId() + ")");
+            linkGroup.attr("marker-start", "url(#" + inverse.markerId() + ")")
         }
     }
 }

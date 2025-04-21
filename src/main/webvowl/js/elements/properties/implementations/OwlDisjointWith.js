@@ -2,7 +2,6 @@ import Graph from "../../../graph"
 import CenteringTextElement from "../../../util/CenteringTextElement"
 import BaseProperty from "../BaseProperty"
 
-
 export default class OwlDisjointWith extends BaseProperty {
     /**
      * @param {Graph} graph
@@ -31,26 +30,31 @@ export default class OwlDisjointWith extends BaseProperty {
      * @param {d3.Selection<any, any, null, undefined>} labelContainer
      */
     drawLabel(labelContainer) {
-        this.shapeElement = this.addRect(labelContainer);
+        this.shapeElement = this.addRect(labelContainer)
 
-        labelContainer.append("circle")
+        labelContainer
+            .append("circle")
             .classed("symbol", true)
             .classed("fineline", true)
             .classed("embedded", true)
             .attr("cx", -12.5)
-            .attr("r", 10);
+            .attr("r", 10)
 
-        labelContainer.append("circle")
+        labelContainer
+            .append("circle")
             .classed("symbol", true)
             .classed("fineline", true)
             .classed("embedded", true)
             .attr("cx", 12.5)
-            .attr("r", 10);
+            .attr("r", 10)
 
-        const textElement = new CenteringTextElement(labelContainer, this.backgroundColor);
+        const textElement = new CenteringTextElement(
+            labelContainer,
+            this.backgroundColor,
+        )
         if (!this.graph.options.compactNotation) {
-            textElement.addSubText("disjoint");
+            textElement.addSubText("disjoint")
         }
-        textElement.translation(0, 20);
+        textElement.translation(0, 20)
     }
 }

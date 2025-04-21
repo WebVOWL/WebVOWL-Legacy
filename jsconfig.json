@@ -14,10 +14,5 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true
     },
-    "exclude": [
-        "node_modules",
-        "**/node_modules/*",
-        "target",
-        "node"
-    ]
+    "exclude": ["node_modules", "**/node_modules/*", "target", "node"]
 }

@@ -1,8 +1,7 @@
-import Trie from "../trie";
-
+import Trie from "../trie"
 
 function testTrie() {
-    let trie = new Trie();
+    let trie = new Trie()
     let testData = ["Rem", "Ram", "Fubuki", "Unicorn"]
 
     console.log("--- Testing Trie ---")

@@ -33,7 +33,6 @@ import PickAndPin from "./modules/pickAndPin"
 import SelectionDetailsDisplayer from "./modules/selectionDetailsDisplayer"
 import PrefixTools from "./util/prefixTools"
 
-
 export class UntouchedOptions {
     constructor() {
         this.classDistance = 200
@@ -183,17 +182,19 @@ export default class Options {
             this.colorExternalsModule,
             this.compactNotation,
             this.nodeScalingModule,
-            this.statistics
+            this.statistics,
         ]
 
         // Misc
         this.focuserModule = new Focuser(this.graph)
         this.pickAndPinModule = new PickAndPin()
-        this.selectionDetailDisplayer = new SelectionDetailsDisplayer(this.sidebar.updateSelectionInformation)
+        this.selectionDetailDisplayer = new SelectionDetailsDisplayer(
+            this.sidebar.updateSelectionInformation,
+        )
         this.selectionModules = [
             this.focuserModule,
             this.pickAndPinModule,
-            this.selectionDetailDisplayer
+            this.selectionDetailDisplayer,
         ]
 
         // Supported types
@@ -203,38 +204,38 @@ export default class Options {
             "xsd:double",
             "xsd:integer",
             "xsd:string",
-            "undefined"
+            "undefined",
         ]
         this.supportedClasses = [
             "owl:Thing",
             "owl:Class",
-            "owl:DeprecatedClass"
+            "owl:DeprecatedClass",
         ]
         this.supportedProperties = [
             "owl:objectProperty",
             "rdfs:subClassOf",
             "owl:disjointWith",
             "owl:allValuesFrom",
-            "owl:someValuesFrom"
+            "owl:someValuesFrom",
         ]
         const prefixes = {
-            rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-            rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
-            owl: 'http://www.w3.org/2002/07/owl#',
-            xsd: 'http://www.w3.org/2001/XMLSchema#',
-            dc: 'http://purl.org/dc/elements/1.1/#',
-            xml: 'http://www.w3.org/XML/1998/namespace'
+            rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+            owl: "http://www.w3.org/2002/07/owl#",
+            xsd: "http://www.w3.org/2001/XMLSchema#",
+            dc: "http://purl.org/dc/elements/1.1/#",
+            xml: "http://www.w3.org/XML/1998/namespace",
         }
         this.prefixList = new Map(Object.entries(prefixes))
     }
 
     get defaultConfig() {
-        this.#updateConfigObject();
-        return this._defaultConfig;
+        this.#updateConfigObject()
+        return this._defaultConfig
     }
 
     clearGeneralMetaObject() {
-        this.generalOntologyMetaData.clear();
+        this.generalOntologyMetaData.clear()
     }
 
     /**
@@ -249,20 +250,17 @@ export default class Options {
             this.subclassFilter,
             this.disjointPropertyFilter,
             this.setOperatorFilter,
-            this.nodeDegreeFilter
+            this.nodeDegreeFilter,
         )
         this.modeMenu.setup(
             this.pickAndPinModule,
             this.nodeScalingModule,
             this.compactNotationModule,
-            this.colorExternalsModule
+            this.colorExternalsModule,
         )
         this.pauseMenu.setup()
         this.sidebar.setup()
-        this.loadingModule.setup([
-            this.statistics,
-            loadingFunc
-        ])
+        this.loadingModule.setup([this.statistics, loadingFunc])
         this.leftSidebar.setup()
         this.editSidebar.setup()
         this.debugMenu.setup()
@@ -272,7 +270,7 @@ export default class Options {
             this.modeMenu,
             this.focuserModule,
             this.selectionDetailDisplayer,
-            this.pauseMenu
+            this.pauseMenu,
         ])
         this.searchMenu.setup()
         this.navigationMenu.setup()
@@ -285,17 +283,17 @@ export default class Options {
     }
 
     executeHiddenDebugFeatuers() {
-        this.hideDebugOptions = !this.hideDebugOptions;
-        d3.selectAll(".debugOption").classed("hidden", this.hideDebugOptions);
+        this.hideDebugOptions = !this.hideDebugOptions
+        d3.selectAll(".debugOption").classed("hidden", this.hideDebugOptions)
         if (!this.hideDebugOptions) {
-            this.graph.setForceTickFunctionWithFPS();
+            this.graph.setForceTickFunctionWithFPS()
         } else {
-            this.graph.setDefaultForceTickFunction();
+            this.graph.setDefaultForceTickFunction()
         }
         if (this.debugMenu) {
-            this.debugMenu.updateSettings();
+            this.debugMenu.updateSettings()
         }
-        this.setHideDebugFeaturesForDefaultObject(this.hideDebugOptions);
+        this.setHideDebugFeaturesForDefaultObject(this.hideDebugOptions)
     }
 
     /**
@@ -311,14 +309,14 @@ export default class Options {
                         "Input IRI does not represent an URL",
                         "Restoring previous IRI for ontology",
                         1,
-                        undefined
-                    );
-                    return false;
+                        undefined,
+                    )
+                    return false
                 }
             }
         }
-        this.generalOntologyMetaData.set(property, value);
-        return true;
+        this.generalOntologyMetaData.set(property, value)
+        return true
     }
 
     /**
@@ -348,7 +346,7 @@ export default class Options {
      * @param {string} url
      */
     addPrefix(prefix, url) {
-        this.prefixList.set(prefix, url);
+        this.prefixList.set(prefix, url)
     }
 
     /**
@@ -359,22 +357,30 @@ export default class Options {
      */
     updatePrefix(oldPrefix, newPrefix, oldURL, newURL) {
         if (oldPrefix === newPrefix && oldURL === newURL) {
-            return true;
+            return true
         }
-        if (oldPrefix === newPrefix && oldURL !== newURL && PrefixTools.validURL(newURL)) {
-            this.prefixList.set(oldPrefix, newURL);
-        } else if (oldPrefix === newPrefix && oldURL !== newURL && !PrefixTools.validURL(newURL)) {
+        if (
+            oldPrefix === newPrefix &&
+            oldURL !== newURL &&
+            PrefixTools.validURL(newURL)
+        ) {
+            this.prefixList.set(oldPrefix, newURL)
+        } else if (
+            oldPrefix === newPrefix &&
+            oldURL !== newURL &&
+            !PrefixTools.validURL(newURL)
+        ) {
             if (!PrefixTools.validURL(newURL)) {
                 this.warningModule.showWarning(
                     "Invalid Prefix IRI",
                     "Input IRI does not represent an IRI",
                     "You should enter a valid IRI in form of a URL",
                     1,
-                    undefined
-                );
-                return false;
+                    undefined,
+                )
+                return false
             }
-            return false;
+            return false
         }
         if (oldPrefix !== newPrefix && PrefixTools.validURL(newURL)) {
             // sanity check
@@ -384,14 +390,14 @@ export default class Options {
                     "Prefix: " + newPrefix + " is already defined",
                     "You should use an other one",
                     1,
-                    undefined
-                );
-                return false;
+                    undefined,
+                )
+                return false
             }
-            this.removePrefix(oldPrefix);
-            this.addPrefix(newPrefix, newURL);
-            this.editSidebar.updateEditDeleteButtonIds(oldPrefix, newPrefix);
-            return true;
+            this.removePrefix(oldPrefix)
+            this.addPrefix(newPrefix, newURL)
+            this.editSidebar.updateEditDeleteButtonIds(oldPrefix, newPrefix)
+            return true
         }
         if (!PrefixTools.validURL(newURL)) {
             this.warningModule.showWarning(
@@ -399,49 +405,65 @@ export default class Options {
                 "Input IRI does not represent an URL",
                 "You should enter a valid URL",
                 1,
-                undefined
-            );
+                undefined,
+            )
         }
-        return false;
+        return false
     }
 
     /**
      * @param {string} prefix
      */
     removePrefix(prefix) {
-        this.prefixList.delete(prefix);
+        this.prefixList.delete(prefix)
     }
 
     /**
      * @param {boolean} val
      */
     setEditorModeForDefaultObject(val) {
-        this._defaultConfig.editorMode = val;
+        this._defaultConfig.editorMode = val
     }
 
     /**
      * @param {boolean} val
      */
     setHideDebugFeaturesForDefaultObject(val) {
-        this._defaultConfig.debugFeatures = !val;
+        this._defaultConfig.debugFeatures = !val
     }
 
     #updateConfigObject() {
         this._defaultConfig.sidebar = this.sidebar.getSidebarVisibility()
-        this._defaultConfig.cd = this.classDistance;
-        this._defaultConfig.dd = this.datatypeDistance;
-        this._defaultConfig.filter_datatypes = this.filterMenu.getCheckBoxValue("datatypeFilterCheckbox");
-        this._defaultConfig.filter_sco = this.filterMenu.getCheckBoxValue("subclassFilterCheckbox");
-        this._defaultConfig.filter_disjoint = this.filterMenu.getCheckBoxValue("disjointFilterCheckbox");
-        this._defaultConfig.filter_setOperator = this.filterMenu.getCheckBoxValue("setoperatorFilterCheckbox");
-        this._defaultConfig.filter_objectProperties = this.filterMenu.getCheckBoxValue("objectPropertyFilterCheckbox");
-        this._defaultConfig.mode_dynamic = this.dynamicLabelWidth;
-        this._defaultConfig.mode_scaling = this.modeMenu.getCheckBoxValue("nodescalingModuleCheckbox");
-        this._defaultConfig.mode_compact = this.modeMenu.getCheckBoxValue("compactnotationModuleCheckbox");
-        this._defaultConfig.mode_colorExt = this.modeMenu.getCheckBoxValue("colorexternalsModuleCheckbox");
-        this._defaultConfig.mode_multiColor = this.modeMenu.colorModeState;
-        this._defaultConfig.mode_pnp = this.modeMenu.getCheckBoxValue("pickandpinModuleCheckbox");
-        this._defaultConfig.rect = 0;
+        this._defaultConfig.cd = this.classDistance
+        this._defaultConfig.dd = this.datatypeDistance
+        this._defaultConfig.filter_datatypes = this.filterMenu.getCheckBoxValue(
+            "datatypeFilterCheckbox",
+        )
+        this._defaultConfig.filter_sco = this.filterMenu.getCheckBoxValue(
+            "subclassFilterCheckbox",
+        )
+        this._defaultConfig.filter_disjoint = this.filterMenu.getCheckBoxValue(
+            "disjointFilterCheckbox",
+        )
+        this._defaultConfig.filter_setOperator =
+            this.filterMenu.getCheckBoxValue("setoperatorFilterCheckbox")
+        this._defaultConfig.filter_objectProperties =
+            this.filterMenu.getCheckBoxValue("objectPropertyFilterCheckbox")
+        this._defaultConfig.mode_dynamic = this.dynamicLabelWidth
+        this._defaultConfig.mode_scaling = this.modeMenu.getCheckBoxValue(
+            "nodescalingModuleCheckbox",
+        )
+        this._defaultConfig.mode_compact = this.modeMenu.getCheckBoxValue(
+            "compactnotationModuleCheckbox",
+        )
+        this._defaultConfig.mode_colorExt = this.modeMenu.getCheckBoxValue(
+            "colorexternalsModuleCheckbox",
+        )
+        this._defaultConfig.mode_multiColor = this.modeMenu.colorModeState
+        this._defaultConfig.mode_pnp = this.modeMenu.getCheckBoxValue(
+            "pickandpinModuleCheckbox",
+        )
+        this._defaultConfig.rect = 0
     }
 
     /**
@@ -451,102 +473,131 @@ export default class Options {
      */
     setOptionsFromURL(opts, changeEditFlag) {
         if (opts.sidebar !== undefined) {
-            this.sidebar.showSidebar(opts.sidebar, true);
+            this.sidebar.showSidebar(opts.sidebar, true)
         }
         if (opts.doc) {
-            this.filterMenu.setDegreeSliderValue(opts.doc);
-            this.graph.global_dof = opts.doc;
+            this.filterMenu.setDegreeSliderValue(opts.doc)
+            this.graph.global_dof = opts.doc
             // reset the value to be -1;
-            this.defaultConfig.doc = -1;
+            this.defaultConfig.doc = -1
         }
         if (opts.editorMode) {
             const settingFlag = opts.editorMode
-            d3.select("#editorModeModuleCheckbox").node().checked = settingFlag;
+            d3.select("#editorModeModuleCheckbox").node().checked = settingFlag
             if (changeEditFlag) {
-                this.graph.editorMode = settingFlag;
+                this.graph.editorMode = settingFlag
             }
             // REVIEW: Check if we need to set values on this.defaultConfig
             // update config object
             // this.defaultConfig.editorMode = opts.editorMode;
         }
-        if (opts.cd) { // class distance
-            this.classDistance = opts.cd; // class distance
+        if (opts.cd) {
+            // class distance
+            this.classDistance = opts.cd // class distance
             // this.defaultConfig.cd = opts.cd;
         }
-        if (opts.dd) { // data distance
-            this.datatypeDistance = opts.dd;
+        if (opts.dd) {
+            // data distance
+            this.datatypeDistance = opts.dd
             // this.defaultConfig.cd = opts.cd;
         }
         if (opts.cd || opts.dd) {
-            this.gravityMenu.reset(); // reset the values so the slider is updated;
+            this.gravityMenu.reset() // reset the values so the slider is updated;
         }
         if (opts.filter_datatypes) {
             const settingFlag = opts.filter_datatypes
-            this.filterMenu.setCheckBoxValue("datatypeFilterCheckbox", settingFlag);
+            this.filterMenu.setCheckBoxValue(
+                "datatypeFilterCheckbox",
+                settingFlag,
+            )
             // this.defaultConfig.filter_datatypes = opts.filter_datatypes;
         }
         if (opts.debugFeatures) {
-            this.hideDebugOptions = opts.debugFeatures;
+            this.hideDebugOptions = opts.debugFeatures
             if (!this.hideDebugOptions) {
-                this.executeHiddenDebugFeatuers();
+                this.executeHiddenDebugFeatuers()
             }
             // this.defaultConfig.debugFeatures = opts.debugFeatures;
         }
         if (opts.filter_objectProperties) {
             const settingFlag = opts.filter_objectProperties
-            this.filterMenu.setCheckBoxValue("objectPropertyFilterCheckbox", settingFlag);
+            this.filterMenu.setCheckBoxValue(
+                "objectPropertyFilterCheckbox",
+                settingFlag,
+            )
             // this.defaultConfig.filter_objectProperties = opts.filter_objectProperties;
         }
         if (opts.filter_sco) {
             const settingFlag = opts.filter_sco
-            this.filterMenu.setCheckBoxValue("subclassFilterCheckbox", settingFlag);
+            this.filterMenu.setCheckBoxValue(
+                "subclassFilterCheckbox",
+                settingFlag,
+            )
             // this.defaultConfig.filter_sco = opts.filter_sco;
         }
         if (opts.filter_disjoint) {
             const settingFlag = opts.filter_disjoint
-            this.filterMenu.setCheckBoxValue("disjointFilterCheckbox", settingFlag);
+            this.filterMenu.setCheckBoxValue(
+                "disjointFilterCheckbox",
+                settingFlag,
+            )
             // this.defaultConfig.filter_disjoint = opts.filter_disjoint;
         }
         if (opts.filter_setOperator) {
             const settingFlag = opts.filter_setOperator
-            this.filterMenu.setCheckBoxValue("setoperatorFilterCheckbox", settingFlag);
+            this.filterMenu.setCheckBoxValue(
+                "setoperatorFilterCheckbox",
+                settingFlag,
+            )
             // this.defaultConfig.filter_setOperator = opts.filter_setOperator;
         }
-        this.filterMenu.updateSettings();
+        this.filterMenu.updateSettings()
 
         // modesMenu
         if (opts.mode_dynamic) {
             const settingFlag = opts.mode_dynamic
-            this.modeMenu.setDynamicLabelWidth(settingFlag);
-            this.dynamicLabelWidth = settingFlag;
+            this.modeMenu.setDynamicLabelWidth(settingFlag)
+            this.dynamicLabelWidth = settingFlag
             // this.defaultConfig.mode_dynamic = opts.mode_dynamic;
         }
         if (opts.mode_pnp) {
             const settingFlag = opts.mode_pnp
-            this.modeMenu.setCheckBoxValue("pickandpinModuleCheckbox", settingFlag);
+            this.modeMenu.setCheckBoxValue(
+                "pickandpinModuleCheckbox",
+                settingFlag,
+            )
             // this.defaultConfig.mode_pnp = opts.mode_pnp;
         }
         if (opts.mode_scaling) {
             const settingFlag = opts.mode_scaling
-            this.modeMenu.setCheckBoxValue("nodescalingModuleCheckbox", settingFlag);
+            this.modeMenu.setCheckBoxValue(
+                "nodescalingModuleCheckbox",
+                settingFlag,
+            )
             // this.defaultConfig.mode_scaling = opts.mode_scaling;
         }
         if (opts.mode_compact) {
             const settingFlag = opts.mode_compact
-            this.modeMenu.setCheckBoxValue("compactnotationModuleCheckbox", settingFlag);
+            this.modeMenu.setCheckBoxValue(
+                "compactnotationModuleCheckbox",
+                settingFlag,
+            )
             // this.defaultConfig.mode_compact = opts.mode_compact;
         }
         if (opts.mode_colorExt) {
             const settingFlag = opts.mode_colorExt
-            this.modeMenu.setCheckBoxValue("colorexternalsModuleCheckbox", settingFlag);
+            this.modeMenu.setCheckBoxValue(
+                "colorexternalsModuleCheckbox",
+                settingFlag,
+            )
             // this.defaultConfig.mode_colorExt = opts.mode_colorExt;
         }
         if (opts.mode_multiColor) {
             const settingFlag = opts.mode_multiColor
-            this.modeMenu.setColorSwitchStateUsingURL(settingFlag);
+            this.modeMenu.setColorSwitchStateUsingURL(settingFlag)
             // this.defaultConfig.mode_multiColor = opts.mode_multiColor;
         }
-        this.modeMenu.updateSettingsUsingURL();
-        this.rectangularRepresentation = Boolean(opts.rect);
+        this.modeMenu.updateSettingsUsingURL()
+        this.rectangularRepresentation = Boolean(opts.rect)
     }
 }

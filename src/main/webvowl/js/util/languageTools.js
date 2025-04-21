@@ -1,5 +1,4 @@
-import Constants from "./constants";
-
+import Constants from "./constants"
 
 /**
  * Encapsulates methods which return a label in a specific language for a preferred language.
@@ -12,26 +11,29 @@ export default class LanguageTools {
      */
     static textInLanguage(textObject, preferredLanguage = null) {
         if (typeof textObject === "undefined") {
-            return undefined;
+            return undefined
         }
 
         if (typeof textObject === "string") {
-            return textObject;
+            return textObject
         }
 
         if (preferredLanguage && textObject.hasOwnProperty(preferredLanguage)) {
-            return textObject[preferredLanguage];
+            return textObject[preferredLanguage]
         }
 
-        const textForLanguage = this.#searchLanguage(textObject, "en");
+        const textForLanguage = this.#searchLanguage(textObject, "en")
         if (textForLanguage) {
-            return textForLanguage;
+            return textForLanguage
         }
-        textForLanguage = this.#searchLanguage(textObject, Constants.LANG_UNDEFINED);
+        textForLanguage = this.#searchLanguage(
+            textObject,
+            Constants.LANG_UNDEFINED,
+        )
         if (textForLanguage) {
-            return textForLanguage;
+            return textForLanguage
         }
-        return textObject[Constants.LANG_IRIBASED];
+        return textObject[Constants.LANG_IRIBASED]
     }
 
     /**
@@ -41,10 +43,12 @@ export default class LanguageTools {
      */
     static #searchLanguage(textObject, preferredLanguage) {
         for (const language of textObject) {
-            if (language === preferredLanguage && textObject.hasOwnProperty(language)) {
-                return textObject[language];
+            if (
+                language === preferredLanguage &&
+                textObject.hasOwnProperty(language)
+            ) {
+                return textObject[language]
             }
         }
     }
 }
-

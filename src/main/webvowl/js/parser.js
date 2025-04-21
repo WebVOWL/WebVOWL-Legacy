@@ -11,7 +11,6 @@ import AttributeParser from "./parsing/attributeParser"
 import ElementTools from "./util/elementTools"
 import LanguageTools from "./util/languageTools"
 
-
 export default class Parser {
     PREFIX = "GENERATED-MERGED_RANGE-"
     OBJECT_PROPERTY_DEFAULT_RANGE_TYPE = "owl:Thing"
@@ -43,58 +42,65 @@ export default class Parser {
     }
 
     parseSettings() {
-        this.settingsImported = true;
-        this.settingsImportGraphZoomAndTranslation = false;
+        this.settingsImported = true
+        this.settingsImportGraphZoomAndTranslation = false
 
         if (!this.settingsData) {
-            this.settingsImported = false;
-            return;
+            this.settingsImported = false
+            return
         }
         /** global settings **********************************************************/
         if (this.settingsData.global) {
             if (this.settingsData.global.zoom) {
-                const zoomFactor = this.settingsData.global.zoom;
-                this.graph.setZoom(zoomFactor);
-                this.settingsImportGraphZoomAndTranslation = true;
+                const zoomFactor = this.settingsData.global.zoom
+                this.graph.setZoom(zoomFactor)
+                this.settingsImportGraphZoomAndTranslation = true
             }
 
             if (this.settingsData.global.translation) {
-                const translation = this.settingsData.global.translation;
-                this.graph.setTranslation(translation);
-                this.settingsImportGraphZoomAndTranslation = true;
+                const translation = this.settingsData.global.translation
+                this.graph.setTranslation(translation)
+                this.settingsImportGraphZoomAndTranslation = true
             }
 
             if (this.settingsData.global.paused) {
-                const paused = this.settingsData.global.paused;
-                this.graph.options.pauseMenu.setPauseValue(paused);
+                const paused = this.settingsData.global.paused
+                this.graph.options.pauseMenu.setPauseValue(paused)
             }
         }
         /** Gravity Settings  **********************************************************/
         if (this.settingsData.gravity) {
             if (this.settingsData.gravity.classDistance) {
-                const classDistance = this.settingsData.gravity.classDistance;
-                this.graph.options.classDistance = classDistance;
+                const classDistance = this.settingsData.gravity.classDistance
+                this.graph.options.classDistance = classDistance
             }
             if (this.settingsData.gravity.datatypeDistance) {
-                const datatypeDistance = this.settingsData.gravity.datatypeDistance;
-                this.graph.options.datatypeDistance = datatypeDistance;
+                const datatypeDistance =
+                    this.settingsData.gravity.datatypeDistance
+                this.graph.options.datatypeDistance = datatypeDistance
             }
-            this.graph.options.gravityMenu.reset(); // reads the options values and sets the gui values
+            this.graph.options.gravityMenu.reset() // reads the options values and sets the gui values
         }
 
         /** Filter Settings **********************************************************/
         if (this.settingsData.filter) {
             // checkbox settings
             if (this.settingsData.filter.checkBox) {
-                for (const filterCheckbox of this.settingsData.filter.checkBox) {
-                    this.graph.options.filterMenu.setCheckBoxValue(filterCheckbox.id, filterCheckbox.checked);
+                for (const filterCheckbox of this.settingsData.filter
+                    .checkBox) {
+                    this.graph.options.filterMenu.setCheckBoxValue(
+                        filterCheckbox.id,
+                        filterCheckbox.checked,
+                    )
                 }
             }
             // node degree filter settings
             if (this.settingsData.filter.degreeSliderValue) {
-                this.graph.options.filterMenu.setDegreeSliderValue(this.settingsData.filter.degreeSliderValue);
+                this.graph.options.filterMenu.setDegreeSliderValue(
+                    this.settingsData.filter.degreeSliderValue,
+                )
             }
-            this.graph.options.filterMenu.updateSettings();
+            this.graph.options.filterMenu.updateSettings()
         }
 
         /** Modes Setting **********************************************************/
@@ -102,14 +108,19 @@ export default class Parser {
             // checkbox settings
             if (this.settingsData.modes.checkBox) {
                 for (const modeCheckbox of this.settingsData.modes.checkBox) {
-                    this.graph.options.modeMenu.setCheckBoxValue(modeCheckbox.id, modeCheckbox.checked);
+                    this.graph.options.modeMenu.setCheckBoxValue(
+                        modeCheckbox.id,
+                        modeCheckbox.checked,
+                    )
                 }
             }
             // color switch settings
-            this.graph.options.modeMenu.setColorSwitchState(Boolean(this.settingsData.modes.colorSwitchState));
-            this.graph.options.modeMenu.updateSettings();
+            this.graph.options.modeMenu.setColorSwitchState(
+                Boolean(this.settingsData.modes.colorSwitchState),
+            )
+            this.graph.options.modeMenu.updateSettings()
         }
-        this.graph.updateStyle(); // updates graph representation(setting charges and distances)
+        this.graph.updateStyle() // updates graph representation(setting charges and distances)
     }
 
     /**
@@ -118,7 +129,7 @@ export default class Parser {
      */
     parse(ontologyData) {
         if (ontologyData.settings) {
-            this.settingsData = ontologyData.settings;
+            this.settingsData = ontologyData.settings
         }
 
         // Create node objects
@@ -127,14 +138,17 @@ export default class Parser {
             [ontologyData.classAttribute, ontologyData.datatypeAttribute],
             ontologyData.namespace,
             nodeClassMap,
-            this.#combineClasses
+            this.#combineClasses,
         )
 
         const unparsedProperties = ontologyData.property || []
 
         // Inject properties for unions, intersections etc.
         // @ts-ignore
-        this.#addSetOperatorProperties(combinedClassesAndDatatypes, unparsedProperties)
+        this.#addSetOperatorProperties(
+            combinedClassesAndDatatypes,
+            unparsedProperties,
+        )
 
         // Create property objects
         const combinedProperties = this.#combineClassesOrProperties(
@@ -144,17 +158,20 @@ export default class Parser {
             // @ts-ignore
             propertyClassMap,
             // @ts-ignore
-            this.#combineProperties
+            this.#combineProperties,
         )
 
         // @ts-ignore
-        this.mergeRangesOfEquivalentProperties(combinedProperties, combinedClassesAndDatatypes)
+        this.mergeRangesOfEquivalentProperties(
+            combinedProperties,
+            combinedClassesAndDatatypes,
+        )
 
         // Process the graph data
         // @ts-ignore
-        this.nodes = this.#createNodeStructure(combinedClassesAndDatatypes);
+        this.nodes = this.#createNodeStructure(combinedClassesAndDatatypes)
         // @ts-ignore
-        this.properties = this.#createPropertyStructure(combinedProperties);
+        this.properties = this.#createPropertyStructure(combinedProperties)
     }
 
     /**
@@ -165,44 +182,47 @@ export default class Parser {
      * @returns {[{ header?: any; class?: any[]; } | undefined, boolean]} Whether `jsonObject` is valid graph data
      */
     parseOntologyFromText(jsonObject, filename, alternativeFilename) {
-        let isValidData = false;
-        const options = this.graph.options;
-        const loadingModule = options.loadingModule;
+        let isValidData = false
+        const options = this.graph.options
+        const loadingModule = options.loadingModule
 
         if (!jsonObject && filename === undefined) {
-            loadingModule.notValidJsonFile();
-            return [undefined, isValidData];
+            loadingModule.notValidJsonFile()
+            return [undefined, isValidData]
         }
 
         if (!filename) {
             // First look if an ontology title exists, otherwise take the alternative filename
             // @ts-ignore
-            const ontologyNames = jsonObject.header ? jsonObject.header.title : undefined;
-            const ontologyName = LanguageTools.textInLanguage(ontologyNames);
+            const ontologyNames = jsonObject.header
+                ? jsonObject.header.title
+                : undefined
+            const ontologyName = LanguageTools.textInLanguage(ontologyNames)
 
             if (ontologyName) {
-                filename = ontologyName;
+                filename = ontologyName
             } else {
-                filename = alternativeFilename;
+                filename = alternativeFilename
             }
         }
 
         // check if we have graph data
         // @ts-ignore
-        isValidData = jsonObject.class !== undefined && jsonObject.class.length > 0;
+        isValidData =
+            jsonObject.class !== undefined && jsonObject.class.length > 0
 
         if (isValidData) {
-            const ontologyMenu = options.ontologyMenu;
-            const exportMenu = options.exportMenu;
-            options.data = jsonObject;
-            loadingModule.validJsonFile();
+            const ontologyMenu = options.ontologyMenu
+            const exportMenu = options.exportMenu
+            options.data = jsonObject
+            loadingModule.validJsonFile()
             if (ontologyMenu.shouldCacheOntology(jsonObject)) {
-                ontologyMenu.setCachedOntology(filename, jsonObject);
-                exportMenu.setJsonText(jsonObject);
+                ontologyMenu.setCachedOntology(filename, jsonObject)
+                exportMenu.setJsonText(jsonObject)
             }
-            exportMenu.setFilename(filename);
+            exportMenu.setFilename(filename)
         }
-        return [jsonObject, isValidData];
+        return [jsonObject, isValidData]
     }
 
     /**
@@ -214,61 +234,74 @@ export default class Parser {
      * @param {Map<string, new (graph: any) => BaseElement>} prototypeMap
      * @param {(element: any, Prototype: new (graph: any) => BaseElement) => BaseElement} callable
      */
-    #combineClassesOrProperties(baseObjects, attributes, namespaces, prototypeMap, callable) {
+    #combineClassesOrProperties(
+        baseObjects,
+        attributes,
+        namespaces,
+        prototypeMap,
+        callable,
+    ) {
         if (baseObjects.length !== attributes.length) {
             throw new Error(
-                `Cannot combine arrays of different size. BaseObject has size ${baseObjects.length} and objectAttribute has size ${attributes.length}`
+                `Cannot combine arrays of different size. BaseObject has size ${baseObjects.length} and objectAttribute has size ${attributes.length}`,
             )
         }
 
-        let combined = [];
+        let combined = []
 
         for (let i = 0; i < baseObjects.length; i++) {
-            let objectMap = new Map();
+            let objectMap = new Map()
             if (attributes[i]) {
                 for (const attribute of attributes[i]) {
-                    objectMap.set(attribute.id, attribute);
+                    objectMap.set(attribute.id, attribute)
                 }
             }
 
             for (const element of baseObjects[i]) {
                 if (attributes[i]) {
                     // Look for an attribute with the same id and merge them
-                    const matchingAttribute = objectMap.get(element.id);
-                    this.#addAdditionalAttributes(element, matchingAttribute); // REVIEW: Ensure correctess of this call
+                    const matchingAttribute = objectMap.get(element.id)
+                    this.#addAdditionalAttributes(element, matchingAttribute) // REVIEW: Ensure correctess of this call
                 }
 
                 // Then look for a prototype to add its properties
-                let Prototype = prototypeMap.get(element.type.toLowerCase());
+                let Prototype = prototypeMap.get(element.type.toLowerCase())
                 if (Prototype) {
                     // Should be unnecessary, as attributes defined in the Prototype should be present in the ontology data
                     // addAdditionalAttributes(element, Prototype);
 
                     // Create an instance of a node or property (according to `element`'s type)
-                    let object = callable(element, Prototype);
+                    let object = callable(element, Prototype)
 
                     // Class element pin
                     if (element.pinned === true) {
-                        object.pinned = true;
-                        this.graph.options.pickAndPinModule.addPinnedElement(object);
+                        object.pinned = true
+                        this.graph.options.pickAndPinModule.addPinnedElement(
+                            object,
+                        )
                     }
 
                     // Combine attributes
                     if (element.attributes) {
-                        object.attributes = element.attributes.concat(object.attributes);
+                        object.attributes = element.attributes.concat(
+                            object.attributes,
+                        )
                     }
 
                     // convert types to IRIs
                     if (typeof element.iri === "string") {
-                        element.iri = this.#replaceNamespace(element.iri, namespaces)
+                        element.iri = this.#replaceNamespace(
+                            element.iri,
+                            namespaces,
+                        )
                     }
-                    combined.push(object);
+                    combined.push(object)
                 } else {
-                    console.error("Unknown element type: " + element.type);
+                    console.error("Unknown element type: " + element.type)
                 }
             }
         }
-        return combined;
+        return combined
     }
 
     /**
@@ -277,38 +310,38 @@ export default class Parser {
      * Note: all `element` properties are strings or JSON objects
      */
     #combineClasses(element, Prototype) {
-        let node = new Prototype(this.graph);
-        node.annotations = element.annotations;
-        node.baseIri = element.baseIri;
-        node.comment = element.comment;
-        node.complement = element.complement;
-        node.disjointUnion = element.disjointUnion;
-        node.description = element.description;
-        node.equivalents = element.equivalent;
-        node.id = element.id;
-        node.intersection = element.intersection;
-        node.label = element.label;
+        let node = new Prototype(this.graph)
+        node.annotations = element.annotations
+        node.baseIri = element.baseIri
+        node.comment = element.comment
+        node.complement = element.complement
+        node.disjointUnion = element.disjointUnion
+        node.description = element.description
+        node.equivalents = element.equivalent
+        node.id = element.id
+        node.intersection = element.intersection
+        node.label = element.label
         // node.type=element.type; Ignore, because we predefined it
-        node.union = element.union;
-        node.iri = element.iri;
+        node.union = element.union
+        node.iri = element.iri
         if (element.pos) {
-            node.x = element.pos[0];
-            node.y = element.pos[1];
-            node.px = node.x;
-            node.py = node.y;
+            node.x = element.pos[0]
+            node.y = element.pos[1]
+            node.px = node.x
+            node.py = node.y
         }
 
         // Create node objects for all individuals
         if (element.individuals) {
             for (const individual of element.individuals) {
-                let individualNode = new Prototype(this.graph);
-                individualNode.label = individual.labels;
-                individualNode.iri = individual.iri;
-                node.individuals.push(individualNode);
-            };
+                let individualNode = new Prototype(this.graph)
+                individualNode.label = individual.labels
+                individualNode.iri = individual.iri
+                node.individuals.push(individualNode)
+            }
         }
-        this.nodeMap.set(node.id, node);
-        return node;
+        this.nodeMap.set(node.id, node)
+        return node
     }
 
     /**
@@ -316,32 +349,32 @@ export default class Parser {
      * @param {new (graph: any) => BaseProperty} Prototype The property class that matches `element`'s type
      */
     #combineProperties(element, Prototype) {
-        let property = new Prototype(this.graph);
-        property.annotations = element.annotations;
-        property.baseIri = element.baseIri;
-        property.cardinality = element.cardinality;
-        property.comment = element.comment;
-        property.domain = element.domain;
-        property.description = element.description;
-        property.equivalents = element.equivalent;
-        property.id = element.id;
-        property.inverse = element.inverse;
-        property.label = element.label;
-        property.minCardinality = element.minCardinality;
-        property.maxCardinality = element.maxCardinality;
-        property.range = element.range;
-        property.subproperties = element.subproperty;
-        property.superproperties = element.superproperty;
+        let property = new Prototype(this.graph)
+        property.annotations = element.annotations
+        property.baseIri = element.baseIri
+        property.cardinality = element.cardinality
+        property.comment = element.comment
+        property.domain = element.domain
+        property.description = element.description
+        property.equivalents = element.equivalent
+        property.id = element.id
+        property.inverse = element.inverse
+        property.label = element.label
+        property.minCardinality = element.minCardinality
+        property.maxCardinality = element.maxCardinality
+        property.range = element.range
+        property.subproperties = element.subproperty
+        property.superproperties = element.superproperty
         // property.type=element.type; Ignore, because we predefined it
-        property.iri = element.iri;
+        property.iri = element.iri
         if (element.pos) {
-            property.x = element.pos[0];
-            property.y = element.pos[1];
-            property.px = element.pos[0];
-            property.py = element.pos[1];
+            property.x = element.pos[0]
+            property.y = element.pos[1]
+            property.px = element.pos[0]
+            property.py = element.pos[1]
         }
-        this.propertyMap.set(property.id, property);
-        return property;
+        this.propertyMap.set(property.id, property)
+        return property
     }
 
     /**
@@ -376,24 +409,24 @@ export default class Parser {
      */
     #processDisjoints(property) {
         if (!(property instanceof OwlDisjointWith)) {
-            return;
+            return
         }
 
-        const domain = property.domain;
-        const range = property.range;
+        const domain = property.domain
+        const range = property.range
 
         // Check the domain.
         if (!domain.disjointWith) {
-            domain.disjointWith = [];
+            domain.disjointWith = []
         }
 
         // Check the range.
         if (!range.disjointWith) {
-            range.disjointWith = [];
+            range.disjointWith = []
         }
 
-        domain.disjointWith.push(property.range);
-        range.disjointWith.push(property.domain);
+        domain.disjointWith.push(property.range)
+        range.disjointWith.push(property.domain)
     }
 
     /**
@@ -402,105 +435,119 @@ export default class Parser {
      * @param {BaseProperty[]} rawProperties the properties
      */
     #createPropertyStructure(rawProperties) {
-        let properties = [];
+        let properties = []
 
         // Connect properties with nodes
         for (const property of rawProperties) {
             /* Skip properties that have no information about their domain and range, like
              inverse properties with optional inverse and optional domain and range attributes */
             if ((property.domain && property.range) || property.inverse) {
-                let domainObject;
-                let rangeObject;
+                let domainObject
+                let rangeObject
                 // @ts-ignore
-                const inversePropertyId = this.#findId(property.inverse);
-                const inverse = this.propertyMap.get(inversePropertyId);
+                const inversePropertyId = this.#findId(property.inverse)
+                const inverse = this.propertyMap.get(inversePropertyId)
                 if (!inverse) {
-                    console.warn("No inverse property was found for id: " + inversePropertyId);
-                    property.inverse = undefined;
+                    console.warn(
+                        "No inverse property was found for id: " +
+                            inversePropertyId,
+                    )
+                    property.inverse = undefined
                 }
                 // Either domain and range are set on this property or at the inverse
-                if (typeof property.domain !== "undefined" && typeof property.range !== "undefined") {
-                    domainObject = this.nodeMap.get(this.#findId(property.domain));
-                    rangeObject = this.nodeMap.get(this.#findId(property.range));
+                if (
+                    typeof property.domain !== "undefined" &&
+                    typeof property.range !== "undefined"
+                ) {
+                    domainObject = this.nodeMap.get(
+                        this.#findId(property.domain),
+                    )
+                    rangeObject = this.nodeMap.get(this.#findId(property.range))
                 } else if (inverse) {
                     // Domain and range need to be switched
-                    domainObject = this.nodeMap.get(this.#findId(inverse.range));
-                    rangeObject = this.nodeMap.get(this.#findId(inverse.domain));
+                    domainObject = this.nodeMap.get(this.#findId(inverse.range))
+                    rangeObject = this.nodeMap.get(this.#findId(inverse.domain))
                 } else {
-                    console.warn("Domain and range not found for property: " + property.id);
+                    console.warn(
+                        "Domain and range not found for property: " +
+                            property.id,
+                    )
                 }
                 // Set the references on this property
-                property.domain = domainObject;
-                property.range = rangeObject;
+                property.domain = domainObject
+                property.range = rangeObject
 
                 // Also set the attributes of the inverse property
                 if (inverse) {
-                    property.inverse = inverse;
-                    inverse.inverse = property;
+                    property.inverse = inverse
+                    inverse.inverse = property
 
                     // Switch domain and range
-                    inverse.domain = rangeObject;
-                    inverse.range = domainObject;
+                    inverse.domain = rangeObject
+                    inverse.range = domainObject
                 }
             }
             // Reference sub- and superproperties
-            this.#referenceSubOrSuperProperties(property.subproperties);
-            this.#referenceSubOrSuperProperties(property.superproperties);
+            this.#referenceSubOrSuperProperties(property.subproperties)
+            this.#referenceSubOrSuperProperties(property.superproperties)
         }
 
         // Merge equivalent properties and process disjoints.
         for (const property of rawProperties) {
-            this.#processEquivalentIds(property, this.propertyMap);
-            this.#processDisjoints(property);
-            AttributeParser.parsePropertyAttributes(property);
+            this.#processEquivalentIds(property, this.propertyMap)
+            this.#processDisjoints(property)
+            AttributeParser.parsePropertyAttributes(property)
         }
 
         // Add additional information to the properties
         for (const property of rawProperties) {
             // Properties of merged classes should point to/from the visible equivalent class
-            let propertyWasRerouted = false;
+            let propertyWasRerouted = false
             if (property.domain === undefined) {
-                console.warn("No Domain was found for id: " + property.id);
-                return [];
+                console.warn("No Domain was found for id: " + property.id)
+                return []
             }
             if (this.#wasNodeMerged(property.domain)) {
-                property.domain = property.domain.equivalentBase;
-                propertyWasRerouted = true;
+                property.domain = property.domain.equivalentBase
+                propertyWasRerouted = true
             }
 
             if (property.range === undefined) {
-                console.warn("No range was found for id: " + property.id);
-                return [];
+                console.warn("No range was found for id: " + property.id)
+                return []
             }
             if (this.#wasNodeMerged(property.range)) {
-                property.range = property.range.equivalentBase;
-                propertyWasRerouted = true;
+                property.range = property.range.equivalentBase
+                propertyWasRerouted = true
             }
 
             if (propertyWasRerouted) {
                 // But there should not be two equal properties between the same domain and range.
-                const equalProperty = this.#getOtherEqualProperty(rawProperties, property);
+                const equalProperty = this.#getOtherEqualProperty(
+                    rawProperties,
+                    property,
+                )
                 if (equalProperty) {
-                    property.visible = false;
+                    property.visible = false
                     if (equalProperty.redundantProperties instanceof Array) {
-                        equalProperty.redundantProperties.push(property);
+                        equalProperty.redundantProperties.push(property)
                     } else {
-                        equalProperty.redundantProperties = [property];
+                        equalProperty.redundantProperties = [property]
                     }
                 }
             }
 
             // Hide property if source or target node is hidden
             if (!property.domain.visible || !property.range.visible) {
-                property.visible = false;
+                property.visible = false
             }
 
             // Collect all properties that should be displayed
             if (property.visible) {
-                properties.push(property);
+                properties.push(property)
             }
         }
-        return properties;
+        return properties
     }
 
     /**
@@ -508,18 +555,24 @@ export default class Parser {
      */
     #referenceSubOrSuperProperties(subOrSuperPropertiesArray) {
         if (!subOrSuperPropertiesArray) {
-            return;
+            return
         }
         for (let i = 0; i < subOrSuperPropertiesArray.length; ++i) {
             // @ts-ignore
-            const subOrSuperPropertyId = this.#findId(subOrSuperPropertiesArray[i]);
-            const subOrSuperProperty = this.propertyMap.get(subOrSuperPropertyId);
+            const subOrSuperPropertyId = this.#findId(
+                subOrSuperPropertiesArray[i],
+            )
+            const subOrSuperProperty =
+                this.propertyMap.get(subOrSuperPropertyId)
 
             if (subOrSuperProperty) {
                 // Replace id with object
-                subOrSuperPropertiesArray[i] = subOrSuperProperty;
+                subOrSuperPropertiesArray[i] = subOrSuperProperty
             } else {
-                console.warn("No sub-/superproperty was found for id: " + subOrSuperPropertyId);
+                console.warn(
+                    "No sub-/superproperty was found for id: " +
+                        subOrSuperPropertyId,
+                )
             }
         }
     }
@@ -528,7 +581,7 @@ export default class Parser {
      * @param {BaseNode} node
      */
     #wasNodeMerged(node) {
-        return !node.visible && node.equivalentBase;
+        return !node.visible && node.equivalentBase
     }
 
     /**
@@ -538,24 +591,28 @@ export default class Parser {
     #getOtherEqualProperty(properties, referenceProperty) {
         for (const property of properties) {
             if (referenceProperty === property) {
-                continue;
+                continue
             }
-            if (referenceProperty.domain !== property.domain
-                || referenceProperty.range !== property.range) {
-                continue;
+            if (
+                referenceProperty.domain !== property.domain ||
+                referenceProperty.range !== property.range
+            ) {
+                continue
             }
 
             // Check for an equal IRI, if non existent compare label and type
             if (referenceProperty.iri && property.iri) {
                 if (referenceProperty.iri === property.iri) {
-                    return property;
+                    return property
                 }
-            } else if (referenceProperty.type === property.type &&
-                referenceProperty.defaultLabel() === property.defaultLabel()) {
-                return property;
+            } else if (
+                referenceProperty.type === property.type &&
+                referenceProperty.defaultLabel() === property.defaultLabel()
+            ) {
+                return property
             }
         }
-        return undefined;
+        return undefined
     }
 
     /**
@@ -571,26 +628,34 @@ export default class Parser {
          */
         function addProperties(domainId, rangeIds, operatorType) {
             if (!rangeIds) {
-                return;
+                return
             }
 
             for (let i = 0; i < rangeIds.length; i++) {
-                const rangeId = rangeIds[i];
+                const rangeId = rangeIds[i]
                 const property = {
-                    id: "GENERATED-" + operatorType + "-" + domainId + "-" + rangeId + "-" + i,
+                    id:
+                        "GENERATED-" +
+                        operatorType +
+                        "-" +
+                        domainId +
+                        "-" +
+                        rangeId +
+                        "-" +
+                        i,
                     type: "setOperatorProperty",
                     domain: domainId,
-                    range: rangeId
-                };
-                properties.push(property);
+                    range: rangeId,
+                }
+                properties.push(property)
             }
         }
 
         for (const node of nodes) {
-            addProperties(node.id, node.complement, "COMPLEMENT");
-            addProperties(node.id, node.intersection, "INTERSECTION");
-            addProperties(node.id, node.union, "UNION");
-            addProperties(node.id, node.disjointUnion, "DISJOINTUNION");
+            addProperties(node.id, node.complement, "COMPLEMENT")
+            addProperties(node.id, node.intersection, "INTERSECTION")
+            addProperties(node.id, node.union, "UNION")
+            addProperties(node.id, node.disjointUnion, "DISJOINTUNION")
         }
     }
 
@@ -603,29 +668,33 @@ export default class Parser {
      */
     #processEquivalentIds(element, elementMap) {
         if (!element.equivalents || element.equivalentBase) {
-            return;
+            return
         }
 
         // Replace ids with the corresponding objects
         for (let i = 0; i < element.equivalents.length; ++i) {
-            const equivalentId = this.#findId(element.equivalents[i]);
-            const equivalentObject = elementMap.get(equivalentId);
+            const equivalentId = this.#findId(element.equivalents[i])
+            const equivalentObject = elementMap.get(equivalentId)
 
             if (equivalentObject) {
                 // Clear the old string array
-                if (equivalentObject.equivalents.length !== 0
-                    && typeof equivalentObject.equivalents[0] === "string"
+                if (
+                    equivalentObject.equivalents.length !== 0 &&
+                    typeof equivalentObject.equivalents[0] === "string"
                 ) {
                     equivalentObject.equivalents = []
                 }
                 // Cross reference both objects
-                equivalentObject.equivalents.push(element);
-                equivalentObject.equivalentBase = element;
-                element.equivalents[i] = equivalentObject;
+                equivalentObject.equivalents.push(element)
+                equivalentObject.equivalentBase = element
+                element.equivalents[i] = equivalentObject
                 // Hide other equivalent nodes
-                equivalentObject.visible = false;
+                equivalentObject.visible = false
             } else {
-                console.warn("No class/property was found for equivalent id: " + equivalentId);
+                console.warn(
+                    "No class/property was found for equivalent id: " +
+                        equivalentId,
+                )
             }
         }
     }
@@ -639,15 +708,18 @@ export default class Parser {
      */
     #addAdditionalAttributes(base, addition) {
         // Check for an undefined value
-        addition = addition || {};
+        addition = addition || {}
 
         for (const addAttribute in addition) {
             // Add the attribute if it doesn't exist
-            if (!(addAttribute in base) && addition.hasOwnProperty(addAttribute)) {
-                base[addAttribute] = addition[addAttribute]; // TODO: Check if we should use an element's "attribute" here
+            if (
+                !(addAttribute in base) &&
+                addition.hasOwnProperty(addAttribute)
+            ) {
+                base[addAttribute] = addition[addAttribute] // TODO: Check if we should use an element's "attribute" here
             }
         }
-        return base;
+        return base
     }
 
     /**
@@ -657,18 +729,18 @@ export default class Parser {
      * @returns {string} the processed address with the (possibly) replaced namespace
      */
     #replaceNamespace(address, namespaces) {
-        const separatorIndex = address.indexOf(":");
+        const separatorIndex = address.indexOf(":")
         if (separatorIndex === -1) {
-            return address;
+            return address
         }
-        const namespaceName = address.substring(0, separatorIndex);
+        const namespaceName = address.substring(0, separatorIndex)
 
         for (const namespace of namespaces) {
             if (namespaceName === namespace.name) {
-                return namespace.iri + address.substring(separatorIndex + 1);
+                return namespace.iri + address.substring(separatorIndex + 1)
             }
         }
-        return address;
+        return address
     }
 
     /**
@@ -695,7 +767,9 @@ export default class Parser {
             } else {
                 // Add the equivalent property instances from their ID
                 for (const equivalentProperty of property.equivalents) {
-                    propertyWithEquivalents.push(this.propertyMap.get(equivalentProperty.id))
+                    propertyWithEquivalents.push(
+                        this.propertyMap.get(equivalentProperty.id),
+                    )
                 }
                 if (propertyWithEquivalents.length === 1) {
                     continue
@@ -706,18 +780,20 @@ export default class Parser {
             if (mergeNode) {
                 mergeNodes.push(this.#createDefaultMergeNode(property))
                 for (const equivalentProperty of propertyWithEquivalents) {
-                    const oldRangeId = equivalentProperty.range.id;
-                    equivalentProperty.range.id = mergeNode.id;
+                    const oldRangeId = equivalentProperty.range.id
+                    equivalentProperty.range.id = mergeNode.id
                     // isDomainOrRangeOfOtherProperty
-                    if (!(domainIDs.has(oldRangeId) || rangeIDs.has(oldRangeId))) {
-                        nodeIdsToHide.add(oldRangeId);
+                    if (
+                        !(domainIDs.has(oldRangeId) || rangeIDs.has(oldRangeId))
+                    ) {
+                        nodeIdsToHide.add(oldRangeId)
                     }
-                    processedPropertyIDs.add(equivalentProperty.id);
+                    processedPropertyIDs.add(equivalentProperty.id)
                 }
             }
         }
         // @ts-ignore
-        return this.#filterVisibleNodes(nodes.concat(mergeNodes), nodeIdsToHide);
+        return this.#filterVisibleNodes(nodes.concat(mergeNodes), nodeIdsToHide)
     }
 
     /**
@@ -725,18 +801,18 @@ export default class Parser {
      * @returns {BaseNode | void}
      */
     #findMergeNode(propertyWithEquivalents) {
-        let typeMap = this.#mapPropertiesRangesToType(propertyWithEquivalents);
-        let typeSet = new Set(typeMap.keys());
+        let typeMap = this.#mapPropertiesRangesToType(propertyWithEquivalents)
+        let typeSet = new Set(typeMap.keys())
 
         // default types are the fallback values and should be ignored for the type determination
-        typeSet.delete(this.OBJECT_PROPERTY_DEFAULT_RANGE_TYPE);
-        typeSet.delete(this.DATA_PROPERTY_DEFAULT_RANGE_TYPE);
+        typeSet.delete(this.OBJECT_PROPERTY_DEFAULT_RANGE_TYPE)
+        typeSet.delete(this.DATA_PROPERTY_DEFAULT_RANGE_TYPE)
 
         // exactly one type to chose from -> take the node of this type as range
         if (typeSet.size === 1) {
-            const ranges = typeMap.get(typeSet.values().next().value);
+            const ranges = typeMap.get(typeSet.values().next().value)
             if (ranges.length === 1) {
-                return ranges[0];
+                return ranges[0]
             }
         }
     }
@@ -748,34 +824,36 @@ export default class Parser {
         /**
          * @type {Map<string,BaseNode[]>}
          */
-        let typeMap = new Map();
+        let typeMap = new Map()
         for (const property of propertyWithEquivalents) {
             if (property === undefined) {
-                throw new TypeError(`Property cannot be '${property}' in this context`)
+                throw new TypeError(
+                    `Property cannot be '${property}' in this context`,
+                )
             }
-            const range = this.nodeMap.get(property.range.id);
-            const type = range.type;
+            const range = this.nodeMap.get(property.range.id)
+            const type = range.type
 
             if (!typeMap.has(type)) {
-                typeMap.set(type, []);
+                typeMap.set(type, [])
             }
-            typeMap.get(type).push(range);
+            typeMap.get(type).push(range)
         }
-        return typeMap;
+        return typeMap
     }
 
     /**
      * @param {BaseProperty} property
      */
     #createDefaultMergeNode(property) {
-        let range;
+        let range
         if (ElementTools.isDatatypeProperty(property)) {
-            range = new RdfsLiteral(this.graph);
+            range = new RdfsLiteral(this.graph)
         } else {
-            range = new OwlThing(this.graph);
+            range = new OwlThing(this.graph)
         }
-        range.id = this.PREFIX + property.id;
-        return range;
+        range.id = this.PREFIX + property.id
+        return range
     }
 
     /**
@@ -783,16 +861,16 @@ export default class Parser {
      * @param {Set<string>} nodeIdsToHide
      */
     #filterVisibleNodes(nodes, nodeIdsToHide) {
-        const filteredNodes = [];
+        const filteredNodes = []
         for (const node of nodes) {
             if (!nodeIdsToHide.has(node.id)) {
-                filteredNodes.push(node);
+                filteredNodes.push(node)
             } else {
                 // Remove hidden nodes from the map
                 this.nodeMap.delete(node.id)
             }
         }
-        return filteredNodes;
+        return filteredNodes
     }
 
     /**
@@ -803,14 +881,14 @@ export default class Parser {
      */
     #findId(object) {
         if (!object) {
-            return undefined;
+            return undefined
         } else if (typeof object === "string") {
-            return object;
+            return object
         } else if ("id" in object) {
-            return object.id;
+            return object.id
         } else {
-            console.warn("No Id was found for this object: " + object);
-            return undefined;
+            console.warn("No Id was found for this object: " + object)
+            return undefined
         }
     }
 }

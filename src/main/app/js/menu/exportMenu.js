@@ -1,9 +1,8 @@
-import BaseNode from "../../../webvowl/js/elements/nodes/BaseNode";
-import Graph from "../../../webvowl/js/graph";
-import MathUtils from "../../../webvowl/js/util/math";
-import WebVOWL from "../../../webvowl/js/webvowl";
-import ExportTTLModule from "./exportTTLModule";
-
+import BaseNode from "../../../webvowl/js/elements/nodes/BaseNode"
+import Graph from "../../../webvowl/js/graph"
+import MathUtils from "../../../webvowl/js/util/math"
+import WebVOWL from "../../../webvowl/js/webvowl"
+import ExportTTLModule from "./exportTTLModule"
 
 export default class ExportMenu {
     /**
@@ -11,36 +10,44 @@ export default class ExportMenu {
      * @param {Graph} graph
      */
     constructor(graph) {
-        this.graph = graph;
-        this.exportSvgButton = null;
-        this.exportFilename = null;
-        this.exportJsonButton = null;
-        this.exportTurtleButton = null;
-        this.exportTexButton = null;
-        this.copyButton = null;
-        this.exportableJsonText = null;
-        this.exportTTLModule = new ExportTTLModule(graph);
+        this.graph = graph
+        this.exportSvgButton = null
+        this.exportFilename = null
+        this.exportJsonButton = null
+        this.exportTurtleButton = null
+        this.exportTexButton = null
+        this.copyButton = null
+        this.exportableJsonText = null
+        this.exportTTLModule = new ExportTTLModule(graph)
     }
 
     setup() {
-        this.exportSvgButton = d3.select("#exportSvg").on("click", () => this.exportSvg());
-        this.exportJsonButton = d3.select("#exportJson").on("click", () => this.exportJson());
-        this.copyButton = d3.select("#copyBt").on("click", () => this.copyUrl());
-        this.exportTexButton = d3.select("#exportTex").on("click", () => this.exportTex());
-        this.exportTurtleButton = d3.select("#exportTurtle").on("click", () => this.exportTurtle());
+        this.exportSvgButton = d3
+            .select("#exportSvg")
+            .on("click", () => this.exportSvg())
+        this.exportJsonButton = d3
+            .select("#exportJson")
+            .on("click", () => this.exportJson())
+        this.copyButton = d3.select("#copyBt").on("click", () => this.copyUrl())
+        this.exportTexButton = d3
+            .select("#exportTex")
+            .on("click", () => this.exportTex())
+        this.exportTurtleButton = d3
+            .select("#exportTurtle")
+            .on("click", () => this.exportTurtle())
 
-        const menuEntry = d3.select("#m_export");
+        const menuEntry = d3.select("#m_export")
         menuEntry.on("mouseover", () => {
-            const searchMenu = this.graph.options.searchMenu;
-            searchMenu.hideSearchEntries();
-            this.exportAsUrl();
-        });
+            const searchMenu = this.graph.options.searchMenu
+            searchMenu.hideSearchEntries()
+            this.exportAsUrl()
+        })
     }
     exportTurtle() {
-        const success = this.exportTTLModule.requestExport();
-        const result = this.exportTTLModule.resultingTTLContent;
-        const ontoTitle = "NewOntology";
-        console.log("Exporter was successful: " + success);
+        const success = this.exportTTLModule.requestExport()
+        const result = this.exportTTLModule.resultingTTLContent
+        const ontoTitle = "NewOntology"
+        console.log("Exporter was successful: " + success)
         if (success) {
             // console.log("The result is : " + result);
             // const ontoTitle=graph.options.getGeneralMetaObjectProperty('title');
@@ -54,18 +61,20 @@ export default class ExportMenu {
             // TODO: show TEXT in warning module?
 
             // // write the data
-            const dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(result);
-            this.exportTurtleButton.attr("href", dataURI)
-                .attr("download", ontoTitle + ".ttl");
+            const dataURI =
+                "data:text/json;charset=utf-8," + encodeURIComponent(result)
+            this.exportTurtleButton
+                .attr("href", dataURI)
+                .attr("download", ontoTitle + ".ttl")
             // okay restore old href?
             //  exportTurtleButton.attr("href", oldHref);
         } else {
-            console.log("ShowWarning!");
-            this.graph.options.warningModule.showExporterWarning();
-            console.log("Stay on the page! " + window.location.href);
-            this.exportTurtleButton.attr("href", window.location.href);
+            console.log("ShowWarning!")
+            this.graph.options.warningModule.showExporterWarning()
+            console.log("Stay on the page! " + window.location.href)
+            this.exportTurtleButton.attr("href", window.location.href)
             // @ts-ignore
-            d3.event.preventDefault(); // prevent the href to be called ( reloads the page otherwise )
+            d3.event.preventDefault() // prevent the href to be called ( reloads the page otherwise )
         }
     }
 
@@ -73,25 +82,25 @@ export default class ExportMenu {
      * @param {string} filename
      */
     setFilename(filename) {
-        this.exportFilename = filename || "export";
+        this.exportFilename = filename || "export"
     }
 
     /**
      * @param {string} jsonText
      */
     setJsonText(jsonText) {
-        this.exportableJsonText = jsonText;
+        this.exportableJsonText = jsonText
     }
 
     copyUrl() {
         // @ts-ignore
-        d3.select("#exportedUrl").node().focus();
+        d3.select("#exportedUrl").node().focus()
         // @ts-ignore
-        d3.select("#exportedUrl").node().select();
-        document.execCommand("copy");
-        this.graph.options.navigationMenu.hideAllMenus();
+        d3.select("#exportedUrl").node().select()
+        document.execCommand("copy")
+        this.graph.options.navigationMenu.hideAllMenus()
         // @ts-ignore
-        d3.event.preventDefault(); // prevent the href to be called ( reloads the page otherwise )
+        d3.event.preventDefault() // prevent the href to be called ( reloads the page otherwise )
     }
 
     /**
@@ -99,145 +108,189 @@ export default class ExportMenu {
      * @param {{ [x: string]: any; }} currOpts
      */
     prepareOptionString(defOpts, currOpts) {
-        let setOptions = 0;
-        let optsString = "opts=";
+        let setOptions = 0
+        let optsString = "opts="
 
         for (const name in defOpts) {
             // define key and value ;
-            if (defOpts.hasOwnProperty(name)) {// for travis warning
-                const def_value = defOpts[name];
-                const cur_value = currOpts[name];
+            if (defOpts.hasOwnProperty(name)) {
+                // for travis warning
+                const def_value = defOpts[name]
+                const cur_value = currOpts[name]
                 if (def_value !== cur_value) {
-                    optsString += name + "=" + cur_value + ";";
-                    setOptions++;
+                    optsString += name + "=" + cur_value + ";"
+                    setOptions++
                 }
             }
         }
-        optsString += "";
+        optsString += ""
         if (setOptions === 0) {
-            return "";
+            return ""
         }
-        return optsString;
+        return optsString
     }
 
     exportAsUrl() {
-        const currObj = {};
-        currObj.sidebar = this.graph.options.sidebar.getSidebarVisibility();
+        const currObj = {}
+        currObj.sidebar = this.graph.options.sidebar.getSidebarVisibility()
 
         // identify default value given by ontology;
-        const defOntValue = this.graph.options.filterMenu.defaultDegreeValue;
-        const currentValue = this.graph.options.filterMenu.getDegreeSliderValue();
+        const defOntValue = this.graph.options.filterMenu.defaultDegreeValue
+        const currentValue =
+            this.graph.options.filterMenu.getDegreeSliderValue()
         if (defOntValue === parseInt(currentValue)) {
-            currObj.doc = -1;
+            currObj.doc = -1
         } else {
-            currObj.doc = currentValue;
+            currObj.doc = currentValue
         }
 
-        currObj.cd = this.graph.options.classDistance;
-        currObj.dd = this.graph.options.datatypeDistance;
+        currObj.cd = this.graph.options.classDistance
+        currObj.dd = this.graph.options.datatypeDistance
         if (this.graph.editorMode) {
-            currObj.editorMode = "true";
+            currObj.editorMode = "true"
         } else {
-            currObj.editorMode = "false";
+            currObj.editorMode = "false"
         }
-        currObj.filter_datatypes = String(this.graph.options.filterMenu.getCheckBoxValue("datatypeFilterCheckbox"));
-        currObj.filter_sco = String(this.graph.options.filterMenu.getCheckBoxValue("subclassFilterCheckbox"));
-        currObj.filter_disjoint = String(this.graph.options.filterMenu.getCheckBoxValue("disjointFilterCheckbox"));
-        currObj.filter_setOperator = String(this.graph.options.filterMenu.getCheckBoxValue("setoperatorFilterCheckbox"));
-        currObj.filter_objectProperties = String(this.graph.options.filterMenu.getCheckBoxValue("objectPropertyFilterCheckbox"));
-        currObj.mode_dynamic = String(this.graph.options.dynamicLabelWidth);
-        currObj.mode_scaling = String(this.graph.options.modeMenu.getCheckBoxValue("nodescalingModuleCheckbox"));
-        currObj.mode_compact = String(this.graph.options.modeMenu.getCheckBoxValue("compactnotationModuleCheckbox"));
-        currObj.mode_colorExt = String(this.graph.options.modeMenu.getCheckBoxValue("colorexternalsModuleCheckbox"));
-        currObj.mode_multiColor = String(this.graph.options.modeMenu.colorModeState);
-        currObj.mode_pnp = String(this.graph.options.modeMenu.getCheckBoxValue("pickandpinModuleCheckbox"));
-        currObj.debugFeatures = String(!this.graph.options.hideDebugOptions);
-        currObj.rect = 0;
+        currObj.filter_datatypes = String(
+            this.graph.options.filterMenu.getCheckBoxValue(
+                "datatypeFilterCheckbox",
+            ),
+        )
+        currObj.filter_sco = String(
+            this.graph.options.filterMenu.getCheckBoxValue(
+                "subclassFilterCheckbox",
+            ),
+        )
+        currObj.filter_disjoint = String(
+            this.graph.options.filterMenu.getCheckBoxValue(
+                "disjointFilterCheckbox",
+            ),
+        )
+        currObj.filter_setOperator = String(
+            this.graph.options.filterMenu.getCheckBoxValue(
+                "setoperatorFilterCheckbox",
+            ),
+        )
+        currObj.filter_objectProperties = String(
+            this.graph.options.filterMenu.getCheckBoxValue(
+                "objectPropertyFilterCheckbox",
+            ),
+        )
+        currObj.mode_dynamic = String(this.graph.options.dynamicLabelWidth)
+        currObj.mode_scaling = String(
+            this.graph.options.modeMenu.getCheckBoxValue(
+                "nodescalingModuleCheckbox",
+            ),
+        )
+        currObj.mode_compact = String(
+            this.graph.options.modeMenu.getCheckBoxValue(
+                "compactnotationModuleCheckbox",
+            ),
+        )
+        currObj.mode_colorExt = String(
+            this.graph.options.modeMenu.getCheckBoxValue(
+                "colorexternalsModuleCheckbox",
+            ),
+        )
+        currObj.mode_multiColor = String(
+            this.graph.options.modeMenu.colorModeState,
+        )
+        currObj.mode_pnp = String(
+            this.graph.options.modeMenu.getCheckBoxValue(
+                "pickandpinModuleCheckbox",
+            ),
+        )
+        currObj.debugFeatures = String(!this.graph.options.hideDebugOptions)
+        currObj.rect = 0
 
-        const defObj = this.graph.options.initialConfig;
-        const optsString = this.prepareOptionString(defObj, currObj);
-        let urlString = String(location);
-        let htmlElement;
+        const defObj = this.graph.options.initialConfig
+        const optsString = this.prepareOptionString(defObj, currObj)
+        let urlString = String(location)
+        let htmlElement
         // when everything is default then there is nothing to write
         if (optsString.length === 0) {
             // building up parameter list;
 
             // remove the all options form location
-            const hashCode = location.hash;
-            urlString = urlString.split(hashCode)[0];
+            const hashCode = location.hash
+            urlString = urlString.split(hashCode)[0]
 
-            const lPos = hashCode.lastIndexOf("#");
+            const lPos = hashCode.lastIndexOf("#")
             if (lPos === -1) {
-                htmlElement = d3.select("#exportedUrl").node();
-                htmlElement.value = String(location);
-                htmlElement.title = String(location);
-                return;  // nothing to change in the location String
+                htmlElement = d3.select("#exportedUrl").node()
+                htmlElement.value = String(location)
+                htmlElement.title = String(location)
+                return // nothing to change in the location String
             }
-            const newURL = hashCode.slice(lPos, hashCode.length);
-            htmlElement = d3.select("#exportedUrl").node();
-            htmlElement.value = urlString + newURL;
-            htmlElement.title = urlString + newURL;
-            return;
+            const newURL = hashCode.slice(lPos, hashCode.length)
+            htmlElement = d3.select("#exportedUrl").node()
+            htmlElement.value = urlString + newURL
+            htmlElement.title = urlString + newURL
+            return
         }
 
         // generate the options string;
-        const numParameters = (urlString.match(/#/g) || []).length;
-        let newUrlString;
+        const numParameters = (urlString.match(/#/g) || []).length
+        let newUrlString
         if (numParameters === undefined || numParameters === 0) {
-            newUrlString = urlString + "#" + optsString;
+            newUrlString = urlString + "#" + optsString
         }
         if (numParameters > 0) {
-            const tokens = urlString.split("#");
+            const tokens = urlString.split("#")
             if (tokens[1].indexOf("opts=") >= 0) {
-                tokens[1] = optsString;
-                newUrlString = tokens[0];
+                tokens[1] = optsString
+                newUrlString = tokens[0]
             } else {
-                newUrlString = tokens[0] + "#";
-                newUrlString += optsString;
+                newUrlString = tokens[0] + "#"
+                newUrlString += optsString
             }
             // append parameters
             for (let i = 1; i < tokens.length; i++) {
                 if (tokens[i].length > 0) {
-                    newUrlString += "#" + tokens[i];
+                    newUrlString += "#" + tokens[i]
                 }
             }
         }
         // building up parameter list;
-        htmlElement = d3.select("#exportedUrl").node();
-        htmlElement.value = newUrlString;
-        htmlElement.title = newUrlString;
-    };
+        htmlElement = d3.select("#exportedUrl").node()
+        htmlElement.value = newUrlString
+        htmlElement.title = newUrlString
+    }
 
     exportSvg() {
-        this.graph.options.navigationMenu.hideAllMenus();
+        this.graph.options.navigationMenu.hideAllMenus()
         // Get the d3js SVG element
-        let graphSvg = d3.select(this.graph.options.graphContainerSelector).select("svg"),
+        let graphSvg = d3
+                .select(this.graph.options.graphContainerSelector)
+                .select("svg"),
             graphSvgCode,
             escapedGraphSvgCode,
-            dataURI;
+            dataURI
 
         // inline the styles, so that the exported svg code contains the css rules
-        this.inlineVowlStyles();
-        this.hideNonExportableElements();
+        this.inlineVowlStyles()
+        this.hideNonExportableElements()
 
-        graphSvgCode = graphSvg.attr("version", 1.1)
+        graphSvgCode = graphSvg
+            .attr("version", 1.1)
             .attr("xmlns", "http://www.w3.org/2000/svg")
-            .node().parentNode.innerHTML;
+            .node().parentNode.innerHTML
 
         // Insert the reference to VOWL
-        graphSvgCode = `<!-- Created with WebVOWL (version ${WebVOWL.version}), ${WebVOWL.link} -->\n" ${graphSvgCode}`;
+        graphSvgCode = `<!-- Created with WebVOWL (version ${WebVOWL.version}), ${WebVOWL.link} -->\n" ${graphSvgCode}`
 
-        escapedGraphSvgCode = this.escapeUnicodeCharacters(graphSvgCode);
+        escapedGraphSvgCode = this.escapeUnicodeCharacters(graphSvgCode)
         //btoa(); Creates a base-64 encoded ASCII string from a "string" of binary data.
-        dataURI = "data:image/svg+xml;base64," + btoa(escapedGraphSvgCode);
+        dataURI = "data:image/svg+xml;base64," + btoa(escapedGraphSvgCode)
 
-        this.exportSvgButton.attr("href", dataURI)
-            .attr("download", this.exportFilename + ".svg");
+        this.exportSvgButton
+            .attr("href", dataURI)
+            .attr("download", this.exportFilename + ".svg")
 
         // remove graphic styles for interaction to go back to normal
-        this.removeVowlInlineStyles();
-        this.showNonExportableElements();
-        this.graph.lazyRefresh();
+        this.removeVowlInlineStyles()
+        this.showNonExportableElements()
+        this.graph.lazyRefresh()
     }
 
     /**
@@ -247,56 +300,121 @@ export default class ExportMenu {
         const textSnippets = []
 
         for (let i = 0; i < text.length; i++) {
-            const character = text.charAt(i);
-            const charCode = character.charCodeAt(0);
+            const character = text.charAt(i)
+            const charCode = character.charCodeAt(0)
 
             if (charCode < 128) {
-                textSnippets.push(character);
+                textSnippets.push(character)
             } else {
-                textSnippets.push("&#" + charCode + ";");
+                textSnippets.push("&#" + charCode + ";")
             }
         }
-        return textSnippets.join("");
+        return textSnippets.join("")
     }
 
     inlineVowlStyles() {
-        this.setStyleSensitively(".text", [{ name: "font-family", value: "Helvetica, Arial, sans-serif" }, {
-            name: "font-size",
-            value: "12px"
-        }]);
-        this.setStyleSensitively(".subtext", [{ name: "font-size", value: "9px" }]);
-        this.setStyleSensitively(".text.instance-count", [{ name: "fill", value: "#666" }]);
-        this.setStyleSensitively(".external + text .instance-count", [{ name: "fill", value: "#aaa" }]);
-        this.setStyleSensitively(".cardinality", [{ name: "font-size", value: "10px" }]);
-        this.setStyleSensitively(".text, .embedded", [{ name: "pointer-events", value: "none" }]);
-        this.setStyleSensitively(".class, .object, .disjoint, .objectproperty, .disjointwith, .equivalentproperty, .transitiveproperty, .functionalproperty, .inversefunctionalproperty, .symmetricproperty, .allvaluesfromproperty, .somevaluesfromproperty", [{
-            name: "fill",
-            value: "#acf"
-        }]);
-        this.setStyleSensitively(".label .datatype, .datatypeproperty", [{ name: "fill", value: "#9c6" }]);
-        this.setStyleSensitively(".rdf, .rdfproperty", [{ name: "fill", value: "#c9c" }]);
-        this.setStyleSensitively(".literal, .node .datatype", [{ name: "fill", value: "#fc3" }]);
-        this.setStyleSensitively(".deprecated, .deprecatedproperty", [{ name: "fill", value: "#ccc" }]);
-        this.setStyleSensitively(".external, .externalproperty", [{ name: "fill", value: "#36c" }]);
-        this.setStyleSensitively("path, .nofill", [{ name: "fill", value: "none" }]);
-        this.setStyleSensitively("marker path", [{ name: "fill", value: "#000" }]);
-        this.setStyleSensitively(".class, path, line, .fineline", [{ name: "stroke", value: "#000" }]);
-        this.setStyleSensitively(".white, .subclass, .subclassproperty, .external + text", [{ name: "fill", value: "#fff" }]);
-        this.setStyleSensitively(".class.hovered, .property.hovered, .cardinality.hovered, .cardinality.focused, circle.pin, .filled.hovered, .filled.focused", [{
-            name: "fill",
-            value: "#f00"
-        }, { name: "cursor", value: "pointer" }]);
-        this.setStyleSensitively(".focused, path.hovered", [{ name: "stroke", value: "#f00" }]);
-        this.setStyleSensitively(".indirect-highlighting, .feature:hover", [{ name: "fill", value: "#f90" }]);
-        this.setStyleSensitively(".values-from", [{ name: "stroke", value: "#69c" }]);
-        this.setStyleSensitively(".symbol, .values-from.filled", [{ name: "fill", value: "#69c" }]);
-        this.setStyleSensitively(".class, path, line", [{ name: "stroke-width", value: "2" }]);
-        this.setStyleSensitively(".fineline", [{ name: "stroke-width", value: "1" }]);
-        this.setStyleSensitively(".dashed, .anonymous", [{ name: "stroke-dasharray", value: "8" }]);
-        this.setStyleSensitively(".dotted", [{ name: "stroke-dasharray", value: "3" }]);
-        this.setStyleSensitively("rect.focused, circle.focused", [{ name: "stroke-width", value: "4px" }]);
-        this.setStyleSensitively(".nostroke", [{ name: "stroke", value: "none" }]);
-        this.setStyleSensitively("marker path", [{ name: "stroke-dasharray", value: "100" }]);
+        this.setStyleSensitively(".text", [
+            { name: "font-family", value: "Helvetica, Arial, sans-serif" },
+            {
+                name: "font-size",
+                value: "12px",
+            },
+        ])
+        this.setStyleSensitively(".subtext", [
+            { name: "font-size", value: "9px" },
+        ])
+        this.setStyleSensitively(".text.instance-count", [
+            { name: "fill", value: "#666" },
+        ])
+        this.setStyleSensitively(".external + text .instance-count", [
+            { name: "fill", value: "#aaa" },
+        ])
+        this.setStyleSensitively(".cardinality", [
+            { name: "font-size", value: "10px" },
+        ])
+        this.setStyleSensitively(".text, .embedded", [
+            { name: "pointer-events", value: "none" },
+        ])
+        this.setStyleSensitively(
+            ".class, .object, .disjoint, .objectproperty, .disjointwith, .equivalentproperty, .transitiveproperty, .functionalproperty, .inversefunctionalproperty, .symmetricproperty, .allvaluesfromproperty, .somevaluesfromproperty",
+            [
+                {
+                    name: "fill",
+                    value: "#acf",
+                },
+            ],
+        )
+        this.setStyleSensitively(".label .datatype, .datatypeproperty", [
+            { name: "fill", value: "#9c6" },
+        ])
+        this.setStyleSensitively(".rdf, .rdfproperty", [
+            { name: "fill", value: "#c9c" },
+        ])
+        this.setStyleSensitively(".literal, .node .datatype", [
+            { name: "fill", value: "#fc3" },
+        ])
+        this.setStyleSensitively(".deprecated, .deprecatedproperty", [
+            { name: "fill", value: "#ccc" },
+        ])
+        this.setStyleSensitively(".external, .externalproperty", [
+            { name: "fill", value: "#36c" },
+        ])
+        this.setStyleSensitively("path, .nofill", [
+            { name: "fill", value: "none" },
+        ])
+        this.setStyleSensitively("marker path", [
+            { name: "fill", value: "#000" },
+        ])
+        this.setStyleSensitively(".class, path, line, .fineline", [
+            { name: "stroke", value: "#000" },
+        ])
+        this.setStyleSensitively(
+            ".white, .subclass, .subclassproperty, .external + text",
+            [{ name: "fill", value: "#fff" }],
+        )
+        this.setStyleSensitively(
+            ".class.hovered, .property.hovered, .cardinality.hovered, .cardinality.focused, circle.pin, .filled.hovered, .filled.focused",
+            [
+                {
+                    name: "fill",
+                    value: "#f00",
+                },
+                { name: "cursor", value: "pointer" },
+            ],
+        )
+        this.setStyleSensitively(".focused, path.hovered", [
+            { name: "stroke", value: "#f00" },
+        ])
+        this.setStyleSensitively(".indirect-highlighting, .feature:hover", [
+            { name: "fill", value: "#f90" },
+        ])
+        this.setStyleSensitively(".values-from", [
+            { name: "stroke", value: "#69c" },
+        ])
+        this.setStyleSensitively(".symbol, .values-from.filled", [
+            { name: "fill", value: "#69c" },
+        ])
+        this.setStyleSensitively(".class, path, line", [
+            { name: "stroke-width", value: "2" },
+        ])
+        this.setStyleSensitively(".fineline", [
+            { name: "stroke-width", value: "1" },
+        ])
+        this.setStyleSensitively(".dashed, .anonymous", [
+            { name: "stroke-dasharray", value: "8" },
+        ])
+        this.setStyleSensitively(".dotted", [
+            { name: "stroke-dasharray", value: "3" },
+        ])
+        this.setStyleSensitively("rect.focused, circle.focused", [
+            { name: "stroke-width", value: "4px" },
+        ])
+        this.setStyleSensitively(".nostroke", [
+            { name: "stroke", value: "none" },
+        ])
+        this.setStyleSensitively("marker path", [
+            { name: "stroke-dasharray", value: "100" },
+        ])
     }
 
     /**
@@ -304,19 +422,19 @@ export default class ExportMenu {
      * @param {any[]} styles
      */
     setStyleSensitively(selector, styles) {
-        const elements = d3.selectAll(selector);
+        const elements = d3.selectAll(selector)
         if (elements.empty()) {
-            return;
+            return
         }
 
-        const _this = this;
+        const _this = this
         for (const style of styles) {
             elements.each(function () {
-                const element = d3.select(this);
+                const element = d3.select(this)
                 if (!_this.shouldntChangeInlineCss(element, style.name)) {
-                    element.style(style.name, style.value);
+                    element.style(style.name, style.value)
                 }
-            });
+            })
         }
     }
 
@@ -325,216 +443,227 @@ export default class ExportMenu {
      * @param {string} style
      */
     shouldntChangeInlineCss(element, style) {
-        return style === "fill" && this.hasBackgroundColorSet(element);
+        return style === "fill" && this.hasBackgroundColorSet(element)
     }
 
     /**
      * @param {{ datum: () => any; }} element
      */
     hasBackgroundColorSet(element) {
-        const data = element.datum();
+        const data = element.datum()
         if (data === undefined) {
-            return false;
+            return false
         }
-        return data.backgroundColor && !!data.backgroundColor;
+        return data.backgroundColor && !!data.backgroundColor
     }
 
     /**
      * For example the pin of the pick&pin module should be invisible in the exported graphic.
      */
     hideNonExportableElements() {
-        d3.selectAll(".hidden-in-export").style("display", "none");
+        d3.selectAll(".hidden-in-export").style("display", "none")
     }
 
     removeVowlInlineStyles() {
-        const _this = this;
-        d3.selectAll(".text, .subtext, .text.instance-count, .external + text .instance-count, .cardinality, .text, .embedded, .class, .object, .disjoint, .objectproperty, .disjointwith, .equivalentproperty, .transitiveproperty, .functionalproperty, .inversefunctionalproperty, .symmetricproperty, .allvaluesfromproperty, .somevaluesfromproperty, .label .datatype, .datatypeproperty, .rdf, .rdfproperty, .literal, .node .datatype, .deprecated, .deprecatedproperty, .external, .externalproperty, path, .nofill, .symbol, .values-from.filled, marker path, .class, path, line, .fineline, .white, .subclass, .subclassproperty, .external + text, .class.hovered, .property.hovered, .cardinality.hovered, .cardinality.focused, circle.pin, .filled.hovered, .filled.focused, .focused, path.hovered, .indirect-highlighting, .feature:hover, .values-from, .class, path, line, .fineline, .dashed, .anonymous, .dotted, rect.focused, circle.focused, .nostroke, marker path")
-            .each(function () {
-                const element = d3.select(this);
-                const inlineStyles = element.node().style;
-                for (const styleName in inlineStyles) {
-                    if (inlineStyles.hasOwnProperty(styleName)) {
-                        if (_this.shouldntChangeInlineCss(element, styleName)) {
-                            continue;
-                        }
-                        element.style(styleName, null);
+        const _this = this
+        d3.selectAll(
+            ".text, .subtext, .text.instance-count, .external + text .instance-count, .cardinality, .text, .embedded, .class, .object, .disjoint, .objectproperty, .disjointwith, .equivalentproperty, .transitiveproperty, .functionalproperty, .inversefunctionalproperty, .symmetricproperty, .allvaluesfromproperty, .somevaluesfromproperty, .label .datatype, .datatypeproperty, .rdf, .rdfproperty, .literal, .node .datatype, .deprecated, .deprecatedproperty, .external, .externalproperty, path, .nofill, .symbol, .values-from.filled, marker path, .class, path, line, .fineline, .white, .subclass, .subclassproperty, .external + text, .class.hovered, .property.hovered, .cardinality.hovered, .cardinality.focused, circle.pin, .filled.hovered, .filled.focused, .focused, path.hovered, .indirect-highlighting, .feature:hover, .values-from, .class, path, line, .fineline, .dashed, .anonymous, .dotted, rect.focused, circle.focused, .nostroke, marker path",
+        ).each(function () {
+            const element = d3.select(this)
+            const inlineStyles = element.node().style
+            for (const styleName in inlineStyles) {
+                if (inlineStyles.hasOwnProperty(styleName)) {
+                    if (_this.shouldntChangeInlineCss(element, styleName)) {
+                        continue
                     }
+                    element.style(styleName, null)
                 }
-                if (element.datum && element.datum() !== undefined && element.datum().type) {
-                    if (element.datum().type === "rdfs:subClassOf") {
-                        element.style("fill", null);
-                    }
+            }
+            if (
+                element.datum &&
+                element.datum() !== undefined &&
+                element.datum().type
+            ) {
+                if (element.datum().type === "rdfs:subClassOf") {
+                    element.style("fill", null)
                 }
-            });
+            }
+        })
 
         // repair svg icons in the menu;
-        const scrollContainer = d3.select("#menuElementContainer").node();
-        const controlElements = scrollContainer.children;
-        const numEntries = controlElements.length;
+        const scrollContainer = d3.select("#menuElementContainer").node()
+        const controlElements = scrollContainer.children
+        const numEntries = controlElements.length
 
         for (let i = 0; i < numEntries; i++) {
-            const currentMenu = controlElements[i].id;
-            d3.select("#" + currentMenu).select("path").style("stroke-width", "0");
-            d3.select("#" + currentMenu).select("path").style("fill", "#fff");
+            const currentMenu = controlElements[i].id
+            d3.select("#" + currentMenu)
+                .select("path")
+                .style("stroke-width", "0")
+            d3.select("#" + currentMenu)
+                .select("path")
+                .style("fill", "#fff")
         }
-        d3.select("#magnifyingGlass").style("stroke-width", "0");
-        d3.select("#magnifyingGlass").style("fill", "#666");
+        d3.select("#magnifyingGlass").style("stroke-width", "0")
+        d3.select("#magnifyingGlass").style("fill", "#666")
     }
 
     showNonExportableElements() {
-        d3.selectAll(".hidden-in-export").style("display", null);
+        d3.selectAll(".hidden-in-export").style("display", null)
     }
 
     createJSON_exportObject() {
         /** get data for exporter **/
         if (!this.graph.options.data) {
-            return {}; // return an empty json object
+            return {} // return an empty json object
         }
         // extract onotology information;
-        const unfilteredData = this.graph.unfilteredData;
-        const ontologyComment = this.graph.options.data._comment;
-        const metaObj = this.graph.options.generalOntologyMetaData;
-        const header = this.graph.options.data.header;
+        const unfilteredData = this.graph.unfilteredData
+        const ontologyComment = this.graph.options.data._comment
+        const metaObj = this.graph.options.generalOntologyMetaData
+        const header = this.graph.options.data.header
 
         if (metaObj.iri && metaObj.iri !== header.iri) {
-            header.iri = metaObj.iri;
+            header.iri = metaObj.iri
         }
         if (metaObj.title && metaObj.title !== header.title) {
-            header.title = metaObj.title;
+            header.title = metaObj.title
         }
         if (metaObj.version && metaObj.version !== header.version) {
-            header.version = metaObj.version;
+            header.version = metaObj.version
         }
         if (metaObj.author && metaObj.author !== header.author) {
-            header.author = metaObj.author;
+            header.author = metaObj.author
         }
         if (metaObj.description && metaObj.description !== header.description) {
-            header.description = metaObj.description;
+            header.description = metaObj.description
         }
 
-        const exportText = {};
-        exportText._comment = ontologyComment;
-        exportText.header = header;
-        exportText.namespace = this.graph.options.data.namespace;
+        const exportText = {}
+        exportText._comment = ontologyComment
+        exportText.header = header
+        exportText.namespace = this.graph.options.data.namespace
         if (exportText.namespace === undefined) {
             /**
              * @type {any[]}
              */
-            exportText.namespace = []; // just an empty namespace array
+            exportText.namespace = [] // just an empty namespace array
         }
         // we do have now the unfiltered data which needs to be transfered to class/classAttribute and property/propertyAttribute
 
         // const classAttributeString='classAttribute:[ \n';
-        const nodes = unfilteredData.nodes;
-        const classObjects = [];
-        const classAttributeObjects = [];
+        const nodes = unfilteredData.nodes
+        const classObjects = []
+        const classAttributeObjects = []
         for (let i = 0; i < nodes.length; i++) {
-            const classObj = {};
-            const classAttr = {};
-            classObj.id = nodes[i].id;
-            classObj.type = nodes[i].type;
-            classObjects.push(classObj);
+            const classObj = {}
+            const classAttr = {}
+            classObj.id = nodes[i].id
+            classObj.type = nodes[i].type
+            classObjects.push(classObj)
 
             // define the attributes object
-            classAttr.id = nodes[i].id;
-            classAttr.iri = nodes[i].iri;
-            classAttr.baseIri = nodes[i].baseIri;
-            classAttr.label = nodes[i].label;
+            classAttr.id = nodes[i].id
+            classAttr.iri = nodes[i].iri
+            classAttr.baseIri = nodes[i].baseIri
+            classAttr.label = nodes[i].label
 
             if (nodes[i].attributes.length > 0) {
-                classAttr.attributes = nodes[i].attributes;
+                classAttr.attributes = nodes[i].attributes
             }
             if (nodes[i].comment) {
-                classAttr.comment = nodes[i].comment;
+                classAttr.comment = nodes[i].comment
             }
             if (nodes[i].annotations) {
-                classAttr.annotations = nodes[i].annotations;
+                classAttr.annotations = nodes[i].annotations
             }
             if (nodes[i].description) {
-                classAttr.description = nodes[i].description;
+                classAttr.description = nodes[i].description
             }
 
             if (nodes[i].individuals.length > 0) {
-                const classIndividualElements = [];
-                const nIndividuals = nodes[i].individuals;
+                const classIndividualElements = []
+                const nIndividuals = nodes[i].individuals
                 for (let j = 0; j < nIndividuals.length; j++) {
-                    const indObj = {};
-                    indObj.iri = nIndividuals[j].iri;
-                    indObj.baseIri = nIndividuals[j].baseIri;
-                    indObj.labels = nIndividuals[j].label;
+                    const indObj = {}
+                    indObj.iri = nIndividuals[j].iri
+                    indObj.baseIri = nIndividuals[j].baseIri
+                    indObj.labels = nIndividuals[j].label
                     if (nIndividuals[j].annotations) {
-                        indObj.annotations = nIndividuals[j].annotations;
+                        indObj.annotations = nIndividuals[j].annotations
                     }
                     if (nIndividuals[j].description) {
-                        indObj.description = nIndividuals[j].description;
+                        indObj.description = nIndividuals[j].description
                     }
                     if (nIndividuals[j].comment) {
-                        indObj.comment = nIndividuals[j].comment;
+                        indObj.comment = nIndividuals[j].comment
                     }
-                    classIndividualElements.push(indObj);
+                    classIndividualElements.push(indObj)
                 }
-                classAttr.individuals = classIndividualElements;
+                classAttr.individuals = classIndividualElements
             }
 
-            const equalsForAttributes = [];
+            const equalsForAttributes = []
             if (nodes[i].equivalents.length > 0) {
-                const equals = nodes[i].equivalents;
+                const equals = nodes[i].equivalents
                 for (let j = 0; j < equals.length; j++) {
-                    const eqObj = {};
-                    const eqAttr = {};
-                    eqObj.id = equals[j].id;
-                    equalsForAttributes.push(equals[j].id);
-                    eqObj.type = equals[j].type;
-                    classObjects.push(eqObj);
+                    const eqObj = {}
+                    const eqAttr = {}
+                    eqObj.id = equals[j].id
+                    equalsForAttributes.push(equals[j].id)
+                    eqObj.type = equals[j].type
+                    classObjects.push(eqObj)
 
-                    eqAttr.id = equals[j].id;
-                    eqAttr.iri = equals[j].iri;
-                    eqAttr.baseIri = equals[j].baseIri;
-                    eqAttr.label = equals[j].label;
+                    eqAttr.id = equals[j].id
+                    eqAttr.iri = equals[j].iri
+                    eqAttr.baseIri = equals[j].baseIri
+                    eqAttr.label = equals[j].label
 
                     if (equals[j].attributes.length > 0) {
-                        eqAttr.attributes = equals[j].attributes;
+                        eqAttr.attributes = equals[j].attributes
                     }
                     if (equals[j].comment) {
-                        eqAttr.comment = equals[j].comment;
+                        eqAttr.comment = equals[j].comment
                     }
                     if (equals[j].individuals.length > 0) {
-                        eqAttr.individuals = equals[j].individuals;
+                        eqAttr.individuals = equals[j].individuals
                     }
                     if (equals[j].annotations) {
-                        eqAttr.annotations = equals[j].annotations;
+                        eqAttr.annotations = equals[j].annotations
                     }
                     if (equals[j].description) {
-                        eqAttr.description = equals[j].description;
+                        eqAttr.description = equals[j].description
                     }
 
                     if (equals[j].individuals.length > 0) {
-                        const e_classIndividualElements = [];
-                        const e_nIndividuals = equals[i].individuals;
+                        const e_classIndividualElements = []
+                        const e_nIndividuals = equals[i].individuals
                         for (let k = 0; k < e_nIndividuals.length; k++) {
-                            const e_indObj = {};
-                            e_indObj.iri = e_nIndividuals[k].iri;
-                            e_indObj.baseIri = e_nIndividuals[k].baseIri;
-                            e_indObj.labels = e_nIndividuals[k].label;
+                            const e_indObj = {}
+                            e_indObj.iri = e_nIndividuals[k].iri
+                            e_indObj.baseIri = e_nIndividuals[k].baseIri
+                            e_indObj.labels = e_nIndividuals[k].label
 
                             if (e_nIndividuals[k].annotations) {
-                                e_indObj.annotations = e_nIndividuals[k].annotations;
+                                e_indObj.annotations =
+                                    e_nIndividuals[k].annotations
                             }
                             if (e_nIndividuals[k].description) {
-                                e_indObj.description = e_nIndividuals[k].description;
+                                e_indObj.description =
+                                    e_nIndividuals[k].description
                             }
                             if (e_nIndividuals[k].comment) {
-                                e_indObj.comment = e_nIndividuals[k].comment;
+                                e_indObj.comment = e_nIndividuals[k].comment
                             }
-                            e_classIndividualElements.push(e_indObj);
+                            e_classIndividualElements.push(e_indObj)
                         }
-                        eqAttr.individuals = e_classIndividualElements;
+                        eqAttr.individuals = e_classIndividualElements
                     }
-                    classAttributeObjects.push(eqAttr);
+                    classAttributeObjects.push(eqAttr)
                 }
             }
             if (equalsForAttributes.length > 0) {
-                classAttr.equivalent = equalsForAttributes;
+                classAttr.equivalent = equalsForAttributes
             }
             // classAttr.subClasses=nodes[i].subClasses(); // not needed
             // classAttr.instances=nodes[i].instances();
@@ -546,269 +675,292 @@ export default class ExportMenu {
             // .intersection=element.intersection
             // .type=element.type Ignore, because we predefined it
             // .union=element.union
-            classAttributeObjects.push(classAttr);
+            classAttributeObjects.push(classAttr)
         }
 
         //** -- properties -- **/
-        const properties = unfilteredData.properties;
-        const propertyObjects = [];
-        const propertyAttributeObjects = [];
+        const properties = unfilteredData.properties
+        const propertyObjects = []
+        const propertyAttributeObjects = []
 
         for (let i = 0; i < properties.length; i++) {
-            const pObj = {};
-            const pAttr = {};
-            pObj.id = properties[i].id;
-            pObj.type = properties[i].type;
-            propertyObjects.push(pObj);
+            const pObj = {}
+            const pAttr = {}
+            pObj.id = properties[i].id
+            pObj.type = properties[i].type
+            propertyObjects.push(pObj)
 
             // define the attributes object
-            pAttr.id = properties[i].id;
-            pAttr.iri = properties[i].iri;
-            pAttr.baseIri = properties[i].baseIri;
-            pAttr.label = properties[i].label;
+            pAttr.id = properties[i].id
+            pAttr.iri = properties[i].iri
+            pAttr.baseIri = properties[i].baseIri
+            pAttr.label = properties[i].label
 
             if (properties[i].attributes.length > 0) {
-                pAttr.attributes = properties[i].attributes;
+                pAttr.attributes = properties[i].attributes
             }
             if (properties[i].comment) {
-                pAttr.comment = properties[i].comment;
+                pAttr.comment = properties[i].comment
             }
             if (properties[i].annotations) {
-                pAttr.annotations = properties[i].annotations;
+                pAttr.annotations = properties[i].annotations
             }
             if (properties[i].maxCardinality) {
-                pAttr.maxCardinality = properties[i].maxCardinality;
+                pAttr.maxCardinality = properties[i].maxCardinality
             }
             if (properties[i].minCardinality) {
-                pAttr.minCardinality = properties[i].minCardinality;
+                pAttr.minCardinality = properties[i].minCardinality
             }
             if (properties[i].cardinality) {
-                pAttr.cardinality = properties[i].cardinality;
+                pAttr.cardinality = properties[i].cardinality
             }
             if (properties[i].description) {
-                pAttr.description = properties[i].description;
+                pAttr.description = properties[i].description
             }
 
-            pAttr.domain = properties[i].domain.id;
-            pAttr.range = properties[i].range.id;
+            pAttr.domain = properties[i].domain.id
+            pAttr.range = properties[i].range.id
             // sub properties;
             if (properties[i].subproperties) {
-                const subProps = properties[i].subproperties;
-                const subPropsIdArray = [];
+                const subProps = properties[i].subproperties
+                const subPropsIdArray = []
                 for (let j = 0; j < subProps.length; j++) {
                     if (subProps[j].id) {
-                        subPropsIdArray.push(subProps[j].id);
+                        subPropsIdArray.push(subProps[j].id)
                     }
                 }
-                pAttr.subproperty = subPropsIdArray;
+                pAttr.subproperty = subPropsIdArray
             }
 
             // super properties
             if (properties[i].superproperties) {
-                const superProps = properties[i].superproperties;
-                const superPropsIdArray = [];
+                const superProps = properties[i].superproperties
+                const superPropsIdArray = []
                 for (let j = 0; j < superProps.length; j++) {
                     if (superProps[j].id) {
-                        superPropsIdArray.push(superProps[j].id);
+                        superPropsIdArray.push(superProps[j].id)
                     }
                 }
-                pAttr.superproperty = superPropsIdArray;
+                pAttr.superproperty = superPropsIdArray
             }
 
             // check for inverse element
             if (properties[i].inverse) {
                 if (properties[i].inverse.id) {
-                    pAttr.inverse = properties[i].inverse.id;
+                    pAttr.inverse = properties[i].inverse.id
                 }
             }
-            propertyAttributeObjects.push(pAttr);
+            propertyAttributeObjects.push(pAttr)
         }
 
-        exportText.class = classObjects;
-        exportText.classAttribute = classAttributeObjects;
-        exportText.property = propertyObjects;
-        exportText.propertyAttribute = propertyAttributeObjects;
+        exportText.class = classObjects
+        exportText.classAttribute = classAttributeObjects
+        exportText.property = propertyObjects
+        exportText.propertyAttribute = propertyAttributeObjects
 
-        const nodeElements = this.graph.getVisibleNodeElements();  // get visible nodes
-        const propElements = this.graph.getVisibleLabelNodes(); // get visible labels
+        const nodeElements = this.graph.getVisibleNodeElements() // get visible nodes
+        const propElements = this.graph.getVisibleLabelNodes() // get visible labels
         // const jsonObj = JSON.parse(exportableJsonText);	   // reparse the original input json
 
         /** modify comment **/
-        const comment = exportText._comment;
-        const additionalString = ` [Additional Information added by WebVOWL Exporter Version: ${WebVOWL.version}]`;
+        const comment = exportText._comment
+        const additionalString = ` [Additional Information added by WebVOWL Exporter Version: ${WebVOWL.version}]`
         // adding new string to comment only if it does not exist
         if (comment !== undefined && comment.indexOf(additionalString) === -1) {
-            exportText._comment = comment + ` [Additional Information added by WebVOWL Exporter Version: ${WebVOWL.version}]`;
+            exportText._comment =
+                comment +
+                ` [Additional Information added by WebVOWL Exporter Version: ${WebVOWL.version}]`
         }
 
-        const classAttribute = exportText.classAttribute;
-        const propAttribute = exportText.propertyAttribute;
+        const classAttribute = exportText.classAttribute
+        const propAttribute = exportText.propertyAttribute
         //**  remove previously stored variables **/
         for (let i = 0; i < classAttribute.length; i++) {
-            const classObj_del = classAttribute[i];
-            delete classObj_del.pos;
-            delete classObj_del.pinned;
+            const classObj_del = classAttribute[i]
+            delete classObj_del.pos
+            delete classObj_del.pinned
         }
         for (let i = 0; i < propAttribute.length; i++) {
-            const propertyObj = propAttribute[i];
-            delete propertyObj.pos;
-            delete propertyObj.pinned;
+            const propertyObj = propAttribute[i]
+            delete propertyObj.pos
+            delete propertyObj.pinned
         }
         /**  add new variables to jsonObj  **/
         // class attribute variables
         nodeElements.each(function (/** @type {BaseNode} */ node) {
-            const nodeId = node.id;
+            const nodeId = node.id
             for (let i = 0; i < classAttribute.length; i++) {
-                const classObj = classAttribute[i];
+                const classObj = classAttribute[i]
                 if (classObj.id === nodeId) {
                     // store relative positions
-                    classObj.pos = [parseFloat(node.x.toFixed(2)), parseFloat(node.y.toFixed(2))];
+                    classObj.pos = [
+                        parseFloat(node.x.toFixed(2)),
+                        parseFloat(node.y.toFixed(2)),
+                    ]
                     if (node.pinned) {
-                        classObj.pinned = true;
+                        classObj.pinned = true
                     }
-                    break;
+                    break
                 }
             }
-        });
+        })
         // property attribute variables
         for (let j = 0; j < propElements.length; j++) {
-            const correspondingProp = propElements[j].property;
+            const correspondingProp = propElements[j].property
             for (let i = 0; i < propAttribute.length; i++) {
-                const propertyObj = propAttribute[i];
+                const propertyObj = propAttribute[i]
                 if (propertyObj.id === correspondingProp.id) {
-                    propertyObj.pos = [parseFloat(propElements[j].x.toFixed(2)), parseFloat(propElements[j].y.toFixed(2))];
-                    if (propElements[j].pinned)
-                        propertyObj.pinned = true;
-                    break;
+                    propertyObj.pos = [
+                        parseFloat(propElements[j].x.toFixed(2)),
+                        parseFloat(propElements[j].y.toFixed(2)),
+                    ]
+                    if (propElements[j].pinned) propertyObj.pinned = true
+                    break
                 }
             }
         }
         /** create the variable for settings and set their values **/
-        exportText.settings = {};
+        exportText.settings = {}
 
         // Global Settings
-        const zoom = this.graph.getScaleFactor();
-        const paused = this.graph.paused;
-        const translation = [parseFloat(this.graph.getTranslation()[0].toFixed(2)), parseFloat(this.graph.getTranslation()[1].toFixed(2))];
-        exportText.settings.global = {};
-        exportText.settings.global.zoom = zoom.toFixed(2);
-        exportText.settings.global.translation = translation;
-        exportText.settings.global.paused = paused;
+        const zoom = this.graph.getScaleFactor()
+        const paused = this.graph.paused
+        const translation = [
+            parseFloat(this.graph.getTranslation()[0].toFixed(2)),
+            parseFloat(this.graph.getTranslation()[1].toFixed(2)),
+        ]
+        exportText.settings.global = {}
+        exportText.settings.global.zoom = zoom.toFixed(2)
+        exportText.settings.global.translation = translation
+        exportText.settings.global.paused = paused
 
         // Gravity Settings
-        const classDistance = this.graph.options.classDistance;
-        const datatypeDistance = this.graph.options.datatypeDistance;
-        exportText.settings.gravity = {};
-        exportText.settings.gravity.classDistance = classDistance;
-        exportText.settings.gravity.datatypeDistance = datatypeDistance;
+        const classDistance = this.graph.options.classDistance
+        const datatypeDistance = this.graph.options.datatypeDistance
+        exportText.settings.gravity = {}
+        exportText.settings.gravity.classDistance = classDistance
+        exportText.settings.gravity.datatypeDistance = datatypeDistance
 
         // Filter Settings
-        const fMenu = this.graph.options.filterMenu;
-        const fContainer = fMenu.getCheckBoxContainer();
-        const cbCont = [];
+        const fMenu = this.graph.options.filterMenu
+        const fContainer = fMenu.getCheckBoxContainer()
+        const cbCont = []
         for (let i = 0; i < fContainer.length; i++) {
-            const cb_text = fContainer[i].checkbox.attr("id");
-            const isEnabled = fContainer[i].checkbox.property("checked");
-            const cb_obj = {};
+            const cb_text = fContainer[i].checkbox.attr("id")
+            const isEnabled = fContainer[i].checkbox.property("checked")
+            const cb_obj = {}
             // @ts-ignore
-            cb_obj.id = cb_text;
+            cb_obj.id = cb_text
             // @ts-ignore
-            cb_obj.checked = isEnabled;
-            cbCont.push(cb_obj);
+            cb_obj.checked = isEnabled
+            cbCont.push(cb_obj)
         }
-        const degreeSliderVal = fMenu.getDegreeSliderValue();
-        exportText.settings.filter = {};
-        exportText.settings.filter.checkBox = cbCont;
-        exportText.settings.filter.degreeSliderValue = degreeSliderVal;
+        const degreeSliderVal = fMenu.getDegreeSliderValue()
+        exportText.settings.filter = {}
+        exportText.settings.filter.checkBox = cbCont
+        exportText.settings.filter.degreeSliderValue = degreeSliderVal
 
         // Modes Settings
-        const mMenu = this.graph.options.modeMenu;
-        const mContainer = mMenu.getCheckBoxContainer();
-        const cb_modes = [];
+        const mMenu = this.graph.options.modeMenu
+        const mContainer = mMenu.getCheckBoxContainer()
+        const cb_modes = []
         for (let i = 0; i < mContainer.length; i++) {
-            const cb_text = mContainer[i].attr("id");
-            const isEnabled = mContainer[i].property("checked");
-            const cb_obj = {};
+            const cb_text = mContainer[i].attr("id")
+            const isEnabled = mContainer[i].property("checked")
+            const cb_obj = {}
             // @ts-ignore
-            cb_obj.id = cb_text;
+            cb_obj.id = cb_text
             // @ts-ignore
-            cb_obj.checked = isEnabled;
-            cb_modes.push(cb_obj);
+            cb_obj.checked = isEnabled
+            cb_modes.push(cb_obj)
         }
-        const colorSwitchState = mMenu.colorModeState;
-        exportText.settings.modes = {};
-        exportText.settings.modes.checkBox = cb_modes;
-        exportText.settings.modes.colorSwitchState = colorSwitchState;
+        const colorSwitchState = mMenu.colorModeState
+        exportText.settings.modes = {}
+        exportText.settings.modes.checkBox = cb_modes
+        exportText.settings.modes.colorSwitchState = colorSwitchState
 
-        const exportObj = {};
+        const exportObj = {}
         // todo: [ ] find better way for ordering the objects
         // hack for ordering of objects, so settings is after metrics
-        exportObj._comment = exportText._comment;
-        exportObj.header = exportText.header;
-        exportObj.namespace = exportText.namespace;
+        exportObj._comment = exportText._comment
+        exportObj.header = exportText.header
+        exportObj.namespace = exportText.namespace
         // @ts-ignore
-        exportObj.metrics = exportText.metrics;
-        exportObj.settings = exportText.settings;
-        exportObj.class = exportText.class;
-        exportObj.classAttribute = exportText.classAttribute;
-        exportObj.property = exportText.property;
-        exportObj.propertyAttribute = exportText.propertyAttribute;
-        return exportObj;
+        exportObj.metrics = exportText.metrics
+        exportObj.settings = exportText.settings
+        exportObj.class = exportText.class
+        exportObj.classAttribute = exportText.classAttribute
+        exportObj.property = exportText.property
+        exportObj.propertyAttribute = exportText.propertyAttribute
+        return exportObj
     }
 
     exportJson() {
-        this.graph.options.navigationMenu.hideAllMenus();
+        this.graph.options.navigationMenu.hideAllMenus()
         /**  check if there is data **/
         if (!this.exportableJsonText) {
-            alert("No graph data available.");
+            alert("No graph data available.")
             // Stop the redirection to the path of the href attribute
             // @ts-ignore
-            d3.event.preventDefault();
-            return;
+            d3.event.preventDefault()
+            return
         }
-        const exportObj = this.createJSON_exportObject();
+        const exportObj = this.createJSON_exportObject()
 
         // make a string again;
-        const exportText = JSON.stringify(exportObj, null, '  ');
+        const exportText = JSON.stringify(exportObj, null, "  ")
         // write the data
-        const dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(exportText);
-        let jsonExportFileName = this.exportFilename;
+        const dataURI =
+            "data:text/json;charset=utf-8," + encodeURIComponent(exportText)
+        let jsonExportFileName = this.exportFilename
 
         if (!jsonExportFileName.endsWith(".json")) {
-            jsonExportFileName += ".json";
+            jsonExportFileName += ".json"
         }
-        this.exportJsonButton.attr("href", dataURI)
-            .attr("download", jsonExportFileName);
+        this.exportJsonButton
+            .attr("href", dataURI)
+            .attr("download", jsonExportFileName)
     }
 
     exportTex() {
-        const bbox = this.graph.getBoundingBoxForTex();
-        let comment = " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n";
-        comment += ` %        Generated with the experimental alpha version of the TeX exporter of WebVOWL (version ${WebVOWL.version}), ${WebVOWL.link} %%% \n`;
-        comment += " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n";
-        comment += " %   The content can be used as import in other TeX documents. \n";
-        comment += " %   Parent document has to use the following packages   \n";
-        comment += " %   \\usepackage{tikz}  \n";
-        comment += " %   \\usepackage{helvet}  \n";
-        comment += " %   \\usetikzlibrary{decorations.markings,decorations.shapes,decorations,arrows,automata,backgrounds,petri,shapes.geometric}  \n";
-        comment += " %   \\usepackage{xcolor}  \n\n";
-        comment += " %%%%%%%%%%%%%%% Example Parent Document %%%%%%%%%%%%%%%%%%%%%%%\n";
-        comment += " %\\documentclass{article} \n";
-        comment += " %\\usepackage{tikz} \n";
-        comment += " %\\usepackage{helvet} \n";
-        comment += " %\\usetikzlibrary{decorations.markings,decorations.shapes,decorations,arrows,automata,backgrounds,petri,shapes.geometric} \n";
-        comment += " %\\usepackage{xcolor} \n\n";
-        comment += " %\\begin{document} \n";
-        comment += " %\\section{Example} \n";
-        comment += " %  This is an example. \n";
-        comment += " %  \\begin{figure} \n";
-        comment += " %    \\input{<THIS_FILE_NAME>} % << tex file name for the graph \n";
-        comment += " %    \\caption{A generated graph with TKIZ using alpha version of the TeX exporter of WebVOWL (version 1.1.3) } \n";
-        comment += " %  \\end{figure} \n";
-        comment += " %\\end{document} \n";
-        comment += " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n";
+        const bbox = this.graph.getBoundingBoxForTex()
+        let comment =
+            " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"
+        comment += ` %        Generated with the experimental alpha version of the TeX exporter of WebVOWL (version ${WebVOWL.version}), ${WebVOWL.link} %%% \n`
+        comment +=
+            " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n"
+        comment +=
+            " %   The content can be used as import in other TeX documents. \n"
+        comment += " %   Parent document has to use the following packages   \n"
+        comment += " %   \\usepackage{tikz}  \n"
+        comment += " %   \\usepackage{helvet}  \n"
+        comment +=
+            " %   \\usetikzlibrary{decorations.markings,decorations.shapes,decorations,arrows,automata,backgrounds,petri,shapes.geometric}  \n"
+        comment += " %   \\usepackage{xcolor}  \n\n"
+        comment +=
+            " %%%%%%%%%%%%%%% Example Parent Document %%%%%%%%%%%%%%%%%%%%%%%\n"
+        comment += " %\\documentclass{article} \n"
+        comment += " %\\usepackage{tikz} \n"
+        comment += " %\\usepackage{helvet} \n"
+        comment +=
+            " %\\usetikzlibrary{decorations.markings,decorations.shapes,decorations,arrows,automata,backgrounds,petri,shapes.geometric} \n"
+        comment += " %\\usepackage{xcolor} \n\n"
+        comment += " %\\begin{document} \n"
+        comment += " %\\section{Example} \n"
+        comment += " %  This is an example. \n"
+        comment += " %  \\begin{figure} \n"
+        comment +=
+            " %    \\input{<THIS_FILE_NAME>} % << tex file name for the graph \n"
+        comment +=
+            " %    \\caption{A generated graph with TKIZ using alpha version of the TeX exporter of WebVOWL (version 1.1.3) } \n"
+        comment += " %  \\end{figure} \n"
+        comment += " %\\end{document} \n"
+        comment +=
+            " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n"
 
-        let texString = comment + "\\definecolor{imageBGCOLOR}{HTML}{FFFFFF} \n" +
+        let texString =
+            comment +
+            "\\definecolor{imageBGCOLOR}{HTML}{FFFFFF} \n" +
             "\\definecolor{owlClassColor}{HTML}{AACCFF}\n" +
             "\\definecolor{owlObjectPropertyColor}{HTML}{AACCFF}\n" +
             "\\definecolor{owlExternalClassColor}{HTML}{AACCFF}\n" +
@@ -820,221 +972,303 @@ export default class ExportMenu {
             "\\definecolor{unionColor}{HTML}{6699cc}\n" +
             "\\begin{center} \n" +
             "\\resizebox{\\linewidth}{!}{\n" +
-
             "\\begin{tikzpicture}[framed]\n" +
-            "\\clip (" + bbox[0] + "pt , " + bbox[1] + "pt ) rectangle (" + bbox[2] + "pt , " + bbox[3] + "pt);\n" +
+            "\\clip (" +
+            bbox[0] +
+            "pt , " +
+            bbox[1] +
+            "pt ) rectangle (" +
+            bbox[2] +
+            "pt , " +
+            bbox[3] +
+            "pt);\n" +
             "\\tikzstyle{dashed}=[dash pattern=on 4pt off 4pt] \n" +
             "\\tikzstyle{dotted}=[dash pattern=on 2pt off 2pt] \n" +
-            "\\fontfamily{sans-serif}{\\fontsize{12}{12}\\selectfont}\n \n";
+            "\\fontfamily{sans-serif}{\\fontsize{12}{12}\\selectfont}\n \n"
 
-        texString += "\\tikzset{triangleBlack/.style = {fill=black, draw=black, line width=1pt,scale=0.7,regular polygon, regular polygon sides=3} }\n";
-        texString += "\\tikzset{triangleWhite/.style = {fill=white, draw=black, line width=1pt,scale=0.7,regular polygon, regular polygon sides=3} }\n";
-        texString += "\\tikzset{triangleBlue/.style  = {fill=valuesFrom, draw=valuesFrom, line width=1pt,scale=0.7,regular polygon, regular polygon sides=3} }\n";
-        texString += "\\tikzset{Diamond/.style = {fill=white, draw=black, line width=2pt,scale=1.2,regular polygon, regular polygon sides=4} }\n";
-        texString += "\\tikzset{Literal/.style={rectangle,align=center,\n" +
+        texString +=
+            "\\tikzset{triangleBlack/.style = {fill=black, draw=black, line width=1pt,scale=0.7,regular polygon, regular polygon sides=3} }\n"
+        texString +=
+            "\\tikzset{triangleWhite/.style = {fill=white, draw=black, line width=1pt,scale=0.7,regular polygon, regular polygon sides=3} }\n"
+        texString +=
+            "\\tikzset{triangleBlue/.style  = {fill=valuesFrom, draw=valuesFrom, line width=1pt,scale=0.7,regular polygon, regular polygon sides=3} }\n"
+        texString +=
+            "\\tikzset{Diamond/.style = {fill=white, draw=black, line width=2pt,scale=1.2,regular polygon, regular polygon sides=4} }\n"
+        texString +=
+            "\\tikzset{Literal/.style={rectangle,align=center,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "black, draw=black, dashed, line width=1pt, fill=owlDatatypeColor, minimum width=80pt,\n" +
-            "minimum height = 20pt}}\n\n";
+            "minimum height = 20pt}}\n\n"
 
-        texString += "\\tikzset{Datatype/.style={rectangle,align=center,\n" +
+        texString +=
+            "\\tikzset{Datatype/.style={rectangle,align=center,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "black, draw=black, line width=1pt, fill=owlDatatypeColor, minimum width=80pt,\n" +
-            "minimum height = 20pt}}\n\n";
+            "minimum height = 20pt}}\n\n"
 
-        texString += "\\tikzset{owlClass/.style={circle, inner sep=0mm,align=center, \n" +
+        texString +=
+            "\\tikzset{owlClass/.style={circle, inner sep=0mm,align=center, \n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
-            "black, draw=black, line width=1pt, fill=owlClassColor, minimum size=101pt}}\n\n";
+            "black, draw=black, line width=1pt, fill=owlClassColor, minimum size=101pt}}\n\n"
 
-        texString += "\\tikzset{anonymousClass/.style={circle, inner sep=0mm,align=center, \n" +
+        texString +=
+            "\\tikzset{anonymousClass/.style={circle, inner sep=0mm,align=center, \n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
-            "black, dashed, draw=black, line width=1pt, fill=owlClassColor, minimum size=101pt}}\n\n";
+            "black, dashed, draw=black, line width=1pt, fill=owlClassColor, minimum size=101pt}}\n\n"
 
-        texString += "\\tikzset{owlThing/.style={circle, inner sep=0mm,align=center,\n" +
+        texString +=
+            "\\tikzset{owlThing/.style={circle, inner sep=0mm,align=center,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
-            "black, dashed, draw=black, line width=1pt, fill=owlThingColor, minimum size=62pt}}\n\n";
+            "black, dashed, draw=black, line width=1pt, fill=owlThingColor, minimum size=62pt}}\n\n"
 
-        texString += "\\tikzset{owlObjectProperty/.style={rectangle,align=center,\n" +
+        texString +=
+            "\\tikzset{owlObjectProperty/.style={rectangle,align=center,\n" +
             "inner sep=0mm,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "fill=owlObjectPropertyColor, minimum width=80pt,\n" +
-            "minimum height = 25pt}}\n\n";
+            "minimum height = 25pt}}\n\n"
 
-        texString += "\\tikzset{rdfProperty/.style={rectangle,align=center,\n" +
+        texString +=
+            "\\tikzset{rdfProperty/.style={rectangle,align=center,\n" +
             "inner sep=0mm,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "fill=rdfPropertyColor, minimum width=80pt,\n" +
-            "minimum height = 25pt}}\n\n";
+            "minimum height = 25pt}}\n\n"
 
-        texString += "\\tikzset{owlDatatypeProperty/.style={rectangle,align=center,\n" +
+        texString +=
+            "\\tikzset{owlDatatypeProperty/.style={rectangle,align=center,\n" +
             "fill=owlDatatypePropertyColor, minimum width=80pt,\n" +
             "inner sep=0mm,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
-            "minimum height = 25pt}}\n\n";
+            "minimum height = 25pt}}\n\n"
 
-        texString += "\\tikzset{rdfsSubClassOf/.style={rectangle,align=center,\n" +
+        texString +=
+            "\\tikzset{rdfsSubClassOf/.style={rectangle,align=center,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "inner sep=0mm,\n" +
             "fill=imageBGCOLOR, minimum width=80pt,\n" +
-            "minimum height = 25pt}}\n\n";
+            "minimum height = 25pt}}\n\n"
 
-        texString += "\\tikzset{unionOf/.style={circle, inner sep=0mm,align=center,\n" +
+        texString +=
+            "\\tikzset{unionOf/.style={circle, inner sep=0mm,align=center,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
-            "black, draw=black, line width=1pt, fill=unionColor, minimum size=25pt}}\n\n";
+            "black, draw=black, line width=1pt, fill=unionColor, minimum size=25pt}}\n\n"
 
-        texString += "\\tikzset{disjointWith/.style={circle, inner sep=0mm,align=center,\n" +
+        texString +=
+            "\\tikzset{disjointWith/.style={circle, inner sep=0mm,align=center,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
-            "black, draw=black, line width=1pt, fill=unionColor, minimum size=20pt}}\n\n";
+            "black, draw=black, line width=1pt, fill=unionColor, minimum size=20pt}}\n\n"
 
-
-        texString += "\\tikzset{owlEquivalentClass/.style={circle,align=center,\n" +
+        texString +=
+            "\\tikzset{owlEquivalentClass/.style={circle,align=center,\n" +
             "font={\\fontsize{12pt}{12}\\selectfont \\sffamily },\n" +
             "inner sep=0mm,\n" +
             "black, solid, draw=black, line width=3pt, fill=owlExternalClassColor, minimum size=101pt,\n" +
-            "postaction = {draw,line width=1pt, white}}}\n\n";
+            "postaction = {draw,line width=1pt, white}}}\n\n"
 
         // draw a bounding box;
         // get bbox coordinates;
-        this.graph.options.navigationMenu.hideAllMenus();
+        this.graph.options.navigationMenu.hideAllMenus()
         /**  check if there is data **/
         if (!this.exportableJsonText) {
-            alert("No graph data available.");
+            alert("No graph data available.")
             // Stop the redirection to the path of the href attribute
-            d3.event.preventDefault();
-            return;
+            d3.event.preventDefault()
+            return
         }
 
         /** get data for exporter **/
-        const nodeElements = this.graph.getVisibleNodeElements();  // get visible nodes
-        const propElements = this.graph.getVisibleLabelNodes(); // get visible labels
-        const links = this.graph.getVisibleLinks();
+        const nodeElements = this.graph.getVisibleNodeElements() // get visible nodes
+        const propElements = this.graph.getVisibleLabelNodes() // get visible labels
+        const links = this.graph.getVisibleLinks()
 
         // export only nodes;
         // draw Links;
         let i = 0 // Variable scope intended
         for (; i < links.length; i++) {
-            const link = links[i];
-            const prop = link.property;
-            let dx, dy, px, py, rx, ry;
-            let colorStr = "black";
-            let linkStyle = "";
-            let isLoop = "";
-            let curvePoint;
-            let pathStart;
-            let pathEnd;
-            const markerOffset = 7;
+            const link = links[i]
+            const prop = link.property
+            let dx, dy, px, py, rx, ry
+            let colorStr = "black"
+            let linkStyle = ""
+            let isLoop = ""
+            let curvePoint
+            let pathStart
+            let pathEnd
+            const markerOffset = 7
 
-            let arrowType = "triangleBlack";
-            const linkWidth = ",line width=2pt";
+            let arrowType = "triangleBlack"
+            const linkWidth = ",line width=2pt"
             if (prop.linkType) {
                 if (prop.linkType === "dotted") {
                     //stroke-dasharray: 3;
-                    linkStyle = ", dotted ";
-                    arrowType = "triangleWhite";
+                    linkStyle = ", dotted "
+                    arrowType = "triangleWhite"
                 }
                 if (prop.linkType === "dashed") {
                     //stroke-dasharray: 3;
-                    linkStyle = ", dashed ";
+                    linkStyle = ", dashed "
                 }
 
                 if (prop.linkType === "values-from") {
-                    colorStr = "valuesFrom";
+                    colorStr = "valuesFrom"
                 }
             }
 
-            let lg;
+            let lg
             if (link.layers === 1 && !link.loops) {
-                const linkDomainIntersection = MathUtils.calculateIntersection(link.range, link.domain, 1);
-                const linkRangeIntersection = MathUtils.calculateIntersection(link.domain, link.range, 1);
-                const center = MathUtils.calculateCenter(linkDomainIntersection, linkRangeIntersection);
-                dx = linkDomainIntersection.x;
-                dy = -linkDomainIntersection.y;
-                px = center.x;
-                py = -center.y;
-                rx = linkRangeIntersection.x;
-                ry = -linkRangeIntersection.y;
+                const linkDomainIntersection = MathUtils.calculateIntersection(
+                    link.range,
+                    link.domain,
+                    1,
+                )
+                const linkRangeIntersection = MathUtils.calculateIntersection(
+                    link.domain,
+                    link.range,
+                    1,
+                )
+                const center = MathUtils.calculateCenter(
+                    linkDomainIntersection,
+                    linkRangeIntersection,
+                )
+                dx = linkDomainIntersection.x
+                dy = -linkDomainIntersection.y
+                px = center.x
+                py = -center.y
+                rx = linkRangeIntersection.x
+                ry = -linkRangeIntersection.y
 
-                pathStart = linkDomainIntersection;
-                curvePoint = center;
-                pathEnd = linkRangeIntersection;
+                pathStart = linkDomainIntersection
+                curvePoint = center
+                pathEnd = linkRangeIntersection
 
-                let nx = rx - px;
-                let ny = ry - py;
+                let nx = rx - px
+                let ny = ry - py
 
                 // normalize ;
-                const len = Math.sqrt(nx * nx + ny * ny);
+                const len = Math.sqrt(nx * nx + ny * ny)
 
-                nx = nx / len;
-                ny = ny / len;
+                nx = nx / len
+                ny = ny / len
 
-                const ahAngle = Math.atan2(ny, nx) * (180 / Math.PI);
-            }
-            else {
+                const ahAngle = Math.atan2(ny, nx) * (180 / Math.PI)
+            } else {
                 if (link.isLoop()) {
-                    isLoop = ", tension=3";
-                    const controlPoints = MathUtils.calculateLoopPoints(link);
-                    pathStart = controlPoints[0];
-                    curvePoint = controlPoints[1];
-                    pathEnd = controlPoints[2];
+                    isLoop = ", tension=3"
+                    const controlPoints = MathUtils.calculateLoopPoints(link)
+                    pathStart = controlPoints[0]
+                    curvePoint = controlPoints[1]
+                    pathEnd = controlPoints[2]
                 } else {
-                    curvePoint = link.label;
-                    pathStart = MathUtils.calculateIntersection(curvePoint, link.domain, 1);
-                    pathEnd = MathUtils.calculateIntersection(curvePoint, link.range, 1);
+                    curvePoint = link.label
+                    pathStart = MathUtils.calculateIntersection(
+                        curvePoint,
+                        link.domain,
+                        1,
+                    )
+                    pathEnd = MathUtils.calculateIntersection(
+                        curvePoint,
+                        link.range,
+                        1,
+                    )
                 }
-                dx = pathStart.x;
-                dy = -pathStart.y;
-                px = curvePoint.x;
-                py = -curvePoint.y;
-                rx = pathEnd.x;
-                ry = -pathEnd.y;
+                dx = pathStart.x
+                dy = -pathStart.y
+                px = curvePoint.x
+                py = -curvePoint.y
+                rx = pathEnd.x
+                ry = -pathEnd.y
             }
 
-            texString += "\\draw [" + colorStr + linkStyle + linkWidth + isLoop + "] plot [smooth] coordinates {(" +
-                dx + "pt, " + dy + "pt) (" + px + "pt, " + py + "pt)  (" + rx + "pt, " + ry + "pt)};\n";
+            texString +=
+                "\\draw [" +
+                colorStr +
+                linkStyle +
+                linkWidth +
+                isLoop +
+                "] plot [smooth] coordinates {(" +
+                dx +
+                "pt, " +
+                dy +
+                "pt) (" +
+                px +
+                "pt, " +
+                py +
+                "pt)  (" +
+                rx +
+                "pt, " +
+                ry +
+                "pt)};\n"
 
-            if (link.property.markerElement === undefined) continue;
+            if (link.property.markerElement === undefined) continue
 
             // add arrow head;
-            if (link.property.type === "owl:someValuesFrom" || link.property.type === "owl:allValuesFrom") {
-                arrowType = "triangleBlue";
+            if (
+                link.property.type === "owl:someValuesFrom" ||
+                link.property.type === "owl:allValuesFrom"
+            ) {
+                arrowType = "triangleBlue"
             }
 
-            lg = link.pathElement;
-            const pathLen = Math.floor(lg.node().getTotalLength());
-            let p1 = lg.node().getPointAtLength(pathLen - 4);
-            let p2 = lg.node().getPointAtLength(pathLen);
-            let markerCenter = lg.node().getPointAtLength(pathLen - 6);
+            lg = link.pathElement
+            const pathLen = Math.floor(lg.node().getTotalLength())
+            let p1 = lg.node().getPointAtLength(pathLen - 4)
+            let p2 = lg.node().getPointAtLength(pathLen)
+            let markerCenter = lg.node().getPointAtLength(pathLen - 6)
             if (link.property.type === "setOperatorProperty") {
-                p1 = lg.node().getPointAtLength(4);
-                p2 = lg.node().getPointAtLength(0);
-                markerCenter = lg.node().getPointAtLength(8);
-                arrowType = "Diamond";
+                p1 = lg.node().getPointAtLength(4)
+                p2 = lg.node().getPointAtLength(0)
+                markerCenter = lg.node().getPointAtLength(8)
+                arrowType = "Diamond"
             }
 
-            const startX = p1.x;
-            const startY = p1.y;
-            const endX = p2.x;
-            const endY = p2.y;
-            let normX = endX - startX;
-            let normY = endY - startY;
-            const len = Math.sqrt(normX * normX + normY * normY);
-            normX = normX / len;
-            normY = normY / len;
+            const startX = p1.x
+            const startY = p1.y
+            const endX = p2.x
+            const endY = p2.y
+            let normX = endX - startX
+            let normY = endY - startY
+            const len = Math.sqrt(normX * normX + normY * normY)
+            normX = normX / len
+            normY = normY / len
 
-            let ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
-            ahAngle -= 90;
+            let ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI)
+            ahAngle -= 90
             if (link.property.type === "setOperatorProperty") {
-                ahAngle -= 45;
+                ahAngle -= 45
             }
             // console.log(link.property.labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
-            rx = markerCenter.x;
-            ry = markerCenter.y;
+            rx = markerCenter.x
+            ry = markerCenter.y
             if (link.layers === 1 && !link.loops) {
                 // markerOffset=-1*m
-                ry = -1 * ry;
-                texString += "\\node[" + arrowType + ", rotate=" + ahAngle + "] at (" + rx + "pt, " + ry + "pt)   (single_marker" + i + ") {};\n ";
+                ry = -1 * ry
+                texString +=
+                    "\\node[" +
+                    arrowType +
+                    ", rotate=" +
+                    ahAngle +
+                    "] at (" +
+                    rx +
+                    "pt, " +
+                    ry +
+                    "pt)   (single_marker" +
+                    i +
+                    ") {};\n "
             } else {
-                ry = -1 * ry;
-                texString += "\\node[" + arrowType + ", rotate=" + ahAngle + "] at (" + rx + "pt, " + ry + "pt)   (marker" + i + ") {};\n ";
+                ry = -1 * ry
+                texString +=
+                    "\\node[" +
+                    arrowType +
+                    ", rotate=" +
+                    ahAngle +
+                    "] at (" +
+                    rx +
+                    "pt, " +
+                    ry +
+                    "pt)   (marker" +
+                    i +
+                    ") {};\n "
             }
 
             // if   (link.isLoop()){
@@ -1042,326 +1276,743 @@ export default class ExportMenu {
             // }
 
             // add cardinality;
-            let cardinalityText = link.property.generateCardinalityText();
+            let cardinalityText = link.property.generateCardinalityText()
             if (cardinalityText && cardinalityText.length > 0) {
-                const cardinalityCenter = lg.node().getPointAtLength(pathLen - 18);
-                const cx = cardinalityCenter.x - (10 * normY);
-                let cy = cardinalityCenter.y + (10 * normX); // using orthonormal y Coordinate
-                cy *= -1.0;
-                const textColor = "black";
+                const cardinalityCenter = lg
+                    .node()
+                    .getPointAtLength(pathLen - 18)
+                const cx = cardinalityCenter.x - 10 * normY
+                let cy = cardinalityCenter.y + 10 * normX // using orthonormal y Coordinate
+                cy *= -1.0
+                const textColor = "black"
                 if (cardinalityText.indexOf("A") > -1) {
-                    cardinalityText = "$\\forall$";
+                    cardinalityText = "$\\forall$"
                 }
                 if (cardinalityText.indexOf("E") > -1) {
-                    cardinalityText = "$\\exists$";
+                    cardinalityText = "$\\exists$"
                 }
-                texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily },text=" + textColor + "] at (" + cx + "pt, " + cy + "pt)   (cardinalityText" + i + ") {" + cardinalityText + "};\n ";
+                texString +=
+                    "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily },text=" +
+                    textColor +
+                    "] at (" +
+                    cx +
+                    "pt, " +
+                    cy +
+                    "pt)   (cardinalityText" +
+                    i +
+                    ") {" +
+                    cardinalityText +
+                    "};\n "
             }
 
             if (link.property.inverse) {
-                lg = link.pathElement;
-                const pathLen = Math.floor(lg.node().getTotalLength());
-                const p1_inv = lg.node().getPointAtLength(4);
-                const p2_inv = lg.node().getPointAtLength(0);
-                const markerCenter_inv = lg.node().getPointAtLength(6);
-                const startX = p1_inv.x;
-                const startY = p1_inv.y;
-                const endX = p2_inv.x;
-                const endY = p2_inv.y;
-                let normX = endX - startX;
-                let normY = endY - startY;
-                const len = Math.sqrt(normX * normX + normY * normY);
-                normX = normX / len;
-                normY = normY / len;
+                lg = link.pathElement
+                const pathLen = Math.floor(lg.node().getTotalLength())
+                const p1_inv = lg.node().getPointAtLength(4)
+                const p2_inv = lg.node().getPointAtLength(0)
+                const markerCenter_inv = lg.node().getPointAtLength(6)
+                const startX = p1_inv.x
+                const startY = p1_inv.y
+                const endX = p2_inv.x
+                const endY = p2_inv.y
+                let normX = endX - startX
+                let normY = endY - startY
+                const len = Math.sqrt(normX * normX + normY * normY)
+                normX = normX / len
+                normY = normY / len
 
-                let ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI);
-                ahAngle -= 90;
+                let ahAngle = -1.0 * Math.atan2(normY, normX) * (180 / Math.PI)
+                ahAngle -= 90
                 //   console.log("INV>>\n "+link.property.inverse.labelForCurrentLanguage()+ ": "+normX+ " "+normY +"  "+ahAngle);
-                rx = markerCenter_inv.x;
-                ry = markerCenter_inv.y;
+                rx = markerCenter_inv.x
+                ry = markerCenter_inv.y
                 if (link.layers === 1 && !link.loops) {
                     // markerOffset=-1*m
-                    ry = -1 * ry;
-                    texString += "\\node[" + arrowType + ", rotate=" + ahAngle + "] at (" + rx + "pt, " + ry + "pt)   (INV_single_marker" + i + ") {};\n ";
+                    ry = -1 * ry
+                    texString +=
+                        "\\node[" +
+                        arrowType +
+                        ", rotate=" +
+                        ahAngle +
+                        "] at (" +
+                        rx +
+                        "pt, " +
+                        ry +
+                        "pt)   (INV_single_marker" +
+                        i +
+                        ") {};\n "
                 } else {
-                    ry = -1 * ry;
-                    texString += "\\node[" + arrowType + ", rotate=" + ahAngle + "] at (" + rx + "pt, " + ry + "pt)   (INV_marker" + i + ") {};\n ";
+                    ry = -1 * ry
+                    texString +=
+                        "\\node[" +
+                        arrowType +
+                        ", rotate=" +
+                        ahAngle +
+                        "] at (" +
+                        rx +
+                        "pt, " +
+                        ry +
+                        "pt)   (INV_marker" +
+                        i +
+                        ") {};\n "
                 }
             }
         }
 
         nodeElements.each(function (/** @type {BaseNode} */ node) {
-            const px = node.x;
-            const py = -node.y;
-            let identifier = node.labelForCurrentLanguage();
+            const px = node.x
+            const py = -node.y
+            let identifier = node.labelForCurrentLanguage()
             if (identifier === undefined) {
-                identifier = "";
+                identifier = ""
             }
-            let qType = "owlClass";
+            let qType = "owlClass"
             if (node.type === "owl:Thing" || node.type === "owl:Nothing")
-                qType = "owlThing";
+                qType = "owlThing"
 
             if (node.type === "owl:equivalentClass") {
-                qType = "owlEquivalentClass";
+                qType = "owlEquivalentClass"
             }
-            let textColorStr = "";
+            let textColorStr = ""
             if (node.textBlock) {
-                const txtColor = node.textBlock.textBlock.style("fill");
+                const txtColor = node.textBlock.textBlock.style("fill")
                 if (txtColor === "rgb(0, 0, 0)") {
-                    textColorStr = ", text=black";
+                    textColorStr = ", text=black"
                 }
                 if (txtColor === "rgb(255, 255, 255)") {
-                    textColorStr = ", text=white";
+                    textColorStr = ", text=white"
                 }
-                const tspans = node.textBlock.textBlock.node().children;
+                const tspans = node.textBlock.textBlock.node().children
                 if (tspans[0]) {
-                    identifier = tspans[0].innerHTML;
-                    if (node.individuals && node.individuals.length === parseInt(tspans[0].innerHTML)) {
-                        identifier = "{\\color{gray} " + tspans[0].innerHTML + " }";
+                    identifier = tspans[0].innerHTML
+                    if (
+                        node.individuals &&
+                        node.individuals.length ===
+                            parseInt(tspans[0].innerHTML)
+                    ) {
+                        identifier =
+                            "{\\color{gray} " + tspans[0].innerHTML + " }"
                     }
                     for (let t = 1; t < tspans.length; t++) {
-                        if (node.individuals && node.individuals.length === parseInt(tspans[t].innerHTML)) {
-                            identifier += "\\\\ {\\color{gray} " + tspans[t].innerHTML + " }";
+                        if (
+                            node.individuals &&
+                            node.individuals.length ===
+                                parseInt(tspans[t].innerHTML)
+                        ) {
+                            identifier +=
+                                "\\\\ {\\color{gray} " +
+                                tspans[t].innerHTML +
+                                " }"
                         } else {
-                            identifier += "\\\\ {\\small " + tspans[t].innerHTML + " }";
+                            identifier +=
+                                "\\\\ {\\small " + tspans[t].innerHTML + " }"
                         }
                     }
                 }
             }
             if (node.type === "rdfs:Literal") {
-                qType = "Literal";
+                qType = "Literal"
             }
             if (node.type === "rdfs:Datatype") {
-                qType = "Datatype";
+                qType = "Datatype"
             }
             if (node.attributes.indexOf("anonymous") !== -1) {
-                qType = "anonymousClass";
+                qType = "anonymousClass"
             }
-            if (node.type === "owl:unionOf" || node.type === "owl:complementOf" || node.type === "owl:disjointUnionOf" || node.type === "owl:intersectionOf") {
-                qType = "owlClass";
+            if (
+                node.type === "owl:unionOf" ||
+                node.type === "owl:complementOf" ||
+                node.type === "owl:disjointUnionOf" ||
+                node.type === "owl:intersectionOf"
+            ) {
+                qType = "owlClass"
             }
 
-            let bgColorStr = "";
-            let widthString = "";
+            let bgColorStr = ""
+            let widthString = ""
             if (node.type === "rdfs:Literal" || node.type === "rdfs:Datatype") {
-                const width = node.labelWidth;
-                widthString = ",minimum width=" + width + "pt";
-            }
-            else {
-                widthString = ",minimum size=" + 2 * node.smallestRadius + "pt";
+                const width = node.labelWidth
+                widthString = ",minimum width=" + width + "pt"
+            } else {
+                widthString = ",minimum size=" + 2 * node.smallestRadius + "pt"
             }
             if (node.backgroundColor) {
-                let bgColor = node.backgroundColor;
-                bgColor.toUpperCase();
-                bgColor = bgColor.slice(1, bgColor.length);
-                texString += "\\definecolor{Node" + i + "_COLOR}{HTML}{" + bgColor + "} \n ";
-                bgColorStr = ", fill=Node" + i + "_COLOR ";
+                let bgColor = node.backgroundColor
+                bgColor.toUpperCase()
+                bgColor = bgColor.slice(1, bgColor.length)
+                texString +=
+                    "\\definecolor{Node" +
+                    i +
+                    "_COLOR}{HTML}{" +
+                    bgColor +
+                    "} \n "
+                bgColorStr = ", fill=Node" + i + "_COLOR "
             }
             if (node.attributes.indexOf("deprecated") > -1) {
-                texString += "\\definecolor{Node" + i + "_COLOR}{HTML}{CCCCCC} \n ";
-                bgColorStr = ", fill=Node" + i + "_COLOR ";
+                texString +=
+                    "\\definecolor{Node" + i + "_COLOR}{HTML}{CCCCCC} \n "
+                bgColorStr = ", fill=Node" + i + "_COLOR "
             }
 
-            const leftPos = px - 7;
-            const rightPos = px + 7;
-            const txtOffset = py + 20;
+            const leftPos = px - 7
+            const rightPos = px + 7
+            const txtOffset = py + 20
             // @ts-ignore
-            if (node.type !== "owl:unionOf" || node.type !== "owl:disjointUnionOf") {
-                texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
+            if (
+                node.type !== "owl:unionOf" ||
+                node.type !== "owl:disjointUnionOf"
+            ) {
+                texString +=
+                    "\\node[" +
+                    qType +
+                    " " +
+                    widthString +
+                    " " +
+                    bgColorStr +
+                    " " +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)   (Node" +
+                    i +
+                    ") {" +
+                    identifier.replaceAll("_", "\\_ ") +
+                    "};\n"
             }
             if (node.type === "owl:unionOf") {
                 // add symbol to it;
-                texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {};\n";
-                texString += "\\node[unionOf   , text=black] at (" + leftPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[unionOf   , text=black] at (" + rightPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[unionOf ,fill=none   , text=black] at (" + leftPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[text=black] at (" + px + "pt, " + py + "pt)  (unionText13) {$\\mathbf{\\cup}$};\n";
-                texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
+                texString +=
+                    "\\node[" +
+                    qType +
+                    " " +
+                    widthString +
+                    " " +
+                    bgColorStr +
+                    " " +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)   (Node" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf   , text=black] at (" +
+                    leftPos +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf   , text=black] at (" +
+                    rightPos +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf ,fill=none   , text=black] at (" +
+                    leftPos +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[text=black] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)  (unionText13) {$\\mathbf{\\cup}$};\n"
+                texString +=
+                    "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    txtOffset +
+                    "pt)   (Node_text" +
+                    i +
+                    ") {" +
+                    identifier.replaceAll("_", "\\_ ") +
+                    "};\n"
             }
             // OWL DISJOINT UNION OF
             if (node.type === "owl:disjointUnionOf") {
-                texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {};\n";
-                texString += "\\node[unionOf   , text=black] at (" + leftPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[unionOf   , text=black] at (" + rightPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[unionOf ,fill=none   , text=black] at (" + leftPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + py + "pt)  (disjointUnoinText" + i + ") {1};\n";
-                texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
+                texString +=
+                    "\\node[" +
+                    qType +
+                    " " +
+                    widthString +
+                    " " +
+                    bgColorStr +
+                    " " +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)   (Node" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf   , text=black] at (" +
+                    leftPos +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf   , text=black] at (" +
+                    rightPos +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf ,fill=none   , text=black] at (" +
+                    leftPos +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)  (disjointUnoinText" +
+                    i +
+                    ") {1};\n"
+                texString +=
+                    "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    txtOffset +
+                    "pt)   (Node_text" +
+                    i +
+                    ") {" +
+                    identifier.replaceAll("_", "\\_ ") +
+                    "};\n"
             }
             // OWL COMPLEMENT OF
             if (node.type === "owl:complementOf") {
                 // add symbol to it;
-                texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {};\n";
-                texString += "\\node[unionOf   , text=black] at (" + px + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[font={\\fontsize{18pt}{18}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + py + "pt)  (unionText13) {$\\neg$};\n";
-                texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
+                texString +=
+                    "\\node[" +
+                    qType +
+                    " " +
+                    widthString +
+                    " " +
+                    bgColorStr +
+                    " " +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)   (Node" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf   , text=black] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[font={\\fontsize{18pt}{18}\\selectfont \\sffamily }" +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)  (unionText13) {$\\neg$};\n"
+                texString +=
+                    "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    txtOffset +
+                    "pt)   (Node_text" +
+                    i +
+                    ") {" +
+                    identifier.replaceAll("_", "\\_ ") +
+                    "};\n"
             }
             // OWL INTERSECTION OF
             if (node.type === "owl:intersectionOf") {
-                texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + px + "pt, " + py + "pt)   (Node" + i + ") {};\n";
-                texString += "\\node[unionOf   , text=black] at (" + leftPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[unionOf   , text=black] at (" + rightPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[unionOf ,fill=none   , text=black] at (" + leftPos + "pt, " + py + "pt)   (SymbolNode" + i + ") {};\n";
+                texString +=
+                    "\\node[" +
+                    qType +
+                    " " +
+                    widthString +
+                    " " +
+                    bgColorStr +
+                    " " +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)   (Node" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf   , text=black] at (" +
+                    leftPos +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf   , text=black] at (" +
+                    rightPos +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[unionOf ,fill=none   , text=black] at (" +
+                    leftPos +
+                    "pt, " +
+                    py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
 
                 // add now the outer colors;
-                texString += "\\filldraw[even odd rule,fill=owlClassColor,line width=1pt] (" + leftPos + "pt, " + py + "pt) circle (12.5pt)  (" + rightPos + "pt, " + py + "pt) circle (12.5pt);\n ";
+                texString +=
+                    "\\filldraw[even odd rule,fill=owlClassColor,line width=1pt] (" +
+                    leftPos +
+                    "pt, " +
+                    py +
+                    "pt) circle (12.5pt)  (" +
+                    rightPos +
+                    "pt, " +
+                    py +
+                    "pt) circle (12.5pt);\n "
 
                 // add texts
-                texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + py + "pt)  (intersectionText" + i + ") {$\\cap$};\n";
-                texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
+                texString +=
+                    "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    py +
+                    "pt)  (intersectionText" +
+                    i +
+                    ") {$\\cap$};\n"
+                texString +=
+                    "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" +
+                    textColorStr +
+                    "] at (" +
+                    px +
+                    "pt, " +
+                    txtOffset +
+                    "pt)   (Node_text" +
+                    i +
+                    ") {" +
+                    identifier.replaceAll("_", "\\_ ") +
+                    "};\n"
             }
-            i++;
-        });
+            i++
+        })
         for (let i = 0; i < propElements.length; i++) {
-            const correspondingProp = propElements[i].property;
-            const p_px = propElements[i].x;
-            const p_py = -propElements[i].y;
-            let identifier = correspondingProp.labelForCurrentLanguage();
+            const correspondingProp = propElements[i].property
+            const p_px = propElements[i].x
+            const p_py = -propElements[i].y
+            let identifier = correspondingProp.labelForCurrentLanguage()
             if (identifier === undefined) {
-                identifier = "";
+                identifier = ""
             }
-            let textColorStr = "";
+            let textColorStr = ""
             if (correspondingProp.textBlock && correspondingProp.textBlock) {
-                const txtColor = correspondingProp.textBlock.textBlock.style("fill");
+                const txtColor =
+                    correspondingProp.textBlock.textBlock.style("fill")
                 //  console.log("PropertyTextColor="+txtColor);
                 if (txtColor === "rgb(0, 0, 0)") {
-                    textColorStr = ", text=black";
+                    textColorStr = ", text=black"
                 }
                 if (txtColor === "rgb(255, 255, 255)") {
-                    textColorStr = ", text=white";
+                    textColorStr = ", text=white"
                 }
-                const tspans = correspondingProp.textBlock.textBlock.node().children;
+                const tspans =
+                    correspondingProp.textBlock.textBlock.node().children
 
                 // identifier=node.textBlock.textBlock.text();
                 // console.log(tspans);
                 if (tspans[0]) {
-                    identifier = tspans[0].innerHTML;
+                    identifier = tspans[0].innerHTML
 
                     for (let t = 1; t < tspans.length; t++) {
-                        const spanText = tspans[t].innerHTML;
+                        const spanText = tspans[t].innerHTML
                         if (spanText.indexOf("(") > -1) {
-                            identifier += "\\\\ {\\small " + tspans[t].innerHTML + " }";
-                        }
-                        else {
-                            identifier += "\\\\ " + tspans[t].innerHTML;
+                            identifier +=
+                                "\\\\ {\\small " + tspans[t].innerHTML + " }"
+                        } else {
+                            identifier += "\\\\ " + tspans[t].innerHTML
                         }
                     }
                 }
             }
             if (correspondingProp.type === "setOperatorProperty") {
-                continue; // this property does not have a label
+                continue // this property does not have a label
             }
-            let qType = "owlObjectProperty";
+            let qType = "owlObjectProperty"
             if (correspondingProp.type === "owl:DatatypeProperty") {
-                qType = "owlDatatypeProperty";
+                qType = "owlDatatypeProperty"
             }
             if (correspondingProp.type === "rdfs:subClassOf") {
-                qType = "rdfsSubClassOf";
+                qType = "rdfsSubClassOf"
             }
             if (correspondingProp.type === "rdf:Property") {
-                qType = "rdfProperty";
+                qType = "rdfProperty"
             }
 
-            let bgColorStr = "";
+            let bgColorStr = ""
             if (correspondingProp.backgroundColor) {
-                let bgColor = correspondingProp.backgroundColor;
-                bgColor.toUpperCase();
-                bgColor = bgColor.slice(1, bgColor.length);
-                texString += "\\definecolor{property" + i + "_COLOR}{HTML}{" + bgColor + "} \n ";
-                bgColorStr = ", fill=property" + i + "_COLOR ";
+                let bgColor = correspondingProp.backgroundColor
+                bgColor.toUpperCase()
+                bgColor = bgColor.slice(1, bgColor.length)
+                texString +=
+                    "\\definecolor{property" +
+                    i +
+                    "_COLOR}{HTML}{" +
+                    bgColor +
+                    "} \n "
+                bgColorStr = ", fill=property" + i + "_COLOR "
             }
             if (correspondingProp.attributes.indexOf("deprecated") > -1) {
-                texString += "\\definecolor{property" + i + "_COLOR}{HTML}{CCCCCC} \n ";
-                bgColorStr = ", fill=property" + i + "_COLOR ";
+                texString +=
+                    "\\definecolor{property" + i + "_COLOR}{HTML}{CCCCCC} \n "
+                bgColorStr = ", fill=property" + i + "_COLOR "
             }
 
-            const width = correspondingProp.getTextWidth();
-            const widthString = ",minimum width=" + width + "pt";
+            const width = correspondingProp.getTextWidth()
+            const widthString = ",minimum width=" + width + "pt"
 
             // OWL INTERSECTION OF
             if (correspondingProp.type === "owl:disjointWith") {
-                const leftPos = p_px - 12;
-                const rightPos = p_px + 12;
-                const txtOffset = p_py - 20;
-                texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + p_px + "pt, " + p_py + "pt)   (Node" + i + ") {};\n";
-                texString += "\\node[disjointWith , text=black] at (" + leftPos + "pt, " + p_py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[disjointWith , text=black] at (" + rightPos + "pt, " + p_py + "pt)   (SymbolNode" + i + ") {};\n";
-                texString += "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" + textColorStr + "] at (" + p_px + "pt, " + txtOffset + "pt)   (Node_text" + i + ") {";
+                const leftPos = p_px - 12
+                const rightPos = p_px + 12
+                const txtOffset = p_py - 20
+                texString +=
+                    "\\node[" +
+                    qType +
+                    " " +
+                    widthString +
+                    " " +
+                    bgColorStr +
+                    " " +
+                    textColorStr +
+                    "] at (" +
+                    p_px +
+                    "pt, " +
+                    p_py +
+                    "pt)   (Node" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[disjointWith , text=black] at (" +
+                    leftPos +
+                    "pt, " +
+                    p_py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[disjointWith , text=black] at (" +
+                    rightPos +
+                    "pt, " +
+                    p_py +
+                    "pt)   (SymbolNode" +
+                    i +
+                    ") {};\n"
+                texString +=
+                    "\\node[font={\\fontsize{12pt}{12}\\selectfont \\sffamily }" +
+                    textColorStr +
+                    "] at (" +
+                    p_px +
+                    "pt, " +
+                    txtOffset +
+                    "pt)   (Node_text" +
+                    i +
+                    ") {"
                 if (!this.graph.options.compactNotation) {
-                    texString += "(disjoint)";
+                    texString += "(disjoint)"
                 }
-                texString += "};\n";
-                continue;
+                texString += "};\n"
+                continue
             }
 
             if (correspondingProp.inverse) {
-                const inv_correspondingProp = correspondingProp.inverse;
+                const inv_correspondingProp = correspondingProp.inverse
                 // create the rendering element for the inverse property;
-                let inv_identifier = inv_correspondingProp.labelForCurrentLanguage();
+                let inv_identifier =
+                    inv_correspondingProp.labelForCurrentLanguage()
                 if (inv_identifier === undefined) {
-                    inv_identifier = "";
+                    inv_identifier = ""
                 }
 
-                let inv_textColorStr = "";
-                if (inv_correspondingProp.textBlock && inv_correspondingProp.textBlock) {
-                    const inv_txtColor = inv_correspondingProp.textBlock.textBlock.style("fill");
+                let inv_textColorStr = ""
+                if (
+                    inv_correspondingProp.textBlock &&
+                    inv_correspondingProp.textBlock
+                ) {
+                    const inv_txtColor =
+                        inv_correspondingProp.textBlock.textBlock.style("fill")
                     //  console.log("PropertyTextColor="+inv_txtColor);
                     if (inv_txtColor === "rgb(0, 0, 0)") {
-                        inv_textColorStr = ", text=black";
+                        inv_textColorStr = ", text=black"
                     }
                     if (inv_txtColor === "rgb(255, 255, 255)") {
-                        inv_textColorStr = ", text=white";
+                        inv_textColorStr = ", text=white"
                     }
-                    const inv_tspans = inv_correspondingProp.textBlock.textBlock.node().children;
+                    const inv_tspans =
+                        inv_correspondingProp.textBlock.textBlock.node()
+                            .children
 
                     // identifier=node.textBlock.textBlock.text();
                     if (inv_tspans[0]) {
-                        inv_identifier = inv_tspans[0].innerHTML;
-                        for (let inv_t = 1; inv_t < inv_tspans.length; inv_t++) {
-                            const ispanText = inv_tspans[inv_t].innerHTML;
+                        inv_identifier = inv_tspans[0].innerHTML
+                        for (
+                            let inv_t = 1;
+                            inv_t < inv_tspans.length;
+                            inv_t++
+                        ) {
+                            const ispanText = inv_tspans[inv_t].innerHTML
                             if (ispanText.indexOf("(") > -1) {
-                                inv_identifier += "\\\\ {\\small " + inv_tspans[inv_t].innerHTML + " }";
+                                inv_identifier +=
+                                    "\\\\ {\\small " +
+                                    inv_tspans[inv_t].innerHTML +
+                                    " }"
                             } else {
-                                inv_identifier += "\\\\ " + inv_tspans[inv_t].innerHTML;
+                                inv_identifier +=
+                                    "\\\\ " + inv_tspans[inv_t].innerHTML
                             }
                         }
                     }
                 }
-                const inv_qType = "owlObjectProperty";
-                let inv_bgColorStr = "";
+                const inv_qType = "owlObjectProperty"
+                let inv_bgColorStr = ""
 
                 if (inv_correspondingProp.backgroundColor) {
-                    let inv_bgColor = inv_correspondingProp.backgroundColor;
-                    inv_bgColor.toUpperCase();
-                    inv_bgColor = inv_bgColor.slice(1, inv_bgColor.length);
-                    texString += "\\definecolor{inv_property" + i + "_COLOR}{HTML}{" + inv_bgColor + "} \n ";
-                    inv_bgColorStr = ", fill=inv_property" + i + "_COLOR ";
+                    let inv_bgColor = inv_correspondingProp.backgroundColor
+                    inv_bgColor.toUpperCase()
+                    inv_bgColor = inv_bgColor.slice(1, inv_bgColor.length)
+                    texString +=
+                        "\\definecolor{inv_property" +
+                        i +
+                        "_COLOR}{HTML}{" +
+                        inv_bgColor +
+                        "} \n "
+                    inv_bgColorStr = ", fill=inv_property" + i + "_COLOR "
                 }
-                if (inv_correspondingProp.attributes.indexOf("deprecated") > -1) {
-                    texString += "\\definecolor{inv_property" + i + "_COLOR}{HTML}{CCCCCC} \n ";
-                    inv_bgColorStr = ", fill=inv_property" + i + "_COLOR ";
+                if (
+                    inv_correspondingProp.attributes.indexOf("deprecated") > -1
+                ) {
+                    texString +=
+                        "\\definecolor{inv_property" +
+                        i +
+                        "_COLOR}{HTML}{CCCCCC} \n "
+                    inv_bgColorStr = ", fill=inv_property" + i + "_COLOR "
                 }
 
-                const inv_width = inv_correspondingProp.getTextWidth();
-                const pOY1 = p_py - 14;
-                const pOY2 = p_py + 14;
-                const inv_widthString = ",minimum width=" + inv_width + "pt";
+                const inv_width = inv_correspondingProp.getTextWidth()
+                const pOY1 = p_py - 14
+                const pOY2 = p_py + 14
+                const inv_widthString = ",minimum width=" + inv_width + "pt"
 
-                texString += "% Createing Inverse Property \n";
-                texString += "\\node[" + inv_qType + " " + inv_widthString + " " + inv_bgColorStr + " " + inv_textColorStr + "] at (" + p_px + "pt, " + pOY1 + "pt)   (property" + i + ") {" + inv_identifier.replaceAll("_", "\\_ ") + "};\n";
-                texString += "% " + inv_qType + " vs " + qType + "\n";
-                texString += "% " + inv_widthString + " vs " + widthString + "\n";
-                texString += "% " + inv_bgColorStr + " vs " + bgColorStr + "\n";
-                texString += "% " + inv_textColorStr + " vs " + textColorStr + "\n";
-                texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + p_px + "pt, " + pOY2 + "pt)   (property" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
+                texString += "% Createing Inverse Property \n"
+                texString +=
+                    "\\node[" +
+                    inv_qType +
+                    " " +
+                    inv_widthString +
+                    " " +
+                    inv_bgColorStr +
+                    " " +
+                    inv_textColorStr +
+                    "] at (" +
+                    p_px +
+                    "pt, " +
+                    pOY1 +
+                    "pt)   (property" +
+                    i +
+                    ") {" +
+                    inv_identifier.replaceAll("_", "\\_ ") +
+                    "};\n"
+                texString += "% " + inv_qType + " vs " + qType + "\n"
+                texString +=
+                    "% " + inv_widthString + " vs " + widthString + "\n"
+                texString += "% " + inv_bgColorStr + " vs " + bgColorStr + "\n"
+                texString +=
+                    "% " + inv_textColorStr + " vs " + textColorStr + "\n"
+                texString +=
+                    "\\node[" +
+                    qType +
+                    " " +
+                    widthString +
+                    " " +
+                    bgColorStr +
+                    " " +
+                    textColorStr +
+                    "] at (" +
+                    p_px +
+                    "pt, " +
+                    pOY2 +
+                    "pt)   (property" +
+                    i +
+                    ") {" +
+                    identifier.replaceAll("_", "\\_ ") +
+                    "};\n"
             } else {
-                texString += "\\node[" + qType + " " + widthString + " " + bgColorStr + " " + textColorStr + "] at (" + p_px + "pt, " + p_py + "pt)   (property" + i + ") {" + identifier.replaceAll("_", "\\_ ") + "};\n";
+                texString +=
+                    "\\node[" +
+                    qType +
+                    " " +
+                    widthString +
+                    " " +
+                    bgColorStr +
+                    " " +
+                    textColorStr +
+                    "] at (" +
+                    p_px +
+                    "pt, " +
+                    p_py +
+                    "pt)   (property" +
+                    i +
+                    ") {" +
+                    identifier.replaceAll("_", "\\_ ") +
+                    "};\n"
             }
         }
-        texString += "\\end{tikzpicture}\n}\n \\end{center}\n";
+        texString += "\\end{tikzpicture}\n}\n \\end{center}\n"
 
         //   console.log("Tex Output\n"+ texString);
-        const dataURI = "data:text/json;charset=utf-8," + encodeURIComponent(texString);
-        this.exportTexButton.attr("href", dataURI)
-            .attr("download", this.exportFilename + ".tex");
+        const dataURI =
+            "data:text/json;charset=utf-8," + encodeURIComponent(texString)
+        this.exportTexButton
+            .attr("href", dataURI)
+            .attr("download", this.exportFilename + ".tex")
     }
 }

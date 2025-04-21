@@ -1,8 +1,7 @@
-import BaseNode from "../../elements/nodes/BaseNode";
-import BaseProperty from "../../elements/properties/BaseProperty";
-import OwlDisjointWith from "../../elements/properties/implementations/OwlDisjointWith";
-import AbstractFilter from "./abstractFilter";
-
+import BaseNode from "../../elements/nodes/BaseNode"
+import BaseProperty from "../../elements/properties/BaseProperty"
+import OwlDisjointWith from "../../elements/properties/implementations/OwlDisjointWith"
+import AbstractFilter from "./abstractFilter"
 
 export default class DisjointFilter extends AbstractFilter {
     constructor() {
@@ -16,11 +15,12 @@ export default class DisjointFilter extends AbstractFilter {
      * @param {BaseProperty[]} properties
      */
     filter(nodes, properties) {
-        this.filteredNodes = nodes;
-        this.filteredProperties = properties;
+        this.filteredNodes = nodes
+        this.filteredProperties = properties
 
         if (this.enabled) {
-            this.filteredProperties = this.#removeDisjointWithProperties(properties);
+            this.filteredProperties =
+                this.#removeDisjointWithProperties(properties)
         }
     }
 
@@ -31,9 +31,9 @@ export default class DisjointFilter extends AbstractFilter {
         let cleanedProperties = []
         for (const property of properties) {
             if (!(property instanceof OwlDisjointWith)) {
-                cleanedProperties.push(property);
+                cleanedProperties.push(property)
             }
         }
-        return cleanedProperties;
+        return cleanedProperties
     }
 }

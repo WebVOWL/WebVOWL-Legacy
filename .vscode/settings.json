@@ -4,7 +4,7 @@
     },
     "editor.codeActionsOnSave": {
         "source.organizeImports": "always",
-        "source.sortImports": "always",
+        "source.sortImports": "always"
     },
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"

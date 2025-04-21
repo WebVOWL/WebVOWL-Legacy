@@ -1,8 +1,7 @@
-import BaseNode from "../../elements/nodes/BaseNode";
-import BaseProperty from "../../elements/properties/BaseProperty";
-import Graph from "../../graph";
-import AbstractFilter from "./abstractFilter";
-
+import BaseNode from "../../elements/nodes/BaseNode"
+import BaseProperty from "../../elements/properties/BaseProperty"
+import Graph from "../../graph"
+import AbstractFilter from "./abstractFilter"
 
 export default class NodeScalingSwitch extends AbstractFilter {
     /**
@@ -20,8 +19,8 @@ export default class NodeScalingSwitch extends AbstractFilter {
      * @param {BaseProperty[]} untouchedProperties
      */
     filter(untouchedNodes, untouchedProperties) {
-        this.graph.options.scaleNodesByIndividuals = this.enabled;
-        this.filteredNodes = untouchedNodes;
-        this.filteredProperties = untouchedProperties;
+        this.graph.options.scaleNodesByIndividuals = this.enabled
+        this.filteredNodes = untouchedNodes
+        this.filteredProperties = untouchedProperties
     }
 }

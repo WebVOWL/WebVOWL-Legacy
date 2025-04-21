@@ -5,5 +5,5 @@ export default class WebVOWL {
      * Path to the OWL2VOWL converter
      */
     static url_prefix = "o2v/"
-    constructor() { }
+    constructor() {}
 }

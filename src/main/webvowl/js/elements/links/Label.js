@@ -1,6 +1,5 @@
-import BaseProperty from "../properties/BaseProperty";
-import PlainLink from "./PlainLink";
-
+import BaseProperty from "../properties/BaseProperty"
+import PlainLink from "./PlainLink"
 
 export default class Label {
     /**
@@ -10,55 +9,59 @@ export default class Label {
      * @param {PlainLink} link the link this label belongs to
      */
     constructor(property, link) {
-        this.frozen = property.frozen;
-        this.locked = property.locked;
-        this.pinned = property.pinned;
+        this.frozen = property.frozen
+        this.locked = property.locked
+        this.pinned = property.pinned
         this.link = link
         this.property = property
     }
 
     get fixed() {
-        const inverseFixed = this.property.inverse ? this.property.inverse.fixed : false;
-        return this.property.fixed || inverseFixed;
+        const inverseFixed = this.property.inverse
+            ? this.property.inverse.fixed
+            : false
+        return this.property.fixed || inverseFixed
     }
 
     set fixed(v) {
-        this.property.fixed = v;
+        this.property.fixed = v
         if (this.property.inverse) {
-            this.property.inverse.fixed = v;
+            this.property.inverse.fixed = v
         }
     }
 
     get inverse() {
-        return this.property.inverse;
+        return this.property.inverse
     }
 
     actualRadius() {
-        return this.property.smallestRadius;
+        return this.property.smallestRadius
     }
 
     /**
      * @param {any} container
      */
     draw(container) {
-        return this.property.draw(container);
+        return this.property.draw(container)
     }
 
     /**
      * @param {Label} other
      */
     equals(other) {
-        if (!other
-            || !(other instanceof Label)
-            || !this.property.equals(other.property)) {
-            return false;
+        if (
+            !other ||
+            !(other instanceof Label) ||
+            !this.property.equals(other.property)
+        ) {
+            return false
         }
-        let equalInverse = false;
+        let equalInverse = false
         if (this.property.inverse) {
-            equalInverse = this.property.inverse.equals(other.property.inverse);
+            equalInverse = this.property.inverse.equals(other.property.inverse)
         } else if (!other.property.inverse) {
-            equalInverse = true;
+            equalInverse = true
         }
-        return equalInverse;
+        return equalInverse
     }
 }

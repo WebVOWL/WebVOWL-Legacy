@@ -1,7 +1,6 @@
 import Graph from "../../../graph"
 import OwlThing from "./OwlThing"
 
-
 export default class OwlNothing extends OwlThing {
     /**
      * @param {Graph} graph

@@ -1,8 +1,8 @@
-import Graph from "../../../graph";
-import DrawTools from "../../drawTools";
-import RoundNode from "../RoundNode";
+import Graph from "../../../graph"
+import DrawTools from "../../drawTools"
+import RoundNode from "../RoundNode"
 
-const CIRCLE_SIZE_DIFFERENCE = 4;
+const CIRCLE_SIZE_DIFFERENCE = 4
 
 export default class OwlEquivalentClass extends RoundNode {
     /**
@@ -11,101 +11,97 @@ export default class OwlEquivalentClass extends RoundNode {
     constructor(graph) {
         super(graph)
 
-        this.renderingElement   // HTMLElement | undefined
+        this.renderingElement // HTMLElement | undefined
         this.styleClass = "equivalentclass"
         this.type = "owl:equivalentClass"
     }
 
     actualRadius() {
-        return super.actualRadius() + CIRCLE_SIZE_DIFFERENCE;
+        return super.actualRadius() + CIRCLE_SIZE_DIFFERENCE
     }
 
     redrawElement() {
-        this.renderingElement.remove();
-        this.textBlock.remove();
-        const bgColor = this.backgroundColor;
+        this.renderingElement.remove()
+        this.textBlock.remove()
+        const bgColor = this.backgroundColor
 
         if (this.attributes.indexOf("deprecated") > -1) {
-            bgColor = undefined;
+            bgColor = undefined
         }
-        const cssClasses = this.collectCssClasses();
-        this.renderingElement = this.nodeElement.append("g");
+        const cssClasses = this.collectCssClasses()
+        this.renderingElement = this.nodeElement.append("g")
 
         if (this.rectangularRepresentation === true) {
-            DrawTools.appendRectangularClass(
-                this.renderingElement,
-                84,
-                84,
-                ["white", "embedded"],
-            );
+            DrawTools.appendRectangularClass(this.renderingElement, 84, 84, [
+                "white",
+                "embedded",
+            ])
             DrawTools.appendRectangularClass(
                 this.renderingElement,
                 80 - CIRCLE_SIZE_DIFFERENCE,
                 80 - CIRCLE_SIZE_DIFFERENCE,
                 cssClasses,
                 this.labelForCurrentLanguage(),
-                bgColor
-            );
+                bgColor,
+            )
         } else {
             DrawTools.appendCircularClass(
                 this.renderingElement,
                 this.actualRadius(),
-                ["white", "embedded"]
-            );
+                ["white", "embedded"],
+            )
             DrawTools.appendCircularClass(
                 this.renderingElement,
                 this.actualRadius() - CIRCLE_SIZE_DIFFERENCE,
                 cssClasses,
                 this.labelForCurrentLanguage(),
-                bgColor
-            );
+                bgColor,
+            )
         }
-        this.postDrawActions();
+        this.postDrawActions()
     }
 
     /**
      * @param {d3.Selection<any, any, null, undefined>} parentElement
      */
     draw(parentElement) {
-        const cssClasses = this.collectCssClasses();
-        this.nodeElement = parentElement;
-        this.renderingElement = parentElement.append("g");
-        const bgColor = this.backgroundColor;
+        const cssClasses = this.collectCssClasses()
+        this.nodeElement = parentElement
+        this.renderingElement = parentElement.append("g")
+        const bgColor = this.backgroundColor
 
         if (this.attributes.indexOf("deprecated") > -1) {
-            bgColor = undefined;
+            bgColor = undefined
         }
         // draw the outer circle at first and afterwards the inner circle
         if (this.rectangularRepresentation === true) {
-            DrawTools.appendRectangularClass(
-                this.renderingElement,
-                84,
-                84,
-                ["white", "embedded"]
-            );
+            DrawTools.appendRectangularClass(this.renderingElement, 84, 84, [
+                "white",
+                "embedded",
+            ])
             DrawTools.appendRectangularClass(
                 this.renderingElement,
                 80 - CIRCLE_SIZE_DIFFERENCE,
                 80 - CIRCLE_SIZE_DIFFERENCE,
                 cssClasses,
                 this.labelForCurrentLanguage(),
-                bgColor
-            );
+                bgColor,
+            )
         } else {
             DrawTools.appendCircularClass(
                 this.renderingElement,
                 this.actualRadius(),
-                ["white", "embedded"]
-            );
+                ["white", "embedded"],
+            )
             DrawTools.appendCircularClass(
                 this.renderingElement,
                 this.actualRadius() - CIRCLE_SIZE_DIFFERENCE,
                 cssClasses,
                 this.labelForCurrentLanguage(),
-                bgColor
-            );
+                bgColor,
+            )
         }
-        this.postDrawActions();
+        this.postDrawActions()
     }
 
     /**
@@ -113,6 +109,8 @@ export default class OwlEquivalentClass extends RoundNode {
      * @param {boolean} enable
      */
     setHoverHighlighting(enable) {
-        this.nodeElement.selectAll("circle:last-of-type").classed("hovered", enable);
+        this.nodeElement
+            .selectAll("circle:last-of-type")
+            .classed("hovered", enable)
     }
 }

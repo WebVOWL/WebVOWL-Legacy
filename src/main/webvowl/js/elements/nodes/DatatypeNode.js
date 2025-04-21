@@ -1,6 +1,5 @@
-import Graph from "../../graph";
-import RectangularNode from "./RectangularNode";
-
+import Graph from "../../graph"
+import RectangularNode from "./RectangularNode"
 
 export default class DatatypeNode extends RectangularNode {
     /**

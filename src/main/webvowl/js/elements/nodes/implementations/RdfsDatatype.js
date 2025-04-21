@@ -1,7 +1,6 @@
 import Graph from "../../../graph"
 import DatatypeNode from "../DatatypeNode"
 
-
 export default class RdfsDataType extends DatatypeNode {
     /**
      * @param {Graph} graph

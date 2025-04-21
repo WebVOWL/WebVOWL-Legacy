@@ -1,7 +1,6 @@
 import Graph from "../../../graph"
 import BaseProperty from "../BaseProperty"
 
-
 export default class SetOperatorProperty extends BaseProperty {
     /**
      * @param {Graph} graph

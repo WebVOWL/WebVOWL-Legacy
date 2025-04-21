@@ -1,8 +1,7 @@
-import _ from '@npm/lodash/array';
-import BaseElement from '../elements/BaseElement';
-import BaseProperty from '../elements/properties/BaseProperty';
-import ElementTools from '../util/elementTools';
-
+import _ from "lodash/array"
+import BaseElement from "../elements/BaseElement"
+import BaseProperty from "../elements/properties/BaseProperty"
+import ElementTools from "../util/elementTools"
 
 export default class PickAndPin {
     constructor() {
@@ -19,7 +18,7 @@ export default class PickAndPin {
     addPinnedElement(element) {
         // check if element is already in list
         if (this.pinnedElements.indexOf(element) === -1) {
-            this.pinnedElements.push(element);
+            this.pinnedElements.push(element)
         }
     }
 
@@ -29,26 +28,26 @@ export default class PickAndPin {
      */
     handle(selection, forced) {
         if (!this.enabled) {
-            return;
+            return
         }
 
         if (!forced) {
             if (!d3.event.defaultPrevented) {
                 // was not dragged
-                return;
+                return
             }
         }
         if (ElementTools.isProperty(selection)) {
             if (selection.inverse && selection.inverse.pinned) {
-                return;
+                return
             } else if (this.#hasNoParallelProperties(selection)) {
-                return;
+                return
             }
         }
 
         if (!selection.pinned) {
-            selection.drawPin();
-            this.addPinnedElement(selection);
+            selection.drawPin()
+            this.addPinnedElement(selection)
         }
     }
 
@@ -56,7 +55,10 @@ export default class PickAndPin {
      * @param {BaseProperty} property
      */
     #hasNoParallelProperties(property) {
-        return _.intersection = property.domain.links, property.range.links.length === 1;
+        return (
+            (_.intersection = property.domain.links),
+            property.range.links.length === 1
+        )
     }
 
     reset() {

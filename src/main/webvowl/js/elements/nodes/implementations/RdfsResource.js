@@ -1,7 +1,6 @@
 import Graph from "../../../graph"
 import RoundNode from "../RoundNode"
 
-
 export default class RdfsResource extends RoundNode {
     /**
      * @param {Graph} graph
@@ -20,7 +19,6 @@ export default class RdfsResource extends RoundNode {
      * @param {d3.Selection<any, any, null, undefined>} element
      */
     draw(element) {
-        super.draw(element, ["rdf", "dashed"]);
+        super.draw(element, ["rdf", "dashed"])
     }
 }
-

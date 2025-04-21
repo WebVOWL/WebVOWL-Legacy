@@ -10,14 +10,21 @@ export default class DrawTools {
      * @param {string} tooltip
      * @param {string} backgroundColor
      */
-    static appendCircularClass(parent, radius, cssClasses, tooltip = undefined, backgroundColor = undefined) {
-        const circle = parent.append("circle")
+    static appendCircularClass(
+        parent,
+        radius,
+        cssClasses,
+        tooltip = undefined,
+        backgroundColor = undefined,
+    ) {
+        const circle = parent
+            .append("circle")
             .classed("class", true)
-            .attr("r", radius);
-        this.#addCssClasses(circle, cssClasses);
-        this.#addToolTip(circle, tooltip);
-        this.#addBackgroundColor(circle, backgroundColor);
-        return circle;
+            .attr("r", radius)
+        this.#addCssClasses(circle, cssClasses)
+        this.#addToolTip(circle, tooltip)
+        this.#addBackgroundColor(circle, backgroundColor)
+        return circle
     }
 
     /**
@@ -28,7 +35,7 @@ export default class DrawTools {
     static #addCssClasses(element, cssClasses) {
         if (cssClasses instanceof Array) {
             for (const cssClass of cssClasses) {
-                element.classed(cssClass, true);
+                element.classed(cssClass, true)
             }
         }
     }
@@ -39,7 +46,7 @@ export default class DrawTools {
      */
     static #addToolTip(element, tooltip) {
         if (tooltip) {
-            element.append("title").text(tooltip);
+            element.append("title").text(tooltip)
         }
     }
 
@@ -49,7 +56,7 @@ export default class DrawTools {
      */
     static #addBackgroundColor(element, backgroundColor) {
         if (backgroundColor) {
-            element.style("fill", backgroundColor);
+            element.style("fill", backgroundColor)
         }
     }
 
@@ -62,17 +69,25 @@ export default class DrawTools {
      * @param {string} tooltip
      * @param {string} backgroundColor
      */
-    static appendRectangularClass(parent, width, height, cssClasses, tooltip = undefined, backgroundColor = undefined) {
-        const rectangle = parent.append("rect")
+    static appendRectangularClass(
+        parent,
+        width,
+        height,
+        cssClasses,
+        tooltip = undefined,
+        backgroundColor = undefined,
+    ) {
+        const rectangle = parent
+            .append("rect")
             .classed("class", true)
             .attr("x", -width / 2)
             .attr("y", -height / 2)
             .attr("width", width)
-            .attr("height", height);
-        this.#addCssClasses(rectangle, cssClasses);
-        this.#addToolTip(rectangle, tooltip);
-        this.#addBackgroundColor(rectangle, backgroundColor);
-        return rectangle;
+            .attr("height", height)
+        this.#addCssClasses(rectangle, cssClasses)
+        this.#addToolTip(rectangle, tooltip)
+        this.#addBackgroundColor(rectangle, backgroundColor)
+        return rectangle
     }
 
     /**
@@ -83,29 +98,39 @@ export default class DrawTools {
      * @param {boolean} accuraciesHelper
      * @param {boolean} useAccuracyHelper
      */
-    static drawPin(container, dx, dy, onClick, accuraciesHelper, useAccuracyHelper) {
+    static drawPin(
+        container,
+        dx,
+        dy,
+        onClick,
+        accuraciesHelper,
+        useAccuracyHelper,
+    ) {
         const pinGroupElement = container
             .append("g")
             .classed("hidden-in-export", true)
-            .attr("transform", "translate(" + dx + "," + dy + ")");
+            .attr("transform", "translate(" + dx + "," + dy + ")")
 
-        const base = pinGroupElement.append("circle")
+        const base = pinGroupElement
+            .append("circle")
             .classed("class pin feature", true)
             .attr("r", 12)
             .on("click", function () {
                 if (onClick) {
-                    onClick();
+                    onClick()
                 }
-                d3.event.stopPropagation();
-            });
-        pinGroupElement.append("line")
+                d3.event.stopPropagation()
+            })
+        pinGroupElement
+            .append("line")
             .attr("x1", 0)
             .attr("x2", 0)
             .attr("y1", 12)
-            .attr("y2", 16);
+            .attr("y2", 16)
 
         if (useAccuracyHelper === true) {
-            pinGroupElement.append("circle")
+            pinGroupElement
+                .append("circle")
                 .attr("r", 15)
                 .attr("cx", -7)
                 .attr("cy", -7)
@@ -113,18 +138,18 @@ export default class DrawTools {
                 .classed("superOpacityElement", !accuraciesHelper)
                 .on("click", function () {
                     if (onClick) {
-                        onClick();
+                        onClick()
                     }
-                    d3.event.stopPropagation();
+                    d3.event.stopPropagation()
                 })
                 .on("mouseover", function () {
-                    base.classed("feature_hover", true);
+                    base.classed("feature_hover", true)
                 })
                 .on("mouseout", function () {
-                    base.classed("feature_hover", false);
-                });
+                    base.classed("feature_hover", false)
+                })
         }
-        return pinGroupElement;
+        return pinGroupElement
     }
 
     /**
@@ -135,35 +160,34 @@ export default class DrawTools {
      */
     static drawRectHalo(container, width, height, offset) {
         if (!container) {
-            return undefined;
+            return undefined
         }
 
         const haloGroupElement = container
             .append("g")
-            .classed("hidden-in-export", true);
+            .classed("hidden-in-export", true)
 
-        haloGroupElement.append("rect")
+        haloGroupElement
+            .append("rect")
             .classed("searchResultA", true)
             .attr("x", (-width - offset) / 2)
             .attr("y", (-offset - height) / 2)
             .attr("width", width + offset)
-            .attr("height", height + offset);
-        haloGroupElement.attr("animationRunning", true);
+            .attr("height", height + offset)
+        haloGroupElement.attr("animationRunning", true)
 
         haloGroupElement.node().addEventListener("webkitAnimationEnd", () => {
-            const test = haloGroupElement.selectAll(".searchResultA");
-            test.classed("searchResultA", false)
-                .classed("searchResultB", true);
-            haloGroupElement.attr("animationRunning", false);
-        });
+            const test = haloGroupElement.selectAll(".searchResultA")
+            test.classed("searchResultA", false).classed("searchResultB", true)
+            haloGroupElement.attr("animationRunning", false)
+        })
 
         haloGroupElement.node().addEventListener("animationend", () => {
-            const test = haloGroupElement.selectAll(".searchResultA");
-            test.classed("searchResultA", false)
-                .classed("searchResultB", true);
-            haloGroupElement.attr("animationRunning", false);
-        });
-        return haloGroupElement;
+            const test = haloGroupElement.selectAll(".searchResultA")
+            test.classed("searchResultA", false).classed("searchResultB", true)
+            haloGroupElement.attr("animationRunning", false)
+        })
+        return haloGroupElement
     }
 
     /**
@@ -172,35 +196,36 @@ export default class DrawTools {
      */
     static drawHalo(container, radius) {
         if (container === undefined) {
-            return null;
+            return null
             // there is no element to add the halo to;
             // this means the node was not rendered previously
         }
 
         const haloGroupElement = container
             .append("g")
-            .classed("hidden-in-export", true);
+            .classed("hidden-in-export", true)
 
-        haloGroupElement.append("circle", ":first-child")
+        haloGroupElement
+            .append("circle", ":first-child")
             .classed("searchResultA", true)
-            .attr("r", radius + 15);
-        haloGroupElement.attr("animationRunning", true);
+            .attr("r", radius + 15)
+        haloGroupElement.attr("animationRunning", true)
 
         haloGroupElement.node().addEventListener("webkitAnimationEnd", () => {
-            const test = haloGroupElement.selectAll(".searchResultA");
+            const test = haloGroupElement.selectAll(".searchResultA")
             test.classed("searchResultA", false)
                 .classed("searchResultB", true)
-                .attr("animationRunning", false);
-            haloGroupElement.attr("animationRunning", false);
-        });
+                .attr("animationRunning", false)
+            haloGroupElement.attr("animationRunning", false)
+        })
 
         haloGroupElement.node().addEventListener("animationend", () => {
-            const test = haloGroupElement.selectAll(".searchResultA");
+            const test = haloGroupElement.selectAll(".searchResultA")
             test.classed("searchResultA", false)
                 .classed("searchResultB", true)
-                .attr("animationRunning", false);
-            haloGroupElement.attr("animationRunning", false);
-        });
-        return haloGroupElement;
+                .attr("animationRunning", false)
+            haloGroupElement.attr("animationRunning", false)
+        })
+        return haloGroupElement
     }
 }

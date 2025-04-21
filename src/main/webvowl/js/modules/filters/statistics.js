@@ -6,7 +6,6 @@ import BaseProperty from "../../elements/properties/BaseProperty"
 import ElementTools from "../../util/elementTools"
 import AbstractFilter from "./abstractFilter"
 
-
 export default class Statistics extends AbstractFilter {
     constructor() {
         super(true)
@@ -29,32 +28,32 @@ export default class Statistics extends AbstractFilter {
      * @param {BaseProperty[]} properties
      */
     filter(classesAndDatatypes, properties) {
-        this.#resetStoredData();
+        this.#resetStoredData()
 
-        this.#storeTotalCounts(classesAndDatatypes, properties);
+        this.#storeTotalCounts(classesAndDatatypes, properties)
         // @ts-ignore
-        this.#storeClassAndDatatypeCount(classesAndDatatypes);
-        this.#storePropertyCount(properties);
+        this.#storeClassAndDatatypeCount(classesAndDatatypes)
+        this.#storePropertyCount(properties)
 
         // this.#storeOccurencesOfTypes(classesAndDatatypes, this.occurencesOfClassAndDatatypeTypes);
         // // @ts-ignore
         // this.#storeOccurencesOfTypes(properties, this.occurencesOfPropertyTypes);
 
-        this.#storeTotalIndividualCount(classesAndDatatypes);
+        this.#storeTotalIndividualCount(classesAndDatatypes)
 
-        this.filteredNodes = classesAndDatatypes;
-        this.filteredProperties = properties;
+        this.filteredNodes = classesAndDatatypes
+        this.filteredProperties = properties
     }
 
     #resetStoredData() {
-        this.nodeCount = 0;
-        this.edgeCount = 0;
-        this.classCount = 0;
-        this.datatypeCount = 0;
-        this.datatypePropertyCount = 0;
-        this.objectPropertyCount = 0;
-        this.propertyCount = 0;
-        this.totalIndividualCount = 0;
+        this.nodeCount = 0
+        this.edgeCount = 0
+        this.classCount = 0
+        this.datatypeCount = 0
+        this.datatypePropertyCount = 0
+        this.objectPropertyCount = 0
+        this.propertyCount = 0
+        this.totalIndividualCount = 0
     }
 
     /**
@@ -62,16 +61,16 @@ export default class Statistics extends AbstractFilter {
      * @param {BaseProperty[]} properties
      */
     #storeTotalCounts(classesAndDatatypes, properties) {
-        this.nodeCount = classesAndDatatypes.length;
+        this.nodeCount = classesAndDatatypes.length
         let seenProperties = new Set()
 
         for (const property of properties) {
             if (!seenProperties.has(property.id)) {
-                this.edgeCount += 1;
+                this.edgeCount += 1
             }
-            seenProperties.add(property.id);
+            seenProperties.add(property.id)
             if (property.inverse) {
-                seenProperties.add(property.inverse.id);
+                seenProperties.add(property.inverse.id)
             }
         }
     }
@@ -81,29 +80,29 @@ export default class Statistics extends AbstractFilter {
      */
     #storeClassAndDatatypeCount(classesAndDatatypes) {
         // Each datatype should be counted just a single time
-        let datatypeSet = new Set();
-        let hasThing = false;
-        let hasNothing = false;
+        let datatypeSet = new Set()
+        let hasThing = false
+        let hasNothing = false
 
         for (const node of classesAndDatatypes) {
             if (ElementTools.isDatatype(node)) {
-                datatypeSet.add(node.defaultLabel());
+                datatypeSet.add(node.defaultLabel())
             } else if (node instanceof SetOperatorNode) {
-                this.classCount += 1;
+                this.classCount += 1
             } else if (ElementTools.isThing(node)) {
-                hasThing = true;
+                hasThing = true
             } else if (node instanceof OwlNothing) {
-                hasNothing = true;
+                hasNothing = true
             } else {
                 // @ts-ignore
-                this.classCount += 1 + this.#countElementArray(node.equivalents);
+                this.classCount += 1 + this.#countElementArray(node.equivalents)
             }
 
             // REVIEW: Check whether Things should only be counted once
             // count things and nothings just a single time
-            this.classCount += hasThing ? 1 : 0;
-            this.classCount += hasNothing ? 1 : 0;
-            this.datatypeCount = datatypeSet.size;
+            this.classCount += hasThing ? 1 : 0
+            this.classCount += hasNothing ? 1 : 0
+            this.datatypeCount = datatypeSet.size
         }
     }
 
@@ -112,20 +111,23 @@ export default class Statistics extends AbstractFilter {
      */
     #storePropertyCount(properties) {
         for (const property of properties) {
-            let result = false;
+            let result = false
             if (property.attributes) {
-                const attr = property.attributes;
+                const attr = property.attributes
                 if (attr && attr.indexOf("datatype") !== -1) {
-                    result = true;
+                    result = true
                 }
             }
             if (result === true) {
-                this.datatypePropertyCount += this.#getExtendedPropertyCount(property);
+                this.datatypePropertyCount +=
+                    this.#getExtendedPropertyCount(property)
             } else if (ElementTools.isObjectProperty(property)) {
-                this.objectPropertyCount += this.#getExtendedPropertyCount(property);
+                this.objectPropertyCount +=
+                    this.#getExtendedPropertyCount(property)
             }
         }
-        this.propertyCount = this.objectPropertyCount + this.datatypePropertyCount;
+        this.propertyCount =
+            this.objectPropertyCount + this.datatypePropertyCount
     }
 
     /**
@@ -133,12 +135,12 @@ export default class Statistics extends AbstractFilter {
      */
     #getExtendedPropertyCount(property) {
         // count the property itself
-        let count = 1;
+        let count = 1
 
         // and count properties this property represents
-        count += this.#countElementArray(property.equivalents);
-        count += this.#countElementArray(property.redundantProperties);
-        return count;
+        count += this.#countElementArray(property.equivalents)
+        count += this.#countElementArray(property.redundantProperties)
+        return count
     }
 
     /**
@@ -146,9 +148,9 @@ export default class Statistics extends AbstractFilter {
      */
     #countElementArray(properties) {
         if (properties) {
-            return properties.length;
+            return properties.length
         }
-        return 0;
+        return 0
     }
 
     // NOTE: Disabled to save memory while this method is not used
@@ -173,7 +175,7 @@ export default class Statistics extends AbstractFilter {
      * @param {BaseNode[]} nodes
      */
     #storeTotalIndividualCount(nodes) {
-        let sawIndividuals = new Set();
+        let sawIndividuals = new Set()
         for (const node of nodes) {
             for (const individual of node.individuals) {
                 if (!sawIndividuals.has(individual.iri)) {
@@ -181,6 +183,6 @@ export default class Statistics extends AbstractFilter {
                 }
             }
         }
-        this.totalIndividualCount = sawIndividuals.size;
+        this.totalIndividualCount = sawIndividuals.size
     }
 }

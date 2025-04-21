@@ -1,7 +1,6 @@
 import Graph from "../../../graph"
 import RoundNode from "../RoundNode"
 
-
 export default class OwlThing extends RoundNode {
     /**
      * @param {Graph} graph
@@ -19,6 +18,6 @@ export default class OwlThing extends RoundNode {
      * @param {d3.Selection<any, any, null, undefined>} element
      */
     draw(element) {
-        super.draw(element, ["white", "dashed"]);
+        super.draw(element, ["white", "dashed"])
     }
 }

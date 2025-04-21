@@ -1,7 +1,6 @@
-import BaseNode from "../nodes/BaseNode";
-import BaseProperty from "../properties/BaseProperty";
-import PlainLink from "./PlainLink";
-
+import BaseNode from "../nodes/BaseNode"
+import BaseProperty from "../properties/BaseProperty"
+import PlainLink from "./PlainLink"
 
 export default class BoxArrowLink extends PlainLink {
     /**
@@ -18,12 +17,13 @@ export default class BoxArrowLink extends PlainLink {
      * @param {BaseProperty} inverse
      */
     #createPropertyMarker(markerContainer, inverse) {
-        const inverseMarker = this.#appendBasicMarker(markerContainer, inverse);
-        inverseMarker.attr("refX", -8);
-        inverseMarker.append("path")
+        const inverseMarker = this.#appendBasicMarker(markerContainer, inverse)
+        inverseMarker.attr("refX", -8)
+        inverseMarker
+            .append("path")
             .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
-            .classed(inverse.markerType, true);
-        inverse.markerElement = inverseMarker;
+            .classed(inverse.markerType, true)
+        inverse.markerElement = inverseMarker
     }
 
     /**
@@ -31,12 +31,13 @@ export default class BoxArrowLink extends PlainLink {
      * @param {BaseProperty} property
      */
     #createInverseMarker(markerContainer, property) {
-        const marker = this.#appendBasicMarker(markerContainer, property);
-        marker.attr("refX", 8);
-        marker.append("path")
+        const marker = this.#appendBasicMarker(markerContainer, property)
+        marker.attr("refX", 8)
+        marker
+            .append("path")
             .attr("d", "M0,-8L8,0L0,8L-8,0L0,-8L8,0")
-            .classed(property.markerType, true);
-        property.markerElement = marker;
+            .classed(property.markerType, true)
+        property.markerElement = marker
     }
 
     /**
@@ -44,14 +45,15 @@ export default class BoxArrowLink extends PlainLink {
      * @param {BaseProperty} property
      */
     #appendBasicMarker(markerContainer, property) {
-        return markerContainer.append("marker")
+        return markerContainer
+            .append("marker")
             .datum(property)
             .attr("id", property.markerId())
             .attr("viewBox", "-10 -10 20 20")
             .attr("markerWidth", 20)
             .attr("markerHeight", 20)
             .attr("markerUnits", "userSpaceOnUse")
-            .attr("orient", "auto");
+            .attr("orient", "auto")
     }
 
     /**
@@ -60,20 +62,20 @@ export default class BoxArrowLink extends PlainLink {
      */
     // @ts-ignore
     draw(linkGroup, markerContainer) {
-        const property = this.label.property;
-        const inverse = property.inverse;
+        const property = this.label.property
+        const inverse = property.inverse
 
-        this.#createPropertyMarker(markerContainer, property);
+        this.#createPropertyMarker(markerContainer, property)
         if (inverse) {
-            this.#createInverseMarker(markerContainer, inverse);
+            this.#createInverseMarker(markerContainer, inverse)
         }
 
-        super.draw(linkGroup);
+        super.draw(linkGroup)
 
         // attach the markers to the link
-        linkGroup.attr("marker-start", "url(#" + property.markerId() + ")");
+        linkGroup.attr("marker-start", "url(#" + property.markerId() + ")")
         if (inverse) {
-            linkGroup.attr("marker-end", "url(#" + inverse.markerId() + ")");
+            linkGroup.attr("marker-end", "url(#" + inverse.markerId() + ")")
         }
     }
 }

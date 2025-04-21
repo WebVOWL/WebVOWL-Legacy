@@ -1,7 +1,6 @@
 import Graph from "../../../graph"
 import BaseProperty from "../BaseProperty"
 
-
 export default class RdfsSubClassOf extends BaseProperty {
     /**
      * @param {Graph} graph
@@ -22,8 +21,8 @@ export default class RdfsSubClassOf extends BaseProperty {
      * @param {d3.Selection<any, any, null, undefined>} labelGroup
      */
     draw(labelGroup) {
-        this.labelVisible = !this.graph.options.compactNotation;
-        return super.draw(labelGroup);
+        this.labelVisible = !this.graph.options.compactNotation
+        return super.draw(labelGroup)
     }
 
     get label() {

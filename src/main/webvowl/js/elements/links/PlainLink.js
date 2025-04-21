@@ -3,7 +3,6 @@ import BaseProperty from "../properties/BaseProperty"
 import Label from "./Label"
 import LinkPart from "./linkPart"
 
-
 export default class PlainLink {
     /**
      * A link connects at least two VOWL nodes.
@@ -38,38 +37,39 @@ export default class PlainLink {
     }
 
     linkParts() {
-        return [this.frontPart, this.backPart];
+        return [this.frontPart, this.backPart]
     }
 
     /**
      * @param {d3.Selection<any,any,null,undefined>} linkGroup
      */
     draw(linkGroup) {
-        const property = this.label.property;
-        const inverse = property.inverse;
+        const property = this.label.property
+        const inverse = property.inverse
 
-        property.linkGroup = linkGroup;
+        property.linkGroup = linkGroup
         if (inverse) {
-            inverse.linkGroup = linkGroup;
+            inverse.linkGroup = linkGroup
         }
 
-        const pathElement = linkGroup.append("path");
-        pathElement.classed("link-path", true)
+        const pathElement = linkGroup.append("path")
+        pathElement
+            .classed("link-path", true)
             .classed(this.domain.cssClassOfNode(), true)
             .classed(this.range.cssClassOfNode(), true)
-            .classed(property.linkType, true);
-        this.pathElement = pathElement;
+            .classed(property.linkType, true)
+        this.pathElement = pathElement
     }
 
     isLoop() {
-        return this.domain.equals(this.range);
+        return this.domain.equals(this.range)
     }
 
     get inverse() {
-        return this.label.inverse;
+        return this.label.inverse
     }
 
     get property() {
-        return this.label.property;
+        return this.label.property
     }
 }

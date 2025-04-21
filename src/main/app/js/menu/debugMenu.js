@@ -1,47 +1,55 @@
-import Graph from "../../../webvowl/js/graph";
-
+import Graph from "../../../webvowl/js/graph"
 
 export default class DebugMenu {
     /**
      * @param {Graph} graph
      */
     constructor(graph) {
-        this.graph = graph;
+        this.graph = graph
         /**
          * @type {d3.Selection<HTMLInputElement, any, HTMLElement, any>[]}
          */
-        this.checkboxes = [];
-        this.hoverFlag = false;
+        this.checkboxes = []
+        this.hoverFlag = false
         /**
          * @type {d3.Selection<HTMLInputElement, any, HTMLElement, any> | null}
          */
-        this.specialCbx = null;
+        this.specialCbx = null
     }
 
     setup() {
-        const menuEntry = d3.select("#debugMenuHref");
+        const menuEntry = d3.select("#debugMenuHref")
         menuEntry.on("mouseover", () => {
             if (!this.hoverFlag) {
-                const searchMenu = this.graph.options.searchMenu;
-                searchMenu.hideSearchEntries();
-                this.specialCbx.node().click();
+                const searchMenu = this.graph.options.searchMenu
+                searchMenu.hideSearchEntries()
+                this.specialCbx.node().click()
                 if (this.graph.editorMode === false) {
-                    d3.select("#useAccuracyHelper").style("color", "#979797");
-                    d3.select("#useAccuracyHelper").style("pointer-events", "none");
+                    d3.select("#useAccuracyHelper").style("color", "#979797")
+                    d3.select("#useAccuracyHelper").style(
+                        "pointer-events",
+                        "none",
+                    )
 
-                    d3.select("#showDraggerObject").style("color", "#979797");
-                    d3.select("#showDraggerObject").style("pointer-events", "none");
+                    d3.select("#showDraggerObject").style("color", "#979797")
+                    d3.select("#showDraggerObject").style(
+                        "pointer-events",
+                        "none",
+                    )
                 } else {
-                    d3.select("#useAccuracyHelper").style("color", "#2980b9");
-                    d3.select("#useAccuracyHelper").style("pointer-events", "auto");
+                    d3.select("#useAccuracyHelper").style("color", "#2980b9")
+                    d3.select("#useAccuracyHelper").style(
+                        "pointer-events",
+                        "auto",
+                    )
                 }
-                this.hoverFlag = true;
+                this.hoverFlag = true
             }
-        });
+        })
 
         menuEntry.on("mouseout", () => {
-            this.hoverFlag = false;
-        });
+            this.hoverFlag = false
+        })
 
         this.specialCbx = this.addCheckBox(
             "useAccuracyHelper",
@@ -50,27 +58,34 @@ export default class DebugMenu {
             (val) => {
                 if (!arguments.length)
                     return this.graph.options.useAccuracyHelper
-                else
-                    this.graph.options.useAccuracyHelper = val
+                else this.graph.options.useAccuracyHelper = val
             },
             (/** @type {boolean} */ enabled, /** @type {boolean} */ silent) => {
                 if (!enabled) {
-                    d3.select("#showDraggerObject").style("color", "#979797");
-                    d3.select("#showDraggerObject").style("pointer-events", "none");
+                    d3.select("#showDraggerObject").style("color", "#979797")
+                    d3.select("#showDraggerObject").style(
+                        "pointer-events",
+                        "none",
+                    )
                     // @ts-ignore
-                    (d3.select("#showDraggerObjectConfigCheckbox").node()).checked = false;
+                    d3
+                        .select("#showDraggerObjectConfigCheckbox")
+                        .node().checked = false
                 } else {
-                    d3.select("#showDraggerObject").style("color", "#2980b9");
-                    d3.select("#showDraggerObject").style("pointer-events", "auto");
+                    d3.select("#showDraggerObject").style("color", "#2980b9")
+                    d3.select("#showDraggerObject").style(
+                        "pointer-events",
+                        "auto",
+                    )
                 }
 
                 if (silent) {
-                    return;
+                    return
                 }
-                this.graph.lazyRefresh();
-                this.graph.updateDraggerElements();
-            }
-        );
+                this.graph.lazyRefresh()
+                this.graph.updateDraggerElements()
+            },
+        )
         this.addCheckBox(
             "showDraggerObject",
             "Show accuracy helper",
@@ -78,17 +93,19 @@ export default class DebugMenu {
             (val) => {
                 if (!arguments.length)
                     return this.graph.options.showDraggerObject
-                else
-                    this.graph.options.showDraggerObject = val
+                else this.graph.options.showDraggerObject = val
             },
-            (/** @type {boolean} */ _enabled, /** @type {boolean} */ silent) => {
+            (
+                /** @type {boolean} */ _enabled,
+                /** @type {boolean} */ silent,
+            ) => {
                 if (silent) {
-                    return;
+                    return
                 }
-                this.graph.lazyRefresh();
-                this.graph.updateDraggerElements();
-            }
-        );
+                this.graph.lazyRefresh()
+                this.graph.updateDraggerElements()
+            },
+        )
         this.addCheckBox(
             "showFPS_Statistics",
             "Show rendering statistics",
@@ -96,17 +113,16 @@ export default class DebugMenu {
             (val) => {
                 if (!arguments.length)
                     return this.graph.options.showRenderingStatistic
-                else
-                    this.graph.options.showRenderingStatistic = val
+                else this.graph.options.showRenderingStatistic = val
             },
             (/** @type {boolean} */ enabled, /** @type {any} */ _silent) => {
                 if (!this.graph.options.hideDebugOptions) {
-                    d3.select("#FPS_Statistics").classed("hidden", !enabled);
+                    d3.select("#FPS_Statistics").classed("hidden", !enabled)
                 } else {
-                    d3.select("#FPS_Statistics").classed("hidden", true);
+                    d3.select("#FPS_Statistics").classed("hidden", true)
                 }
-            }
-        );
+            },
+        )
         this.addCheckBox(
             "showModeOfOperation",
             "Show input modality",
@@ -114,17 +130,19 @@ export default class DebugMenu {
             (val) => {
                 if (!arguments.length)
                     return this.graph.options.showInputModality
-                else
-                    this.graph.options.showInputModality = val
+                else this.graph.options.showInputModality = val
             },
             (enabled) => {
                 if (!this.graph.options.hideDebugOptions) {
-                    d3.select("#modeOfOperationString").classed("hidden", !enabled);
+                    d3.select("#modeOfOperationString").classed(
+                        "hidden",
+                        !enabled,
+                    )
                 } else {
-                    d3.select("#modeOfOperationString").classed("hidden", true);
+                    d3.select("#modeOfOperationString").classed("hidden", true)
                 }
-            }
-        );
+            },
+        )
     }
 
     /**
@@ -134,29 +152,35 @@ export default class DebugMenu {
      * @param {(arg0: undefined) => void} onChangeFunc
      * @param {(enabled: boolean, silent: boolean) => void} callbackFunction
      */
-    addCheckBox(identifier, modeName, selector, onChangeFunc, callbackFunction) {
+    addCheckBox(
+        identifier,
+        modeName,
+        selector,
+        onChangeFunc,
+        callbackFunction,
+    ) {
         const configOptionContainer = d3
             .select(selector)
             .append("div")
-            .classed("checkboxContainer", true);
+            .classed("checkboxContainer", true)
         const configCheckbox = configOptionContainer
             .append("input")
             .classed("moduleCheckbox", true)
             .attr("id", identifier + "ConfigCheckbox")
             .attr("type", "checkbox")
-            .property("checked", onChangeFunc());
+            .property("checked", onChangeFunc())
         configCheckbox.on("click", (silent) => {
-            const isEnabled = configCheckbox.property("checked");
-            onChangeFunc(isEnabled);
-            callbackFunction(isEnabled, silent);
-        });
+            const isEnabled = configCheckbox.property("checked")
+            onChangeFunc(isEnabled)
+            callbackFunction(isEnabled, silent)
+        })
 
-        this.checkboxes.push(configCheckbox);
+        this.checkboxes.push(configCheckbox)
         configOptionContainer
             .append("label")
             .attr("for", identifier + "ConfigCheckbox")
-            .text(modeName);
-        return configCheckbox;
+            .text(modeName)
+        return configCheckbox
     }
 
     /**
@@ -165,10 +189,10 @@ export default class DebugMenu {
      */
     setCheckBoxValue(identifier, value) {
         for (const checkbox of this.checkboxes) {
-            const cbdId = checkbox.attr("id");
+            const cbdId = checkbox.attr("id")
             if (cbdId === identifier) {
-                checkbox.property("checked", value);
-                break;
+                checkbox.property("checked", value)
+                break
             }
         }
     }
@@ -178,9 +202,9 @@ export default class DebugMenu {
      */
     getCheckBoxValue(id) {
         for (const checkbox of this.checkboxes) {
-            const cbdId = checkbox.attr("id");
+            const cbdId = checkbox.attr("id")
             if (cbdId === id) {
-                return checkbox.property("checked");
+                return checkbox.property("checked")
             }
         }
     }
@@ -188,23 +212,23 @@ export default class DebugMenu {
     updateSettings() {
         d3.selectAll(".debugOption").classed(
             "hidden",
-            this.graph.options.hideDebugOptions
-        );
+            this.graph.options.hideDebugOptions,
+        )
 
-        const silent = true;
+        const silent = true
         this.checkboxes.forEach((checkbox) => {
-            checkbox.on("click")(silent);
-        });
+            checkbox.on("click")(silent)
+        })
 
         if (!this.graph.editorMode) {
-            d3.select("#useAccuracyHelper").style("color", "#979797");
-            d3.select("#useAccuracyHelper").style("pointer-events", "none");
+            d3.select("#useAccuracyHelper").style("color", "#979797")
+            d3.select("#useAccuracyHelper").style("pointer-events", "none")
 
-            d3.select("#showDraggerObject").style("color", "#979797");
-            d3.select("#showDraggerObject").style("pointer-events", "none");
+            d3.select("#showDraggerObject").style("color", "#979797")
+            d3.select("#showDraggerObject").style("pointer-events", "none")
         } else {
-            d3.select("#useAccuracyHelper").style("color", "#2980b9");
-            d3.select("#useAccuracyHelper").style("pointer-events", "auto");
+            d3.select("#useAccuracyHelper").style("color", "#2980b9")
+            d3.select("#useAccuracyHelper").style("pointer-events", "auto")
         }
     }
 }

@@ -1,29 +1,28 @@
-import Graph from "../../../webvowl/js/graph";
-import ColorExternalsSwitch from "../../../webvowl/js/modules/filters/colorExternalsSwitch";
-import CompactNotationSwitch from "../../../webvowl/js/modules/filters/compactNotationSwitch";
-import NodeScalingSwitch from "../../../webvowl/js/modules/filters/nodeScalingSwitch";
-import PickAndPin from "../../../webvowl/js/modules/pickAndPin";
-
+import Graph from "../../../webvowl/js/graph"
+import ColorExternalsSwitch from "../../../webvowl/js/modules/filters/colorExternalsSwitch"
+import CompactNotationSwitch from "../../../webvowl/js/modules/filters/compactNotationSwitch"
+import NodeScalingSwitch from "../../../webvowl/js/modules/filters/nodeScalingSwitch"
+import PickAndPin from "../../../webvowl/js/modules/pickAndPin"
 
 export default class ModeMenu {
-    SAME_COLOR_MODE = { text: "Multicolor", type: "same" };
-    GRADIENT_COLOR_MODE = { text: "Multicolor", type: "gradient" };
+    SAME_COLOR_MODE = { text: "Multicolor", type: "same" }
+    GRADIENT_COLOR_MODE = { text: "Multicolor", type: "gradient" }
 
     /**
      * Contains the logic for connecting the modes with the website.
      * @param {Graph} graph the graph that belongs to these controls
      */
     constructor(graph) {
-        this.graph = graph;
+        this.graph = graph
         /**
          * @type {{ property: (arg0: string) => any; }[]}
          */
-        this.checkboxes = [];
-        this.colorModeSwitch = undefined;
+        this.checkboxes = []
+        this.colorModeSwitch = undefined
         /**
          * @type {d3.Selection<HTMLInputElement, any, any, undefined> | undefined}
          */
-        this.dynamicLabelWidthCheckBox = undefined;
+        this.dynamicLabelWidthCheckBox = undefined
     }
 
     get colorModeState() {
@@ -31,18 +30,18 @@ export default class ModeMenu {
     }
 
     set colorModeState(s) {
-        this.colorModeSwitch.datum().active = s;
+        this.colorModeSwitch.datum().active = s
     }
 
     /**
      * @param {boolean} val
      */
     setDynamicLabelWidth(val) {
-        this.dynamicLabelWidthCheckBox.property("checked", val);
+        this.dynamicLabelWidthCheckBox.property("checked", val)
     }
 
     getCheckBoxContainer() {
-        return this.checkboxes;
+        return this.checkboxes
     }
 
     /**
@@ -53,12 +52,12 @@ export default class ModeMenu {
      * @param {ColorExternalsSwitch} colorExternals
      */
     setup(pickAndPin, nodeScaling, compactNotation, colorExternals) {
-        const _this = this;
-        const menuEntry = d3.select("#m_modes");
+        const _this = this
+        const menuEntry = d3.select("#m_modes")
         menuEntry.on("mouseover", function () {
-            const searchMenu = _this.graph.options.searchMenu;
-            searchMenu.hideSearchEntries();
-        });
+            const searchMenu = _this.graph.options.searchMenu
+            searchMenu.hideSearchEntries()
+        })
         this.addCheckBoxUpdateLevel(
             "labelWidth",
             "Dynamic label width",
@@ -66,27 +65,46 @@ export default class ModeMenu {
             (val) => {
                 if (!arguments.length)
                     return this.graph.options.dynamicLabelWidth
-                else
-                    this.graph.options.dynamicLabelWidth = val
+                else this.graph.options.dynamicLabelWidth = val
             },
-            1
-        );
-        this.addCheckBox(
-            "editorMode",
-            "Editing ",
-            "#editMode",
-            (val) => {
-                if (!arguments.length)
-                    return this.graph.editorMode
-                else
-                    this.graph.editorMode = val
-            }
-        );
-        this.addModeItem(pickAndPin, "pickandpin", "Pick & pin", "#pickAndPinOption", false);
-        this.addModeItem(nodeScaling, "nodescaling", "Node scaling", "#nodeScalingOption", true);
-        this.addModeItem(compactNotation, "compactnotation", "Compact notation", "#compactNotationOption", true);
-        const container = this.addModeItem(colorExternals, "colorexternals", "Color externals", "#colorExternalsOption", true);
-        this.colorModeSwitch = this.addExternalModeSelection(container, colorExternals);
+            1,
+        )
+        this.addCheckBox("editorMode", "Editing ", "#editMode", (val) => {
+            if (!arguments.length) return this.graph.editorMode
+            else this.graph.editorMode = val
+        })
+        this.addModeItem(
+            pickAndPin,
+            "pickandpin",
+            "Pick & pin",
+            "#pickAndPinOption",
+            false,
+        )
+        this.addModeItem(
+            nodeScaling,
+            "nodescaling",
+            "Node scaling",
+            "#nodeScalingOption",
+            true,
+        )
+        this.addModeItem(
+            compactNotation,
+            "compactnotation",
+            "Compact notation",
+            "#compactNotationOption",
+            true,
+        )
+        const container = this.addModeItem(
+            colorExternals,
+            "colorexternals",
+            "Color externals",
+            "#colorExternalsOption",
+            true,
+        )
+        this.colorModeSwitch = this.addExternalModeSelection(
+            container,
+            colorExternals,
+        )
     }
 
     /**
@@ -96,36 +114,52 @@ export default class ModeMenu {
      * @param {(arg0: undefined) => void} onChangeFunc
      * @param {number} updateLvl
      */
-    addCheckBoxUpdateLevel(identifier, modeName, selector, onChangeFunc, updateLvl) {
-        const moduleOptionContainer = d3.select(selector)
+    addCheckBoxUpdateLevel(
+        identifier,
+        modeName,
+        selector,
+        onChangeFunc,
+        updateLvl,
+    ) {
+        const moduleOptionContainer = d3
+            .select(selector)
             .append("div")
-            .classed("checkboxContainer", true);
-        const moduleCheckbox = moduleOptionContainer.append("input")
+            .classed("checkboxContainer", true)
+        const moduleCheckbox = moduleOptionContainer
+            .append("input")
             .classed("moduleCheckbox", true)
             .attr("id", identifier + "ModuleCheckbox")
             .attr("type", "checkbox")
-            .property("checked", onChangeFunc());
+            .property("checked", onChangeFunc())
 
         moduleCheckbox.on("click", (d) => {
-            const isEnabled = moduleCheckbox.property("checked");
-            onChangeFunc(isEnabled);
-            d3.select("#maxLabelWidthSlider").node().disabled = !isEnabled;
-            d3.select("#maxLabelWidthvalueLabel").classed("disabledLabelForSlider", !isEnabled);
-            d3.select("#maxLabelWidthDescriptionLabel").classed("disabledLabelForSlider", !isEnabled);
+            const isEnabled = moduleCheckbox.property("checked")
+            onChangeFunc(isEnabled)
+            d3.select("#maxLabelWidthSlider").node().disabled = !isEnabled
+            d3.select("#maxLabelWidthvalueLabel").classed(
+                "disabledLabelForSlider",
+                !isEnabled,
+            )
+            d3.select("#maxLabelWidthDescriptionLabel").classed(
+                "disabledLabelForSlider",
+                !isEnabled,
+            )
             if (updateLvl > 0) {
-                this.graph.animateDynamicLabelWidth();
+                this.graph.animateDynamicLabelWidth()
                 // graph.lazyRefresh();
             }
-        });
-        moduleOptionContainer.append("label")
+        })
+        moduleOptionContainer
+            .append("label")
             .attr("for", identifier + "ModuleCheckbox")
-            .text(modeName);
+            .text(modeName)
         if (identifier === "editorMode") {
-            moduleOptionContainer.append("label")
+            moduleOptionContainer
+                .append("label")
                 .attr("style", "font-size:10px;padding-top:3px")
-                .text("(experimental)");
+                .text("(experimental)")
         }
-        this.dynamicLabelWidthCheckBox = moduleCheckbox;
+        this.dynamicLabelWidthCheckBox = moduleCheckbox
     }
 
     /**
@@ -135,28 +169,31 @@ export default class ModeMenu {
      * @param {(arg0: undefined) => void} onChangeFunc
      */
     addCheckBox(identifier, modeName, selector, onChangeFunc) {
-        const moduleOptionContainer = d3.select(selector)
+        const moduleOptionContainer = d3
+            .select(selector)
             .append("div")
-            .classed("checkboxContainer", true);
-        const moduleCheckbox = moduleOptionContainer.append("input")
+            .classed("checkboxContainer", true)
+        const moduleCheckbox = moduleOptionContainer
+            .append("input")
             .classed("moduleCheckbox", true)
             .attr("id", identifier + "ModuleCheckbox")
             .attr("type", "checkbox")
-            .property("checked", onChangeFunc());
+            .property("checked", onChangeFunc())
 
         moduleCheckbox.on("click", (d) => {
-            const isEnabled = moduleCheckbox.property("checked");
-            onChangeFunc(isEnabled);
-            if (isEnabled)
-                this.graph.showEditorHintIfNeeded();
-        });
-        moduleOptionContainer.append("label")
+            const isEnabled = moduleCheckbox.property("checked")
+            onChangeFunc(isEnabled)
+            if (isEnabled) this.graph.showEditorHintIfNeeded()
+        })
+        moduleOptionContainer
+            .append("label")
             .attr("for", identifier + "ModuleCheckbox")
-            .text(modeName);
+            .text(modeName)
         if (identifier === "editorMode") {
-            moduleOptionContainer.append("label")
+            moduleOptionContainer
+                .append("label")
                 .attr("style", "font-size:10px;padding-top:3px")
-                .text(" (experimental)");
+                .text(" (experimental)")
         }
     }
 
@@ -168,30 +205,33 @@ export default class ModeMenu {
      * @param {boolean} updateGraphOnClick
      */
     addModeItem(module, identifier, modeName, selector, updateGraphOnClick) {
-        const moduleOptionContainer = d3.select(selector)
+        const moduleOptionContainer = d3
+            .select(selector)
             .append("div")
             .classed("checkboxContainer", true)
-            .datum({ module: module, defaultState: module.enabled });
-        const moduleCheckbox = moduleOptionContainer.append("input")
+            .datum({ module: module, defaultState: module.enabled })
+        const moduleCheckbox = moduleOptionContainer
+            .append("input")
             .classed("moduleCheckbox", true)
             .attr("id", identifier + "ModuleCheckbox")
             .attr("type", "checkbox")
-            .property("checked", module.enabled);
+            .property("checked", module.enabled)
 
         // Store for easier resetting all modes
-        this.checkboxes.push(moduleCheckbox);
+        this.checkboxes.push(moduleCheckbox)
         moduleCheckbox.on("click", (d, silent) => {
-            d.module.enabled = moduleCheckbox.property("checked");
+            d.module.enabled = moduleCheckbox.property("checked")
             if (updateGraphOnClick && silent !== true) {
-                this.graph.executeColorExternalsModule();
-                this.graph.executeCompactNotationModule();
-                this.graph.lazyRefresh();
+                this.graph.executeColorExternalsModule()
+                this.graph.executeCompactNotationModule()
+                this.graph.lazyRefresh()
             }
-        });
-        moduleOptionContainer.append("label")
+        })
+        moduleOptionContainer
+            .append("label")
             .attr("for", identifier + "ModuleCheckbox")
-            .text(modeName);
-        return moduleOptionContainer;
+            .text(modeName)
+        return moduleOptionContainer
     }
 
     /**
@@ -199,19 +239,22 @@ export default class ModeMenu {
      * @param {ColorExternalsSwitch} colorExternalsMode
      */
     addExternalModeSelection(container, colorExternalsMode) {
-        const button = container.append("button").datum({ active: false }).classed("color-mode-switch", true);
-        this.applyColorModeSwitchState(button, colorExternalsMode);
+        const button = container
+            .append("button")
+            .datum({ active: false })
+            .classed("color-mode-switch", true)
+        this.applyColorModeSwitchState(button, colorExternalsMode)
 
         button.on("click", (/** @type {boolean} */ silent) => {
-            const data = button.datum();
-            data.active = !data.active;
-            applyColorModeSwitchState(button, colorExternalsMode);
+            const data = button.datum()
+            data.active = !data.active
+            applyColorModeSwitchState(button, colorExternalsMode)
             if (colorExternalsMode.enabled && !silent) {
-                this.graph.executeColorExternalsModule();
-                this.graph.lazyRefresh();
+                this.graph.executeColorExternalsModule()
+                this.graph.lazyRefresh()
             }
-        });
-        return button;
+        })
+        return button
     }
 
     /**
@@ -219,14 +262,13 @@ export default class ModeMenu {
      * @param {ColorExternalsSwitch} colorExternalsMode
      */
     applyColorModeSwitchState(element, colorExternalsMode) {
-        const isActive = element.datum().active;
-        const activeColorMode = this.getColorModeByState(isActive);
+        const isActive = element.datum().active
+        const activeColorMode = this.getColorModeByState(isActive)
 
-        element.classed("active", isActive)
-            .text(activeColorMode.text);
+        element.classed("active", isActive).text(activeColorMode.text)
 
         if (colorExternalsMode) {
-            colorExternalsMode.colorModeType = activeColorMode.type;
+            colorExternalsMode.colorModeType = activeColorMode.type
         }
     }
 
@@ -234,7 +276,7 @@ export default class ModeMenu {
      * @param {boolean} isActive
      */
     getColorModeByState(isActive) {
-        return isActive ? this.GRADIENT_COLOR_MODE : this.SAME_COLOR_MODE;
+        return isActive ? this.GRADIENT_COLOR_MODE : this.SAME_COLOR_MODE
     }
 
     /**
@@ -242,22 +284,22 @@ export default class ModeMenu {
      */
     reset() {
         this.checkboxes.forEach(function (checkbox) {
-            const defaultState = checkbox.datum().defaultState;
-            const isChecked = checkbox.property("checked");
+            const defaultState = checkbox.datum().defaultState
+            const isChecked = checkbox.property("checked")
 
             if (isChecked !== defaultState) {
-                checkbox.property("checked", defaultState);
+                checkbox.property("checked", defaultState)
                 // Call onclick event handlers programmatically
-                checkbox.on("click")(checkbox.datum());
+                checkbox.on("click")(checkbox.datum())
             }
 
             // Reset the module that is connected with the checkbox
-            checkbox.datum().module.reset();
-        });
+            checkbox.datum().module.reset()
+        })
 
         // set the switch to active and simulate disabling
-        this.colorModeSwitch.datum().active = true;
-        this.colorModeSwitch.on("click")();
+        this.colorModeSwitch.datum().active = true
+        this.colorModeSwitch.on("click")()
     }
 
     // setting manually the values of the filter
@@ -269,10 +311,10 @@ export default class ModeMenu {
      */
     setCheckBoxValue(id, checked) {
         for (let i = 0; i < this.checkboxes.length; i++) {
-            const cbdId = this.checkboxes[i].attr("id");
+            const cbdId = this.checkboxes[i].attr("id")
             if (cbdId === id) {
-                this.checkboxes[i].property("checked", checked);
-                break;
+                this.checkboxes[i].property("checked", checked)
+                break
             }
         }
     }
@@ -282,9 +324,9 @@ export default class ModeMenu {
      */
     getCheckBoxValue(id) {
         for (let i = 0; i < this.checkboxes.length; i++) {
-            const cbdId = this.checkboxes[i].attr("id");
+            const cbdId = this.checkboxes[i].attr("id")
             if (cbdId === id) {
-                return this.checkboxes[i].property("checked");
+                return this.checkboxes[i].property("checked")
             }
         }
     }
@@ -294,7 +336,7 @@ export default class ModeMenu {
      */
     setColorSwitchState(state) {
         // need the !state because we simulate later a click
-        this.colorModeState = !state;
+        this.colorModeState = !state
     }
 
     /**
@@ -302,23 +344,23 @@ export default class ModeMenu {
      */
     setColorSwitchStateUsingURL(state) {
         // need the !state because we simulate later a click
-        this.colorModeState = !state;
-        this.colorModeSwitch.on("click")(true);
+        this.colorModeState = !state
+        this.colorModeSwitch.on("click")(true)
     }
 
     updateSettingsUsingURL() {
-        const silent = true;
+        const silent = true
         this.checkboxes.forEach(function (checkbox) {
-            checkbox.on("click")(checkbox.datum(), silent);
-        });
+            checkbox.on("click")(checkbox.datum(), silent)
+        })
     }
 
     updateSettings() {
-        const silent = true;
+        const silent = true
         this.checkboxes.forEach(function (checkbox) {
-            checkbox.on("click")(checkbox.datum(), silent);
-        });
+            checkbox.on("click")(checkbox.datum(), silent)
+        })
         // this simulates onclick and inverts its state
-        this.colorModeSwitch.on("click")(silent);
+        this.colorModeSwitch.on("click")(silent)
     }
 }

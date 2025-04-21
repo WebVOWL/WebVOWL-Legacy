@@ -1,8 +1,7 @@
-import BaseNode from "../../elements/nodes/BaseNode";
-import BaseProperty from "../../elements/properties/BaseProperty";
-import ElementTools from "../../util/elementTools";
-import AbstractFilter from "./abstractFilter";
-
+import BaseNode from "../../elements/nodes/BaseNode"
+import BaseProperty from "../../elements/properties/BaseProperty"
+import ElementTools from "../../util/elementTools"
+import AbstractFilter from "./abstractFilter"
 
 export default class ObjectPropertyFilter extends AbstractFilter {
     constructor() {
@@ -16,12 +15,12 @@ export default class ObjectPropertyFilter extends AbstractFilter {
      */
     filter(nodes, properties) {
         if (this.enabled) {
-            const filteredData = this.#removeObjectProperties(nodes, properties);
-            this.filteredNodes = filteredData.nodes;
-            this.filteredProperties = filteredData.properties;
+            const filteredData = this.#removeObjectProperties(nodes, properties)
+            this.filteredNodes = filteredData.nodes
+            this.filteredProperties = filteredData.properties
         } else {
-            this.filteredNodes = nodes;
-            this.filteredProperties = properties;
+            this.filteredNodes = nodes
+            this.filteredProperties = properties
         }
     }
 
@@ -34,7 +33,10 @@ export default class ObjectPropertyFilter extends AbstractFilter {
         let filteredNodes = []
 
         for (const node of nodes) {
-            if (this.#isNoFloatingThing(node) || this.#hasPropertiesOtherThanObjectProperties(node)) {
+            if (
+                this.#isNoFloatingThing(node) ||
+                this.#hasPropertiesOtherThanObjectProperties(node)
+            ) {
                 filteredNodes.push(node)
             }
         }
@@ -46,7 +48,7 @@ export default class ObjectPropertyFilter extends AbstractFilter {
 
         return {
             nodes: nodes.filter(this.#isNoFloatingThing),
-            properties: properties.filter(this.#isNoObjectProperty)
+            properties: properties.filter(this.#isNoObjectProperty),
         }
     }
 
@@ -54,14 +56,14 @@ export default class ObjectPropertyFilter extends AbstractFilter {
      * @param {BaseProperty} property
      */
     #isNoObjectProperty(property) {
-        return !ElementTools.isObjectProperty(property);
+        return !ElementTools.isObjectProperty(property)
     }
 
     /**
      * @param {BaseNode} node
      */
     #isNoFloatingThing(node) {
-        return !ElementTools.isThing(node);
+        return !ElementTools.isThing(node)
     }
 
     /**
@@ -74,6 +76,6 @@ export default class ObjectPropertyFilter extends AbstractFilter {
                 return true
             }
         }
-        return false;
+        return false
     }
 }

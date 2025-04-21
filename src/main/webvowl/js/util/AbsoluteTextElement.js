@@ -1,6 +1,5 @@
-import AbstractTextElement from "./AbstractTextElement";
-import TextTools from "./textTools";
-
+import AbstractTextElement from "./AbstractTextElement"
+import TextTools from "./textTools"
 
 export default class AbsoluteTextElement extends AbstractTextElement {
     /**
@@ -19,7 +18,13 @@ export default class AbsoluteTextElement extends AbstractTextElement {
      */
     addText(text, yShift, prefix, suffix) {
         if (text) {
-            this.addTextline(text, AbstractTextElement.CSS_CLASSES.default, yShift, prefix, suffix);
+            this.addTextline(
+                text,
+                AbstractTextElement.CSS_CLASSES.default,
+                yShift,
+                prefix,
+                suffix,
+            )
         }
     }
 
@@ -29,7 +34,13 @@ export default class AbsoluteTextElement extends AbstractTextElement {
      */
     addSubText(text, yShift) {
         if (text) {
-            this.addTextline(text, AbstractTextElement.CSS_CLASSES.subtext, yShift, "(", ")");
+            this.addTextline(
+                text,
+                AbstractTextElement.CSS_CLASSES.subtext,
+                yShift,
+                "(",
+                ")",
+            )
         }
     }
 
@@ -39,7 +50,11 @@ export default class AbsoluteTextElement extends AbstractTextElement {
      */
     addEquivalents(text, yShift) {
         if (text) {
-            this.addTextline(text, AbstractTextElement.CSS_CLASSES.default, yShift);
+            this.addTextline(
+                text,
+                AbstractTextElement.CSS_CLASSES.default,
+                yShift,
+            )
         }
     }
 
@@ -49,7 +64,11 @@ export default class AbsoluteTextElement extends AbstractTextElement {
      */
     addInstanceCount(instanceCount, yShift) {
         if (instanceCount) {
-            this.addTextline(instanceCount.toString(), AbstractTextElement.CSS_CLASSES.instanceCount, yShift);
+            this.addTextline(
+                instanceCount.toString(),
+                AbstractTextElement.CSS_CLASSES.instanceCount,
+                yShift,
+            )
         }
     }
 
@@ -65,14 +84,15 @@ export default class AbsoluteTextElement extends AbstractTextElement {
             text,
             this.textBlock.datum().getTextWidth(yShift),
             style,
-            0
-        );
-        const tspan = this.textBlock.append("tspan")
+            0,
+        )
+        const tspan = this.textBlock
+            .append("tspan")
             .classed(AbstractTextElement.CSS_CLASSES.default, true)
             .classed(style, true)
             .text(this.applyPreAndPostFix(truncatedText, prefix, postfix))
-            .attr("x", 0);
-        this.#repositionTextLine(tspan, yShift);
+            .attr("x", 0)
+        this.#repositionTextLine(tspan, yShift)
     }
 
     /**
@@ -81,11 +101,16 @@ export default class AbsoluteTextElement extends AbstractTextElement {
      * @param {number} yShift
      */
     #repositionTextLine(tspan, yShift) {
-        const fontSizeProperty = window.getComputedStyle(tspan.node()).getPropertyValue("font-size");
-        const fontSize = parseFloat(fontSizeProperty);
+        const fontSizeProperty = window
+            .getComputedStyle(tspan.node())
+            .getPropertyValue("font-size")
+        const fontSize = parseFloat(fontSizeProperty)
 
         /* BBox height is not supported in Firefox for tspans and dominant-baseline doesn't work in some SVG editors */
-        const approximatedShiftForVerticalCentering = (1 / 3) * fontSize;
-        tspan.attr("y", approximatedShiftForVerticalCentering + (yShift || 0) + "px");
+        const approximatedShiftForVerticalCentering = (1 / 3) * fontSize
+        tspan.attr(
+            "y",
+            approximatedShiftForVerticalCentering + (yShift || 0) + "px",
+        )
     }
 }
