@@ -55,13 +55,12 @@ Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
 2. Install Node.js from http://nodejs.org/download/
 3. Install Maven from https://maven.apache.org/download.cgi
 4. Install Rust from https://www.rust-lang.org/tools/install
-5. Run `cargo install wasm-pack`
-6. Run `npm install`
 7. Open the terminal in the `WebVOWL` directory
 
 Now you can execute these commands:
 
-- `npm run webserver` to start a local live-updating webserver with the current development version
+- `npm run webserver` to start a local live-updating webserver in development mode
+- `npm run prodserver` to start a local live-updating webserver in production mode
 - `npm run release` builds the release files into the deploy directory
 
 Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
