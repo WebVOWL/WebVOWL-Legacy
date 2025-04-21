@@ -2,8 +2,6 @@ import Graph from "../graph"
 import AbsoluteTextElement from "../util/AbsoluteTextElement"
 import CenteringTextElement from "../util/CenteringTextElement"
 import LanguageTools from "../util/languageTools"
-import BaseNode from "./nodes/BaseNode"
-import BaseProperty from "./properties/BaseProperty"
 
 
 export default class BaseElement {
@@ -68,7 +66,7 @@ export default class BaseElement {
          */
         this.description = undefined
         /**
-         * @type {BaseNode | BaseProperty | undefined}
+         * @type {BaseElement | undefined}
          */
         this.equivalentBase = undefined
         /**
@@ -165,10 +163,18 @@ export default class BaseElement {
     }
 
     /**
+     * @param {number} [val]
      * @returns {number}
      */
-    textWidth() {
-        throw new Error("Method textWidth() must be implemented")
+    getTextWidth(val) {
+        throw new Error("Method getTextWidth() must be implemented")
+    }
+
+    /**
+     * @param {number} width
+     */
+    setTextWidth(width) {
+        throw new Error("Method setTextWidth() must be implemented")
     }
 
     /**

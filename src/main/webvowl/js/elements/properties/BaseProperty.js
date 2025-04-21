@@ -147,8 +147,15 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
         }
     }
 
-    textWidth() {
+    getTextWidth() {
         return this.width;
+    }
+
+    /**
+     * @param {number} width
+     */
+    setTextWidth(width) {
+        this.width = width
     }
 
     markerId() {
@@ -266,8 +273,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
             rect.classed(this.visualAttributes, true);
         }
 
-        const bgColor = this.backgroundColor;
-
+        let bgColor = this.backgroundColor;
         if (this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined;
             rect.classed("deprecatedproperty", true);
@@ -287,7 +293,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
         const equivalentsString = this.equivalentsString();
         const suffixForFollowingEquivalents = equivalentsString ? "," : "";
 
-        const bgColor = this.backgroundColor;
+        let bgColor = this.backgroundColor;
         if (this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined;
         }
@@ -388,7 +394,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
             }
         });
 
-        const inversed = false;
+        let inversed = false;
         if (!this.graph.ignoreOtherHoverEvents) {
             if (this.inverse) {
                 inversed = true;
@@ -418,8 +424,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
         /**
          * @type {BaseProperty[]}
          */
-        const properties = [];
-
+        let properties = [];
         if (this.subproperties) {
             properties = properties.concat(this.subproperties);
         }
@@ -520,7 +525,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
     }
 
     animationProcess() {
-        const animRuns = false;
+        let animRuns = false;
         if (this.haloGroupElement) {
             const haloGr = this.haloGroupElement;
             const haloEls = haloGr.selectAll(".searchResultA");
@@ -548,31 +553,34 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
             const labelNode = this.labelElement.node();
             const labelContainer = labelNode.parentNode;
             // do this only if animation is not running
-            if (this.animationProcess() === false && labelContainer) {
+            if (!this.animationProcess() && labelContainer) {
                 labelContainer.appendChild(labelNode);
             }
         }
-        this.haloGroupElement = DrawTools.drawRectHalo(this.labelElement, this.width, this.height, offset);
+        this.haloGroupElement = DrawTools.drawRectHalo(
+            this.labelElement,
+            this.width,
+            this.height,
+            offset
+        );
         if (this.haloGroupElement) {
             const haloNode = this.haloGroupElement.node();
             const haloContainer = haloNode.parentNode;
             haloContainer.appendChild(haloNode);
         }
-        const selectedNode;
-        const nodeContainer;
         if (this.pinned) {
-            selectedNode = this.pinGroupElement.node();
-            nodeContainer = selectedNode.parentNode;
+            const selectedNode = this.pinGroupElement.node();
+            const nodeContainer = selectedNode.parentNode;
             nodeContainer.appendChild(selectedNode);
         }
         if (this.inverse && this.inverse.pinned) {
             if (this.inverse.pinGroupElement) {
-                selectedNode = this.inverse.pinGroupElement.node();
-                nodeContainer = selectedNode.parentNode;
+                const selectedNode = this.inverse.pinGroupElement.node();
+                const nodeContainer = selectedNode.parentNode;
                 nodeContainer.appendChild(selectedNode);
             }
         }
-        if (pulseAnimation === false) {
+        if (!pulseAnimation) {
             const pulseItem = this.haloGroupElement.selectAll(".searchResultA");
             pulseItem.classed("searchResultA", false);
             pulseItem.classed("searchResultB", true);
@@ -588,34 +596,14 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
         if (this.shapeElement === undefined) { // this handles setOperatorProperties which dont have a shapeElement!
             return;
         }
-        const _this = this
-        if (dynamic === true) {
-            this.width = Math.min(this.getMyWidth(), this.graph.options.maxLabelWidth);
-            this.shapeElement.transition().tween("attr", function () { })
-                .ease('linear')
-                .duration(100)
-                .attr({ x: -this.width / 2, y: -this.height / 2, width: this.width, height: this.height })
-                // @ts-ignore
-                .each("end", function () {
-                    _this.updateTextElement();
-                });
-        } else {
-            // Static width for property labels = 80
-            this.width = this.defaultWidth;
-            this.updateTextElement();
-            this.shapeElement.transition().tween("attr", function () { })
-                .ease('linear')
-                .duration(100)
-                .attr({ x: -this.width / 2, y: -this.height / 2, width: this.width, height: this.height });
+
+        const transition = () => {
+            const dx = -0.5 * this.width + 10;
+            const dy = -25;
+            return [dx, dy]
         }
-        if (this.pinned === true && this.pinGroupElement) {
-            const dx = -0.5 * this.width + 10, dy = -25;
-            this.pinGroupElement.transition()
-                .tween("attr.translate", function () { })
-                .attr("transform", "translate(" + dx + "," + dy + ")")
-                .ease('linear')
-                .duration(100);
-        }
+
+        super.animateDynamicLabelWidth(dynamic, transition)
     }
 
     redrawLabelText() {
@@ -670,14 +658,14 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
         this.graph.killDelayedTimer();
         this.graph.ignoreOtherHoverEvents = false;
         this.foreignerObject = this.labelElement.append("foreignObject")
-            .attr("x", -0.5 * this.textWidth())
+            .attr("x", -0.5 * this.getTextWidth())
             .attr("y", -13)
             .attr("height", 25)
             .attr("class", "foreignelements")
             .on("dragstart", function () {
                 return false;
             }) // remove drag operations of text element)
-            .attr("width", this.textWidth() - 2);
+            .attr("width", this.getTextWidth() - 2);
         // adding a Style to the fObject
         const editText = this.foreignerObject.append("xhtml:input")
             .attr("class", "nodeEditSpan")
@@ -689,7 +677,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
             }); // remove drag operations of text element)
 
         const bgColor = '#f00';
-        const txtWidth = this.textWidth() - 2;
+        const txtWidth = this.getTextWidth() - 2;
         // @ts-ignore
         editText.style({
             // 'line-height': '30px',
@@ -802,12 +790,12 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
      * @param {boolean} enable
      */
     updateHoverElements(enable) {
-        if (this.graph.ignoreOtherHoverEvents === false) {
-            const inversed = false;
+        if (!this.graph.ignoreOtherHoverEvents) {
+            let inversed = false;
             if (this.inverse) {
                 inversed = true;
             }
-            if (enable === true) {
+            if (enable) {
                 this.graph.activateHoverElementsForProperties(enable, this, inversed);
             }
         }
@@ -823,7 +811,6 @@ export default class BaseProperty extends RectangularElementToolsMixin(BaseEleme
         if (other.type === "owl:ObjectProperty" ||
             other.type === "owl:DatatypeProperty") {
             this.backupLabel = other.label;
-            // console.log("copied backup label"+this.backupLabel);
         }
         if (other.backupLabel !== undefined) {
             this.backupLabel = other.backupLabel;

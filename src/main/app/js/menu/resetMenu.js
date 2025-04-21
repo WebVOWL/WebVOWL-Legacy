@@ -1,5 +1,11 @@
 import Graph from "../../../webvowl/js/graph";
-import Options from "../../../webvowl/js/options";
+import Focuser from "../../../webvowl/js/modules/focuser";
+import SelectionDetailsDisplayer from "../../../webvowl/js/modules/selectionDetailsDisplayer";
+import { UntouchedOptions } from "../../../webvowl/js/options";
+import FilterMenu from "./filterMenu";
+import GravityMenu from "./gravityMenu";
+import ModeMenu from "./modeMenu";
+import PauseMenu from "./pauseMenu";
 
 
 export default class ResetMenu {
@@ -15,12 +21,12 @@ export default class ResetMenu {
          * @type {any[] | undefined}
          */
         this.resettableModules = undefined;
-        this.untouchedOptions = new Options(); // FIXME: We don't want a full options here
+        this.untouchedOptions = new UntouchedOptions();
     }
 
     /**
      * Adds the reset button to the website.
-     * @param {any} _resettableModules modules that can be resetted
+     * @param {[GravityMenu, FilterMenu, ModeMenu, Focuser, SelectionDetailsDisplayer, PauseMenu]} _resettableModules modules that can be resetted
      */
     setup(_resettableModules) {
         this.resettableModules = _resettableModules;

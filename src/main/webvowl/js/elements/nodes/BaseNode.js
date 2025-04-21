@@ -151,7 +151,7 @@ export default class BaseNode extends BaseElement {
      * @param {boolean} autoEditing
      */
     enableEditing(autoEditing) {
-        if (autoEditing === false) {
+        if (!autoEditing) {
             return;
         }
         this.raiseDoubleClickEdit(true);
@@ -182,7 +182,7 @@ export default class BaseNode extends BaseElement {
         this.nodeElement.selectAll("circle").classed("hoveredForEditing", true);
         this.graph.killDelayedTimer();
         this.graph.ignoreOtherHoverEvents = false;
-        const textWidth = this.textWidth()
+        const textWidth = this.getTextWidth()
         this.foreignerObject = this.nodeElement.append("foreignObject")
             .attr("x", -0.5 * (textWidth - 2))
             .attr("y", -12)

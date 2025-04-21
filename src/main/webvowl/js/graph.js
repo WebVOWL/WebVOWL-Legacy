@@ -1,4 +1,4 @@
-import Deque from "collections/deque";
+import Deque from "@npm/collections/deque";
 import AbstractDomainRangeDragger from "./draggers/abstractDomainRangeDragger";
 import AbstractDragger from "./draggers/abstractDragger";
 import ClassDragger from "./draggers/classDragger";
@@ -36,11 +36,8 @@ export default class Graph {
         })
         .interpolate("cardinal");
 
-    /**
-     * @param {Options} options
-     */
-    constructor(options) {
-        this.options = options
+    constructor() {
+        this.options = new Options(this)
         /**
          * @type {Parser | undefined}
          */
@@ -110,7 +107,7 @@ export default class Graph {
         this.graphUpdateRequired = false;
         /**
          * The currently rendered node IDs that have a pulsating halo
-         * @note The ID is a force node ID, i.e., a number
+         * @note The ID is a force node ID
          * @type {Set<number>}
          */
         this.visiblePulseNodeIDs = new Set();
@@ -159,12 +156,14 @@ export default class Graph {
 
         this.ignoreOtherHoverEvents = false;
         this.forceNotZooming = false;
-        this.now = undefined;
-        this.then = undefined; // used for fps computation
-        this.showFPS = false;
         this.seenEditorHint = false;
         this.seenFilterWarning = false;
         this.showFilterWarning = false;
+
+        // used for fps computation
+        this.now = undefined;
+        this.then = undefined;
+        this.showFPS = false;
 
         this.keepDetailsCollapsedOnLoading = true;
         this.adjustingGraphSize = false;
@@ -1451,7 +1450,7 @@ export default class Graph {
         }
         this.parser.dictionary = originalDictionary;
 
-        const literalFilter = this.options.literalFilter;
+        const literalFilter = this.options.emptyLiteralFilter;
         const idsToRemove = literalFilter.removedNodes; // A set
         const originalDict = this.parser.dictionary;
         const newDict = [];
@@ -1690,9 +1689,9 @@ export default class Graph {
      * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} preprocessedData An object containing nodes and properties.
      */
     #refreshGraphData(preprocessedData) {
-        let shouldExecuteEmptyFilter = this.options.literalFilter.enabled;
+        let shouldExecuteEmptyFilter = this.options.emptyLiteralFilter.enabled;
         this.executeEmptyLiteralFilter();
-        this.options.literalFilter.enabled = shouldExecuteEmptyFilter;
+        this.options.emptyLiteralFilter.enabled = shouldExecuteEmptyFilter;
 
         // Filter the data
         this.links = LinkCreator.createLinks(preprocessedData.properties);
@@ -2918,7 +2917,7 @@ export default class Graph {
                 compactNotationContainer.style("pointer-events", "auto");
                 d3.select("#compactNotationOption").style("color", "");
                 d3.select("#compactNotationOption").node().title = "";
-                this.options.literalFilter.enabled = true;
+                this.options.emptyLiteralFilter.enabled = true;
                 this.update();
             } else {
                 // if editor Mode
@@ -2927,7 +2926,7 @@ export default class Graph {
                 compactNotationContainer.node().disabled = true;
                 compactNotationContainer.node().checked = false;
                 this.options.compactNotationModule.enabled = false;
-                this.options.literalFilter.enabled = false;
+                this.options.emptyLiteralFilter.enabled = false;
                 this.executeCompactNotationModule();
                 this.executeEmptyLiteralFilter();
                 this.lazyRefresh();
@@ -3603,12 +3602,12 @@ export default class Graph {
 
     executeEmptyLiteralFilter() {
         if (this.unfilteredData && this.unfilteredData.nodes.length > 1) {
-            this.options.literalFilter.filter(
+            this.options.emptyLiteralFilter.filter(
                 this.unfilteredData.nodes,
                 this.unfilteredData.properties
             );
-            this.unfilteredData.nodes = this.options.literalFilter.filteredNodes;
-            this.unfilteredData.properties = this.options.literalFilter.filteredProperties;
+            this.unfilteredData.nodes = this.options.emptyLiteralFilter.filteredNodes;
+            this.unfilteredData.properties = this.options.emptyLiteralFilter.filteredProperties;
         }
     }
 
@@ -3676,23 +3675,19 @@ export default class Graph {
             this.originalD3_touchZoomFunction(); // REVIEW: Might be context issues when calling
     }
 
-    /**
-     * @param {any} [_d]
-     */
-    modified_dblTouchFunction(_d) {
+    modified_dblTouchFunction() {
         d3.event.stopPropagation();
         d3.event.preventDefault();
-        const xy;
         if (this.isEditorMode) {
-            xy = d3.touches(d3.selectAll(".vowlGraph").node());
+            const xy = d3.touches(d3.selectAll(".vowlGraph").node());
+            const grPos = this.#getClickedScreenCoords(
+                xy[0][0],
+                xy[0][1],
+                this.getTranslation(),
+                this.getScaleFactor()
+            );
+            this.#createNewNodeAtPosition(grPos);
         }
-        const grPos = this.#getClickedScreenCoords(
-            xy[0][0],
-            xy[0][1],
-            this.getTranslation(),
-            this.getScaleFactor()
-        );
-        this.#createNewNodeAtPosition(grPos);
     }
 
     //** --------------------------------------------------------- **/

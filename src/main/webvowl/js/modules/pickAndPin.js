@@ -1,4 +1,4 @@
-import _ from 'lodash/array';
+import _ from '@npm/lodash/array';
 import BaseElement from '../elements/BaseElement';
 import BaseProperty from '../elements/properties/BaseProperty';
 import ElementTools from '../util/elementTools';

@@ -39,8 +39,8 @@ export default class AbstractTextElement {
 
     /**
      * @param {string} text
-     * @param {string} prefix
-     * @param {string} postfix
+     * @param {string} [prefix]
+     * @param {string} [postfix]
      */
     applyPreAndPostFix(text, prefix, postfix) {
         if (prefix) {

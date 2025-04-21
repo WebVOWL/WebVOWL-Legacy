@@ -48,9 +48,8 @@ export default class RoundNode extends BaseNode {
     /**
      * @param {number} yOffset
      */
-    // @ts-ignore
-    textWidth(yOffset) {
-        const availableWidth = this.actualRadius() * 2;
+    getTextWidth(yOffset) {
+        let availableWidth = this.actualRadius() * 2;
         // if the text is not placed in the center of the circle, it can't have the full width
         if (yOffset) {
             const relativeOffset = Math.abs(yOffset) / this.actualRadius();
@@ -64,6 +63,8 @@ export default class RoundNode extends BaseNode {
         }
         return availableWidth;
     }
+
+    setTextWidth() { } // The width is controlled by the radius
 
     toggleFocus() {
         this.focused = !this.focused;
@@ -158,9 +159,9 @@ export default class RoundNode extends BaseNode {
      * @param {Array<string>} additionalCssClasses additional css classes
      */
     draw(parentElement, additionalCssClasses) {
-        const cssClasses = this.collectCssClasses();
         this.nodeElement = parentElement;
-        const bgColor = this.backgroundColor;
+        let cssClasses = this.collectCssClasses();
+        let bgColor = this.backgroundColor;
 
         if (bgColor === null) {
             bgColor = undefined;
@@ -195,7 +196,7 @@ export default class RoundNode extends BaseNode {
     redrawElement() {
         this.renderingElement.remove();
         this.textBlock.remove();
-        const bgColor = this.backgroundColor;
+        let bgColor = this.backgroundColor;
         if (this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined;
         }
@@ -246,7 +247,7 @@ export default class RoundNode extends BaseNode {
     }
 
     #createTextBlock() {
-        const bgColor = this.backgroundColor;
+        let bgColor = this.backgroundColor;
         if (this.attributes.indexOf("deprecated") > -1)
             bgColor = undefined;
 

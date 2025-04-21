@@ -1,9 +1,9 @@
 import BaseElement from "../../../webvowl/js/elements/BaseElement";
 import BaseNode from "../../../webvowl/js/elements/nodes/BaseNode";
 import BaseProperty from "../../../webvowl/js/elements/properties/BaseProperty";
-import WebVOWL from "../../../webvowl/js/entry";
 import Graph from "../../../webvowl/js/graph";
 import PrefixTools from "../../../webvowl/js/util/prefixTools";
+import WebVOWL from "../../../webvowl/js/webvowl";
 
 
 export default class ExportTTLModule {

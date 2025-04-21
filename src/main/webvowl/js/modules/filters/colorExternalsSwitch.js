@@ -1,4 +1,4 @@
-import _ from "lodash";
+import _ from "@npm/lodash";
 import BaseElement from "../../elements/BaseElement";
 import BaseNode from "../../elements/nodes/BaseNode";
 import BaseProperty from "../../elements/properties/BaseProperty";

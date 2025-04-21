@@ -1,8 +1,8 @@
 // const wasm = require("../../../../target/pkg/index.js");
 
-import WebVOWL from "../../webvowl/js/entry"
 import Graph from "../../webvowl/js/graph"
 import Statistics from "../../webvowl/js/modules/filters/statistics"
+import WebVOWL from "../../webvowl/js/webvowl"
 import OntologyMenu from "./menu/ontologyMenu"
 
 

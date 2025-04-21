@@ -63,7 +63,7 @@ export default class AbsoluteTextElement extends AbstractTextElement {
     addTextline(text, style, yShift, prefix, postfix) {
         const truncatedText = TextTools.truncate(
             text,
-            this.textBlock.datum().textWidth(yShift),
+            this.textBlock.datum().getTextWidth(yShift),
             style,
             0
         );

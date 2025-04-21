@@ -33,7 +33,7 @@ export default class FilterTools {
             }
         }
         return {
-            nodes: Array.from(cleanedNodes.values()), // TODO: This should return a map
+            nodes: Array.from(cleanedNodes.values()), // REVIEW: This should return a map
             properties: cleanedProperties
         };
     }

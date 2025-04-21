@@ -1,6 +1,7 @@
 import DirectInputModule from "../../app/js/directInputModule"
 import EditSidebar from "../../app/js/editSidebar"
 import LeftSideBar from "../../app/js/leftSidebar"
+import ConfigMenu from "../../app/js/menu/configMenu"
 import DebugMenu from "../../app/js/menu/debugMenu"
 import ExportMenu from "../../app/js/menu/exportMenu"
 import FilterMenu from "../../app/js/menu/filterMenu"
@@ -14,7 +15,7 @@ import SearchMenu from "../../app/js/menu/searchMenu"
 import ZoomSlider from "../../app/js/menu/zoomSlider"
 import OntologyLoading from "../../app/js/ontologyLoading"
 import SideBar from "../../app/js/sidebar"
-import Warnings from "../../app/js/warningModule"
+import WarningModule from "../../app/js/warningModule"
 import Graph from "./graph"
 import ColorExternalsSwitch from "./modules/filters/colorExternalsSwitch"
 import CompactNotationSwitch from "./modules/filters/compactNotationSwitch"
@@ -22,13 +23,42 @@ import DataTypeFilter from "./modules/filters/datatypeFilter"
 import DisjointFilter from "./modules/filters/disjointFilter"
 import EmptyLiteralFilter from "./modules/filters/emptyLiteralFilter"
 import NodeDegreeFilter from "./modules/filters/nodeDegreeFilter"
+import NodeScalingSwitch from "./modules/filters/nodeScalingSwitch"
 import ObjectPropertyFilter from "./modules/filters/objectPropertyFilter"
 import SetOperatorFilter from "./modules/filters/setOperatorFilter"
+import Statistics from "./modules/filters/statistics"
 import SubclassFilter from "./modules/filters/subclassFilter"
 import Focuser from "./modules/focuser"
 import PickAndPin from "./modules/pickAndPin"
+import SelectionDetailsDisplayer from "./modules/selectionDetailsDisplayer"
 import PrefixTools from "./util/prefixTools"
 
+
+export class UntouchedOptions {
+    constructor() {
+        this.classDistance = 200
+        this.datatypeDistance = 120
+        this.loopDistance = 150
+        this.charge = -500
+        this.gravity = 0.025
+        this.linkStrength = 1
+        this.height = 600
+        this.width = 800
+        this.maxLabelWidth = 120
+        this.minMagnification = 0.01
+        this.maxMagnification = 4
+        this.compactNotation = false
+        this.dynamicLabelWidth = true
+        this.scaleNodesByIndividuals = true
+        this.useAccuracyHelper = true
+        this.showRenderingStatistic = true
+        this.showInputModality = false
+        this.hideDebugOptions = true
+        this.rectangularRepresentation = false
+        this.drawPropertyDraggerOnHover = true
+        this.showDraggerObject = false
+    }
+}
 
 class DefaultOptionsConfig {
     constructor() {
@@ -81,130 +111,90 @@ export default class Options {
          * @type {string | undefined}
          */
         this.graphContainerSelector = undefined
-        this.classDistance = 200
-        this.datatypeDistance = 120
-        this.loopDistance = 150
-        this.charge = -500
-        this.gravity = 0.025
-        this.linkStrength = 1
-        this.height = 600
-        this.width = 800
-        this.maxLabelWidth = 120
-        this.selectionModules = []
-        this.minMagnification = 0.01
-        this.maxMagnification = 4
-        this.compactNotation = false
-        this.dynamicLabelWidth = true
-        this.scaleNodesByIndividuals = true
-        this.useAccuracyHelper = true
-        this.showRenderingStatistic = true
-        this.showInputModality = false
-        this.hideDebugOptions = true
-        this.rectangularRepresentation = false
-        this.drawPropertyDraggerOnHover = true
-        this.showDraggerObject = false
+
+        const untouched = new UntouchedOptions()
+
+        this.classDistance = untouched.classDistance
+        this.datatypeDistance = untouched.datatypeDistance
+        this.loopDistance = untouched.loopDistance
+        this.charge = untouched.charge
+        this.gravity = untouched.gravity
+        this.linkStrength = untouched.linkStrength
+        this.height = untouched.height
+        this.width = untouched.width
+        this.maxLabelWidth = untouched.maxLabelWidth
+        this.minMagnification = untouched.minMagnification
+        this.maxMagnification = untouched.maxMagnification
+        this.compactNotation = untouched.compactNotation
+        this.dynamicLabelWidth = untouched.dynamicLabelWidth
+        this.scaleNodesByIndividuals = untouched.scaleNodesByIndividuals
+        this.useAccuracyHelper = untouched.useAccuracyHelper
+        this.showRenderingStatistic = untouched.showRenderingStatistic
+        this.showInputModality = untouched.showInputModality
+        this.hideDebugOptions = untouched.hideDebugOptions
+        this.rectangularRepresentation = untouched.rectangularRepresentation
+        this.drawPropertyDraggerOnHover = untouched.drawPropertyDraggerOnHover
+        this.showDraggerObject = untouched.showDraggerObject
 
         // Configs
         this.initialConfig = new InitialConfig()
         this._defaultConfig = new DefaultOptionsConfig()
 
+        // Menus
+        this.gravityMenu = new GravityMenu(this.graph)
+        this.filterMenu = new FilterMenu(this.graph)
+        this.loadingModule = new OntologyLoading(this.graph)
+        this.modeMenu = new ModeMenu(this.graph)
+        this.pauseMenu = new PauseMenu(this.graph)
+        this.resetMenu = new ResetMenu(this.graph)
+        this.searchMenu = new SearchMenu(this.graph)
+        this.ontologyMenu = new OntologyMenu(this.graph)
+        this.sidebar = new SideBar()
+        this.leftSidebar = new LeftSideBar(this.graph)
+        this.editSidebar = new EditSidebar(this.graph)
+        this.navigationMenu = new NavigationMenu(this.graph)
+        this.exportMenu = new ExportMenu(this.graph)
+        this.zoomSlider = new ZoomSlider(this.graph)
+        this.warningModule = new WarningModule()
+        this.directInputModule = new DirectInputModule(this.graph)
+        this.debugMenu = new DebugMenu(this.graph)
+        this.configMenu = new ConfigMenu(this.graph)
+
         // Filters
-        this.filterModules = []
-        this.literalFilter = new EmptyLiteralFilter()
+        this.emptyLiteralFilter = new EmptyLiteralFilter()
         this.datatypeFilter = new DataTypeFilter()
         this.subclassFilter = new SubclassFilter()
         this.setOperatorFilter = new SetOperatorFilter()
         this.disjointPropertyFilter = new DisjointFilter()
         this.objectPropertyFilter = new ObjectPropertyFilter()
-        this.nodeDegreeFilter = new NodeDegreeFilter()
-        /**
-         * @type {ColorExternalsSwitch | undefined}
-         */
-        this.colorExternalsModule = undefined
-        /**
-         * @type {CompactNotationSwitch | undefined}
-         */
-        this.compactNotationModule = undefined
-
-        // Menus
-        /**
-         * @type {GravityMenu | undefined}
-         */
-        this.gravityMenu = undefined
-        /**
-         * @type {FilterMenu | undefined}
-         */
-        this.filterMenu = undefined
-        /**
-         * @type {OntologyLoading | undefined}
-         */
-        this.loadingModule = undefined
-        /**
-         * @type {ModeMenu | undefined}
-         */
-        this.modeMenu = undefined
-        /**
-         * @type {PauseMenu | undefined}
-         */
-        this.pauseMenu = undefined
-        /**
-         * @type {ResetMenu | undefined}
-         */
-        this.resetMenu = undefined
-        /**
-         * @type {SearchMenu | undefined}
-         */
-        this.searchMenu = undefined
-        /**
-         * @type {OntologyMenu | undefined}
-         */
-        this.ontologyMenu = undefined
-        /**
-         * @type {SideBar | undefined}
-         */
-        this.sidebar = undefined
-        /**
-         * @type {LeftSideBar | undefined}
-         */
-        this.leftSidebar = undefined
-        /**
-         * @type {EditSidebar | undefined}
-         */
-        this.editSidebar = undefined
-        /**
-         * @type {NavigationMenu | undefined}
-         */
-        this.navigationMenu = undefined
-        /**
-         * @type {ExportMenu | undefined}
-         */
-        this.exportMenu = undefined
-        /**
-         * @type {ZoomSlider | undefined}
-         */
-        this.zoomSlider = undefined
-        /**
-         * @type {Warnings | undefined}
-         */
-        this.warningModule = undefined
-        /**
-         * @type {DirectInputModule | undefined}
-         */
-        this.directInputModule = undefined
-        /**
-         * @type {DebugMenu | undefined}
-         */
-        this.debugMenu = undefined
+        this.nodeDegreeFilter = new NodeDegreeFilter(this.filterMenu)
+        this.colorExternalsModule = new ColorExternalsSwitch()
+        this.compactNotationModule = new CompactNotationSwitch(this.graph)
+        this.nodeScalingModule = new NodeScalingSwitch(this.graph)
+        this.statistics = new Statistics()
+        this.filterModules = [
+            this.emptyLiteralFilter,
+            this.datatypeFilter,
+            this.subclassFilter,
+            this.setOperatorFilter,
+            this.disjointPropertyFilter,
+            this.objectPropertyFilter,
+            this.nodeDegreeFilter,
+            this.colorExternalsModule,
+            this.compactNotation,
+            this.nodeScalingModule,
+            this.statistics
+        ]
 
         // Misc
-        /**
-         * @type {Focuser | undefined}
-         */
-        this.focuserModule = undefined
-        /**
-         * @type {PickAndPin | undefined}
-         */
-        this.pickAndPinModule = undefined
+        this.focuserModule = new Focuser(this.graph)
+        this.pickAndPinModule = new PickAndPin()
+        this.selectionDetailDisplayer = new SelectionDetailsDisplayer(this.sidebar.updateSelectionInformation)
+        this.selectionModules = [
+            this.focuserModule,
+            this.pickAndPinModule,
+            this.selectionDetailDisplayer
+        ]
 
         // Supported types
         this.supportedDatatypes = [
@@ -247,13 +237,59 @@ export default class Options {
         this.generalOntologyMetaData.clear();
     }
 
+    /**
+     * @param {Function} loadingFunc
+     */
+    setup(loadingFunc) {
+        this.exportMenu.setup()
+        this.gravityMenu.setup()
+        this.filterMenu.setup(
+            this.datatypeFilter,
+            this.objectPropertyFilter,
+            this.subclassFilter,
+            this.disjointPropertyFilter,
+            this.setOperatorFilter,
+            this.nodeDegreeFilter
+        )
+        this.modeMenu.setup(
+            this.pickAndPinModule,
+            this.nodeScalingModule,
+            this.compactNotationModule,
+            this.colorExternalsModule
+        )
+        this.pauseMenu.setup()
+        this.sidebar.setup()
+        this.loadingModule.setup([
+            this.statistics,
+            loadingFunc
+        ])
+        this.leftSidebar.setup()
+        this.editSidebar.setup()
+        this.debugMenu.setup()
+        this.resetMenu.setup([
+            this.gravityMenu,
+            this.filterMenu,
+            this.modeMenu,
+            this.focuserModule,
+            this.selectionDetailDisplayer,
+            this.pauseMenu
+        ])
+        this.searchMenu.setup()
+        this.navigationMenu.setup()
+        this.zoomSlider.setup()
+        this.ontologyMenu.setup()
+        this.configMenu.setup()
+
+        this.leftSidebar.showSidebar(false)
+        this.leftSidebar.hideCollapseButton(true)
+    }
+
     executeHiddenDebugFeatuers() {
         this.hideDebugOptions = !this.hideDebugOptions;
         d3.selectAll(".debugOption").classed("hidden", this.hideDebugOptions);
         if (!this.hideDebugOptions) {
             this.graph.setForceTickFunctionWithFPS();
-        }
-        else {
+        } else {
             this.graph.setDefaultForceTickFunction();
         }
         if (this.debugMenu) {
@@ -268,7 +304,6 @@ export default class Options {
      */
     addOrUpdateGeneralObjectEntry(property, value) {
         if (this.generalOntologyMetaData.has(property)) {
-            //console.log("Updating Property:"+ property);
             if (property === "iri") {
                 if (!PrefixTools.validURL(value)) {
                     this.warningModule.showWarning(
@@ -344,7 +379,6 @@ export default class Options {
         if (oldPrefix !== newPrefix && PrefixTools.validURL(newURL)) {
             // sanity check
             if (this.prefixList.has(newPrefix)) {
-                //  console.log("Already have this prefix!");
                 this.warningModule.showWarning(
                     "Prefix Already Exist",
                     "Prefix: " + newPrefix + " is already defined",

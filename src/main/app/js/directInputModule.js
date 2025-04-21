@@ -59,14 +59,14 @@ export default class DirectInputModule {
     }
 
     /**
-     * @param {boolean} val
+     * @param {boolean} isVisible Defaults to false
      */
-    setDirectInputMode(val) {
-        if (!val) {
+    setDirectInputMode(isVisible = false) {
+        if (!isVisible) {
             this.visibleContainer = !this.visibleContainer;
         }
         else {
-            this.visibleContainer = val;
+            this.visibleContainer = isVisible;
         }
         // update visibility;
         this.updateLayout();

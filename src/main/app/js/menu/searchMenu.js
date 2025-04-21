@@ -1,4 +1,4 @@
-import { Trie } from "../../../webvowl/js/datastructures/trie";
+import Trie from "../../../webvowl/js/datastructures/trie";
 import Graph from "../../../webvowl/js/graph";
 import PrefixTools from "../../../webvowl/js/util/prefixTools";
 

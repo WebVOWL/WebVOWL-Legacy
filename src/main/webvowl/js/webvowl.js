@@ -1,6 +1,3 @@
-import '../css/vowl.css';
-
-
 export default class WebVOWL {
     static version = "@@WEBVOWL_VERSION" // Is replaced by the actual version by Grunt at project build
     static link = "https://github.com/WebVOWL/WebVOWL-Legacy"

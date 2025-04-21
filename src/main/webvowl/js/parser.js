@@ -235,7 +235,7 @@ export default class Parser {
                 if (attributes[i]) {
                     // Look for an attribute with the same id and merge them
                     const matchingAttribute = objectMap.get(element.id);
-                    this.#addAdditionalAttributes(element, matchingAttribute); // TODO: Ensure correctess of this call
+                    this.#addAdditionalAttributes(element, matchingAttribute); // REVIEW: Ensure correctess of this call
                 }
 
                 // Then look for a prototype to add its properties

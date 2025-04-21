@@ -25,7 +25,7 @@ class TrieNode {
     }
 }
 
-export class Trie {
+export default class Trie {
     /**
      * A basic Trie of word/data pairs.
      * It allows O(k) worst-case additions and O(dk) worst-case searches,

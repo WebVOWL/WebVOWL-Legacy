@@ -80,10 +80,10 @@ export default class DrawTools {
      * @param {string | number} dx
      * @param {string | number} dy
      * @param {() => any} onClick
-     * @param {() => any} accuraciesHelperFunction
+     * @param {boolean} accuraciesHelper
      * @param {boolean} useAccuracyHelper
      */
-    static drawPin(container, dx, dy, onClick, accuraciesHelperFunction, useAccuracyHelper) {
+    static drawPin(container, dx, dy, onClick, accuraciesHelper, useAccuracyHelper) {
         const pinGroupElement = container
             .append("g")
             .classed("hidden-in-export", true)
@@ -110,7 +110,7 @@ export default class DrawTools {
                 .attr("cx", -7)
                 .attr("cy", -7)
                 .classed("superHiddenElement ", true)
-                .classed("superOpacityElement", !accuraciesHelperFunction())
+                .classed("superOpacityElement", !accuraciesHelper)
                 .on("click", function () {
                     if (onClick) {
                         onClick();

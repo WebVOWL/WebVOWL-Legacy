@@ -1,7 +1,7 @@
 import BaseNode from "../../../webvowl/js/elements/nodes/BaseNode";
-import WebVOWL from "../../../webvowl/js/entry";
 import Graph from "../../../webvowl/js/graph";
 import MathUtils from "../../../webvowl/js/util/math";
+import WebVOWL from "../../../webvowl/js/webvowl";
 import ExportTTLModule from "./exportTTLModule";
 
 
@@ -1274,7 +1274,7 @@ export default class ExportMenu {
                 bgColorStr = ", fill=property" + i + "_COLOR ";
             }
 
-            const width = correspondingProp.textWidth();
+            const width = correspondingProp.getTextWidth();
             const widthString = ",minimum width=" + width + "pt";
 
             // OWL INTERSECTION OF
@@ -1341,7 +1341,7 @@ export default class ExportMenu {
                     inv_bgColorStr = ", fill=inv_property" + i + "_COLOR ";
                 }
 
-                const inv_width = inv_correspondingProp.textWidth();
+                const inv_width = inv_correspondingProp.getTextWidth();
                 const pOY1 = p_py - 14;
                 const pOY2 = p_py + 14;
                 const inv_widthString = ",minimum width=" + inv_width + "pt";

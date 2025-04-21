@@ -1,5 +1,5 @@
-import WebVOWL from "../../../webvowl/js/entry";
 import Graph from "../../../webvowl/js/graph";
+import WebVOWL from "../../../webvowl/js/webvowl";
 import OntologyLoading from "../ontologyLoading";
 
 

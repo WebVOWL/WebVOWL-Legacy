@@ -16,7 +16,7 @@ export default class Focuser {
     }
 
     /**
-     * @param {BaseElement | undefined} selectedElement
+     * @param {BaseElement | undefined} selectedElement Node is a d.3 selection
      * @param {boolean} forced
      */
     handle(selectedElement, forced = false) {
@@ -39,7 +39,7 @@ export default class Focuser {
         if (this.focusedElement && this.focusedElement.focused) {
             this.graph.options.editSidebar.updateSelectionInformation(this.focusedElement);
             if (ElementTools.isProperty(selectedElement) === true) {
-                const inversed = false;
+                let inversed = false;
                 if (selectedElement.inverse) {
                     inversed = true;
                 }

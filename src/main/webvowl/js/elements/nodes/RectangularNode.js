@@ -61,15 +61,16 @@ export default class RectangularNode extends RectangularElementToolsMixin(BaseNo
         }
     }
 
-    // Required for class interface compatibility
-    textWidth() {
+    getTextWidth() {
         return this.labelWidth;
     }
 
-    // REVIEW: Check if not having this causes issues
-    // get width() {
-    //     return this.labelWidth;
-    // }
+    /**
+     * @param {number} width
+     */
+    setTextWidth(width) {
+        this.labelWidth = width
+    }
 
     toggleFocus() {
         this.focused = !this.focused;
@@ -84,7 +85,7 @@ export default class RectangularNode extends RectangularElementToolsMixin(BaseNo
      * @param {string[]} additionalCssClasses additional css classes
      */
     draw(parentElement, additionalCssClasses) {
-        const cssClasses = this.collectCssClasses();
+        let cssClasses = this.collectCssClasses();
         this.nodeElement = parentElement;
 
         if (additionalCssClasses instanceof Array) {
@@ -128,8 +129,8 @@ export default class RectangularNode extends RectangularElementToolsMixin(BaseNo
         // else                							this.labelWidth=this.defaultWidth;
         // width=this.labelWidth;
         // console.log("this element label Width is "+this.labelWidth);
-        const dx = -0.5 * this.labelWidth + 5,
-            dy = -1.1 * this.height;
+        const dx = -0.5 * this.labelWidth + 5;
+        const dy = -1.1 * this.height;
         this.pinGroupElement = DrawTools.drawPin(
             this.nodeElement,
             dx,
@@ -146,9 +147,14 @@ export default class RectangularNode extends RectangularElementToolsMixin(BaseNo
     drawHalo(pulseAnimation = false) {
         this.halo = true;
         const offset = 0;
-        this.haloGroupElement = DrawTools.drawRectHalo(this.nodeElement, this.width, this.height, offset);
+        this.haloGroupElement = DrawTools.drawRectHalo(
+            this.nodeElement,
+            this.width,
+            this.height,
+            offset
+        );
 
-        if (pulseAnimation === false) {
+        if (!pulseAnimation) {
             const pulseItem = this.haloGroupElement.selectAll(".searchResultA");
             pulseItem.classed("searchResultA", false);
             pulseItem.classed("searchResultB", true);
@@ -174,45 +180,19 @@ export default class RectangularNode extends RectangularElementToolsMixin(BaseNo
         this.shapeElement.select("title").text(this.labelForCurrentLanguage());
     }
 
-    // REVIEW: Almost identical to BaseProperty
     /**
      * @param {boolean} dynamic
      */
     animateDynamicLabelWidth(dynamic) {
         this.removeHalo();
-        const _this = this
-        if (dynamic === true) {
-            this.labelWidth = Math.min(this.getMyWidth(), this.graph.options.maxLabelWidth);
-            this.shapeElement.transition().tween("attr", function () {
-            })
-                .ease('linear')
-                .duration(100)
-                .attr({ x: -_this.labelWidth / 2, y: -_this.height / 2, width: _this.labelWidth, height: _this.height })
-                // @ts-ignore
-                .each("end", function () {
-                    _this.updateTextElement();
-                });
-        } else {
-            this.labelWidth = this.defaultWidth;
-            this.updateTextElement();
-            this.shapeElement.transition().tween("attr", function () {
-            })
-                .ease('linear')
-                .duration(100)
-                .attr({ x: -this.labelWidth / 2, y: -_this.height / 2, width: _this.labelWidth, height: _this.height });
-        }
 
-        // for the pin we dont need to differ between different widths -- they are already set
-        if (this.pinned === true && this.pinGroupElement) {
+        const transition = () => {
             const dx = 0.5 * this.labelWidth - 10;
             const dy = -1.1 * this.height;
-            this.pinGroupElement.transition()
-                .tween("attr.translate", function () {
-                })
-                .attr("transform", "translate(" + dx + "," + dy + ")")
-                .ease('linear')
-                .duration(100);
+            return [dx, dy]
         }
+
+        super.animateDynamicLabelWidth(dynamic, transition)
     }
 
     addTextLabelElement() {

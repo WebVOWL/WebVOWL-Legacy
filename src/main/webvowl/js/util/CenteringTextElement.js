@@ -26,8 +26,8 @@ export default class CenteringTextElement extends AbstractTextElement {
 
     /**
      * @param {string} text
-     * @param {string} prefix
-     * @param {string} suffix
+     * @param {string} [prefix]
+     * @param {string} [suffix]
      */
     addText(text, prefix, suffix) {
         if (text) {
@@ -54,7 +54,7 @@ export default class CenteringTextElement extends AbstractTextElement {
     }
 
     /**
-     * @param {string} instanceCount
+     * @param {any} instanceCount
      */
     addInstanceCount(instanceCount) {
         if (instanceCount) {
@@ -88,7 +88,7 @@ export default class CenteringTextElement extends AbstractTextElement {
         for (let i = 0; i < this.storedSpanArrays.length; i++) {
             const truncatedText = TextTools.truncate(
                 this.storedFullTextLines[i],
-                this.textBlock.datum().textWidth(),
+                this.textBlock.datum().getTextWidth(),
                 this.storedStyle[i],
                 0
             );
@@ -105,7 +105,7 @@ export default class CenteringTextElement extends AbstractTextElement {
     addTextline(text, style, prefix, postfix) {
         const truncatedText = TextTools.truncate(
             text,
-            this.textBlock.datum().textWidth(),
+            this.textBlock.datum().getTextWidth(),
             style,
             0
         );
