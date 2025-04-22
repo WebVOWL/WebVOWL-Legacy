@@ -5,8 +5,7 @@
     "private": true,
     "scripts": {
         "release": "mvn -B package --file pom.xml -P production",
-        "webserver": "mvn -B package --file pom.xml -P devserver",
-        "prodserver": "mvn -B package --file pom.xml -P prodserver"
+        "webserver": "mvn -B package --file pom.xml -P devserver"
     },
     "dependencies": {
         "collections": "^5.1.13",
@@ -31,7 +30,7 @@
         "process": "^0.11.10",
         "style-loader": "^4.0.0",
         "uglify-js": "^3.19.3",
-        "wasm-pack-plugin": "git://github.com/WebVOWL/wasm-pack-plugin.git#v1.7.1",
+        "wasm-pack-plugin": "git://github.com/WebVOWL/wasm-pack-plugin.git",
         "webpack": "~5.98.0",
         "webpack-dev-middleware": "^7.4.2",
         "webpack-dev-server": "^5.2.0",

@@ -34,7 +34,6 @@ module.exports = function (grunt) {
                 dest: paths.deployPath,
             },
             prod: {
-                // required for removing the benchmark ontology from the selection menu
                 src: `${paths.srcPath}/index.html`,
                 dest: paths.deployPath,
             },
@@ -86,7 +85,6 @@ module.exports = function (grunt) {
         "clean:testOntology",
     ])
     grunt.registerTask("devserver", ["development", "server", "watch"])
-    grunt.registerTask("prodserver", ["production", "server", "watch"])
     grunt.registerTask("server", () => {
         const Webpack = require("webpack")
         const WebpackDevServer = require("webpack-dev-server")
