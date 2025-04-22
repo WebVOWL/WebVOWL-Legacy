@@ -17,8 +17,8 @@ module.exports = function (grunt) {
             deploy: paths.deployPath,
             webappDeploy: paths.webappDeployPath,
             testOntology: paths.deployPath + "/data/benchmark.json",
-            redundantFolders: "pkg",
-            misplacedBundle: "webvowl.js",
+            // redundantFolders: "pkg",
+            // misplacedBundle: "webvowl.js",
         },
         htmlbuild: {
             options: {
@@ -68,8 +68,8 @@ module.exports = function (grunt) {
     grunt.registerTask("pre-js", ["clean:deploy"])
     grunt.registerTask("post-js", [
         "replace",
-        "clean:redundantFolders",
-        "clean:misplacedBundle",
+        // "clean:redundantFolders",
+        // "clean:misplacedBundle",
     ])
     grunt.registerTask("development", [
         "pre-js",
