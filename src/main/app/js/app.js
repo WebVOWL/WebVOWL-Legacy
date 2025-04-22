@@ -1,11 +1,16 @@
-import { init_rust } from "../../../../target/pkg/index_bg.js"
+import { init_rust } from "../../../../target/pkg"
 import Graph from "../../webvowl/js/graph.js"
+import Options from "../../webvowl/js/options.js"
 
 export default class App {
     GRAPH_SELECTOR = "#graph"
 
     constructor() {
         this.graph = new Graph()
+        this.options = new Options(this.graph)
+        this.graph.options = this.options
+        this.graph.initializeGraph()
+
         this.executeFileDrop = false
         this.wasMessageToShow = false
         this.firstTime = false
@@ -22,8 +27,8 @@ export default class App {
 
             d3.select("#dragDropContainer").classed("hidden", false)
             // get svg size
-            const w = this.graph.options.width
-            const h = this.graph.options.height
+            const w = this.options.width
+            const h = this.options.height
 
             // get event position; (using clientX and clientY);
             const cx = e.clientX
@@ -99,14 +104,14 @@ export default class App {
                     if (ev.dataTransfer.items.length === 1) {
                         if (ev.dataTransfer.items[0].kind === "file") {
                             const file = ev.dataTransfer.items[0].getAsFile()
-                            this.graph.options.loadingModule.fromFileDrop(
+                            this.options.loadingModule.fromFileDrop(
                                 file.name,
                                 file,
                             )
                         }
                     } else {
                         //  >> WARNING not multiple file uploaded;
-                        this.graph.options.warningModule.showMultiFileUploadWarning()
+                        this.options.warningModule.showMultiFileUploadWarning()
                     }
                 }
             }
@@ -114,8 +119,8 @@ export default class App {
         }
 
         node.node().ondragleave = (e) => {
-            const w = this.graph.options.width
-            const h = this.graph.options.height
+            const w = this.options.width
+            const h = this.options.height
 
             // get event position; (using clientX and clientY);
             const cx = e.clientX
@@ -134,8 +139,7 @@ export default class App {
 
             d3.select("#loading-info").classed("hidden", !this.wasMessageToShow) // show it again
             // check if it should be visible
-            const should_show =
-                this.graph.options.loadingModule.visibilityStatus
+            const should_show = this.options.loadingModule.visibilityStatus
             if (!should_show) {
                 d3.select("#loading-info").classed("hidden", true) // hide it
             }
@@ -144,6 +148,9 @@ export default class App {
 
     async initialize() {
         init_rust() // Initialize Rust code
+
+        this.options.graphContainerSelector = this.GRAPH_SELECTOR
+        this.options.setup(this.#adjustSize)
 
         this.#addFileDropEvents(this.GRAPH_SELECTOR)
 
@@ -164,11 +171,8 @@ export default class App {
                 clearTimeout(requestID)
             }
 
-        this.graph.options.graphContainerSelector = this.GRAPH_SELECTOR
-
         d3.select(window).on("resize", this.#adjustSize)
 
-        this.graph.options.setup(this.#adjustSize)
         this.graph.start()
 
         const modeOp = d3.select("#modeOfOperationString")
@@ -176,8 +180,8 @@ export default class App {
         modeOp.style("font-style", "italic")
 
         this.#adjustSize()
-        const w = this.graph.options.width
-        const h = this.graph.options.height
+        const w = this.options.width
+        const h = this.options.height
         let defZoom = Math.min(w, h) / 1000
 
         const hideDebugOptions = true
@@ -201,12 +205,12 @@ export default class App {
                 d3.event.shiftKey &&
                 d3.event.keyCode === 68
             ) {
-                this.graph.options.executeHiddenDebugFeatuers()
+                this.options.executeHiddenDebugFeatuers()
                 d3.event.preventDefault()
             }
         })
         if (d3.select("#maxLabelWidthSliderOption")) {
-            const setValue = !this.graph.options.dynamicLabelWidth
+            const setValue = !this.options.dynamicLabelWidth
             d3.select("#maxLabelWidthSlider").node().disabled = setValue
             d3.select("#maxLabelWidthvalueLabel").classed(
                 "disabledLabelForSlider",
@@ -223,8 +227,8 @@ export default class App {
             .style("background-color", "#bdbdbd")
             .style("opacity", "0.5")
             .style("pointer-events", "auto")
-            .style("width", this.graph.options.width + "px")
-            .style("height", this.graph.options.height + "px")
+            .style("width", this.options.width + "px")
+            .style("height", this.options.height + "px")
             .on("click", function () {
                 d3.event.preventDefault()
                 d3.event.stopPropagation()
@@ -234,25 +238,25 @@ export default class App {
                 d3.event.stopPropagation()
             })
         d3.select("#direct-text-input").on("click", () => {
-            this.graph.options.directInputModule.setDirectInputMode()
+            this.options.directInputModule.setDirectInputMode()
         })
         d3.select("#blockGraphInteractions").node().draggable = false
         this.#adjustSize()
-        this.graph.options.sidebar.updateOntologyInformation(
+        this.options.sidebar.updateOntologyInformation(
             undefined,
-            this.graph.options.statistics,
+            this.options.statistics,
         )
-        this.graph.options.loadingModule.parseUrlAndLoadOntology() // loads automatically the ontology provided by the parameters
-        this.graph.options.debugMenu.updateSettings()
+        this.options.loadingModule.parseUrlAndLoadOntology() // loads automatically the ontology provided by the parameters
+        this.options.debugMenu.updateSettings()
 
         // connect the reloadCachedVersionButton
         d3.select("#reloadSvgIcon").on("click", () => {
             if (d3.select("#reloadSvgIcon").node().disabled) {
-                this.graph.options.ontologyMenu.clearCachedVersion()
+                this.options.ontologyMenu.clearCachedVersion()
                 return
             }
             d3.select("#reloadCachedOntology").classed("hidden", true)
-            this.graph.options.ontologyMenu.reloadCachedOntology()
+            this.options.ontologyMenu.reloadCachedOntology()
         })
     }
 
@@ -262,12 +266,12 @@ export default class App {
         let height = window.innerHeight - 40
         let width = window.innerWidth - window.innerWidth * 0.22
 
-        if (this.graph.options.sidebar.getSidebarVisibility()) {
+        if (this.options.sidebar.getSidebarVisibility()) {
             height = window.innerHeight - 40
             width = window.innerWidth
         }
 
-        this.graph.options.directInputModule.updateLayout()
+        this.options.directInputModule.updateLayout()
         d3.select("#blockGraphInteractions").style(
             "width",
             window.innerWidth + "px",
@@ -289,8 +293,8 @@ export default class App {
         graphContainer.style("height", height + "px")
         svg.attr("width", width).attr("height", height)
 
-        this.graph.options.width = width
-        this.graph.options.height = height
+        this.options.width = width
+        this.options.height = height
 
         this.graph.updateStyle()
 
@@ -310,7 +314,7 @@ export default class App {
             "height",
             0.5 * (height - 80) + "px",
         )
-        this.graph.options.loadingModule.checkForScreenSize()
+        this.options.loadingModule.checkForScreenSize()
 
         this.#adjustSliderSize()
         // update also the padding options of loading and the logo positions;
@@ -332,7 +336,7 @@ export default class App {
             // show both and then check how far is bar;
             rightButton.classed("hidden", false)
             leftButton.classed("hidden", false)
-            this.graph.options.navigationMenu.updateScrollButtonVisibility()
+            this.options.navigationMenu.updateScrollButtonVisibility()
         } else {
             // hide both;
             rightButton.classed("hidden", true)
@@ -340,7 +344,7 @@ export default class App {
         }
 
         // adjust height of the leftSidebar element;
-        this.graph.options.editSidebar.updateElementWidth()
+        this.options.editSidebar.updateElementWidth()
 
         const hs = d3.select("#drag_msg").node().getBoundingClientRect().height
         const ws = d3

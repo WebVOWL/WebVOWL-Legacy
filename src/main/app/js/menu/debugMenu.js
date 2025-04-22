@@ -56,7 +56,7 @@ export default class DebugMenu {
             "Use accuracy helper",
             "#useAccuracyHelper",
             (val) => {
-                if (!arguments.length)
+                if (val === undefined)
                     return this.graph.options.useAccuracyHelper
                 else this.graph.options.useAccuracyHelper = val
             },
@@ -91,7 +91,7 @@ export default class DebugMenu {
             "Show accuracy helper",
             "#showDraggerObject",
             (val) => {
-                if (!arguments.length)
+                if (val === undefined)
                     return this.graph.options.showDraggerObject
                 else this.graph.options.showDraggerObject = val
             },
@@ -111,7 +111,7 @@ export default class DebugMenu {
             "Show rendering statistics",
             "#showFPS_Statistics",
             (val) => {
-                if (!arguments.length)
+                if (val === undefined)
                     return this.graph.options.showRenderingStatistic
                 else this.graph.options.showRenderingStatistic = val
             },
@@ -128,7 +128,7 @@ export default class DebugMenu {
             "Show input modality",
             "#showModeOfOperation",
             (val) => {
-                if (!arguments.length)
+                if (val === undefined)
                     return this.graph.options.showInputModality
                 else this.graph.options.showInputModality = val
             },

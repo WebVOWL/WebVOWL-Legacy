@@ -63,14 +63,14 @@ export default class ModeMenu {
             "Dynamic label width",
             "#dynamicLabelWidth",
             (val) => {
-                if (!arguments.length)
+                if (val === undefined)
                     return this.graph.options.dynamicLabelWidth
                 else this.graph.options.dynamicLabelWidth = val
             },
             1,
         )
         this.addCheckBox("editorMode", "Editing ", "#editMode", (val) => {
-            if (!arguments.length) return this.graph.editorMode
+            if (val === undefined) return this.graph.editorMode
             else this.graph.editorMode = val
         })
         this.addModeItem(
@@ -183,7 +183,9 @@ export default class ModeMenu {
         moduleCheckbox.on("click", (d) => {
             const isEnabled = moduleCheckbox.property("checked")
             onChangeFunc(isEnabled)
-            if (isEnabled) this.graph.showEditorHintIfNeeded()
+            if (isEnabled) {
+                this.graph.showEditorHintIfNeeded()
+            }
         })
         moduleOptionContainer
             .append("label")

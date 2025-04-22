@@ -140,62 +140,44 @@ export default class Options {
         this._defaultConfig = new DefaultOptionsConfig()
 
         // Menus
-        this.gravityMenu = new GravityMenu(this.graph)
-        this.filterMenu = new FilterMenu(this.graph)
-        this.loadingModule = new OntologyLoading(this.graph)
-        this.modeMenu = new ModeMenu(this.graph)
-        this.pauseMenu = new PauseMenu(this.graph)
-        this.resetMenu = new ResetMenu(this.graph)
-        this.searchMenu = new SearchMenu(this.graph)
-        this.ontologyMenu = new OntologyMenu(this.graph)
-        this.sidebar = new SideBar()
-        this.leftSidebar = new LeftSideBar(this.graph)
-        this.editSidebar = new EditSidebar(this.graph)
-        this.navigationMenu = new NavigationMenu(this.graph)
-        this.exportMenu = new ExportMenu(this.graph)
-        this.zoomSlider = new ZoomSlider(this.graph)
-        this.warningModule = new WarningModule()
-        this.directInputModule = new DirectInputModule(this.graph)
-        this.debugMenu = new DebugMenu(this.graph)
-        this.configMenu = new ConfigMenu(this.graph)
+        this.gravityMenu = undefined
+        this.filterMenu = undefined
+        this.loadingModule = undefined
+        this.modeMenu = undefined
+        this.pauseMenu = undefined
+        this.resetMenu = undefined
+        this.searchMenu = undefined
+        this.ontologyMenu = undefined
+        this.sidebar = undefined
+        this.leftSidebar = undefined
+        this.editSidebar = undefined
+        this.navigationMenu = undefined
+        this.exportMenu = undefined
+        this.zoomSlider = undefined
+        this.warningModule = undefined
+        this.directInputModule = undefined
+        this.debugMenu = undefined
+        this.configMenu = undefined
 
         // Filters
-        this.emptyLiteralFilter = new EmptyLiteralFilter()
-        this.datatypeFilter = new DataTypeFilter()
-        this.subclassFilter = new SubclassFilter()
-        this.setOperatorFilter = new SetOperatorFilter()
-        this.disjointPropertyFilter = new DisjointFilter()
-        this.objectPropertyFilter = new ObjectPropertyFilter()
-        this.nodeDegreeFilter = new NodeDegreeFilter(this.filterMenu)
-        this.colorExternalsModule = new ColorExternalsSwitch()
-        this.compactNotationModule = new CompactNotationSwitch(this.graph)
-        this.nodeScalingModule = new NodeScalingSwitch(this.graph)
-        this.statistics = new Statistics()
-        this.filterModules = [
-            this.emptyLiteralFilter,
-            this.datatypeFilter,
-            this.subclassFilter,
-            this.setOperatorFilter,
-            this.disjointPropertyFilter,
-            this.objectPropertyFilter,
-            this.nodeDegreeFilter,
-            this.colorExternalsModule,
-            this.compactNotation,
-            this.nodeScalingModule,
-            this.statistics,
-        ]
+        this.emptyLiteralFilter = undefined
+        this.datatypeFilter = undefined
+        this.subclassFilter = undefined
+        this.setOperatorFilter = undefined
+        this.disjointPropertyFilter = undefined
+        this.objectPropertyFilter = undefined
+        this.nodeDegreeFilter = undefined
+        this.colorExternalsModule = undefined
+        this.compactNotationModule = undefined
+        this.nodeScalingModule = undefined
+        this.statistics = undefined
+        this.filterModules = undefined
 
         // Misc
-        this.focuserModule = new Focuser(this.graph)
-        this.pickAndPinModule = new PickAndPin()
-        this.selectionDetailDisplayer = new SelectionDetailsDisplayer(
-            this.sidebar.updateSelectionInformation,
-        )
-        this.selectionModules = [
-            this.focuserModule,
-            this.pickAndPinModule,
-            this.selectionDetailDisplayer,
-        ]
+        this.focuserModule = undefined
+        this.pickAndPinModule = undefined
+        this.selectionDetailDisplayer = undefined
+        this.selectionModules = undefined
 
         // Supported types
         this.supportedDatatypes = [
@@ -242,6 +224,66 @@ export default class Options {
      * @param {Function} loadingFunc
      */
     setup(loadingFunc) {
+        // We create instances here due to classes being too tightly coupled (we'd need a full rewrite to fix that)
+
+        // Menus
+        this.gravityMenu = new GravityMenu(this.graph)
+        this.filterMenu = new FilterMenu(this.graph)
+        this.loadingModule = new OntologyLoading(this.graph)
+        this.modeMenu = new ModeMenu(this.graph)
+        this.pauseMenu = new PauseMenu(this.graph)
+        this.resetMenu = new ResetMenu(this.graph)
+        this.searchMenu = new SearchMenu(this.graph)
+        this.ontologyMenu = new OntologyMenu(this.graph)
+        this.sidebar = new SideBar(this.graph)
+        this.leftSidebar = new LeftSideBar(this.graph)
+        this.editSidebar = new EditSidebar(this.graph)
+        this.navigationMenu = new NavigationMenu(this.graph)
+        this.exportMenu = new ExportMenu(this.graph)
+        this.zoomSlider = new ZoomSlider(this.graph)
+        this.warningModule = new WarningModule(this.graph)
+        this.directInputModule = new DirectInputModule(this.graph)
+        this.debugMenu = new DebugMenu(this.graph)
+        this.configMenu = new ConfigMenu(this.graph)
+
+        // Filters
+        this.emptyLiteralFilter = new EmptyLiteralFilter()
+        this.datatypeFilter = new DataTypeFilter()
+        this.subclassFilter = new SubclassFilter()
+        this.setOperatorFilter = new SetOperatorFilter()
+        this.disjointPropertyFilter = new DisjointFilter()
+        this.objectPropertyFilter = new ObjectPropertyFilter()
+        this.nodeDegreeFilter = new NodeDegreeFilter(this.filterMenu)
+        this.colorExternalsModule = new ColorExternalsSwitch()
+        this.compactNotationModule = new CompactNotationSwitch(this.graph)
+        this.nodeScalingModule = new NodeScalingSwitch(this.graph)
+        this.statistics = new Statistics()
+        this.filterModules = [
+            this.emptyLiteralFilter,
+            this.datatypeFilter,
+            this.subclassFilter,
+            this.setOperatorFilter,
+            this.disjointPropertyFilter,
+            this.objectPropertyFilter,
+            this.nodeDegreeFilter,
+            this.colorExternalsModule,
+            this.compactNotationModule,
+            this.nodeScalingModule,
+            this.statistics,
+        ]
+
+        // Misc
+        this.focuserModule = new Focuser(this.graph)
+        this.pickAndPinModule = new PickAndPin(this.graph)
+        this.selectionDetailDisplayer = new SelectionDetailsDisplayer(
+            this.sidebar.updateSelectionInformation,
+        )
+        this.selectionModules = [
+            this.focuserModule,
+            this.pickAndPinModule,
+            this.selectionDetailDisplayer,
+        ]
+
         this.exportMenu.setup()
         this.gravityMenu.setup()
         this.filterMenu.setup(

@@ -37,7 +37,10 @@ export default class Graph {
         .interpolate("cardinal")
 
     constructor() {
-        this.options = new Options(this)
+        /**
+         * @type {Options | undefined}
+         */
+        this.options = undefined
         /**
          * @type {Parser | undefined}
          */
@@ -174,7 +177,6 @@ export default class Graph {
         this.domainDragger = new DomainDragger(this)
         this.shadowClone = new ShadowClone(this)
         this.cachedJsonOBJ = null
-        this.#initializeGraph()
     }
 
     //** --------------------------------------------------------- **/
@@ -317,17 +319,21 @@ export default class Graph {
         return this.links
     }
 
-    /** --------------------------------------------------------- **/
-    /** graph / rendering  related functions                      **/
-    /** --------------------------------------------------------- **/
+    //** --------------------------------------------------------- **/
+    //** graph / rendering  related functions                      **/
+    //** --------------------------------------------------------- **/
 
-    #initializeGraph() {
-        const _this = this
+    /**
+     * First-time graph initialization
+     */
+    initializeGraph() {
+        this.parser = new Parser(this)
         let moved = false
         this.force = d3.layout
             .force()
             .on("tick", this.#hiddenRecalculatePositions)
 
+        const _this = this
         this.dragBehaviour = d3.behavior
             .drag()
             .origin(function (/** @type {AbstractDragger} */ d) {
@@ -553,7 +559,9 @@ export default class Graph {
                 this.options.minMagnification,
                 this.options.maxMagnification,
             ])
-            .on("zoom", this.#zoomed)
+            .on("zoom", () => {
+                this.#zoomed()
+            })
         this.draggerObjectsArray.push(this.classDragger)
         this.draggerObjectsArray.push(this.rangeDragger)
         this.draggerObjectsArray.push(this.domainDragger)
@@ -3405,7 +3413,7 @@ export default class Graph {
         )
         if (compactNotationContainer) {
             compactNotationContainer.classed("disabled", !this.isEditorMode)
-            if (!this.isEditorMode) {
+            if (this.isEditorMode === false) {
                 compactNotationContainer.node().title = ""
                 compactNotationContainer.node().disabled = false
                 compactNotationContainer.style("pointer-events", "auto")

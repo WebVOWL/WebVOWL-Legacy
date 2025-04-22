@@ -1,8 +1,9 @@
-import { BaseElement } from "../../webvowl/js/elements/BaseElement"
+import BaseElement from "../../webvowl/js/elements/BaseElement"
+import Graph from "../../webvowl/js/graph"
 
 export default class Warnings {
     /**
-     * @param {any} graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         this.graph = graph

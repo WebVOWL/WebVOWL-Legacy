@@ -111,12 +111,12 @@ export default class NodeDegreeFilter extends AbstractFilter {
      * @param {number} maxDegree
      */
     #findDefaultDegree(maxDegree) {
-        const globalDegOfFilter = this.menu.graph.getGlobalDOF()
+        const globalDegOfFilter = this.menu.graph.global_dof
         if (globalDegOfFilter >= 0) {
             if (globalDegOfFilter <= maxDegree) {
                 return globalDegOfFilter
             } else {
-                this.menu.graph.setGlobalDOF(maxDegree)
+                this.menu.graph.global_dof = maxDegree
                 return maxDegree
             }
         }

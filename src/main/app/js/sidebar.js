@@ -1,14 +1,16 @@
 import d3 from "d3"
 import BaseNode from "../../webvowl/js/elements/nodes/BaseNode"
 import BaseProperty from "../../webvowl/js/elements/properties/BaseProperty"
+import Graph from "../../webvowl/js/graph"
 import Statistics from "../../webvowl/js/modules/filters/statistics"
 import Constants from "../../webvowl/js/util/constants"
+import ElementTools from "../../webvowl/js/util/elementTools"
 import LanguageTools from "../../webvowl/js/util/languageTools"
 
 export default class SideBar {
     /**
      * Contains the logic for the sidebar.
-     * @param {any} graph the graph that belongs to these controls
+     * @param {Graph} graph the graph that belongs to these controls
      */
     constructor(graph) {
         this.graph = graph

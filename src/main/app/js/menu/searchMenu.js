@@ -64,9 +64,6 @@ export default class SearchMenu {
         this.c_locate.on("mouseover", () => {
             this.hideSearchEntries()
         })
-
-        // Initialize dictionary
-        this.updateSearchDictionary()
         // Reset text from previous searches
         this.clearText()
     }

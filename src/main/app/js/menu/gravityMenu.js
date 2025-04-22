@@ -30,7 +30,7 @@ export default class GravityMenu {
             "class",
             "Class distance",
             (val) => {
-                if (!arguments.length) return this.options.classDistance
+                if (val === undefined) return this.options.classDistance
                 else this.options.classDistance = val
             },
         )
@@ -39,7 +39,7 @@ export default class GravityMenu {
             "datatype",
             "Datatype distance",
             (val) => {
-                if (!arguments.length) return this.options.datatypeDistance
+                if (val === undefined) return this.options.datatypeDistance
                 else this.options.datatypeDistance = val
             },
         )

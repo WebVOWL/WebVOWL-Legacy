@@ -23,7 +23,11 @@ export default class ConfigMenu {
             "showZoomSlider",
             "Zoom controls",
             "#zoomSliderOption",
-            this.graph.options.zoomSlider.showSlider,
+            (val) => {
+                if (val === undefined)
+                    return this.graph.options.zoomSlider.showSlider
+                else this.graph.options.zoomSlider.showSlider = val
+            },
             0,
         )
         this.#addLabelWidthSlider(
