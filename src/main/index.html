@@ -1106,9 +1106,11 @@
         <script src="js/app.js"></script>
         <script>
             window.onload = () => {
-                console.log(App)
-                const app = new App()
-                app.initialize()
+                app.then((app) => {
+                    const appCls = app.default
+                    let webvowlApp = new appCls()
+                    webvowlApp.initialize()
+                })
             }
         </script>
     </body>
