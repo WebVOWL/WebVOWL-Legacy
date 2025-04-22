@@ -1,4 +1,4 @@
-// const wasm = require("../../../../target/pkg/index.js");
+import { parse_json } from "../../../../target/pkg"
 
 import Graph from "../../webvowl/js/graph"
 import Statistics from "../../webvowl/js/modules/filters/statistics"
@@ -256,9 +256,8 @@ export default class OntologyLoading {
      * @param {boolean} storeCache
      */
     parseUrlAndLoadOntology(storeCache = false) {
-        const autoStore = storeCache
         this.graph.clearAllGraphData()
-        this.initializeLoader(autoStore)
+        this.initializeLoader(storeCache)
         const urlString = String(location)
         const parameterArray = this.#identifyParameter(urlString)
         this.ontologyIdentifierFromURL = this.DEFAULT_JSON_NAME
@@ -434,8 +433,8 @@ export default class OntologyLoading {
             this.ontologyMenu.conversion_sessionId = -10000
             this.ontologyIdentifierFromURL = fileName
             this.loadOntologyContent(
-                this.#parseOntologyContent(await wasm.parse_json(file)),
-            ) // FIXME
+                this.#parseOntologyContent(await parse_json(file)),
+            ) // REVIEW: Check correctness
         } else {
             //2] File Upload to OWL2VOWL Converter
             // 1) check if we can get a timeStamp;
@@ -491,10 +490,8 @@ export default class OntologyLoading {
                 this.ontologyMenu.conversion_sessionId = -10000
                 this.ontologyIdentifierFromURL = filename
                 this.loadOntologyContent(
-                    this.#parseOntologyContent(
-                        await wasm.parse_json(selectedFile),
-                    ),
-                ) // FIXME
+                    this.#parseOntologyContent(await parse_json(selectedFile)),
+                ) // REVIEW: Check correctness
             } else {
                 //2] File Upload to OWL2VOWL Converter
                 // 1) check if we can get a timeStamp;
@@ -639,18 +636,19 @@ export default class OntologyLoading {
 
     /**
      * This method is not well-suited for large ontologies as `text`
-     * is only garbage collected when the entire graph is loaded.
-     * @param {string} text
+     * is only garbage collected when this function exists (i.e. when the entire graph is loaded).
+     * @param {string} text Raw JSON text
+     * @returns {Promise<boolean>} True if ontology content is valid
      */
-    directInput(text) {
+    async directInput(text) {
         this.ontologyMenu.clearDetailInformation()
-        this.loadOntologyContent(this.#parseOntologyContent(text))
+        return this.loadOntologyContent(await this.#parseOntologyContent(text))
     }
 
     /**
      * @param {string} filename
      */
-    loadFromOWL2VOWL(filename) {
+    async loadFromOWL2VOWL(filename) {
         this.loadingWasSuccessFul = false
         const old = d3.select("#bulletPoint_container").node().innerHTML
         if (old.indexOf("(with warnings)") !== -1) {
@@ -663,8 +661,9 @@ export default class OntologyLoading {
                 "Loading already cached ontology: " + filename,
             )
         }
-        const parseResult = this.#parseOntologyContent(cached)
-        return parseResult
+        return this.loadOntologyContent(
+            await this.#parseOntologyContent(cached),
+        )
     }
 
     /**
@@ -804,7 +803,7 @@ export default class OntologyLoading {
 
     /**
      * Parse JSON content
-     * @param {{ header?: any; class?: any[]; }} content
+     * @param {{ header?: any; class?: any[]; } | string} content Raw JSON string or a JSON object
      */
     #parseOntologyContent(content) {
         this.ontologyMenu.append_bulletPoint("Reading ontology graph ... ")
@@ -818,6 +817,7 @@ export default class OntologyLoading {
     /**
      * Load parsed JSON object
      * @param {[{ header?: any; class?: any[]; } | undefined, boolean]} parseResult
+     * @returns {boolean} True if ontology content is valid
      */
     loadOntologyContent(parseResult) {
         const [data, isValidData] = parseResult
@@ -842,6 +842,7 @@ export default class OntologyLoading {
         ) {
             // generate message for the user;
             this.emptyGraphContentError()
+            return false
         } else {
             this.setPercentMode()
             if (loadEmptyOntologyForEditing) {
@@ -860,6 +861,7 @@ export default class OntologyLoading {
                 .node().checked
             this.graph.editorMode = flagOfCheckBox // update gui
         }
+        return true
     }
 
     notValidJsonFile() {

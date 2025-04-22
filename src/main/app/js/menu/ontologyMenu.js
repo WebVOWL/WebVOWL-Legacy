@@ -493,10 +493,8 @@ export default class OntologyMenu {
             this.conversionFinished(local_conversionId)
             return
         }
-        this.loadingModule.loadOntologyContent(
-            this.loadingModule.loadFromOWL2VOWL(parameter[1]),
-        )
-        this.conversionFinished()
+        this.loadingModule.loadFromOWL2VOWL(parameter[1]),
+            this.conversionFinished()
     }
 
     /**
@@ -668,10 +666,8 @@ export default class OntologyMenu {
             return
         }
         if (xhr.status === 200) {
-            this.loadingModule.loadOntologyContent(
-                this.loadingModule.loadFromOWL2VOWL(filename),
-            )
-            this.conversionFinished()
+            this.loadingModule.loadFromOWL2VOWL(filename),
+                this.conversionFinished()
         } else {
             let niceJSON = JSON.stringify(
                 JSON.parse(xhr.responseText),

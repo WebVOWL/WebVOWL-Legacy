@@ -901,7 +901,6 @@ export default class ExportMenu {
         if (!this.exportableJsonText) {
             alert("No graph data available.")
             // Stop the redirection to the path of the href attribute
-            // @ts-ignore
             d3.event.preventDefault()
             return
         }

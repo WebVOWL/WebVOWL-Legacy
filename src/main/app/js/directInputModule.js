@@ -23,10 +23,9 @@ export default class DirectInputModule {
     handleDirectUpload() {
         const text = this.textArea.node().value
         try {
-            const jsonOBJ = JSON.parse(text)
-            this.graph.options.loadingModule.directInput(text)
+            const isValid = this.graph.options.loadingModule.directInput(text)
             // close if successful
-            if (jsonOBJ.class.length > 0) {
+            if (isValid) {
                 this.setDirectInputMode(false)
             }
         } catch (e) {

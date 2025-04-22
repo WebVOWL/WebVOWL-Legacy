@@ -1,3 +1,4 @@
+import { parse_json } from "../../../../target/pkg"
 import BaseElement from "./elements/BaseElement"
 import BaseNode from "./elements/nodes/BaseNode"
 import OwlThing from "./elements/nodes/implementations/OwlThing"
@@ -175,27 +176,42 @@ export default class Parser {
     }
 
     /**
-     * Parse `jsonObject` and ensure the graph data is valid
-     * @param {{ header?: any; class?: any[]; }} jsonObject
+     * Parse `content` and ensure the graph data is valid
+     * @param content Raw JSON string or a JSON object
      * @param {string} filename
      * @param {string} alternativeFilename
-     * @returns {[{ header?: any; class?: any[]; } | undefined, boolean]} Whether `jsonObject` is valid graph data
+     * @returns {Promise<[{header?: any;class?: any[];} | undefined, boolean]>} Whether `content` is valid graph data
      */
-    parseOntologyFromText(jsonObject, filename, alternativeFilename) {
+    async parseOntologyFromText(content, filename, alternativeFilename) {
         let isValidData = false
+        let dataObject = undefined
         const options = this.graph.options
         const loadingModule = options.loadingModule
 
-        if (!jsonObject && filename === undefined) {
+        // Check if we have data
+        if (!content && filename === undefined) {
             loadingModule.notValidJsonFile()
             return [undefined, isValidData]
         }
 
+        // Figure out if data is a file or a JSON string
+        if (content.file) {
+            // This is used for large ontologies to improve performance and memory usage
+            dataObject = await parse_json(content.file)
+        } else if (content.json) {
+            // This is used for small ontologies
+            dataObject = JSON.parse(content.json)
+        } else {
+            console.error(
+                `Content '${content}' is not valid. Expected one of: file pointer, string`,
+            )
+            loadingModule.notValidJsonFile()
+        }
+
         if (!filename) {
             // First look if an ontology title exists, otherwise take the alternative filename
-            // @ts-ignore
-            const ontologyNames = jsonObject.header
-                ? jsonObject.header.title
+            const ontologyNames = dataObject.header
+                ? dataObject.header.title
                 : undefined
             const ontologyName = LanguageTools.textInLanguage(ontologyNames)
 
@@ -207,22 +223,22 @@ export default class Parser {
         }
 
         // check if we have graph data
-        // @ts-ignore
         isValidData =
-            jsonObject.class !== undefined && jsonObject.class.length > 0
+            dataObject.class !== undefined && dataObject.class.length > 0
 
         if (isValidData) {
             const ontologyMenu = options.ontologyMenu
             const exportMenu = options.exportMenu
-            options.data = jsonObject
+            options.data = dataObject
             loadingModule.validJsonFile()
-            if (ontologyMenu.shouldCacheOntology(jsonObject)) {
-                ontologyMenu.setCachedOntology(filename, jsonObject)
-                exportMenu.setJsonText(jsonObject)
+            if (ontologyMenu.shouldCacheOntology(content)) {
+                // FIXME
+                ontologyMenu.setCachedOntology(filename, content)
+                exportMenu.setJsonText(content)
             }
             exportMenu.setFilename(filename)
         }
-        return [jsonObject, isValidData]
+        return [dataObject, isValidData]
     }
 
     /**
