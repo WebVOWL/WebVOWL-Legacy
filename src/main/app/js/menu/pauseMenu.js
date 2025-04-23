@@ -16,8 +16,8 @@ export default class PauseMenu {
     setup() {
         const _this = this
         const menuEntry = d3.select("#pauseOption")
-        menuEntry.on("mouseover", function () {
-            const searchMenu = _this.graph.options.searchMenu
+        menuEntry.on("mouseover", () => {
+            const searchMenu = this.graph.options.searchMenu
             searchMenu.hideSearchEntries()
         })
         this.pauseButton = d3

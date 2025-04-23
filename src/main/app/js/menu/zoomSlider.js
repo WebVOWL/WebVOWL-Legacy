@@ -83,9 +83,15 @@ export default class ZoomSlider {
                 _this.zoomValue = _this.graph.getScaleFactor()
                 _this.t_zoomOut = requestAnimationFrame(_this.timed_zoomOut)
             })
-            .on("mouseup", this.clearAllTimers)
-            .on("touchend", this.clearAllTimers)
-            .on("touchcancel", this.clearAllTimers)
+            .on("mouseup", () => {
+                this.clearAllTimers()
+            })
+            .on("touchend", () => {
+                this.clearAllTimers()
+            })
+            .on("touchcancel", () => {
+                this.clearAllTimers()
+            })
             .attr("title", "zoom out")
         d3.select("#zoomInButton")
             .on("mousedown", function () {
@@ -98,9 +104,15 @@ export default class ZoomSlider {
                 _this.zoomValue = _this.graph.getScaleFactor()
                 _this.t_zoomIn = requestAnimationFrame(_this.timed_zoomIn)
             })
-            .on("mouseup", this.clearAllTimers)
-            .on("touchend", this.clearAllTimers)
-            .on("touchcancel", this.clearAllTimers)
+            .on("mouseup", () => {
+                this.clearAllTimers()
+            })
+            .on("touchend", () => {
+                this.clearAllTimers()
+            })
+            .on("touchcancel", () => {
+                this.clearAllTimers()
+            })
             .attr("title", "zoom in")
         d3.select("#centerGraphButton")
             .on("click", function () {

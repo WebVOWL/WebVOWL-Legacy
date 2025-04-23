@@ -144,7 +144,7 @@ export default class Statistics extends AbstractFilter {
     }
 
     /**
-     * @param {BaseProperty[]} properties
+     * @param {BaseProperty[] | undefined} properties
      */
     #countElementArray(properties) {
         if (properties) {
@@ -177,9 +177,11 @@ export default class Statistics extends AbstractFilter {
     #storeTotalIndividualCount(nodes) {
         let sawIndividuals = new Set()
         for (const node of nodes) {
-            for (const individual of node.individuals) {
-                if (!sawIndividuals.has(individual.iri)) {
-                    sawIndividuals.add(individual.iri)
+            if (node.individuals) {
+                for (const individual of node.individuals) {
+                    if (!sawIndividuals.has(individual.iri)) {
+                        sawIndividuals.add(individual.iri)
+                    }
                 }
             }
         }

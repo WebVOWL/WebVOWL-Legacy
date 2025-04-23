@@ -11,7 +11,6 @@ export default class RectangularNode extends RectangularElementToolsMixin(
      * @param {Graph} graph
      */
     constructor(graph) {
-        // @ts-ignore
         super(graph)
 
         // Size attributes
@@ -46,7 +45,7 @@ export default class RectangularNode extends RectangularElementToolsMixin(
         /**
          * @type {d3.Selection<any,any,null,undefined> | undefined}
          */
-        this.shapeElement
+        this.shapeElement = undefined
     }
 
     /**

@@ -1,3 +1,5 @@
+import Graph from "../graph"
+
 /**
  * Mixin class for shared methods
  * @param {any} Base Inherit from this class
@@ -5,6 +7,13 @@
  */
 export const RectangularElementToolsMixin = (Base) =>
     class extends Base {
+        /**
+         * @param {Graph} graph
+         */
+        constructor(graph) {
+            super(graph)
+        }
+
         /**
          * @param {number} dx
          * @param {number} dy

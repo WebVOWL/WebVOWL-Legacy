@@ -52,10 +52,9 @@ export default class ModeMenu {
      * @param {ColorExternalsSwitch} colorExternals
      */
     setup(pickAndPin, nodeScaling, compactNotation, colorExternals) {
-        const _this = this
         const menuEntry = d3.select("#m_modes")
-        menuEntry.on("mouseover", function () {
-            const searchMenu = _this.graph.options.searchMenu
+        menuEntry.on("mouseover", () => {
+            const searchMenu = this.graph.options.searchMenu
             searchMenu.hideSearchEntries()
         })
         this.addCheckBoxUpdateLevel(
@@ -132,7 +131,7 @@ export default class ModeMenu {
             .attr("type", "checkbox")
             .property("checked", onChangeFunc())
 
-        moduleCheckbox.on("click", (d) => {
+        moduleCheckbox.on("click", () => {
             const isEnabled = moduleCheckbox.property("checked")
             onChangeFunc(isEnabled)
             d3.select("#maxLabelWidthSlider").node().disabled = !isEnabled
@@ -180,7 +179,7 @@ export default class ModeMenu {
             .attr("type", "checkbox")
             .property("checked", onChangeFunc())
 
-        moduleCheckbox.on("click", (d) => {
+        moduleCheckbox.on("click", () => {
             const isEnabled = moduleCheckbox.property("checked")
             onChangeFunc(isEnabled)
             if (isEnabled) {
@@ -250,7 +249,7 @@ export default class ModeMenu {
         button.on("click", (/** @type {boolean} */ silent) => {
             const data = button.datum()
             data.active = !data.active
-            applyColorModeSwitchState(button, colorExternalsMode)
+            this.applyColorModeSwitchState(button, colorExternalsMode)
             if (colorExternalsMode.enabled && !silent) {
                 this.graph.executeColorExternalsModule()
                 this.graph.lazyRefresh()

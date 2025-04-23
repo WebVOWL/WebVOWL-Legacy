@@ -334,7 +334,6 @@ export default class Warnings {
         gotItButton.node().id = "killWarningErrorMessages_" + id
         gotItButton.node().innerHTML = "Continue"
         gotItButton.on("click", function () {
-            // @ts-ignore
             _this.#closeMessage(this.id)
             d3.select("#blockGraphInteractions").classed("hidden", true)
             callback(
@@ -349,7 +348,6 @@ export default class Warnings {
         cancelButton.node().id = "cancelButton_" + id
         cancelButton.node().innerHTML = "Cancel"
         cancelButton.on("click", function () {
-            // @ts-ignore
             _this.#closeMessage(this.id)
             d3.select("#blockGraphInteractions").classed("hidden", true)
         })
@@ -380,7 +378,6 @@ export default class Warnings {
         const gotItButton = warningContainer.append("label")
         gotItButton.node().id = "killFilterMessages_" + id
         gotItButton.node().innerHTML = "Got It"
-        // @ts-ignore
         gotItButton.on("click", function () {
             _this.#closeMessage(this.id)
         })
@@ -407,7 +404,6 @@ export default class Warnings {
         const gotItButton = warningContainer.append("label")
         gotItButton.node().id = "killFilterMessages_" + id
         gotItButton.node().innerHTML = "Got It"
-        // @ts-ignore
         gotItButton.on("click", function () {
             _this.#closeMessage(this.id)
         })
@@ -487,7 +483,6 @@ export default class Warnings {
             gotItButton = warningContainer.append("label")
             gotItButton.node().id = "killWarningErrorMessages_" + id
             gotItButton.node().innerHTML = "Got It"
-            // @ts-ignore
             gotItButton.on("click", function () {
                 _this.#closeMessage(this.id)
             })
@@ -497,7 +492,6 @@ export default class Warnings {
             gotItButton = warningContainer.append("label")
             gotItButton.node().id = "killWarningErrorMessages_" + id
             gotItButton.node().innerHTML = "Got It"
-            // @ts-ignore
             gotItButton.on("click", function () {
                 _this.#closeMessage(this.id)
             })

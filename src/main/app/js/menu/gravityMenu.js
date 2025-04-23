@@ -19,10 +19,9 @@ export default class GravityMenu {
      * Adds the gravity sliders to the website.
      */
     setup() {
-        const _this = this
         const menuEntry = d3.select("#m_gravity")
-        menuEntry.on("mouseover", function () {
-            const searchMenu = _this.graph.options.searchMenu
+        menuEntry.on("mouseover", () => {
+            const searchMenu = this.graph.options.searchMenu
             searchMenu.hideSearchEntries()
         })
         this.#addDistanceSlider(

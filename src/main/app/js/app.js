@@ -150,7 +150,9 @@ export default class App {
         init_rust() // Initialize Rust code
 
         this.options.graphContainerSelector = this.GRAPH_SELECTOR
-        this.options.setup(this.#adjustSize)
+        this.options.setup(() => {
+            this.#adjustSize()
+        })
 
         this.#addFileDropEvents(this.GRAPH_SELECTOR)
 
@@ -171,7 +173,9 @@ export default class App {
                 clearTimeout(requestID)
             }
 
-        d3.select(window).on("resize", this.#adjustSize)
+        d3.select(window).on("resize", () => {
+            this.#adjustSize()
+        })
 
         this.graph.start()
 

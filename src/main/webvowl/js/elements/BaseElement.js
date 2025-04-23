@@ -18,9 +18,9 @@ export default class BaseElement {
         // Basic attributes
         /**
          * ID of equivalent elements
-         * @type {BaseElement[]} // Can also be a string[] during parser.js, but is omitted here as it causes the TS compiler to complain too much
+         * @type {BaseElement[] | undefined} // Can also be a string[] during parser.js, but is omitted here as it causes the TS compiler to complain too much
          */
-        this.equivalents = []
+        this.equivalents = undefined
         /**
          * @type {string | undefined}
          */
@@ -44,13 +44,13 @@ export default class BaseElement {
 
         // Additional attributes
         /**
-         * @type {{}[]}
+         * @type {{}[] | undefined}
          */
-        this.annotations = []
+        this.annotations = undefined
         /**
-         * @type {string[]}
+         * @type {string[] | undefined}
          */
-        this.attributes = []
+        this.attributes = undefined
         /**
          * @type {string | undefined}
          */
@@ -68,9 +68,9 @@ export default class BaseElement {
          */
         this.equivalentBase = undefined
         /**
-         * @type {string[]}
+         * @type {string[] | undefined}
          */
-        this.visualAttributes = []
+        this.visualAttributes = undefined
         /**
          * @type {boolean}
          */
@@ -100,9 +100,9 @@ export default class BaseElement {
          */
         this.focused = false
         /**
-         * @type {string[]}
+         * @type {string[] | undefined}
          */
-        this.indications = []
+        this.indications = undefined
         /**
          * @type {boolean}
          */
@@ -137,6 +137,10 @@ export default class BaseElement {
          * @type {boolean}
          */
         this._pinned = false
+        /**
+         * @type {boolean}
+         */
+        this.fixed = false
 
         // Other
         /**
@@ -265,7 +269,7 @@ export default class BaseElement {
     }
 
     indicationString() {
-        return this.indications.join(", ")
+        return this.indications ? this.indications.join(", ") : ""
     }
 
     labelForCurrentLanguage() {

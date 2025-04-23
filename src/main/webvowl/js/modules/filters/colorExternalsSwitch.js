@@ -53,9 +53,12 @@ export default class ColorExternalsSwitch extends AbstractFilter {
     #isExternalElement(element) {
         // deprecated is the only attribute which has preference over external
         if (
-            !(element.visualAttributes.indexOf("deprecated") >= 0) &&
-            element.attributes.indexOf("external") >= 0
+            element.visualAttributes &&
+            element.visualAttributes.indexOf("deprecated") >= 0
         ) {
+            return false
+        }
+        if (element.attributes && element.attributes.indexOf("external") >= 0) {
             return true
         }
         return false

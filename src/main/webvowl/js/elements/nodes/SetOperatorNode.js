@@ -59,15 +59,16 @@ export default class SetOperatorNode extends RoundNode {
         )
 
         textElement.addEquivalents(equivalentsString, -17)
+        const individualsCount = this.individuals ? this.individuals.length : 0
         if (!this.graph.options.compactNotation) {
             if (this.indicationString().length > 0) {
                 textElement.addSubText(this.indicationString(), 17)
-                textElement.addInstanceCount(this.individuals.length, 30)
+                textElement.addInstanceCount(individualsCount, 30)
             } else {
-                textElement.addInstanceCount(this.individuals.length, 17)
+                textElement.addInstanceCount(individualsCount, 17)
             }
         } else {
-            textElement.addInstanceCount(this.individuals.length, 17)
+            textElement.addInstanceCount(individualsCount, 17)
         }
         this.textBlock = textElement
     }

@@ -30,11 +30,11 @@ export default class RoundNode extends BaseNode {
         /**
          * @type {d3.Selection<any,any,null,undefined> | undefined}
          */
-        this.renderingElement
+        this.renderingElement = undefined
         /**
          * @type {d3.Selection<any,any,null,undefined> | undefined}
          */
-        this.collapsingGroupElement
+        this.collapsingGroupElement = undefined
     }
 
     /**
@@ -79,14 +79,17 @@ export default class RoundNode extends BaseNode {
     actualRadius() {
         if (
             !this.graph.options.scaleNodesByIndividuals ||
-            this.individuals.length <= 0
+            (this.individuals && this.individuals.length <= 0)
         ) {
             return this.radius
         } else {
             // we could "listen" for radius and individualCount changes, but this is easier
-            const MULTIPLIER = 8,
-                additionalRadius =
-                    Math.log(this.individuals.length + 1) * MULTIPLIER + 5
+            const MULTIPLIER = 8
+            const individualsLength = this.individuals
+                ? this.individuals.length
+                : 0
+            const additionalRadius =
+                Math.log(individualsLength + 1) * MULTIPLIER + 5
             return this.radius + additionalRadius
         }
     }
@@ -182,7 +185,7 @@ export default class RoundNode extends BaseNode {
         if (bgColor === null) {
             bgColor = undefined
         }
-        if (this.attributes.indexOf("deprecated") > -1) {
+        if (this.attributes && this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined
         }
         if (additionalCssClasses instanceof Array) {
@@ -213,7 +216,7 @@ export default class RoundNode extends BaseNode {
         this.renderingElement.remove()
         this.textBlock.remove()
         let bgColor = this.backgroundColor
-        if (this.attributes.indexOf("deprecated") > -1) {
+        if (this.attributes && this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined
         }
 
@@ -266,7 +269,9 @@ export default class RoundNode extends BaseNode {
 
     #createTextBlock() {
         let bgColor = this.backgroundColor
-        if (this.attributes.indexOf("deprecated") > -1) bgColor = undefined
+        if (this.attributes && this.attributes.indexOf("deprecated") > -1) {
+            bgColor = undefined
+        }
 
         const textBlock = new CenteringTextElement(this.nodeElement, bgColor)
         const equivalentsString = this.equivalentsString()
@@ -281,7 +286,8 @@ export default class RoundNode extends BaseNode {
         if (!this.graph.options.compactNotation) {
             textBlock.addSubText(this.indicationString())
         }
-        textBlock.addInstanceCount(this.individuals.length)
+        const individualsCount = this.individuals ? this.individuals.length : 0
+        textBlock.addInstanceCount(individualsCount)
         return textBlock
     }
 

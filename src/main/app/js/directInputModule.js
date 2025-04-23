@@ -15,14 +15,19 @@ export default class DirectInputModule {
         this.inputContainer.style("border", "1px solid black")
         this.inputContainer.style("padding", "5px")
         this.inputContainer.style("background", "#fff")
-        d3.select("#directUploadBtn").on("click", this.handleDirectUpload)
-        d3.select("#close_directUploadBtn").on("click", this.handleCloseButton)
+        d3.select("#directUploadBtn").on("click", () => {
+            this.handleDirectUpload()
+        })
+        d3.select("#close_directUploadBtn").on("click", () => {
+            this.handleCloseButton()
+        })
     }
 
     // connect upload and close button;
     handleDirectUpload() {
         const text = this.textArea.node().value
         try {
+            // FIXME
             const isValid = this.graph.options.loadingModule.directInput(text)
             // close if successful
             if (isValid) {

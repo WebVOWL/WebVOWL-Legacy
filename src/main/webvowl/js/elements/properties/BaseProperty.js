@@ -273,8 +273,12 @@ export default class BaseProperty extends RectangularElementToolsMixin(
             .attr("y", -this.height / 2)
             .attr("width", this.labelWidth)
             .attr("height", this.height)
-            .on("mouseover", this.#onMouseOver)
-            .on("mouseout", this.#onMouseOut)
+            .on("mouseover", () => {
+                this.#onMouseOver()
+            })
+            .on("mouseout", () => {
+                this.#onMouseOut()
+            })
 
         rect.append("title").text(this.labelForCurrentLanguage())
 
@@ -283,7 +287,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(
         }
 
         let bgColor = this.backgroundColor
-        if (this.attributes.indexOf("deprecated") > -1) {
+        if (this.attributes && this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined
             rect.classed("deprecatedproperty", true)
         } else {
@@ -303,7 +307,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(
         const suffixForFollowingEquivalents = equivalentsString ? "," : ""
 
         let bgColor = this.backgroundColor
-        if (this.attributes.indexOf("deprecated") > -1) {
+        if (this.attributes && this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined
         }
         this.textBlock = new CenteringTextElement(labelContainer, bgColor)
@@ -396,9 +400,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(
             const maxBoundary = this.maxCardinality || "*"
             return minBoundary + ".." + maxBoundary
         }
-        throw new Error(
-            `Cannot generate cardinality from values (${this.cardinality}, ${this.minCardinality}, ${this.maxCardinality})`,
-        )
+        return undefined
     }
 
     /**
@@ -790,7 +792,7 @@ export default class BaseProperty extends RectangularElementToolsMixin(
             })
             .on("keydown", function () {
                 if (d3.event.keyCode === 13) {
-                    this.blur()
+                    this.blur() // REVIEW: Check how this should be called
                     _this.frozen = false // << releases the not after selection
                     _this.locked = false
                 }

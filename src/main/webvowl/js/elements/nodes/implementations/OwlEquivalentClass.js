@@ -23,9 +23,9 @@ export default class OwlEquivalentClass extends RoundNode {
     redrawElement() {
         this.renderingElement.remove()
         this.textBlock.remove()
-        const bgColor = this.backgroundColor
+        let bgColor = this.backgroundColor
 
-        if (this.attributes.indexOf("deprecated") > -1) {
+        if (this.attributes && this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined
         }
         const cssClasses = this.collectCssClasses()
@@ -68,7 +68,7 @@ export default class OwlEquivalentClass extends RoundNode {
         const cssClasses = this.collectCssClasses()
         this.nodeElement = parentElement
         this.renderingElement = parentElement.append("g")
-        const bgColor = this.backgroundColor
+        let bgColor = this.backgroundColor
 
         if (this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined

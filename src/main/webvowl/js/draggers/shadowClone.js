@@ -103,13 +103,19 @@ export default class ShadowClone extends AbstractDragger {
             .attr("width", parentProperty.labelWidth)
             .attr("height", parentProperty.height)
 
-        if (parentProperty.visualAttributes) {
+        if (
+            parentProperty.visualAttributes &&
+            parentProperty.visualAttributes
+        ) {
             rect.classed(parentProperty.visualAttributes, true)
         }
         rect.classed("datatype", false)
         let bgColor = parentProperty.backgroundColor
 
-        if (parentProperty.attributes.indexOf("deprecated") > -1) {
+        if (
+            parentProperty.attributes &&
+            parentProperty.attributes.indexOf("deprecated") > -1
+        ) {
             bgColor = undefined
             rect.classed("deprecatedproperty", true)
         } else {

@@ -21,8 +21,7 @@ export default class Collapsing extends AbstractFilter {
         this.filteredProperties = properties
         for (const node of nodes) {
             if (!ElementTools.isDatatype(node)) {
-                // FIXME: collapsible is assigned to all nodes even though it's only used on RoundNode (this wastes memory)
-                node.collapsible = this.enabled
+                node.collapsible = this.enabled // This only applies to DataTypeNode which inherits from RectangularNode (so this is fine)
             }
         }
     }

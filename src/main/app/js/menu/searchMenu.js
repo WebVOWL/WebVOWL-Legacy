@@ -53,10 +53,18 @@ export default class SearchMenu {
 
     setup() {
         this.searchLineEdit = d3.select("#search-input-text")
-        this.searchLineEdit.on("input", this.userInput)
-        this.searchLineEdit.on("keydown", this.userNavigation)
-        this.searchLineEdit.on("click", this.toggleSearchEntryView)
-        this.searchLineEdit.on("mouseover", this.hoverSearchEntryView)
+        this.searchLineEdit.on("input", () => {
+            this.userInput()
+        })
+        this.searchLineEdit.on("keydown", () => {
+            this.userNavigation()
+        })
+        this.searchLineEdit.on("click", () => {
+            this.toggleSearchEntryView()
+        })
+        this.searchLineEdit.on("mouseover", () => {
+            this.hoverSearchEntryView()
+        })
 
         this.c_locate.on("click", () => {
             this.graph.locateSearchResult()

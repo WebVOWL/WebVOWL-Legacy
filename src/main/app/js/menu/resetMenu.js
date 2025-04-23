@@ -29,7 +29,9 @@ export default class ResetMenu {
      */
     setup(_resettableModules) {
         this.resettableModules = _resettableModules
-        d3.select("#reset-button").on("click", this.resetGraph)
+        d3.select("#reset-button").on("click", () => {
+            this.resetGraph()
+        })
         const menuEntry = d3.select("#resetOption")
         menuEntry.on("mouseover", () => {
             const searchMenu = this.graph.options.searchMenu

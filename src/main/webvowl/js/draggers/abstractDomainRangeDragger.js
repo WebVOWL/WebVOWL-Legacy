@@ -125,12 +125,20 @@ export default class AbstractDomainRangeDragger extends AbstractDragger {
     addMouseEvents() {
         this.rootNodeLayer
             .selectAll("*")
-            .on("mouseover", this.onMouseOver)
-            .on("mouseout", this.onMouseOut)
+            .on("mouseover", () => {
+                this.onMouseOver()
+            })
+            .on("mouseout", () => {
+                this.onMouseOut()
+            })
             .on("click", function () {})
             .on("dblclick", function () {})
-            .on("mousedown", this.mouseDown)
-            .on("mouseup", this.mouseUp)
+            .on("mousedown", () => {
+                this.mouseDown()
+            })
+            .on("mouseup", () => {
+                this.mouseUp()
+            })
     }
 
     mouseDown() {

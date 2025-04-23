@@ -486,7 +486,7 @@ export default class SideBar {
     }
 
     /**
-     * @param {string[]} attributes
+     * @param {string[] | undefined} attributes
      * @param {d3.Selection<any, any, HTMLElement, any>} textSpan
      */
     #displayAttributes(attributes, textSpan) {
@@ -501,7 +501,6 @@ export default class SideBar {
 
         if (attributes && attributes.length > 0) {
             textSpan.text(attributes.join(", "))
-
             spanParent.classed("hidden", false)
         } else {
             spanParent.classed("hidden", true)
@@ -578,7 +577,7 @@ export default class SideBar {
 
     /**
      * @param {d3.Selection<any,any,HTMLElement,undefined>} textSpan
-     * @param {BaseNode[] | BaseProperty[]} nodes
+     * @param {BaseNode[] | BaseProperty[] | undefined} nodes
      */
     #listNodeArray(textSpan, nodes) {
         const spanParent = d3.select(textSpan.node().parentNode)

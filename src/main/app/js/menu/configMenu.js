@@ -80,11 +80,17 @@ export default class ConfigMenu {
             }
         })
         slider.on("wheel", () => {
-            if (slider.node().disabled === true) return
+            if (slider.node().disabled === true) {
+                return
+            }
             const wheelEvent = d3.event
             let offset = 0
-            if (wheelEvent.deltaY < 0) offset = 10
-            if (wheelEvent.deltaY > 0) offset = -10
+            if (wheelEvent.deltaY < 0) {
+                offset = 10
+            }
+            if (wheelEvent.deltaY > 0) {
+                offset = -10
+            }
             const oldVal = parseInt(slider.property("value"))
             const newSliderValue = oldVal + offset
             if (newSliderValue !== oldVal) {

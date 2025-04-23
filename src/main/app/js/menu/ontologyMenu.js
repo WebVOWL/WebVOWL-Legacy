@@ -42,6 +42,7 @@ export default class OntologyMenu {
 
     /**
      * @param {string} ontoName
+     * @returns {string | undefined}
      */
     cachedOntology(ontoName) {
         this.currentLoadedOntologyName = ontoName
@@ -130,9 +131,8 @@ export default class OntologyMenu {
     setupUriListener() {
         // reload ontology when hash parameter gets changed manually
         d3.select(window).on("hashchange", () => {
-            // @ts-ignore
-            const oldURL = d3.event.oldURL,
-                newURL = d3.event.newURL
+            const oldURL = d3.event.oldURL
+            const newURL = d3.event.newURL
             if (oldURL !== newURL) {
                 // don't reload when just the hash parameter gets appended
                 if (newURL === oldURL + "#") {
@@ -336,7 +336,7 @@ export default class OntologyMenu {
 
     /**
      * @param {(arg0: any) => any} callback
-     * @param {any} parameter
+     * @param {[any, any, number]} parameter
      */
     getLoadingStatusOnceCallBacked(callback, parameter) {
         d3.xhr(
@@ -355,7 +355,7 @@ export default class OntologyMenu {
                     console.log(request)
                 }
                 this.setLoadingStatusInfo(request.responseText)
-                const parseResult = callback(parameter) // FIXME: Use the result
+                callback(parameter)
             },
         )
     }
@@ -413,11 +413,11 @@ export default class OntologyMenu {
     }
 
     /**
-     * @param {any[]} parameter
+     * @param {[string, string, number]} parameter
      */
     callbackLoad_Ontology_FromIRI(parameter) {
         const relativePath = parameter[0]
-        const ontoName = parameter[1]
+        const filename = parameter[1]
         const localThreadId = parameter[2]
         this.stopTimer = false
         this.timedLoadingStatusLogger()
@@ -443,7 +443,7 @@ export default class OntologyMenu {
                     this.stopTimer = true
                     this.getLoadingStatusOnceCallBacked(
                         this.callbackFromIRI_Success,
-                        [ontoName, localThreadId],
+                        [request.responseText, filename, localThreadId],
                     )
                 }
             },
@@ -452,7 +452,7 @@ export default class OntologyMenu {
 
     /**
      * @param {string} text
-     * @param {any[]} parameter
+     * @param {[string, number]} parameter
      */
     callbackLoad_Ontology_From_DirectInput(text, parameter) {
         const input = text
@@ -462,7 +462,7 @@ export default class OntologyMenu {
 
         const formData = new FormData()
         formData.append("input", input)
-        formData.append("sessionId", sessionId)
+        formData.append("sessionId", sessionId.toString())
         const xhr = new XMLHttpRequest()
 
         xhr.open("POST", WebVOWL.url_prefix + "directInput", true)
@@ -480,29 +480,28 @@ export default class OntologyMenu {
     }
 
     /**
-     * @param {any[]} parameter
+     * @param {[string, string, number]} parameters
      */
-    callbackFromIRI_Success(parameter) {
-        const local_conversionId = parameter[2]
+    callbackFromIRI_Success(parameters) {
+        const local_conversionId = parameters[2]
         if (local_conversionId !== this.conversion_sessionId) {
             console.log(
                 "The conversion process for file:" +
-                    parameter[1] +
+                    parameters[1] +
                     " has been canceled!",
             )
             this.conversionFinished(local_conversionId)
             return
         }
-        this.loadingModule.loadFromOWL2VOWL(parameter[1]),
-            this.conversionFinished()
+        this.loadingModule.loadFromOWL2VOWL(parameters[0])
     }
 
     /**
-     * @param {any[]} parameter
+     * @param {[string, string, number]} parameter
      */
     callbackLoad_JSON_FromURL(parameter) {
         const relativePath = parameter[0]
-        const ontoName = parameter[1]
+        const filename = parameter[1]
         const local_conversionId = parameter[2]
         this.stopTimer = false
         this.timedLoadingStatusLogger()
@@ -532,7 +531,7 @@ export default class OntologyMenu {
                     this.stopTimer = true
                     this.getLoadingStatusOnceCallBacked(
                         this.callbackFromJSON_Success,
-                        [ontoName, local_conversionId],
+                        [request.responseText, filename, local_conversionId],
                     )
                 }
             },
@@ -540,7 +539,7 @@ export default class OntologyMenu {
     }
 
     /**
-     * @param {any[]} parameter
+     * @param {[string, string, number]} parameter
      */
     callbackFromJSON_Success(parameter) {
         const local_conversionId = parameter[2]
@@ -552,9 +551,7 @@ export default class OntologyMenu {
             )
             return
         }
-        this.loadingModule.loadOntologyContent(
-            this.loadingModule.loadFromOWL2VOWL(parameter[1]),
-        )
+        this.loadingModule.loadFromOWL2VOWL(parameter[0])
     }
 
     /**
@@ -571,7 +568,7 @@ export default class OntologyMenu {
         }
         this.callbackUpdateLoadingMessage(
             "<br><span style='color:red'> Failed to convert the file.</span> " +
-                ' Ontology could not be loaded.<br>Is it a valid OWL ontology? Please check with <a target="_blank"' +
+                ' Ontology could not be loaded.<br>Is it a valid OWL ontology? Please check with (link invalid) <a target="_blank"' +
                 'href="http://visualdataweb.de/validator/">OWL Validator</a>',
         )
 
@@ -590,7 +587,7 @@ export default class OntologyMenu {
     }
 
     /**
-     * @param {any[]} parameter
+     * @param {[{status: number}, {responseText: string}, number]} parameter
      */
     callbackFromIRI_URL_ERROR(parameter) {
         const error = parameter[0]
@@ -603,7 +600,7 @@ export default class OntologyMenu {
         }
         this.callbackUpdateLoadingMessage(
             "<br><span style='color:red'> Failed to convert the file.</span> " +
-                ' Ontology could not be loaded.<br>Is it a valid OWL ontology? Please check with <a target="_blank"' +
+                ' Ontology could not be loaded.<br>Is it a valid OWL ontology? Please check with (link invalid) <a target="_blank"' +
                 'href="http://visualdataweb.de/validator/">OWL Validator</a>',
         )
 
@@ -624,7 +621,7 @@ export default class OntologyMenu {
     /**
      * @param {string | Blob} selectedFile
      * @param {any} filename
-     * @param {string | Blob} local_threadId
+     * @param {number} local_threadId
      */
     callbackLoadFromOntology(selectedFile, filename, local_threadId) {
         this.stopTimer = false
@@ -632,7 +629,7 @@ export default class OntologyMenu {
 
         const formData = new FormData()
         formData.append("ontology", selectedFile)
-        formData.append("sessionId", local_threadId)
+        formData.append("sessionId", local_threadId.toString())
         const xhr = new XMLHttpRequest()
 
         xhr.open("POST", WebVOWL.url_prefix + "convert", true)
@@ -650,7 +647,7 @@ export default class OntologyMenu {
     }
 
     /**
-     * @param {any[]} parameter
+     * @param {[XMLHttpRequest, string, number]} parameter
      */
     callbackForConvert(parameter) {
         const xhr = parameter[0]
@@ -666,8 +663,8 @@ export default class OntologyMenu {
             return
         }
         if (xhr.status === 200) {
-            this.loadingModule.loadFromOWL2VOWL(filename),
-                this.conversionFinished()
+            this.loadingModule.loadFromOWL2VOWL(xhr.responseText) // FIXME: String is still in memory
+            this.conversionFinished()
         } else {
             let niceJSON = JSON.stringify(
                 JSON.parse(xhr.responseText),
@@ -717,11 +714,9 @@ export default class OntologyMenu {
         const ontologySelection = d3.select("#select .toolTipMenu")
         ontologySelection
             .on("click", function () {
-                // @ts-ignore
                 d3.event.stopPropagation()
             })
             .on("keydown", function () {
-                // @ts-ignore
                 d3.event.stopPropagation()
             })
 

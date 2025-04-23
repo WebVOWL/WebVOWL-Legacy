@@ -137,7 +137,9 @@ export default class LeftSideBar {
             if (supportedClass === defaultClass) {
                 this.#selectThisDefaultElement(aClassSelectionContainer.node())
             }
-            aClassSelectionContainer.on("click", this.#classSelectorFunction)
+            aClassSelectionContainer.on("click", () => {
+                this.#classSelectorFunction()
+            })
             this.defaultClassSelectionContainers.push(aClassSelectionContainer)
         }
         for (const supportedDatatype of supportedDatatypes) {
@@ -151,7 +153,9 @@ export default class LeftSideBar {
             if (supportedDatatype === defaultDatatype) {
                 this.#selectThisDefaultElement(aDTSelectionContainer.node())
             }
-            aDTSelectionContainer.on("click", this.#datatypeSelectorFunction)
+            aDTSelectionContainer.on("click", () => {
+                this.#datatypeSelectorFunction()
+            })
             this.defaultDatatypeSelectionContainers.push(aDTSelectionContainer)
         }
         for (const supportedProperty of supportedProperties) {
@@ -164,7 +168,9 @@ export default class LeftSideBar {
             aPropSelectionContainer.node().id =
                 "selectedClass" + supportedProperty
             aPropSelectionContainer.node().innerHTML = supportedProperty
-            aPropSelectionContainer.on("click", this.#propertySelectorFunction)
+            aPropSelectionContainer.on("click", () => {
+                this.#propertySelectorFunction()
+            })
             if (supportedProperty === defaultProperty) {
                 this.#selectThisDefaultElement(aPropSelectionContainer.node())
             }

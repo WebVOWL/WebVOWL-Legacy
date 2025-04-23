@@ -30,9 +30,9 @@ export default class BaseNode extends BaseElement {
          */
         this.disjointWith = undefined
         /**
-         * @type {BaseNode[]}
+         * @type {BaseNode[] | undefined}
          */
-        this.individuals = []
+        this.individuals = undefined
         /**
          * @type {string[] | undefined}
          */
@@ -58,9 +58,9 @@ export default class BaseNode extends BaseElement {
 
         // Editing attributes
         /**
-         * @type {BaseProperty[]}
+         * @type {BaseProperty[] | undefined}
          */
-        this.assignedProperties = []
+        this.assignedProperties = undefined
         /**
          * @type {boolean}
          */
@@ -116,8 +116,12 @@ export default class BaseNode extends BaseElement {
      * @param {BaseProperty} property
      */
     addProperty(property) {
-        if (this.assignedProperties.indexOf(property) === -1) {
-            this.assignedProperties.push(property)
+        if (this.assignedProperties instanceof Array) {
+            if (this.assignedProperties.indexOf(property) === -1) {
+                this.assignedProperties.push(property)
+            }
+        } else {
+            this.assignedProperties = [property]
         }
     }
 
@@ -125,9 +129,11 @@ export default class BaseNode extends BaseElement {
      * @param {BaseProperty} property
      */
     removePropertyElement(property) {
-        const i = this.assignedProperties.indexOf(property)
-        if (i !== -1) {
-            this.assignedProperties.splice(i, 1)
+        if (this.assignedProperties) {
+            const i = this.assignedProperties.indexOf(property)
+            if (i !== -1) {
+                this.assignedProperties.splice(i, 1)
+            }
         }
     }
 
@@ -326,7 +332,9 @@ export default class BaseNode extends BaseElement {
         if (typeof this.styleClass === "string") {
             cssClasses.push(this.styleClass)
         }
-        cssClasses = cssClasses.concat(this.visualAttributes)
+        if (this.visualAttributes) {
+            cssClasses = cssClasses.concat(this.visualAttributes)
+        }
         return cssClasses
     }
 
@@ -341,8 +349,12 @@ export default class BaseNode extends BaseElement {
         }
         this.nodeElement
             .selectAll("*")
-            .on("mouseover", this.#onMouseOver)
-            .on("mouseout", this.#onMouseOut)
+            .on("mouseover", () => {
+                this.#onMouseOver()
+            })
+            .on("mouseout", () => {
+                this.#onMouseOut()
+            })
     }
 
     animationProcess() {

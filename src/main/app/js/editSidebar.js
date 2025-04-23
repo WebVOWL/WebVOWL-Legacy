@@ -220,7 +220,6 @@ export default class EditSidebar {
             this.selectedElementForCharacteristics = undefined
             this.updateElementWidth()
         } else {
-            const _this = this
             d3.select("#selectedElementProperties").classed("hidden", false)
             d3.select("#selectedElementPropertiesEmptyHint").classed(
                 "hidden",
@@ -273,7 +272,7 @@ export default class EditSidebar {
                         this.#elementChangedLabel(element)
                     }
                 })
-                .on("keyup", function () {
+                .on("keyup", () => {
                     if (forceIRISync) {
                         const labelName = d3
                             .select("#element_labelEditor")
@@ -287,7 +286,7 @@ export default class EditSidebar {
                         d3.select("#element_iriEditor").node().value =
                             PrefixTools.getPrefixRepresentationForFullURI(
                                 syncedIRI,
-                                _this.graph,
+                                this.graph,
                             )
                     }
                 })
@@ -665,9 +664,9 @@ export default class EditSidebar {
     #setupAddPrefixButton() {
         const _this = this
         const btn = d3.select("#addPrefixButton")
-        btn.on("click", function () {
+        btn.on("click", () => {
             // check if we are still in editMode
-            if (!_this.prefix_editMode) {
+            if (!this.prefix_editMode) {
                 // create new line entry;
                 const name = "emptyPrefixEntry"
                 const prefixListContainer = d3.select("#prefixURL_Container")
@@ -742,7 +741,7 @@ export default class EditSidebar {
 
                 prefInput.node().disabled = false
                 prefURL.node().disabled = false
-                _this.prefix_editMode = true
+                this.prefix_editMode = true
                 const deleteContainer = prefixEditContainer.append("div")
                 deleteContainer.style("float", "right")
                 const deleteButton = deleteContainer.append("svg")
@@ -781,16 +780,21 @@ export default class EditSidebar {
                 })
 
                 // connect the buttons;
-                editButton.on("click", _this.#enablePrefixEdit)
-                deleteButton.on("click", _this.#deletePrefixLine)
+                editButton.on("click", () => {
+                    this.#enablePrefixEdit()
+                })
+                deleteButton.on("click", () => {
+                    this.#deletePrefixLine()
+                })
 
-                _this.updateElementWidth()
+                this.updateElementWidth()
                 // swap focus to prefixInput
                 prefInput.node().focus()
-                _this.oldPrefix = name
-                _this.oldPrefixURL = ""
+                this.oldPrefix = name
+                this.oldPrefixURL = ""
                 d3.select("#addPrefixButton").node().innerHTML = "Save Prefix"
             } else {
+                // @ts-ignore
                 d3.select("#editButtonFor_emptyPrefixEntry").on("click")(
                     d3.select("#editButtonFor_emptyPrefixEntry").node(),
                 )
@@ -965,8 +969,12 @@ export default class EditSidebar {
                 deleteButton.selectAll("g").on("mouseout", function () {
                     setEnabledDeletePath(this, false)
                 })
-                editButton.on("click", this.#enablePrefixEdit)
-                deleteButton.on("click", this.#deletePrefixLine)
+                editButton.on("click", () => {
+                    this.#enablePrefixEdit()
+                })
+                deleteButton.on("click", () => {
+                    this.#deletePrefixLine()
+                })
 
                 // EXPERIMENTAL
                 if (
@@ -1302,6 +1310,8 @@ export default class EditSidebar {
      * @param {BaseElement} element
      */
     #addElementsCharacteristics(element) {
+        const _this = this
+
         // save selected element for checkbox handler
         this.selectedElementForCharacteristics = element
 
@@ -1318,7 +1328,7 @@ export default class EditSidebar {
         }
         // datatypes kind of ignored by the elementsNeedCharacteristics function
         // so we need to check if we are a node or not
-        if (element.attributes.indexOf("external") > -1) {
+        if (element.attributes && element.attributes.indexOf("external") > -1) {
             // add external span to the div;
             const externalCharSpan = charSelectionNode.append("span")
             externalCharSpan.classed("spanForCharSelection", true)
@@ -1340,12 +1350,14 @@ export default class EditSidebar {
                 .attr("id", "CharacteristicsCheckbox" + i)
                 .attr("type", "checkbox")
                 .attr("characteristics", type)
-                .property("checked", this.#getPresentAttribute(element, type))
+                .property("checked", _this.#getPresentAttribute(element, type))
             filterContainer
                 .append("label")
                 .attr("for", "CharacteristicsCheckbox" + i)
                 .text(type)
-            filterCheckbox.on("click", this.#handleCheckBoxClick)
+            filterCheckbox.on("click", function () {
+                _this.#handleCheckBoxClick(_this, this) // Handle class context (_this) and CheckBox context (this)
+            })
         }
 
         if (ElementTools.isNode(element)) {
@@ -1376,24 +1388,30 @@ export default class EditSidebar {
      * @param {string} element
      */
     #getPresentAttribute(selectedElement, element) {
-        return selectedElement.attributes.indexOf(element) >= 0
+        return selectedElement.attributes
+            ? selectedElement.attributes.indexOf(element) >= 0
+            : false
     }
 
     /**
+     * @param {EditSidebar} _this
      * @param {any} item
      */
-    #handleCheckBoxClick(item) {
+    #handleCheckBoxClick(_this, item) {
         const char = item.getAttribute("characteristics")
         if (item.checked) {
-            this.#addAttribute(this.selectedElementForCharacteristics, char)
+            _this.#addAttribute(_this.selectedElementForCharacteristics, char)
         } else {
-            this.#removeAttribute(this.selectedElementForCharacteristics, char)
+            _this.#removeAttribute(
+                _this.selectedElementForCharacteristics,
+                char,
+            )
         }
         // graph.executeColorExternalsModule();
-        this.selectedElementForCharacteristics.redrawElement()
+        _this.selectedElementForCharacteristics.redrawElement()
         // workaround to have the node still be focused as rendering element
-        this.selectedElementForCharacteristics.focused = false
-        this.selectedElementForCharacteristics.toggleFocus()
+        _this.selectedElementForCharacteristics.focused = false
+        _this.selectedElementForCharacteristics.toggleFocus()
     }
 
     /**
@@ -1401,28 +1419,38 @@ export default class EditSidebar {
      * @param {string} char
      */
     #addAttribute(selectedElement, char) {
-        if (selectedElement.attributes.indexOf(char) === -1) {
+        if (
+            selectedElement.attributes &&
+            selectedElement.attributes.indexOf(char) === -1
+        ) {
             // not found add it
             selectedElement.attributes.push(char)
         }
         // indications string update;
-        if (selectedElement.indications.indexOf(char) === -1) {
+        if (
+            selectedElement.indications &&
+            selectedElement.indications.indexOf(char) === -1
+        ) {
             selectedElement.indications.push(char)
         }
         // add visual attributes
-        if (selectedElement.visualAttributes.indexOf(char) === -1) {
+        if (
+            selectedElement.visualAttributes &&
+            selectedElement.visualAttributes.indexOf(char) === -1
+        ) {
             selectedElement.visualAttributes.push(char)
         }
         if (
             this.#getPresentAttribute(selectedElement, "external") &&
             this.#getPresentAttribute(selectedElement, "deprecated")
         ) {
-            let visAttr = selectedElement.visualAttributes
-            const visInd = visAttr.indexOf("external")
-            if (visInd > -1) {
-                visAttr.splice(visInd, 1)
+            if (selectedElement.visualAttributes) {
+                const visInd =
+                    selectedElement.visualAttributes.indexOf("external")
+                if (visInd > -1) {
+                    selectedElement.visualAttributes.splice(visInd, 1)
+                }
             }
-            selectedElement.visualAttributes = visAttr
         }
     }
 
@@ -1431,24 +1459,27 @@ export default class EditSidebar {
      * @param {string} element
      */
     #removeAttribute(selectedElement, element) {
-        const attr = selectedElement.attributes
-        const indications = selectedElement.indications
-        const visAttr = selectedElement.visualAttributes
-        const attrInd = attr.indexOf(element)
-        if (attrInd >= 0) {
-            attr.splice(attrInd, 1)
+        if (selectedElement.attributes) {
+            const attrInd = selectedElement.attributes.indexOf(element)
+            if (attrInd >= 0) {
+                selectedElement.attributes.splice(attrInd, 1)
+            }
         }
-        const indInd = indications.indexOf(element)
-        if (indInd > -1) {
-            indications.splice(indInd, 1)
+
+        if (selectedElement.indications) {
+            const indInd = selectedElement.indications.indexOf(element)
+            if (indInd >= 0) {
+                selectedElement.indications.splice(indInd, 1)
+            }
         }
-        const visInd = visAttr.indexOf(element)
-        if (visInd > -1) {
-            visAttr.splice(visInd, 1)
+
+        if (selectedElement.visualAttributes) {
+            const visInd = selectedElement.visualAttributes.indexOf(element)
+            if (visInd >= 0) {
+                selectedElement.visualAttributes.splice(visInd, 1)
+            }
         }
-        selectedElement.attributes = attr
-        selectedElement.indications = indications
-        selectedElement.visualAttributes = visAttr
+
         if (element === "deprecated") {
             // set its to its original Style
             //typeBaseThign

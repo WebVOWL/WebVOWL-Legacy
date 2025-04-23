@@ -22,7 +22,7 @@ export default class LanguageTools {
             return textObject[preferredLanguage]
         }
 
-        const textForLanguage = this.#searchLanguage(textObject, "en")
+        let textForLanguage = this.#searchLanguage(textObject, "en")
         if (textForLanguage) {
             return textForLanguage
         }
@@ -42,7 +42,7 @@ export default class LanguageTools {
      * @returns {string | void}
      */
     static #searchLanguage(textObject, preferredLanguage) {
-        for (const language of textObject) {
+        for (const language in textObject) {
             if (
                 language === preferredLanguage &&
                 textObject.hasOwnProperty(language)

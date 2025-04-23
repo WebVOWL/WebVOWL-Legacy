@@ -1,5 +1,3 @@
-import { parse_json } from "../../../../target/pkg"
-
 import Graph from "../../webvowl/js/graph"
 import Statistics from "../../webvowl/js/modules/filters/statistics"
 import WebVOWL from "../../webvowl/js/webvowl"
@@ -216,19 +214,6 @@ export default class OntologyLoading {
         d3.select("#progressBarValue").node().innherHTML = val
     }
 
-    emptyGraphContentError() {
-        this.graph.clearGraphData()
-        this.ontologyMenu.append_message_toLastBulletPoint(
-            "<span style='color:red;'>failed</span>",
-        )
-        this.ontologyMenu.append_message_toLastBulletPoint(
-            '<br><span style="color:red;">Error: Received empty graph</span>',
-        )
-        this.loadingWasSuccessFul = false
-        this.graph.handleOnLoadingError()
-        this.setErrorMode()
-    }
-
     /**
      * @param {boolean} storeCache
      */
@@ -305,7 +290,7 @@ export default class OntologyLoading {
                 "Loading already cached ontology: " + filename,
             )
             this.loadingWasSuccessFul = true // cached Ontology should be true;
-            this.loadOntologyContent(this.#parseOntologyContent(cached))
+            this.#parseOntologyContent({ json: cached })
         } else {
             // involve the o2v converter;
             this.ontologyMenu.append_message(
@@ -402,7 +387,7 @@ export default class OntologyLoading {
                 "Loading already cached ontology: " + filename,
             )
             this.loadingWasSuccessFul = true // cached Ontology should be true;
-            this.loadOntologyContent(this.#parseOntologyContent(cached))
+            this.#parseOntologyContent({ json: cached })
         } else {
             // involve the o2v conveter;
             const encoded = encodeURIComponent(filename)
@@ -418,9 +403,9 @@ export default class OntologyLoading {
 
     /**
      * @param {string} fileName
-     * @param {any} file
+     * @param {File} file
      */
-    async fromFileDrop(fileName, file) {
+    fromFileDrop(fileName, file) {
         d3.select("#progressBarValue").node().innerHTML = " "
         this.initializeLoader(false)
         this.ontologyMenu.append_bulletPoint(
@@ -432,9 +417,7 @@ export default class OntologyLoading {
         if (fileName.match(/\.json$/)) {
             this.ontologyMenu.conversion_sessionId = -10000
             this.ontologyIdentifierFromURL = fileName
-            this.loadOntologyContent(
-                this.#parseOntologyContent(await parse_json(file)),
-            ) // REVIEW: Check correctness
+            this.#parseOntologyContent({ file: file })
         } else {
             //2] File Upload to OWL2VOWL Converter
             // 1) check if we can get a timeStamp;
@@ -449,7 +432,7 @@ export default class OntologyLoading {
     /**
      * @param {string} fileName
      */
-    async from_FileUpload(fileName) {
+    from_FileUpload(fileName) {
         this.setBusyMode()
         let filename = decodeURIComponent(fileName.slice("file=".length))
         this.ontologyIdentifierFromURL = filename
@@ -460,7 +443,7 @@ export default class OntologyLoading {
                 "Loading already cached ontology: " + filename,
             )
             this.loadingWasSuccessFul = true // cached Ontology should be true;
-            this.loadOntologyContent(this.#parseOntologyContent(cached))
+            this.#parseOntologyContent({ json: cached })
         } else {
             // d3.select("#currentLoadingStep").node().innerHTML="Loading ontology from file "+ filename;
             this.ontologyMenu.append_bulletPoint(
@@ -489,9 +472,7 @@ export default class OntologyLoading {
             if (filename.match(/\.json$/)) {
                 this.ontologyMenu.conversion_sessionId = -10000
                 this.ontologyIdentifierFromURL = filename
-                this.loadOntologyContent(
-                    this.#parseOntologyContent(await parse_json(selectedFile)),
-                ) // REVIEW: Check correctness
+                this.#parseOntologyContent({ file: selectedFile })
             } else {
                 //2] File Upload to OWL2VOWL Converter
                 // 1) check if we can get a timeStamp;
@@ -531,15 +512,14 @@ export default class OntologyLoading {
         xhr.open("POST", WebVOWL.url_prefix + "convert", true)
         xhr.onload = () => {
             if (xhr.status === 200) {
-                const ontologyContent = xhr.responseText // FIXME: Memory leak as text is only garbage collected when this function returns (thus only when the graph, is loaded). This can be several GB if the ontology is large
+                const ontologyContent = xhr.responseText // FIXME: Unnecessary memory usage as text is only garbage collected when this function returns (thus only when the graph, is loaded). This can be several GB if the ontology is large
                 this.ontologyMenu.setCachedOntology(name, ontologyContent)
                 this.ontologyIdentifierFromURL = name
                 this.missingImportsWarning = true // using this variable for warnings
                 this.ontologyMenu.append_message_toLastBulletPoint(
                     "<br>Success, <span style='color:yellow'>but you are using a deprecated OWL2VOWL service!<span>",
                 )
-                const parseResult = this.#parseOntologyContent(ontologyContent)
-                this.loadOntologyContent(parseResult)
+                this.#parseOntologyContent({ json: ontologyContent })
             }
         }
 
@@ -562,7 +542,7 @@ export default class OntologyLoading {
 
     /**
      * @param {(arg0: any) => void} callback
-     * @param {any[]} parameterArray
+     * @param {[string, string]} parameterArray
      */
     #requestServerTimeStampForIRI_Converte(callback, parameterArray) {
         d3.xhr(
@@ -595,6 +575,7 @@ export default class OntologyLoading {
                         parameterArray[0] +
                         "&sessionId=" +
                         this.conversion_sessionId
+                    // @ts-ignore
                     parameterArray.push(this.conversion_sessionId)
                     callback(parameterArray)
                 }
@@ -638,32 +619,29 @@ export default class OntologyLoading {
      * This method is not well-suited for large ontologies as `text`
      * is only garbage collected when this function exists (i.e. when the entire graph is loaded).
      * @param {string} text Raw JSON text
-     * @returns {Promise<boolean>} True if ontology content is valid
      */
-    async directInput(text) {
+    directInput(text) {
         this.ontologyMenu.clearDetailInformation()
-        return this.loadOntologyContent(await this.#parseOntologyContent(text))
+        this.#parseOntologyContent({ json: text })
     }
 
     /**
-     * @param {string} filename
+     * @param {string} content JSON string
      */
-    async loadFromOWL2VOWL(filename) {
+    loadFromOWL2VOWL(content) {
         this.loadingWasSuccessFul = false
         const old = d3.select("#bulletPoint_container").node().innerHTML
         if (old.indexOf("(with warnings)") !== -1) {
             this.missingImportsWarning = true
         }
 
-        const cached = this.ontologyMenu.cachedOntology(filename)
-        if (cached) {
-            this.ontologyMenu.append_bulletPoint(
-                "Loading already cached ontology: " + filename,
-            )
-        }
-        return this.loadOntologyContent(
-            await this.#parseOntologyContent(cached),
-        )
+        // const cached = this.ontologyMenu.cachedOntology(filename)
+        // if (cached) {
+        //     this.ontologyMenu.append_bulletPoint(
+        //         "Loading already cached ontology: " + filename,
+        //     )
+        // }
+        this.#parseOntologyContent({ json: content })
     }
 
     /**
@@ -698,7 +676,7 @@ export default class OntologyLoading {
             )
             this.loadingWasSuccessFul = true // cached Ontology should be true;
             this.showLoadingIndicator()
-            this.loadOntologyContent(this.#parseOntologyContent(cached))
+            this.#parseOntologyContent({ json: cached })
         } else {
             // read the file name
             let fileToRead = "./data/" + ontology + ".json"
@@ -707,176 +685,154 @@ export default class OntologyLoading {
                 fileToRead = f2r
             }
             // read file
-            d3.xhr(
-                fileToRead,
-                "application/json",
-                (
-                    /** @type {{ status: string | number; }} */ error,
-                    /** @type {{ responseText: string; }} */ request,
-                ) => {
-                    const loadingSuccessful = !error
-                    if (loadingSuccessful) {
-                        const parseResult = this.#parseOntologyContent(
-                            request.responseText,
-                        ) // FIXME: We need a a JSON parser over here!
-                        this.loadOntologyContent(parseResult)
+            d3.xhr(fileToRead, "application/json", (error, request) => {
+                if (!error) {
+                    this.#parseOntologyContent({
+                        json: request.responseText,
+                    })
+                } else {
+                    if (loadingNewOntologyForEditor) {
+                        const ontologyContent =
+                            "{\n" +
+                            '  "_comment": "Empty ontology for WebVOWL Editor",\n' +
+                            '  "header": {\n' +
+                            '    "languages": [\n' +
+                            '      "en"\n' +
+                            "    ],\n" +
+                            '    "baseIris": [\n' +
+                            '      "http://www.w3.org/2000/01/rdf-schema"\n' +
+                            "    ],\n" +
+                            '    "iri": "http://visualdataweb.org/newOntology/",\n' +
+                            '    "title": {\n' +
+                            '      "en": "New ontology"\n' +
+                            "    },\n" +
+                            '    "description": {\n' +
+                            '      "en": "New ontology description"\n' +
+                            "    }\n" +
+                            "  },\n" +
+                            '  "namespace": [],\n' +
+                            '  "metrics": {\n' +
+                            '    "classCount": 0,\n' +
+                            '    "datatypeCount": 0,\n' +
+                            '    "objectPropertyCount": 0,\n' +
+                            '    "datatypePropertyCount": 0,\n' +
+                            '    "propertyCount": 0,\n' +
+                            '    "nodeCount": 0,\n' +
+                            '    "individualCount": 0\n' +
+                            "  }\n" +
+                            "}\n"
+                        this.#parseOntologyContent({
+                            json: ontologyContent,
+                        })
                     } else {
-                        if (loadingNewOntologyForEditor) {
-                            const ontologyContent =
-                                "{\n" +
-                                '  "_comment": "Empty ontology for WebVOWL Editor",\n' +
-                                '  "header": {\n' +
-                                '    "languages": [\n' +
-                                '      "en"\n' +
-                                "    ],\n" +
-                                '    "baseIris": [\n' +
-                                '      "http://www.w3.org/2000/01/rdf-schema"\n' +
-                                "    ],\n" +
-                                '    "iri": "http://visualdataweb.org/newOntology/",\n' +
-                                '    "title": {\n' +
-                                '      "en": "New ontology"\n' +
-                                "    },\n" +
-                                '    "description": {\n' +
-                                '      "en": "New ontology description"\n' +
-                                "    }\n" +
-                                "  },\n" +
-                                '  "namespace": [],\n' +
-                                '  "metrics": {\n' +
-                                '    "classCount": 0,\n' +
-                                '    "datatypeCount": 0,\n' +
-                                '    "objectPropertyCount": 0,\n' +
-                                '    "datatypePropertyCount": 0,\n' +
-                                '    "propertyCount": 0,\n' +
-                                '    "nodeCount": 0,\n' +
-                                '    "individualCount": 0\n' +
-                                "  }\n" +
-                                "}\n"
-                            this.loadOntologyContent(
-                                this.#parseOntologyContent(ontologyContent),
-                            ) // FIXME: We need a a JSON parser over here!
-                        } else {
-                            // some error occurred
-                            this.ontologyMenu.append_bulletPoint(
-                                "Failed to load: " + ontology,
+                        // some error occurred
+                        this.ontologyMenu.append_bulletPoint(
+                            "Failed to load: " + ontology,
+                        )
+                        if (error.status === 0) {
+                            // assumption this is CORS error when running locally (error status == 0)
+                            this.ontologyMenu.append_message_toLastBulletPoint(
+                                " <span style='color: red'>ERROR STATUS:</span> " +
+                                    error.status,
                             )
-                            if (error.status === 0) {
-                                // assumption this is CORS error when running locally (error status == 0)
+                            if (
+                                window.location.toString().startsWith("file:/")
+                            ) {
                                 this.ontologyMenu.append_message_toLastBulletPoint(
-                                    " <span style='color: red'>ERROR STATUS:</span> " +
-                                        error.status,
+                                    "<br><p>WebVOWL runs in a local instance.</p>",
                                 )
-                                if (
-                                    window.location
-                                        .toString()
-                                        .startsWith("file:/")
-                                ) {
-                                    this.ontologyMenu.append_message_toLastBulletPoint(
-                                        "<br><p>WebVOWL runs in a local instance.</p>",
-                                    )
-                                    this.ontologyMenu.append_message_toLastBulletPoint(
-                                        "<p>CORS prevents to automatically load files on host system.</p>",
-                                    )
-                                    this.ontologyMenu.append_message_toLastBulletPoint(
-                                        "<p>You can load preprocessed ontologies (i.e. VOWL-JSON files) using the upload feature in the ontology menu or by dragging the files and dropping them on the canvas.</p>",
-                                    )
-                                    this.ontologyMenu.append_message_toLastBulletPoint(
-                                        "<p><i>Hint: </i>Note that the conversion of ontologies into the VOWL-JSON format is not part of WebVOWL but requires an additional converter such as OWL2VOWL.</p>",
-                                    )
-                                    this.ontologyMenu.append_message_toLastBulletPoint(
-                                        "<p>Ontologies can be created using the editor mode (i.e. activate editing mode in <b>Modes</b> menu and create a new ontology using the <b>Ontology</b> menu.</p>",
-                                    )
-                                }
-                            } else {
                                 this.ontologyMenu.append_message_toLastBulletPoint(
-                                    " <span style='color: red'>ERROR STATUS:</span> " +
-                                        error.status,
+                                    "<p>CORS prevents to automatically load files on host system.</p>",
+                                )
+                                this.ontologyMenu.append_message_toLastBulletPoint(
+                                    "<p>You can load preprocessed ontologies (i.e. VOWL-JSON files) using the upload feature in the ontology menu or by dragging the files and dropping them on the canvas.</p>",
+                                )
+                                this.ontologyMenu.append_message_toLastBulletPoint(
+                                    "<p><i>Hint: </i>Note that the conversion of ontologies into the VOWL-JSON format is not part of WebVOWL but requires an additional converter such as OWL2VOWL.</p>",
+                                )
+                                this.ontologyMenu.append_message_toLastBulletPoint(
+                                    "<p>Ontologies can be created using the editor mode (i.e. activate editing mode in <b>Modes</b> menu and create a new ontology using the <b>Ontology</b> menu.</p>",
                                 )
                             }
-                            this.graph.handleOnLoadingError()
-                            this.setErrorMode()
+                        } else {
+                            this.ontologyMenu.append_message_toLastBulletPoint(
+                                " <span style='color: red'>ERROR STATUS:</span> " +
+                                    error.status,
+                            )
                         }
+                        this.graph.handleOnLoadingError()
+                        this.setErrorMode()
                     }
-                },
-            )
+                }
+            })
         }
     }
 
     /**
      * Parse JSON content
-     * @param {{ header?: any; class?: any[]; } | string} content Raw JSON string or a JSON object
+     * @param {{ file?: File; json?: string; }} content File pointer or a JSON string
      */
     #parseOntologyContent(content) {
         this.ontologyMenu.append_bulletPoint("Reading ontology graph ... ")
-        return this.graph.parser.parseOntologyFromText(
-            content,
-            this.ontologyIdentifierFromURL,
-            "noAlternativeNameYet",
-        )
+        this.graph.parser
+            .parseOntologyFromText(
+                content,
+                this.ontologyIdentifierFromURL,
+                "noAlternativeNameYet",
+            )
+            .then(
+                (data) => {
+                    this.loadOntologyContent(data)
+                },
+                (cause) => {
+                    console.error(cause)
+                },
+            )
     }
 
     /**
      * Load parsed JSON object
-     * @param {[{ header?: any; class?: any[]; } | undefined, boolean]} parseResult
-     * @returns {boolean} True if ontology content is valid
+     * @param {{ header?: any; class?: any[]; }} ontologyObject
      */
-    loadOntologyContent(parseResult) {
-        const [data, isValidData] = parseResult
+    loadOntologyContent(ontologyObject) {
         d3.select("#reloadCachedOntology").classed("hidden", true)
         this.graph.options.pauseMenu.reset()
         this.graph.options.navigationMenu.hideAllMenus()
         this.graph.editorMode // updates the checkbox
 
-        let loadEmptyOntologyForEditing = false
-        if (location.hash.indexOf("#new_ontology") !== -1) {
-            loadEmptyOntologyForEditing = true
-            this.newOntologyCounter++
-            d3.select("#empty").node().href =
-                "#opts=editorMode=true;#new_ontology" + this.newOntologyCounter
-        }
-        if (
-            !(
-                isValidData &&
-                this.graph.editorMode &&
-                loadEmptyOntologyForEditing
-            )
-        ) {
-            // generate message for the user;
-            this.emptyGraphContentError()
-            return false
-        } else {
-            this.setPercentMode()
-            if (loadEmptyOntologyForEditing) {
-                this.graph.editorMode = true
-            }
-            this.graph.load()
-            this.graph.options.sidebar.updateOntologyInformation(
-                data,
-                this.statistics,
-            )
-            this.graph.updateZoomSliderValueFromOutside()
-            this.adjustSizeCallable()
+        this.setPercentMode()
 
-            const flagOfCheckBox = d3
-                .select("#editorModeModuleCheckbox")
-                .node().checked
-            this.graph.editorMode = flagOfCheckBox // update gui
-        }
-        return true
+        this.graph.load()
+        this.graph.options.sidebar.updateOntologyInformation(
+            ontologyObject,
+            this.statistics,
+        )
+        this.graph.updateZoomSliderValueFromOutside()
+        this.adjustSizeCallable()
+
+        const flagOfCheckBox = d3
+            .select("#editorModeModuleCheckbox")
+            .node().checked
+        this.graph.editorMode = flagOfCheckBox // update gui
     }
 
-    notValidJsonFile() {
+    /**
+     * @param {any} reason
+     */
+    invalidOntology(reason) {
         this.graph.clearGraphData()
         this.ontologyMenu.append_message_toLastBulletPoint(
-            " <span style='color:red;'>failed</span>",
+            "<span style='color:red;'> (failed)</span>",
         )
         this.ontologyMenu.append_message_toLastBulletPoint(
-            "<br><span style='color:red;'>Error: Received empty graph</span>",
+            `<br><span style='color:red;'>Error: ${reason}</span>`,
         )
         this.loadingWasSuccessFul = false
         this.graph.handleOnLoadingError()
+        this.setErrorMode()
     }
 
-    validJsonFile() {
+    validOntology() {
         this.ontologyMenu.append_message_toLastBulletPoint("done")
         this.loadingWasSuccessFul = true
     }

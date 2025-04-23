@@ -142,8 +142,9 @@ export default class ExportTTLModule {
      * @param {string} element
      */
     getPresentAttribute(selectedElement, element) {
-        const attr = selectedElement.attributes
-        return attr.indexOf(element) >= 0
+        return selectedElement.attributes
+            ? selectedElement.attributes.indexOf(element) >= 0
+            : false
     }
 
     /**
@@ -184,24 +185,24 @@ export default class ExportTTLModule {
         // check for equivalent classes;
         const indent = this.getIndent(subject)
         objectDef += "; \r\n"
-        for (let e = 0; e < node.equivalents.length; e++) {
-            const eqIRI = PrefixTools.getPrefixRepresentationForFullURI(
-                node.equivalents[e].iri,
-            )
-            let eqNode_prefRepresentation = ""
-            if (PrefixTools.validURL(eqIRI) === true)
-                eqNode_prefRepresentation = "<" + eqIRI + ">"
-            else eqNode_prefRepresentation = eqIRI
-            objectDef +=
-                indent +
-                " owl:equivalentClass " +
-                eqNode_prefRepresentation +
-                " ;\r\n"
+        if (node.equivalents) {
+            for (let e = 0; e < node.equivalents.length; e++) {
+                const eqIRI = PrefixTools.getPrefixRepresentationForFullURI(
+                    node.equivalents[e].iri,
+                )
+                let eqNode_prefRepresentation = ""
+                if (PrefixTools.validURL(eqIRI)) {
+                    eqNode_prefRepresentation = "<" + eqIRI + ">"
+                } else {
+                    eqNode_prefRepresentation = eqIRI
+                }
+                objectDef +=
+                    indent +
+                    " owl:equivalentClass " +
+                    eqNode_prefRepresentation +
+                    " ;\r\n"
+            }
         }
-
-        // if (getPresentAttribute(node,"equivalent")===true){
-        //     objectDef+=", owl:EquivalentClass";
-        // }
 
         // add Comments
         if (node.commentForCurrentLanguage()) {
@@ -422,22 +423,6 @@ export default class ExportTTLModule {
                     sPelement.prefixRepresentation +
                     ";\r\n"
             }
-            // for (const an in annotations){
-            //     if (annotations.hasOwnProperty(an)){
-            //         const anArrayObj=annotations[an];
-            //         const anObj=anArrayObj[0];
-            //         const an_ident=anObj.identifier;
-            //         const an_val=anObj.value;
-            //         console.log(an_ident + " "+ an_val);
-            //
-            //         if (an_ident==="isDefinedBy"){
-            //             objectDef+=indent+" rdfs:isDefinedBy <"+an_val+"> ;\r\n";
-            //         }
-            //         if (an_ident==="term_status"){
-            //             objectDef+=indent+" vs:term_status \""+an_val+"\" ;\r\n";
-            //         }
-            //     }
-            // }
         }
         if (property.annotations) {
             const annotations = property.annotations

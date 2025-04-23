@@ -1,7 +1,10 @@
 import FilterMenu from "../../../../app/js/menu/filterMenu"
+import ArrowLink from "../../elements/links/ArrowLink"
+import BoxArrowLink from "../../elements/links/BoxArrowLink"
 import PlainLink from "../../elements/links/PlainLink"
 import BaseNode from "../../elements/nodes/BaseNode"
 import BaseProperty from "../../elements/properties/BaseProperty"
+import ElementTools from "../../util/elementTools"
 import FilterTools from "../../util/filterTools"
 import AbstractFilter from "./abstractFilter"
 
@@ -165,7 +168,7 @@ export default class NodeDegreeFilter extends AbstractFilter {
     }
 
     /**
-     * @param {PlainLink[]} links
+     * @param {(PlainLink | ArrowLink | BoxArrowLink)[]} links
      */
     #filterOutDatatypes(links) {
         let filteredLinks = []

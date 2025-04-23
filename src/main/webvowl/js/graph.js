@@ -329,9 +329,9 @@ export default class Graph {
     initializeGraph() {
         this.parser = new Parser(this)
         let moved = false
-        this.force = d3.layout
-            .force()
-            .on("tick", this.#hiddenRecalculatePositions)
+        this.force = d3.layout.force().on("tick", () => {
+            this.#hiddenRecalculatePositions()
+        })
 
         const _this = this
         this.dragBehaviour = d3.behavior
@@ -625,10 +625,14 @@ export default class Graph {
                 }
                 this.finishedLoadingSequence = true
                 if (this.showFPS) {
-                    this.force.on("tick", this.#recalculatePositionsWithFPS)
+                    this.force.on("tick", () => {
+                        this.#recalculatePositionsWithFPS()
+                    })
                     this.#recalculatePositionsWithFPS()
                 } else {
-                    this.force.on("tick", this.#recalculatePositions)
+                    this.force.on("tick", () => {
+                        this.#recalculatePositions()
+                    })
                     this.#recalculatePositions()
                 }
                 if (
@@ -671,14 +675,18 @@ export default class Graph {
     setForceTickFunctionWithFPS() {
         this.showFPS = true
         if (this.force && this.finishedLoadingSequence) {
-            this.force.on("tick", this.#recalculatePositionsWithFPS())
+            this.force.on("tick", () => {
+                this.#recalculatePositionsWithFPS()
+            })
         }
     }
 
     setDefaultForceTickFunction() {
         this.showFPS = false
         if (this.force && this.finishedLoadingSequence) {
-            this.force.on("tick", this.#recalculatePositions())
+            this.force.on("tick", () => {
+                this.#recalculatePositions()
+            })
         }
     }
 
@@ -1136,9 +1144,13 @@ export default class Graph {
         const svgGraph = d3.selectAll(".vowlGraph")
         this.originalD3_dblClickFunction = svgGraph.on("dblclick.zoom")
         this.originalD3_touchZoomFunction = svgGraph.on("touchstart")
-        svgGraph.on("touchstart", this.#touchzoomed)
+        svgGraph.on("touchstart", () => {
+            this.#touchzoomed()
+        })
         if (this.isEditorMode) {
-            svgGraph.on("dblclick.zoom", this.modified_dblClickFunction)
+            svgGraph.on("dblclick.zoom", () => {
+                this.modified_dblClickFunction()
+            })
         } else {
             svgGraph.on("dblclick.zoom", this.originalD3_dblClickFunction)
         }
@@ -1523,7 +1535,7 @@ export default class Graph {
                 this.forceNodeMap.set(node.id, i)
                 // check for equivalents
                 const eqs = node.equivalents
-                if (eqs.length > 0) {
+                if (eqs && eqs.length > 0) {
                     for (let j = 0; j < eqs.length; j++) {
                         const eqObject = eqs[j]
                         this.forceNodeMap.set(eqObject.id, i)
@@ -1877,13 +1889,19 @@ export default class Graph {
 
             if (this.unfilteredData.nodes.length > 0) {
                 this.graphContainer.style("opacity", "0")
-                this.force.on("tick", this.#hiddenRecalculatePositions)
+                this.force.on("tick", () => {
+                    this.#hiddenRecalculatePositions()
+                })
             } else {
                 this.graphContainer.style("opacity", "1")
                 if (this.showFPS === true) {
-                    this.force.on("tick", this.#recalculatePositionsWithFPS)
+                    this.force.on("tick", () => {
+                        this.#recalculatePositionsWithFPS()
+                    })
                 } else {
-                    this.force.on("tick", this.#recalculatePositions)
+                    this.force.on("tick", () => {
+                        this.#recalculatePositions()
+                    })
                 }
             }
             this.force.start()
@@ -2236,7 +2254,9 @@ export default class Graph {
                 return charge
             })
             .size([this.options.width, this.options.height])
-            .linkDistance(this.#calculateLinkPartDistance)
+            .linkDistance((/** @type {LinkPart} */ linkPart) => {
+                return this.#calculateLinkPartDistance(linkPart)
+            })
             .gravity(this.options.gravity)
             .linkStrength(this.options.linkStrength) // Flexibility of links
 
@@ -3455,7 +3475,9 @@ export default class Graph {
             this.options.leftSidebar.hideCollapseButton(false)
             this.options.editSidebar.updatePrefixUi()
             this.options.editSidebar.updateElementWidth()
-            svgGraph.on("dblclick.zoom", this.modified_dblClickFunction)
+            svgGraph.on("dblclick.zoom", () => {
+                this.modified_dblClickFunction()
+            })
         } else {
             svgGraph.on("dblclick.zoom", this.originalD3_dblClickFunction)
             this.options.leftSidebar.showSidebar(0)

@@ -126,7 +126,7 @@ export default class Parser {
 
     /**
      * Parses the ontology data and preprocesses it (e.g. connecting inverse properties and so on).
-     * @param {{ settings: any; class: any[]; datatype: any[]; classAttribute: any[]; datatypeAttribute: any[]; namespace: any[]; property: any[]; propertyAttribute: any[]; }} ontologyData the loaded ontology json file
+     * @param {any} ontologyData the loaded ontology json file
      */
     parse(ontologyData) {
         if (ontologyData.settings) {
@@ -147,6 +147,7 @@ export default class Parser {
         // Inject properties for unions, intersections etc.
         // @ts-ignore
         this.#addSetOperatorProperties(
+            // @ts-ignore
             combinedClassesAndDatatypes,
             unparsedProperties,
         )
@@ -164,6 +165,7 @@ export default class Parser {
 
         // @ts-ignore
         this.mergeRangesOfEquivalentProperties(
+            // @ts-ignore
             combinedProperties,
             combinedClassesAndDatatypes,
         )
@@ -177,39 +179,41 @@ export default class Parser {
 
     /**
      * Parse `content` and ensure the graph data is valid
-     * @param content Raw JSON string or a JSON object
+     * @param {{ file?: File; json?: string; }} content A file pointer or a JSON string
      * @param {string} filename
      * @param {string} alternativeFilename
-     * @returns {Promise<[{header?: any;class?: any[];} | undefined, boolean]>} Whether `content` is valid graph data
      */
     async parseOntologyFromText(content, filename, alternativeFilename) {
-        let isValidData = false
         let dataObject = undefined
         const options = this.graph.options
         const loadingModule = options.loadingModule
 
-        // Check if we have data
-        if (!content && filename === undefined) {
-            loadingModule.notValidJsonFile()
-            return [undefined, isValidData]
+        const resolve = (/** @type {any} */ data) => {
+            return Promise.resolve(data)
+        }
+
+        const reject = (/** @type {any} */ cause) => {
+            loadingModule.invalidOntology(cause)
+            return Promise.reject(cause)
         }
 
         // Figure out if data is a file or a JSON string
         if (content.file) {
             // This is used for large ontologies to improve performance and memory usage
-            dataObject = await parse_json(content.file)
+            try {
+                dataObject = await parse_json(content.file)
+            } catch (error) {
+                return reject(error)
+            }
         } else if (content.json) {
             // This is used for small ontologies
             dataObject = JSON.parse(content.json)
         } else {
-            console.error(
-                `Content '${content}' is not valid. Expected one of: file pointer, string`,
-            )
-            loadingModule.notValidJsonFile()
+            return reject(`Graph data '${content}' is not valid`)
         }
 
+        // First look if an ontology title exists, otherwise take the alternative filename
         if (!filename) {
-            // First look if an ontology title exists, otherwise take the alternative filename
             const ontologyNames = dataObject.header
                 ? dataObject.header.title
                 : undefined
@@ -222,25 +226,47 @@ export default class Parser {
             }
         }
 
-        // check if we have graph data
-        isValidData =
-            dataObject.class !== undefined && dataObject.class.length > 0
+        // Check if we have graph data
+        const classCount =
+            dataObject.class !== undefined ? dataObject.class.length : 0
 
-        if (isValidData) {
+        if (classCount > 0) {
             const ontologyMenu = options.ontologyMenu
             const exportMenu = options.exportMenu
             options.data = dataObject
-            loadingModule.validJsonFile()
-            if (ontologyMenu.shouldCacheOntology(content)) {
-                // FIXME
-                ontologyMenu.setCachedOntology(filename, content)
-                exportMenu.setJsonText(content)
+            if (
+                content.json &&
+                ontologyMenu.shouldCacheOntology(content.json)
+            ) {
+                ontologyMenu.setCachedOntology(filename, content.json)
+                exportMenu.setJsonText(content.json)
             }
             exportMenu.setFilename(filename)
-        }
-        return [dataObject, isValidData]
-    }
+            loadingModule.validOntology()
+            return resolve(dataObject)
+        } else {
+            // Check if we're creating a new ontology
+            let loadEmptyOntologyForEditing = false
+            if (location.hash.indexOf("#new_ontology") !== -1) {
+                loadEmptyOntologyForEditing = true
+                loadingModule.newOntologyCounter++ // We don't store state in parser as its state is wiped each time a new ontology is loaded
+                d3.select("#empty").node().href =
+                    "#opts=editorMode=true;#new_ontology" +
+                    loadingModule.newOntologyCounter
+            }
 
+            if (loadEmptyOntologyForEditing) {
+                this.graph.editorMode = true
+                return resolve(dataObject)
+            } else if (!this.graph.editorMode) {
+                return reject(
+                    "Received an empty graph when edit mode is not activated",
+                )
+            } else {
+                return reject("The ontology for editing was not found")
+            }
+        }
+    }
     /**
      * Combines the passed objects with its attributes and prototypes. This also applies
      * attributes defined in the base of the prototype.
@@ -248,7 +274,7 @@ export default class Parser {
      * @param {any[][]} attributes
      * @param {any[]} namespaces
      * @param {Map<string, new (graph: any) => BaseElement>} prototypeMap
-     * @param {(element: any, Prototype: new (graph: any) => BaseElement) => BaseElement} callable
+     * @param {(_this: Parser, element: any, Prototype: new (graph: any) => BaseElement) => BaseElement} callable
      */
     #combineClassesOrProperties(
         baseObjects,
@@ -273,47 +299,52 @@ export default class Parser {
                 }
             }
 
-            for (const element of baseObjects[i]) {
-                if (attributes[i]) {
-                    // Look for an attribute with the same id and merge them
-                    const matchingAttribute = objectMap.get(element.id)
-                    this.#addAdditionalAttributes(element, matchingAttribute) // REVIEW: Ensure correctess of this call
-                }
-
-                // Then look for a prototype to add its properties
-                let Prototype = prototypeMap.get(element.type.toLowerCase())
-                if (Prototype) {
-                    // Should be unnecessary, as attributes defined in the Prototype should be present in the ontology data
-                    // addAdditionalAttributes(element, Prototype);
-
-                    // Create an instance of a node or property (according to `element`'s type)
-                    let object = callable(element, Prototype)
-
-                    // Class element pin
-                    if (element.pinned === true) {
-                        object.pinned = true
-                        this.graph.options.pickAndPinModule.addPinnedElement(
-                            object,
-                        )
+            if (baseObjects[i]) {
+                for (const element of baseObjects[i]) {
+                    if (attributes[i]) {
+                        // Look for an attribute with the same id and merge them
+                        const matchingAttribute = objectMap.get(element.id)
+                        this.#addAdditionalAttributes(
+                            element,
+                            matchingAttribute,
+                        ) // REVIEW: Ensure correctess of this call
                     }
 
-                    // Combine attributes
-                    if (element.attributes) {
-                        object.attributes = element.attributes.concat(
-                            object.attributes,
-                        )
-                    }
+                    // Then look for a prototype to add its properties
+                    let Prototype = prototypeMap.get(element.type.toLowerCase())
+                    if (Prototype) {
+                        // Should be unnecessary, as attributes defined in the Prototype should be present in the ontology data
+                        // addAdditionalAttributes(element, Prototype);
 
-                    // convert types to IRIs
-                    if (typeof element.iri === "string") {
-                        element.iri = this.#replaceNamespace(
-                            element.iri,
-                            namespaces,
-                        )
+                        // Create an instance of a node or property (according to `element`'s type)
+                        let object = callable(this, element, Prototype)
+
+                        // Class element pin
+                        if (element.pinned === true) {
+                            object.pinned = true
+                            this.graph.options.pickAndPinModule.addPinnedElement(
+                                object,
+                            )
+                        }
+
+                        // Combine attributes
+                        if (element.attributes) {
+                            object.attributes = element.attributes.concat(
+                                object.attributes,
+                            )
+                        }
+
+                        // Convert types to IRIs
+                        if (typeof element.iri === "string") {
+                            element.iri = this.#replaceNamespace(
+                                element.iri,
+                                namespaces,
+                            )
+                        }
+                        combined.push(object)
+                    } else {
+                        console.error("Unknown element type: " + element.type)
                     }
-                    combined.push(object)
-                } else {
-                    console.error("Unknown element type: " + element.type)
                 }
             }
         }
@@ -321,12 +352,13 @@ export default class Parser {
     }
 
     /**
+     * @note All `element` properties are strings or JSON objects
      * @param {any} element A node object from the parsed JSON object
      * @param {new (graph: any) => BaseNode} Prototype The node class that matches `element`'s type
-     * Note: all `element` properties are strings or JSON objects
+     * @param {Parser} _this Pointer to the current class, as that's not available in this context
      */
-    #combineClasses(element, Prototype) {
-        let node = new Prototype(this.graph)
+    #combineClasses(_this, element, Prototype) {
+        let node = new Prototype(_this.graph)
         node.annotations = element.annotations
         node.baseIri = element.baseIri
         node.comment = element.comment
@@ -350,22 +382,24 @@ export default class Parser {
         // Create node objects for all individuals
         if (element.individuals) {
             for (const individual of element.individuals) {
-                let individualNode = new Prototype(this.graph)
+                let individualNode = new Prototype(_this.graph)
                 individualNode.label = individual.labels
                 individualNode.iri = individual.iri
                 node.individuals.push(individualNode)
             }
         }
-        this.nodeMap.set(node.id, node)
+        _this.nodeMap.set(node.id, node)
         return node
     }
 
     /**
+     * @note All `element` properties are strings or JSON objects
      * @param {any} element A property object from the parsed JSON object
      * @param {new (graph: any) => BaseProperty} Prototype The property class that matches `element`'s type
+     * @param {Parser} _this Pointer to the current class, as that's not available in this context
      */
-    #combineProperties(element, Prototype) {
-        let property = new Prototype(this.graph)
+    #combineProperties(_this, element, Prototype) {
+        let property = new Prototype(_this.graph)
         property.annotations = element.annotations
         property.baseIri = element.baseIri
         property.cardinality = element.cardinality
@@ -389,7 +423,7 @@ export default class Parser {
             property.px = element.pos[0]
             property.py = element.pos[1]
         }
-        this.propertyMap.set(property.id, property)
+        _this.propertyMap.set(property.id, property)
         return property
     }
 
@@ -693,11 +727,7 @@ export default class Parser {
             const equivalentObject = elementMap.get(equivalentId)
 
             if (equivalentObject) {
-                // Clear the old string array
-                if (
-                    equivalentObject.equivalents.length !== 0 &&
-                    typeof equivalentObject.equivalents[0] === "string"
-                ) {
+                if (!(equivalentObject.equivalents instanceof Array)) {
                     equivalentObject.equivalents = []
                 }
                 // Cross reference both objects
@@ -778,7 +808,11 @@ export default class Parser {
 
         for (const property of properties) {
             let propertyWithEquivalents = [property]
-            if (processedPropertyIDs.has(property.id)) {
+            if (
+                !property.equivalents ||
+                property.equivalents.length === 0 ||
+                processedPropertyIDs.has(property.id)
+            ) {
                 continue
             } else {
                 // Add the equivalent property instances from their ID

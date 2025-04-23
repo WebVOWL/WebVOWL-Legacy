@@ -86,22 +86,18 @@ export default class NavigationMenu {
                 this.m_select[i] = undefined
             }
             // create custom behavior for click, touch, and hover
-            d3.select("#" + this.c_select[i]).on(
-                "mouseover",
-                this.menuElementOnHovered,
-            )
-            d3.select("#" + this.c_select[i]).on(
-                "mouseout",
-                this.menuElementOutHovered,
-            )
-            d3.select("#" + this.c_select[i]).on(
-                "click",
-                this.menuElementClicked,
-            )
-            d3.select("#" + this.c_select[i]).on(
-                "touchstart",
-                this.menuElementTouched,
-            )
+            d3.select("#" + this.c_select[i]).on("mouseover", () => {
+                this.menuElementOnHovered()
+            })
+            d3.select("#" + this.c_select[i]).on("mouseout", () => {
+                this.menuElementOutHovered()
+            })
+            d3.select("#" + this.c_select[i]).on("click", () => {
+                this.menuElementClicked()
+            })
+            d3.select("#" + this.c_select[i]).on("touchstart", () => {
+                this.menuElementTouched()
+            })
         }
         // connect to mouseWheel
         d3.select("#menuElementContainer").on("wheel", function () {
@@ -133,9 +129,15 @@ export default class NavigationMenu {
                     _this.timed_scrollRight,
                 )
             })
-            .on("mouseup", this.clearAllTimers)
-            .on("touchend", this.clearAllTimers)
-            .on("touchcancel", this.clearAllTimers)
+            .on("mouseup", () => {
+                _this.clearAllTimers()
+            })
+            .on("touchend", () => {
+                _this.clearAllTimers()
+            })
+            .on("touchcancel", () => {
+                _this.clearAllTimers()
+            })
         d3.select("#scrollLeftButton")
             .on("mousedown", function () {
                 _this.scrolLeftValue = _this.scrollContainer.scrollLeft
@@ -151,9 +153,15 @@ export default class NavigationMenu {
                     _this.timed_scrollLeft,
                 )
             })
-            .on("mouseup", this.clearAllTimers)
-            .on("touchend", this.clearAllTimers)
-            .on("touchcancel", this.clearAllTimers)
+            .on("mouseup", () => {
+                _this.clearAllTimers()
+            })
+            .on("touchend", () => {
+                _this.clearAllTimers()
+            })
+            .on("touchcancel", () => {
+                _this.clearAllTimers()
+            })
         // connect the scroll functionality;
         d3.select("#menuElementContainer").on("scroll", function () {
             _this.updateScrollButtonVisibility()

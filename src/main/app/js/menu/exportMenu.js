@@ -556,34 +556,35 @@ export default class ExportMenu {
         const classObjects = []
         const classAttributeObjects = []
         for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i]
             const classObj = {}
             const classAttr = {}
-            classObj.id = nodes[i].id
-            classObj.type = nodes[i].type
+            classObj.id = node.id
+            classObj.type = node.type
             classObjects.push(classObj)
 
             // define the attributes object
-            classAttr.id = nodes[i].id
-            classAttr.iri = nodes[i].iri
-            classAttr.baseIri = nodes[i].baseIri
-            classAttr.label = nodes[i].label
+            classAttr.id = node.id
+            classAttr.iri = node.iri
+            classAttr.baseIri = node.baseIri
+            classAttr.label = node.label
 
-            if (nodes[i].attributes.length > 0) {
-                classAttr.attributes = nodes[i].attributes
+            if (node.attributes && node.attributes.length > 0) {
+                classAttr.attributes = node.attributes
             }
-            if (nodes[i].comment) {
-                classAttr.comment = nodes[i].comment
+            if (node.comment) {
+                classAttr.comment = node.comment
             }
-            if (nodes[i].annotations) {
-                classAttr.annotations = nodes[i].annotations
+            if (node.annotations) {
+                classAttr.annotations = node.annotations
             }
-            if (nodes[i].description) {
-                classAttr.description = nodes[i].description
+            if (node.description) {
+                classAttr.description = node.description
             }
 
-            if (nodes[i].individuals.length > 0) {
+            if (node.individuals && node.individuals.length > 0) {
                 const classIndividualElements = []
-                const nIndividuals = nodes[i].individuals
+                const nIndividuals = node.individuals
                 for (let j = 0; j < nIndividuals.length; j++) {
                     const indObj = {}
                     indObj.iri = nIndividuals[j].iri
@@ -604,38 +605,39 @@ export default class ExportMenu {
             }
 
             const equalsForAttributes = []
-            if (nodes[i].equivalents.length > 0) {
-                const equals = nodes[i].equivalents
+            if (node.equivalents && node.equivalents.length > 0) {
+                const equals = node.equivalents
                 for (let j = 0; j < equals.length; j++) {
+                    const equal = equals[j]
                     const eqObj = {}
                     const eqAttr = {}
-                    eqObj.id = equals[j].id
-                    equalsForAttributes.push(equals[j].id)
-                    eqObj.type = equals[j].type
+                    eqObj.id = equal.id
+                    equalsForAttributes.push(equal.id)
+                    eqObj.type = equal.type
                     classObjects.push(eqObj)
 
-                    eqAttr.id = equals[j].id
-                    eqAttr.iri = equals[j].iri
-                    eqAttr.baseIri = equals[j].baseIri
-                    eqAttr.label = equals[j].label
+                    eqAttr.id = equal.id
+                    eqAttr.iri = equal.iri
+                    eqAttr.baseIri = equal.baseIri
+                    eqAttr.label = equal.label
 
-                    if (equals[j].attributes.length > 0) {
-                        eqAttr.attributes = equals[j].attributes
+                    if (equal.attributes && equal.attributes.length > 0) {
+                        eqAttr.attributes = equal.attributes
                     }
-                    if (equals[j].comment) {
-                        eqAttr.comment = equals[j].comment
+                    if (equal.comment) {
+                        eqAttr.comment = equal.comment
                     }
-                    if (equals[j].individuals.length > 0) {
-                        eqAttr.individuals = equals[j].individuals
+                    if (equal.individuals && equal.individuals.length > 0) {
+                        eqAttr.individuals = equal.individuals
                     }
-                    if (equals[j].annotations) {
-                        eqAttr.annotations = equals[j].annotations
+                    if (equal.annotations) {
+                        eqAttr.annotations = equal.annotations
                     }
-                    if (equals[j].description) {
-                        eqAttr.description = equals[j].description
+                    if (equal.description) {
+                        eqAttr.description = equal.description
                     }
 
-                    if (equals[j].individuals.length > 0) {
+                    if (equal.individuals && equal.individuals.length > 0) {
                         const e_classIndividualElements = []
                         const e_nIndividuals = equals[i].individuals
                         for (let k = 0; k < e_nIndividuals.length; k++) {
@@ -665,8 +667,8 @@ export default class ExportMenu {
             if (equalsForAttributes.length > 0) {
                 classAttr.equivalent = equalsForAttributes
             }
-            // classAttr.subClasses=nodes[i].subClasses(); // not needed
-            // classAttr.instances=nodes[i].instances();
+            // classAttr.subClasses=node.subClasses(); // not needed
+            // classAttr.instances=node.instances();
             //
             // .complement=element.complement
             // .disjointUnion=element.disjointUnion
@@ -684,45 +686,46 @@ export default class ExportMenu {
         const propertyAttributeObjects = []
 
         for (let i = 0; i < properties.length; i++) {
+            const property = properties[i]
             const pObj = {}
             const pAttr = {}
-            pObj.id = properties[i].id
-            pObj.type = properties[i].type
+            pObj.id = property.id
+            pObj.type = property.type
             propertyObjects.push(pObj)
 
             // define the attributes object
-            pAttr.id = properties[i].id
-            pAttr.iri = properties[i].iri
-            pAttr.baseIri = properties[i].baseIri
-            pAttr.label = properties[i].label
+            pAttr.id = property.id
+            pAttr.iri = property.iri
+            pAttr.baseIri = property.baseIri
+            pAttr.label = property.label
 
-            if (properties[i].attributes.length > 0) {
-                pAttr.attributes = properties[i].attributes
+            if (property.attributes && property.attributes.length > 0) {
+                pAttr.attributes = property.attributes
             }
-            if (properties[i].comment) {
-                pAttr.comment = properties[i].comment
+            if (property.comment) {
+                pAttr.comment = property.comment
             }
-            if (properties[i].annotations) {
-                pAttr.annotations = properties[i].annotations
+            if (property.annotations) {
+                pAttr.annotations = property.annotations
             }
-            if (properties[i].maxCardinality) {
-                pAttr.maxCardinality = properties[i].maxCardinality
+            if (property.maxCardinality) {
+                pAttr.maxCardinality = property.maxCardinality
             }
-            if (properties[i].minCardinality) {
-                pAttr.minCardinality = properties[i].minCardinality
+            if (property.minCardinality) {
+                pAttr.minCardinality = property.minCardinality
             }
-            if (properties[i].cardinality) {
-                pAttr.cardinality = properties[i].cardinality
+            if (property.cardinality) {
+                pAttr.cardinality = property.cardinality
             }
-            if (properties[i].description) {
-                pAttr.description = properties[i].description
+            if (property.description) {
+                pAttr.description = property.description
             }
 
-            pAttr.domain = properties[i].domain.id
-            pAttr.range = properties[i].range.id
+            pAttr.domain = property.domain.id
+            pAttr.range = property.range.id
             // sub properties;
-            if (properties[i].subproperties) {
-                const subProps = properties[i].subproperties
+            if (property.subproperties) {
+                const subProps = property.subproperties
                 const subPropsIdArray = []
                 for (let j = 0; j < subProps.length; j++) {
                     if (subProps[j].id) {
@@ -733,8 +736,8 @@ export default class ExportMenu {
             }
 
             // super properties
-            if (properties[i].superproperties) {
-                const superProps = properties[i].superproperties
+            if (property.superproperties) {
+                const superProps = property.superproperties
                 const superPropsIdArray = []
                 for (let j = 0; j < superProps.length; j++) {
                     if (superProps[j].id) {
@@ -745,9 +748,9 @@ export default class ExportMenu {
             }
 
             // check for inverse element
-            if (properties[i].inverse) {
-                if (properties[i].inverse.id) {
-                    pAttr.inverse = properties[i].inverse.id
+            if (property.inverse) {
+                if (property.inverse.id) {
+                    pAttr.inverse = property.inverse.id
                 }
             }
             propertyAttributeObjects.push(pAttr)
@@ -1415,7 +1418,10 @@ export default class ExportMenu {
             if (node.type === "rdfs:Datatype") {
                 qType = "Datatype"
             }
-            if (node.attributes.indexOf("anonymous") !== -1) {
+            if (
+                node.attributes &&
+                node.attributes.indexOf("anonymous") !== -1
+            ) {
                 qType = "anonymousClass"
             }
             if (
@@ -1800,7 +1806,10 @@ export default class ExportMenu {
                     "} \n "
                 bgColorStr = ", fill=property" + i + "_COLOR "
             }
-            if (correspondingProp.attributes.indexOf("deprecated") > -1) {
+            if (
+                correspondingProp.attributes &&
+                correspondingProp.attributes.indexOf("deprecated") > -1
+            ) {
                 texString +=
                     "\\definecolor{property" + i + "_COLOR}{HTML}{CCCCCC} \n "
                 bgColorStr = ", fill=property" + i + "_COLOR "
@@ -1927,6 +1936,7 @@ export default class ExportMenu {
                     inv_bgColorStr = ", fill=inv_property" + i + "_COLOR "
                 }
                 if (
+                    inv_correspondingProp.attributes &&
                     inv_correspondingProp.attributes.indexOf("deprecated") > -1
                 ) {
                     texString +=
