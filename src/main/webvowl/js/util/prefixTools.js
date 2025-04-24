@@ -1,20 +1,17 @@
+import Graph from "../graph"
+
 export default class PrefixTools {
     /**
      * @param {string} fullURL
-     * @param {any} graph
+     * @param {Graph} graph
      */
     static getPrefixRepresentationForFullURI(fullURL, graph) {
         let currentPrefixModel = graph.options.prefixList
-        const splittedURL = this.#splitURLIntoBaseAndResource(fullURL)
-
-        // lazy approach: for-loop over prefix model
-        for (const name of currentPrefixModel) {
-            if (currentPrefixModel.hasOwnProperty(name)) {
-                // THIS IS CASE SENSITIVE!
-                if (currentPrefixModel[name] === splittedURL.base) {
-                    return name + ":" + splittedURL.resource
-                }
-            }
+        const splittedURL = this.#splitURLIntoBaseAndResource(fullURL, graph)
+        // THIS IS CASE SENSITIVE!
+        const name = currentPrefixModel.get(splittedURL.base)
+        if (name) {
+            return name + ":" + splittedURL.resource
         }
         if (splittedURL.base === ":") {
             return ":" + splittedURL.resource
@@ -24,7 +21,7 @@ export default class PrefixTools {
 
     /**
      * @param {string} fullURL
-     * @param {any} graph
+     * @param {Graph} graph
      */
     static #splitURLIntoBaseAndResource(fullURL, graph) {
         let splitedURL = { base: "", resource: "" }

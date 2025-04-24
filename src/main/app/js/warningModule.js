@@ -1,4 +1,6 @@
 import BaseElement from "../../webvowl/js/elements/BaseElement"
+import BaseNode from "../../webvowl/js/elements/nodes/BaseNode"
+import BaseProperty from "../../webvowl/js/elements/properties/BaseProperty"
 import Graph from "../../webvowl/js/graph"
 
 export default class Warnings {
@@ -271,8 +273,8 @@ export default class Warnings {
      * @param {string} header
      * @param {string} reason
      * @param {string} action
-     * @param {(arg0: any, arg1: any, arg2: any, arg3: any) => void} callback
-     * @param {any[]} parameterArray
+     * @param {(arg0: BaseNode[], arg1: BaseProperty[]) => void} callback
+     * @param {[BaseNode[], BaseProperty[]]} parameterArray
      */
     responseWarning(header, reason, action, callback, parameterArray) {
         const id = this.addMessageBox()
@@ -336,12 +338,7 @@ export default class Warnings {
         gotItButton.on("click", function () {
             _this.#closeMessage(this.id)
             d3.select("#blockGraphInteractions").classed("hidden", true)
-            callback(
-                parameterArray[0],
-                parameterArray[1],
-                parameterArray[2],
-                parameterArray[3],
-            )
+            callback(...parameterArray)
         })
         warningContainer.append("span").node().innerHTML = "|"
         const cancelButton = warningContainer.append("label")

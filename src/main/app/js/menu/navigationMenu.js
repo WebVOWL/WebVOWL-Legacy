@@ -42,7 +42,9 @@ export default class NavigationMenu {
             this.clearAllTimers()
             return
         }
-        this.t_scrollRight = requestAnimationFrame(this.timed_scrollRight)
+        this.t_scrollRight = requestAnimationFrame(() => {
+            this.timed_scrollRight()
+        })
     }
 
     timed_scrollLeft() {
@@ -53,7 +55,9 @@ export default class NavigationMenu {
             this.clearAllTimers()
             return
         }
-        this.t_scrollRight = requestAnimationFrame(this.timed_scrollLeft)
+        this.t_scrollRight = requestAnimationFrame(() => {
+            this.timed_scrollLeft()
+        })
     }
 
     // collect all menu entries and stuff;
@@ -86,14 +90,14 @@ export default class NavigationMenu {
                 this.m_select[i] = undefined
             }
             // create custom behavior for click, touch, and hover
-            d3.select("#" + this.c_select[i]).on("mouseover", () => {
-                this.menuElementOnHovered()
+            d3.select("#" + this.c_select[i]).on("mouseover", function () {
+                _this.menuElementOnHovered(this)
             })
-            d3.select("#" + this.c_select[i]).on("mouseout", () => {
-                this.menuElementOutHovered()
+            d3.select("#" + this.c_select[i]).on("mouseout", function () {
+                _this.menuElementOutHovered(this)
             })
-            d3.select("#" + this.c_select[i]).on("click", () => {
-                this.menuElementClicked()
+            d3.select("#" + this.c_select[i]).on("click", function () {
+                _this.menuElementClicked(this)
             })
             d3.select("#" + this.c_select[i]).on("touchstart", () => {
                 this.menuElementTouched()
@@ -118,16 +122,16 @@ export default class NavigationMenu {
             .on("mousedown", function () {
                 _this.scrolLeftValue = _this.scrollContainer.scrollLeft
                 _this.hideAllMenus()
-                _this.t_scrollRight = requestAnimationFrame(
-                    _this.timed_scrollRight,
-                )
+                _this.t_scrollRight = requestAnimationFrame(() => {
+                    _this.timed_scrollRight
+                })
             })
             .on("touchstart", function () {
                 _this.scrolLeftValue = _this.scrollContainer.scrollLeft
                 _this.hideAllMenus()
-                _this.t_scrollRight = requestAnimationFrame(
-                    _this.timed_scrollRight,
-                )
+                _this.t_scrollRight = requestAnimationFrame(() => {
+                    _this.timed_scrollRight
+                })
             })
             .on("mouseup", () => {
                 _this.clearAllTimers()
@@ -142,16 +146,16 @@ export default class NavigationMenu {
             .on("mousedown", function () {
                 _this.scrolLeftValue = _this.scrollContainer.scrollLeft
                 _this.hideAllMenus()
-                _this.t_scrollLeft = requestAnimationFrame(
-                    _this.timed_scrollLeft,
-                )
+                _this.t_scrollLeft = requestAnimationFrame(() => {
+                    _this.timed_scrollLeft
+                })
             })
             .on("touchstart", function () {
                 _this.scrolLeftValue = _this.scrollContainer.scrollLeft
                 _this.hideAllMenus()
-                _this.t_scrollLeft = requestAnimationFrame(
-                    _this.timed_scrollLeft,
-                )
+                _this.t_scrollLeft = requestAnimationFrame(() => {
+                    _this.timed_scrollLeft
+                })
             })
             .on("mouseup", () => {
                 _this.clearAllTimers()
@@ -169,27 +173,36 @@ export default class NavigationMenu {
         })
     }
 
-    menuElementOnHovered() {
+    /**
+     * @param {any} item
+     */
+    menuElementOnHovered(item) {
         this.hideAllMenus()
         if (this.touchedElement) {
             return
         }
-        this.showSingleMenu(this.id)
+        this.showSingleMenu(item.id)
     }
 
-    menuElementOutHovered() {
-        this.hoveroutedControMenu(this.id)
+    /**
+     * @param {any} item
+     */
+    menuElementOutHovered(item) {
+        this.hoveroutedControMenu(item.id)
     }
 
-    menuElementClicked() {
-        const m_element = this.m_select[this.c_select.indexOf(this.id)]
+    /**
+     * @param {any} item
+     */
+    menuElementClicked(item) {
+        const m_element = this.m_select[this.c_select.indexOf(item.id)]
         if (m_element) {
             const menuElement = d3.select("#" + m_element)
             if (menuElement) {
                 if (menuElement.style("display") === "block") {
                     menuElement.style("display", "none") // hide it
                 } else {
-                    this.showSingleMenu(this.id)
+                    this.showSingleMenu(item.id)
                 }
             }
         }
@@ -235,8 +248,9 @@ export default class NavigationMenu {
             // show it if we have a menu
             this.currentlyVisibleMenu = d3.select("#" + m_element)
             this.currentlyVisibleMenu.style("display", "block")
-            if (m_element === "m_export")
+            if (m_element === "m_export") {
                 this.graph.options.exportMenu.exportAsUrl()
+            }
             this.updateMenuPosition()
         }
     }

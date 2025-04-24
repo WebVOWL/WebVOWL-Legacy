@@ -266,7 +266,11 @@ export default class BaseNode extends BaseElement {
 
                     d3.select("#element_iriEditor").node().title = syncedIRI
                     d3.select("#element_iriEditor").node().value =
-                        PrefixTools.getPrefixRepresentationForFullURI(syncedIRI)
+                        // @ts-ignore
+                        PrefixTools.getPrefixRepresentationForFullURI(
+                            syncedIRI,
+                            this.graph,
+                        )
                 }
                 d3.select("#element_labelEditor").node().value =
                     editText.node().value
@@ -305,13 +309,13 @@ export default class BaseNode extends BaseElement {
                                 " already been set",
                             "Restoring previous IRI for Element : " + _this.iri,
                             2,
-                            this,
+                            _this,
                         )
                     }
                 }
                 if (!_this.graph.isADraggerActive()) {
                     _this.graph.options.focuserModule.handle(undefined)
-                    _this.graph.options.focuserModule.handle(this)
+                    _this.graph.options.focuserModule.handle(_this)
                 }
             })
     }

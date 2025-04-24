@@ -754,8 +754,7 @@ export default class SideBar {
 
         this.collapseButton.on("click", () => {
             this.graph.options.navigationMenu.hideAllMenus()
-            const isVisible = this.getSidebarVisibility()
-            this.showSidebar(!isVisible)
+            this.showSidebar(this.getSidebarVisibility())
         })
     }
 

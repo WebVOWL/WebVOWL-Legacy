@@ -664,9 +664,9 @@ export default class EditSidebar {
     #setupAddPrefixButton() {
         const _this = this
         const btn = d3.select("#addPrefixButton")
-        btn.on("click", () => {
+        btn.on("click", function () {
             // check if we are still in editMode
-            if (!this.prefix_editMode) {
+            if (!_this.prefix_editMode) {
                 // create new line entry;
                 const name = "emptyPrefixEntry"
                 const prefixListContainer = d3.select("#prefixURL_Container")
@@ -741,7 +741,7 @@ export default class EditSidebar {
 
                 prefInput.node().disabled = false
                 prefURL.node().disabled = false
-                this.prefix_editMode = true
+                _this.prefix_editMode = true
                 const deleteContainer = prefixEditContainer.append("div")
                 deleteContainer.style("float", "right")
                 const deleteButton = deleteContainer.append("svg")
@@ -780,23 +780,22 @@ export default class EditSidebar {
                 })
 
                 // connect the buttons;
-                editButton.on("click", () => {
-                    this.#enablePrefixEdit()
+                editButton.on("click", function (item) {
+                    _this.#enablePrefixEdit(item) // item necessary to handle #this_override
                 })
-                deleteButton.on("click", () => {
-                    this.#deletePrefixLine()
+                deleteButton.on("click", function () {
+                    _this.#deletePrefixLine(this)
                 })
 
-                this.updateElementWidth()
+                _this.updateElementWidth()
                 // swap focus to prefixInput
                 prefInput.node().focus()
-                this.oldPrefix = name
-                this.oldPrefixURL = ""
+                _this.oldPrefix = name
+                _this.oldPrefixURL = ""
                 d3.select("#addPrefixButton").node().innerHTML = "Save Prefix"
             } else {
-                // @ts-ignore
                 d3.select("#editButtonFor_emptyPrefixEntry").on("click")(
-                    d3.select("#editButtonFor_emptyPrefixEntry").node(),
+                    d3.select("#editButtonFor_emptyPrefixEntry").node(), // #this_override performed here
                 )
             }
         })
@@ -861,6 +860,7 @@ export default class EditSidebar {
 
         for (const name in prefixElements) {
             if (prefixElements.hasOwnProperty(name)) {
+                const _this = this
                 const prefixEditContainer = prefixListContainer.append("div")
                 prefixEditContainer.classed("prefixIRIElements", true)
                 prefixEditContainer.node().id = "prefixContainerFor_" + name
@@ -969,11 +969,11 @@ export default class EditSidebar {
                 deleteButton.selectAll("g").on("mouseout", function () {
                     setEnabledDeletePath(this, false)
                 })
-                editButton.on("click", () => {
-                    this.#enablePrefixEdit()
+                editButton.on("click", function () {
+                    _this.#enablePrefixEdit(this)
                 })
-                deleteButton.on("click", () => {
-                    this.#deletePrefixLine()
+                deleteButton.on("click", function () {
+                    _this.#deletePrefixLine(this)
                 })
 
                 // EXPERIMENTAL

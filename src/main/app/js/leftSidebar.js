@@ -91,22 +91,31 @@ export default class LeftSideBar {
         d3.select("#" + identifier).node().title = element.innerHTML
     }
 
-    #classSelectorFunction() {
+    /**
+     * @param {any} item
+     */
+    #classSelectorFunction(item) {
         this.#unselectAllElements(this.defaultClassSelectionContainers)
-        this.#selectThisDefaultElement(this)
-        this.#updateDefaultNameInAccordion(this, "defaultClass")
+        this.#selectThisDefaultElement(item)
+        this.#updateDefaultNameInAccordion(item, "defaultClass")
     }
 
-    #datatypeSelectorFunction() {
+    /**
+     * @param {any} item
+     */
+    #datatypeSelectorFunction(item) {
         this.#unselectAllElements(this.defaultDatatypeSelectionContainers)
-        this.#selectThisDefaultElement(this)
-        this.#updateDefaultNameInAccordion(this, "defaultDatatype")
+        this.#selectThisDefaultElement(item)
+        this.#updateDefaultNameInAccordion(item, "defaultDatatype")
     }
 
-    #propertySelectorFunction() {
+    /**
+     * @param {any} item
+     */
+    #propertySelectorFunction(item) {
         this.#unselectAllElements(this.defaultPropertySelectionContainers)
-        this.#selectThisDefaultElement(this)
-        this.#updateDefaultNameInAccordion(this, "defaultProperty")
+        this.#selectThisDefaultElement(item)
+        this.#updateDefaultNameInAccordion(item, "defaultProperty")
     }
 
     #setupSelectionContainers() {
@@ -123,6 +132,7 @@ export default class LeftSideBar {
         const supportedDatatypes = this.graph.options.supportedDatatypes
         const supportedProperties = this.graph.options.supportedProperties
 
+        const _this = this
         for (const supportedClass of supportedClasses) {
             const aClassSelectionContainer = classContainer.append("div")
             aClassSelectionContainer.classed(
@@ -137,8 +147,8 @@ export default class LeftSideBar {
             if (supportedClass === defaultClass) {
                 this.#selectThisDefaultElement(aClassSelectionContainer.node())
             }
-            aClassSelectionContainer.on("click", () => {
-                this.#classSelectorFunction()
+            aClassSelectionContainer.on("click", function () {
+                _this.#classSelectorFunction(this)
             })
             this.defaultClassSelectionContainers.push(aClassSelectionContainer)
         }
@@ -153,8 +163,8 @@ export default class LeftSideBar {
             if (supportedDatatype === defaultDatatype) {
                 this.#selectThisDefaultElement(aDTSelectionContainer.node())
             }
-            aDTSelectionContainer.on("click", () => {
-                this.#datatypeSelectorFunction()
+            aDTSelectionContainer.on("click", function () {
+                _this.#datatypeSelectorFunction(this)
             })
             this.defaultDatatypeSelectionContainers.push(aDTSelectionContainer)
         }
@@ -168,8 +178,8 @@ export default class LeftSideBar {
             aPropSelectionContainer.node().id =
                 "selectedClass" + supportedProperty
             aPropSelectionContainer.node().innerHTML = supportedProperty
-            aPropSelectionContainer.on("click", () => {
-                this.#propertySelectorFunction()
+            aPropSelectionContainer.on("click", function () {
+                _this.#propertySelectorFunction(this)
             })
             if (supportedProperty === defaultProperty) {
                 this.#selectThisDefaultElement(aPropSelectionContainer.node())
@@ -182,10 +192,16 @@ export default class LeftSideBar {
 
     #setupCollapsing() {
         // adapted version of this example: http://www.normansblog.de/simple-jquery-accordion/
+        /**
+         * @param {import("d3-selection").Selection<any, any, null, undefined>} containers
+         */
         function collapseContainers(containers) {
             containers.classed("hidden", true)
         }
 
+        /**
+         * @param {import("d3-selection").Selection<any, any, null, undefined>} containers
+         */
         function expandContainers(containers) {
             containers.classed("hidden", false)
         }

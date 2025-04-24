@@ -380,7 +380,13 @@ export default class Parser {
         }
 
         // Create node objects for all individuals
-        if (element.individuals) {
+        if (
+            element.individuals instanceof Array &&
+            element.individuals.length > 0
+        ) {
+            if (!(node.individuals instanceof Array)) {
+                node.individuals = []
+            }
             for (const individual of element.individuals) {
                 let individualNode = new Prototype(_this.graph)
                 individualNode.label = individual.labels
@@ -496,14 +502,18 @@ export default class Parser {
                 let rangeObject
                 // @ts-ignore
                 const inversePropertyId = this.#findId(property.inverse)
-                const inverse = this.propertyMap.get(inversePropertyId)
-                if (!inverse) {
-                    console.warn(
-                        "No inverse property was found for id: " +
-                            inversePropertyId,
-                    )
-                    property.inverse = undefined
+                let inverse = undefined
+                if (inversePropertyId) {
+                    inverse = this.propertyMap.get(inversePropertyId)
+                    if (!inverse) {
+                        console.warn(
+                            "No inverse property was found for id: " +
+                                inversePropertyId,
+                        )
+                        property.inverse = undefined
+                    }
                 }
+
                 // Either domain and range are set on this property or at the inverse
                 if (
                     typeof property.domain !== "undefined" &&
@@ -802,8 +812,8 @@ export default class Parser {
         let mergeNodes = []
 
         for (const property of properties) {
-            domainIDs.add(property.domain.id)
-            rangeIDs.add(property.range.id)
+            domainIDs.add(property.domain)
+            rangeIDs.add(property.range)
         }
 
         for (const property of properties) {
@@ -818,7 +828,7 @@ export default class Parser {
                 // Add the equivalent property instances from their ID
                 for (const equivalentProperty of property.equivalents) {
                     propertyWithEquivalents.push(
-                        this.propertyMap.get(equivalentProperty.id),
+                        this.propertyMap.get(equivalentProperty),
                     )
                 }
                 if (propertyWithEquivalents.length === 1) {
@@ -830,8 +840,8 @@ export default class Parser {
             if (mergeNode) {
                 mergeNodes.push(this.#createDefaultMergeNode(property))
                 for (const equivalentProperty of propertyWithEquivalents) {
-                    const oldRangeId = equivalentProperty.range.id
-                    equivalentProperty.range.id = mergeNode.id
+                    const oldRangeId = equivalentProperty.range
+                    equivalentProperty.range = mergeNode.id
                     // isDomainOrRangeOfOtherProperty
                     if (
                         !(domainIDs.has(oldRangeId) || rangeIDs.has(oldRangeId))
@@ -881,7 +891,7 @@ export default class Parser {
                     `Property cannot be '${property}' in this context`,
                 )
             }
-            const range = this.nodeMap.get(property.range.id)
+            const range = this.nodeMap.get(property.range)
             const type = range.type
 
             if (!typeMap.has(type)) {

@@ -70,7 +70,7 @@ export default class OwlEquivalentClass extends RoundNode {
         this.renderingElement = parentElement.append("g")
         let bgColor = this.backgroundColor
 
-        if (this.attributes.indexOf("deprecated") > -1) {
+        if (this.attributes && this.attributes.indexOf("deprecated") > -1) {
             bgColor = undefined
         }
         // draw the outer circle at first and afterwards the inner circle

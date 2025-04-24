@@ -40,10 +40,7 @@ export default class Focuser {
                 this.focusedElement,
             )
             if (ElementTools.isProperty(selectedElement) === true) {
-                let inversed = false
-                if (selectedElement.inverse) {
-                    inversed = true
-                }
+                const inversed = Boolean(selectedElement.inverse)
                 this.graph.activateHoverElementsForProperties(
                     true,
                     selectedElement,

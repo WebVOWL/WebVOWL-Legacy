@@ -798,7 +798,6 @@ export default class OntologyLoading {
         d3.select("#reloadCachedOntology").classed("hidden", true)
         this.graph.options.pauseMenu.reset()
         this.graph.options.navigationMenu.hideAllMenus()
-        this.graph.editorMode // updates the checkbox
 
         this.setPercentMode()
 

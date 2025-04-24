@@ -43,7 +43,9 @@ export default class ZoomSlider {
             this.zoomValue = this.minMag
         }
         this.graph.setSliderZoom(this.zoomValue)
-        this.t_zoomOut = requestAnimationFrame(this.timed_zoomOut)
+        this.t_zoomOut = requestAnimationFrame(() => {
+            this.timed_zoomOut()
+        })
     }
 
     timed_zoomIn() {
@@ -53,7 +55,9 @@ export default class ZoomSlider {
             this.zoomValue = this.maxMag
         }
         this.graph.setSliderZoom(this.zoomValue)
-        this.t_zoomIn = requestAnimationFrame(this.timed_zoomIn)
+        this.t_zoomIn = requestAnimationFrame(() => {
+            this.timed_zoomIn()
+        })
     }
 
     setup() {
@@ -73,15 +77,19 @@ export default class ZoomSlider {
                 _this.zooming()
             })
         d3.select("#zoomOutButton")
-            .on("mousedown", function () {
+            .on("mousedown", () => {
                 _this.graph.options.navigationMenu.hideAllMenus()
                 _this.zoomValue = _this.graph.getScaleFactor()
-                _this.t_zoomOut = requestAnimationFrame(_this.timed_zoomOut)
+                _this.t_zoomOut = requestAnimationFrame(() => {
+                    _this.timed_zoomOut()
+                })
             })
-            .on("touchstart", function () {
+            .on("touchstart", () => {
                 _this.graph.options.navigationMenu.hideAllMenus()
                 _this.zoomValue = _this.graph.getScaleFactor()
-                _this.t_zoomOut = requestAnimationFrame(_this.timed_zoomOut)
+                _this.t_zoomOut = requestAnimationFrame(() => {
+                    _this.timed_zoomOut()
+                })
             })
             .on("mouseup", () => {
                 this.clearAllTimers()
@@ -94,15 +102,19 @@ export default class ZoomSlider {
             })
             .attr("title", "zoom out")
         d3.select("#zoomInButton")
-            .on("mousedown", function () {
+            .on("mousedown", () => {
                 _this.graph.options.navigationMenu.hideAllMenus()
                 _this.zoomValue = _this.graph.getScaleFactor()
-                _this.t_zoomIn = requestAnimationFrame(_this.timed_zoomIn)
+                _this.t_zoomIn = requestAnimationFrame(() => {
+                    _this.timed_zoomIn()
+                })
             })
-            .on("touchstart", function () {
+            .on("touchstart", () => {
                 _this.graph.options.navigationMenu.hideAllMenus()
                 _this.zoomValue = _this.graph.getScaleFactor()
-                _this.t_zoomIn = requestAnimationFrame(_this.timed_zoomIn)
+                _this.t_zoomIn = requestAnimationFrame(() => {
+                    _this.timed_zoomIn()
+                })
             })
             .on("mouseup", () => {
                 this.clearAllTimers()

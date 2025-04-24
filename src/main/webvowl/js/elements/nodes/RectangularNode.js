@@ -72,6 +72,11 @@ export default class RectangularNode extends RectangularElementToolsMixin(
         this.labelWidth = width
     }
 
+    // For compatibility reasons // TODO resolve
+    actualRadius() {
+        return this.smallestRadius
+    }
+
     toggleFocus() {
         this.focused = !this.focused
         this.nodeElement.select("rect").classed("focused", this.focused)
@@ -140,7 +145,9 @@ export default class RectangularNode extends RectangularElementToolsMixin(
             this.nodeElement,
             dx,
             dy,
-            this.removePin,
+            () => {
+                this.removePin()
+            },
             this.graph.options.showDraggerObject,
             this.graph.options.useAccuracyHelper,
         )

@@ -546,7 +546,9 @@ export default class BaseProperty extends RectangularElementToolsMixin(
                     this.labelElement,
                     -0.5 * this.width + 10,
                     -25,
-                    this.removePin,
+                    () => {
+                        this.removePin()
+                    },
                     this.graph.options.showDraggerObject,
                     this.graph.options.useAccuracyHelper,
                 )
@@ -555,7 +557,9 @@ export default class BaseProperty extends RectangularElementToolsMixin(
                     this.inverse.labelElement,
                     -0.5 * this.inverse.labelWidth + 10,
                     -25,
-                    this.removePin,
+                    () => {
+                        this.removePin()
+                    },
                     this.graph.options.showDraggerObject,
                     this.graph.options.useAccuracyHelper,
                 )
@@ -564,7 +568,9 @@ export default class BaseProperty extends RectangularElementToolsMixin(
                 this.labelElement,
                 -0.5 * this.width + 10,
                 -25,
-                this.removePin,
+                () => {
+                    this.removePin()
+                },
                 this.graph.options.showDraggerObject,
                 this.graph.options.useAccuracyHelper,
             )
@@ -806,7 +812,11 @@ export default class BaseProperty extends RectangularElementToolsMixin(
 
                     d3.select("#element_iriEditor").node().title = syncedIRI
                     d3.select("#element_iriEditor").node().value =
-                        PrefixTools.getPrefixRepresentationForFullURI(syncedIRI)
+                        // @ts-ignore
+                        PrefixTools.getPrefixRepresentationForFullURI(
+                            syncedIRI,
+                            this.graph,
+                        )
                 }
                 d3.select("#element_labelEditor").node().value =
                     editText.node().value
@@ -858,8 +868,8 @@ export default class BaseProperty extends RectangularElementToolsMixin(
                     _this.iri = _this.backupFullIri
                 }
                 _this.graph.options.focuserModule.handle(undefined)
-                _this.graph.options.focuserModule.handle(this)
-                _this.graph.updatePropertyDraggerElements(this)
+                _this.graph.options.focuserModule.handle(_this)
+                _this.graph.updatePropertyDraggerElements(_this)
             })
     }
 

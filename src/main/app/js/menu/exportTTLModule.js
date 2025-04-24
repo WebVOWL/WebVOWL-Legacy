@@ -65,6 +65,7 @@ export default class ExportTTLModule {
             const node = allNodes[i]
             const nodeIRI = PrefixTools.getPrefixRepresentationForFullURI(
                 node.iri,
+                this.graph,
             )
             if (PrefixTools.validURL(nodeIRI)) {
                 node.prefixRepresentation = "<" + nodeIRI + ">"
@@ -77,6 +78,7 @@ export default class ExportTTLModule {
             const property = allProps[i]
             const propIRI = PrefixTools.getPrefixRepresentationForFullURI(
                 property.iri,
+                this.graph,
             )
             if (PrefixTools.validURL(propIRI)) {
                 property.prefixRepresentation = "<" + propIRI + ">"
@@ -189,6 +191,7 @@ export default class ExportTTLModule {
             for (let e = 0; e < node.equivalents.length; e++) {
                 const eqIRI = PrefixTools.getPrefixRepresentationForFullURI(
                     node.equivalents[e].iri,
+                    this.graph,
                 )
                 let eqNode_prefRepresentation = ""
                 if (PrefixTools.validURL(eqIRI)) {
@@ -240,6 +243,7 @@ export default class ExportTTLModule {
             for (let duE = 0; duE < arrayOfNodes.length; duE++) {
                 const duIri = PrefixTools.getPrefixRepresentationForFullURI(
                     arrayOfNodes[duE].iri,
+                    this.graph,
                 )
                 let duNode_prefRepresentation = ""
                 if (PrefixTools.validURL(duIri) === true)
@@ -258,6 +262,7 @@ export default class ExportTTLModule {
                 if (arrayOfUnionNodes[uE] && arrayOfUnionNodes[uE].iri) {
                     const uIri = PrefixTools.getPrefixRepresentationForFullURI(
                         arrayOfUnionNodes[uE].iri,
+                        this.graph,
                     )
                     let uNode_prefRepresentation = ""
                     if (PrefixTools.validURL(uIri) === true)
@@ -367,6 +372,7 @@ export default class ExportTTLModule {
             console.log("THIS SHOULD NOT HAPPEN")
             const propIRI = PrefixTools.getPrefixRepresentationForFullURI(
                 property.iri,
+                this.graph,
             )
             console.log("FOUND " + propIRI)
         }

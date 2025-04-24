@@ -135,7 +135,9 @@ export default class RoundNode extends BaseNode {
             this.nodeElement,
             dx,
             dy,
-            this.removePin,
+            () => {
+                this.removePin()
+            },
             this.graph.options.showDraggerObject,
             this.graph.options.useAccuracyHelper,
         )

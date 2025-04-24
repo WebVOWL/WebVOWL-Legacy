@@ -153,7 +153,7 @@ export default class Graph {
 
         this.eP = 0 // id for new properties
         this.eN = 0 // id for new Nodes
-        this.isEditorMode = true
+        this.isEditorMode = false
         this.debugContainer = d3.select("#FPS_Statistics")
         this.finishedLoadingSequence = false
 
@@ -3480,7 +3480,7 @@ export default class Graph {
             })
         } else {
             svgGraph.on("dblclick.zoom", this.originalD3_dblClickFunction)
-            this.options.leftSidebar.showSidebar(0)
+            this.options.leftSidebar.showSidebar(false)
             this.options.leftSidebar.hideCollapseButton(true)
             // hide hovered edit elements
             this.removeEditElements()
@@ -3508,7 +3508,7 @@ export default class Graph {
         aNode.y = pos.y
         aNode.px = aNode.x
         aNode.py = aNode.y
-        aNode.id = "Class" + eN++
+        aNode.id = "Class" + this.eN++
         // aNode._paused=true;
         aNode.baseIri = d3.select("#iriEditor").node().value
         aNode.iri = aNode.baseIri + aNode.id
@@ -3944,14 +3944,15 @@ export default class Graph {
         domain.addProperty(aProp)
         range.addProperty(aProp)
 
+        this.#addNewPropertyElement(aProp)
+        this.#generateDictionary(this.unfilteredData)
+        this.fastUpdate()
+
         aProp.labelObject.x = pX
         aProp.labelObject.px = pX
         aProp.labelObject.y = pY
         aProp.labelObject.py = pY
 
-        this.#addNewPropertyElement(aProp)
-        this.#generateDictionary(this.unfilteredData)
-        this.fastUpdate()
         aProp.frozen = this._paused
         aProp.locked = this._paused
         domain.frozen = this._paused
@@ -4136,7 +4137,9 @@ export default class Graph {
                 "Removing elements",
                 text,
                 "Awaiting response!",
-                this.removeNodesViaResponse,
+                (nodesToRemove, propsToRemove) => {
+                    this.removeNodesViaResponse(nodesToRemove, propsToRemove)
+                },
                 [nodesToRemove, propsToRemove],
             )
         } else {
@@ -4166,8 +4169,8 @@ export default class Graph {
 
     executeColorExternalsModule() {
         this.options.colorExternalsModule.filter(
-            unfilteredData.nodes,
-            unfilteredData.properties,
+            this.unfilteredData.nodes,
+            this.unfilteredData.properties,
         )
     }
 

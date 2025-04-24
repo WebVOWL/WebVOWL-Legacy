@@ -274,9 +274,11 @@ export default class Options {
 
         // Misc
         this.focuserModule = new Focuser(this.graph)
-        this.pickAndPinModule = new PickAndPin(this.graph)
+        this.pickAndPinModule = new PickAndPin()
         this.selectionDetailDisplayer = new SelectionDetailsDisplayer(
-            this.sidebar.updateSelectionInformation,
+            (selectedElement) => {
+                this.sidebar.updateSelectionInformation(selectedElement)
+            },
         )
         this.selectionModules = [
             this.focuserModule,
