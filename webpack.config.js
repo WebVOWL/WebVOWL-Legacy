@@ -61,38 +61,6 @@ function getConfig(args) {
                 new CssMinimizerPlugin(),
             ],
         },
-        // resolve: {
-        // 	// Webpack 5 polyfill https://webpack.js.org/configuration/resolve/#resolvefallback
-        // 	fallback: {
-        // 		// assert: require.resolve('assert'),
-        // 		// buffer: require.resolve('buffer'),
-        // 		// console: require.resolve('console-browserify'),
-        // 		// constants: require.resolve('constants-browserify'),
-        // 		// crypto: require.resolve('crypto-browserify'),
-        // 		// domain: require.resolve('domain-browser'),
-        // 		// events: require.resolve('events'),
-        // 		// http: require.resolve('stream-http'),
-        // 		// https: require.resolve('https-browserify'),
-        // 		// os: require.resolve('os-browserify/browser'),
-        // 		path: require.resolve('path-browserify'),
-        // 		// fs: require.resolve('fs'),
-        // 		// punycode: require.resolve('punycode'),
-        // 		// process: require.resolve('process/browser'),
-        // 		// querystring: require.resolve('querystring-es3'),
-        // 		// stream: require.resolve('stream-browserify'),
-        // 		// string_decoder: require.resolve('string_decoder'),
-        // 		// sys: require.resolve('util'),
-        // 		// timers: require.resolve('timers-browserify'),
-        // 		// tty: require.resolve('tty-browserify'),
-        // 		// url: require.resolve('url'),
-        // 		util: require.resolve('util'),
-        // 		vm: require.resolve('vm-browserify'),
-        // 		// zlib: require.resolve('browserify-zlib'),
-        // 	},
-        // 	// alias: {
-        // 	// 	process: "process/browser",
-        // 	// },
-        // },
         module: {
             rules: [
                 {
@@ -111,9 +79,6 @@ function getConfig(args) {
             new webpack.ProvidePlugin({
                 d3: "d3",
             }),
-            // new webpack.ProvidePlugin({
-            // 	process: 'process/browser',
-            // }),
             new CopyWebpackPlugin({
                 patterns: [
                     { context: paths.dataPath, from: "./*", to: `data` },
@@ -126,7 +91,7 @@ function getConfig(args) {
                 crateDirectory: path.resolve(__dirname, paths.rustPath),
                 // For available set of arguments check:
                 // https://rustwasm.github.io/docs/wasm-pack/
-                // https://github.com/wasm-tool/wasm-pack-plugin
+                // https://github.com/WebVOWL/wasm-pack-plugin
                 args: "--verbose",
                 extraArgs: "--target bundler --mode normal",
                 forceMode: "production",
@@ -163,7 +128,7 @@ function getServerConfig(args) {
                     runtimeErrors: true,
                 },
                 logging: "info",
-                progress: true,
+                progress: false,
                 reconnect: 3,
             },
             devMiddleware: {
