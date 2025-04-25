@@ -1,4 +1,3 @@
-import { parse_json } from "../../../../target/pkg"
 import BaseElement from "./elements/BaseElement"
 import BaseNode from "./elements/nodes/BaseNode"
 import OwlThing from "./elements/nodes/implementations/OwlThing"
@@ -178,34 +177,51 @@ export default class Parser {
     }
 
     /**
+     * @param {Blob} file
+     */
+    readFile(file) {
+        const reader = new FileReader()
+
+        return new Promise((resolve, reject) => {
+            reader.onerror = () => {
+                reader.abort()
+                reject()
+            }
+
+            reader.onload = () => {
+                resolve(reader.result)
+            }
+            reader.readAsText(file)
+        })
+    }
+
+    /**
      * Parse `content` and ensure the graph data is valid
      * @param {{ file?: File; json?: string; }} content A file pointer or a JSON string
      * @param {string} filename
      * @param {string} alternativeFilename
      */
-    async parseOntologyFromText(content, filename, alternativeFilename) {
+    async parseOntologyFromUser(content, filename, alternativeFilename) {
         let dataObject = undefined
         const options = this.graph.options
         const loadingModule = options.loadingModule
 
         const resolve = (/** @type {any} */ data) => {
-            loadingModule.validOntology()
             return Promise.resolve(data)
         }
 
         const reject = (/** @type {any} */ cause) => {
-            loadingModule.invalidOntology(cause)
             return Promise.reject(cause)
         }
 
         // Figure out if data is a file or a JSON string
         if (content.file) {
-            // This is used for large ontologies to improve performance and memory usage
-            const result = await parse_json(content.file)
-            if (!result.data) {
-                return reject(result.status)
-            }
-            dataObject = result.data
+            dataObject = JSON.parse(await this.readFile(content.file))
+            // const result = await parse_json(content.file)
+            // if (!result.data) {
+            //     return reject(result.status)
+            // }
+            // dataObject = result.data
         } else if (content.json) {
             // This is used for small ontologies
             dataObject = JSON.parse(content.json)

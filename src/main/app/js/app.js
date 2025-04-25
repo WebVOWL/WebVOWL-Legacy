@@ -1,4 +1,3 @@
-import { init_rust } from "../../../../target/pkg"
 import Graph from "../../webvowl/js/graph.js"
 import Options from "../../webvowl/js/options.js"
 
@@ -147,8 +146,6 @@ export default class App {
     }
 
     async initialize() {
-        init_rust() // Initialize Rust code
-
         this.options.graphContainerSelector = this.GRAPH_SELECTOR
         this.options.setup(() => {
             this.#adjustSize()
