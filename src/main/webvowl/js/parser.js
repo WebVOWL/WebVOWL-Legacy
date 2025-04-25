@@ -189,6 +189,7 @@ export default class Parser {
         const loadingModule = options.loadingModule
 
         const resolve = (/** @type {any} */ data) => {
+            loadingModule.validOntology()
             return Promise.resolve(data)
         }
 
@@ -200,11 +201,11 @@ export default class Parser {
         // Figure out if data is a file or a JSON string
         if (content.file) {
             // This is used for large ontologies to improve performance and memory usage
-            try {
-                dataObject = await parse_json(content.file)
-            } catch (error) {
-                return reject(error)
+            const result = await parse_json(content.file)
+            if (!result.data) {
+                return reject(result.status)
             }
+            dataObject = result.data
         } else if (content.json) {
             // This is used for small ontologies
             dataObject = JSON.parse(content.json)
@@ -242,7 +243,6 @@ export default class Parser {
                 exportMenu.setJsonText(content.json)
             }
             exportMenu.setFilename(filename)
-            loadingModule.validOntology()
             return resolve(dataObject)
         } else {
             // Check if we're creating a new ontology
