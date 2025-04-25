@@ -1,38 +1,114 @@
-use std::str;
-
+use serde::{Deserialize, Serialize};
+use std::str::{self};
 use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::js_sys::Uint8Array;
+use web_sys::{
+    console,
+    js_sys::{Error, Uint8Array},
+};
 
-use crate::graph::data::OwlToWovlJSON;
+#[derive(Serialize, Deserialize)]
+pub struct JsonResult {
+    pub data: Option<serde_json::Value>,
+    pub status: String,
+}
+
+impl JsonResult {
+    pub fn new(data: Option<serde_json::Value>, status: String) -> Self {
+        JsonResult { data, status }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct StringResult {
+    pub data: Option<String>,
+    pub status: String,
+}
+
+impl StringResult {
+    pub fn new(data: Option<String>, status: String) -> Self {
+        StringResult { data, status }
+    }
+}
+
+fn convert_to_js<T: serde::ser::Serialize + ?Sized>(content: &T) -> JsValue {
+    let serializer = serde_wasm_bindgen::Serializer::json_compatible();
+    // return match serde_wasm_bindgen::to_value(content) {
+    return match serde::Serialize::serialize(&content, &serializer) {
+        Ok(res) => res,
+        Err(error) => {
+            console::error_1(&JsValue::from_str(
+                format!("Failed to convert JSON struct to JavaScript object: {error}").as_str(),
+            ));
+            return JsValue::null();
+        }
+    };
+}
 
 /// Reads a JavaScript file handle and returns a Rust byte vector
-pub async fn read_web_file(web_file: web_sys::File) -> Vec<u8> {
+async fn read_web_file(web_file: web_sys::File) -> Result<Vec<u8>, Error> {
     let prom_buf = web_file.array_buffer();
     let future = JsFuture::from(prom_buf);
-    let buf = match future.await {
-        Ok(res) => res,
-        Err(error) => panic!("Failed to load file {error:?}"),
-    };
+    let buf = future.await?;
     let array = Uint8Array::new(&buf.into());
-    array.to_vec()
+    Ok(array.to_vec())
 }
 
-/// Read a JS file
+/// Parse a JavaScript file as a string.
+///
+/// Returns an Object `{data: SomeJSONObject, status: string}`
+/// where:
+/// - `data` is the JavaScript file converted to a JSON object
+/// - `status` is the error message of any error that occured while processing the file.
 #[wasm_bindgen]
 pub async fn read_file_as_string(web_file: web_sys::File) -> JsValue {
-    let bytes: Vec<u8> = read_web_file(web_file).await;
-    let s = match str::from_utf8(&bytes) {
-        Ok(v) => v,
-        Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+    let bytes: Vec<u8> = match read_web_file(web_file).await {
+        Ok(res) => res,
+        Err(error) => {
+            let err_str = error.to_string();
+            let err_object = JsonResult::new(None, format!("Failed to read file: {err_str}"));
+            return convert_to_js(&err_object);
+        }
     };
-    return JsValue::from_str(s);
+    let s: String = String::from_utf8_lossy(&bytes).into_owned();
+    let ok_object = StringResult::new(Some(s), String::new());
+    return convert_to_js(&ok_object);
 }
 
-/// Parse a JS file as a JSON string and return a JS object of it
+/// Parse a JavaScript file as a JSON string and return a JavaScript object of it.
+///
+/// Returns an Object `{data: SomeJSONObject, status: string}`
+/// where:
+/// - `data` is the JavaScript file converted to a JSON object
+/// - `status` is the error message of any error that occured while processing the file.
 #[wasm_bindgen]
 pub async fn parse_json(web_file: web_sys::File) -> JsValue {
-    let bytes: Vec<u8> = read_web_file(web_file).await;
-    let json_object: OwlToWovlJSON = serde_json::from_slice(&bytes).unwrap();
-    return serde_wasm_bindgen::to_value(&json_object).unwrap();
+    let bytes: Vec<u8> = match read_web_file(web_file).await {
+        Ok(res) => res,
+        Err(error) => {
+            let err_str = error.to_string();
+            let err_object = JsonResult::new(None, format!("Failed to read file: {err_str}"));
+            return convert_to_js(&err_object);
+        }
+    };
+    let slice_json_object: serde_json::Value = match serde_json::from_slice(&bytes) {
+        Ok(res) => res,
+        Err(_err1) => {
+            // Assuming an invalid UTF-8 code point in input.
+            // Try replacing invalids with placeholder char "�" (U+FFFD)
+            let s = String::from_utf8_lossy(&bytes).into_owned();
+            let str_json_object: serde_json::Value = match serde_json::from_str(s.as_str()) {
+                Ok(res) => res,
+                Err(err2) => {
+                    let err_object =
+                        JsonResult::new(None, format!("Failed to parse JSON file: {err2}"));
+                    return convert_to_js(&err_object);
+                }
+            };
+            let ok_object = JsonResult::new(Some(str_json_object), String::new());
+            return convert_to_js(&ok_object);
+        }
+    };
+    let ok_object = JsonResult::new(Some(slice_json_object), String::new());
+    return convert_to_js(&ok_object);
 }
