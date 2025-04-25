@@ -266,10 +266,9 @@ export default class BaseNode extends BaseElement {
 
                     d3.select("#element_iriEditor").node().title = syncedIRI
                     d3.select("#element_iriEditor").node().value =
-                        // @ts-ignore
                         PrefixTools.getPrefixRepresentationForFullURI(
                             syncedIRI,
-                            this.graph,
+                            _this.graph,
                         )
                 }
                 d3.select("#element_labelEditor").node().value =
