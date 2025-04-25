@@ -591,7 +591,7 @@ export default class Graph {
         }
         if (!this.updateRenderingDuringSimulation) {
             const value = 1.0 - 10 * this.force.alpha()
-            let percent = 200 * value + "%"
+            let percent = Math.round(200 * value) + "%"
             this.options.loadingModule.setPercentValue(percent)
             d3.select("#progressBarValue").style("width", percent)
             d3.select("#progressBarValue").node().innerHTML = percent
@@ -1129,7 +1129,7 @@ export default class Graph {
             .duration(250)
     }
 
-    #redrawGraph() {
+    #redrawGraphContainer() {
         this.#remove()
         this.graphContainer = d3
             .selectAll(this.options.graphContainerSelector)
@@ -1471,16 +1471,16 @@ export default class Graph {
     }
 
     // Loads all settings, removes the old graph (if it exists) and draws a new one.
-    start() {
-        this.force.stop()
-        this.#loadGraphData(true)
-        this.#redrawGraph()
-        this.update(true)
+    // start() {
+    //     this.force.stop()
+    //     this.#loadGraphData(true)
+    //     this.#redrawGraphContainer()
+    //     this.update(true)
 
-        if (!this.options.loadingModule.loadingWasSuccessFul) {
-            this.options.loadingModule.setErrorMode()
-        }
-    }
+    //     if (!this.options.loadingModule.loadingWasSuccessFul) {
+    //         this.options.loadingModule.setErrorMode()
+    //     }
+    // }
 
     // Updates only the style of the graph.
     updateStyle() {
@@ -1496,22 +1496,23 @@ export default class Graph {
      * Entrypoint for repeated ontology loading
      */
     load() {
-        this.force.stop()
+        this.#redrawGraphContainer()
         this.#loadGraphData()
-        this.labelNodes = this.#computeLabelNodes(
-            LinkCreator.createLinks(this.unfilteredData.properties),
-        )
-        for (let i = 0; i < this.labelNodes.length; i++) {
-            const label = this.labelNodes[i]
-            if (label.property.x && label.property.y) {
-                label.x = label.property.x
-                label.y = label.property.y
-                // also set the prev position of the label
-                label.px = label.x
-                label.py = label.y
-            }
-        }
-        this.update(false, this.unfilteredData)
+        // NOTE: Overridden in in update()
+        // this.labelNodes = this.#computeLabelNodes(
+        //     LinkCreator.createLinks(this.unfilteredData.properties),
+        // )
+        // for (let i = 0; i < this.labelNodes.length; i++) {
+        //     const label = this.labelNodes[i]
+        //     if (label.property.x && label.property.y) {
+        //         label.x = label.property.x
+        //         label.y = label.property.y
+        //         // also set the prev position of the label
+        //         label.px = label.x
+        //         label.py = label.y
+        //     }
+        // }
+        this.update(this.unfilteredData)
     }
 
     fastUpdate() {
@@ -1576,15 +1577,9 @@ export default class Graph {
     /**
      * Updates the graphs displayed data and style.
      * @note `data` will be mutated by this function, thus it should be cloned beforehand.
-     * @param {boolean} init Is first time load?
-     * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} data An object containing nodes and properties.
-     *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
-     * @returns
+     * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} data
      */
-    update(init = false, data = this.currentData) {
-        if (init) {
-            this.options.loadingModule.collapseDetails()
-        }
+    update(data = this.currentData) {
         if (!this.options.loadingModule.loadingWasSuccessFul) {
             return
         }
@@ -1741,7 +1736,7 @@ export default class Graph {
             sidebar.clearOntologyInformation()
         }
         if (this.graphContainer) {
-            this.#redrawGraph()
+            this.#redrawGraphContainer()
         }
     }
 
@@ -1808,11 +1803,7 @@ export default class Graph {
         this.showFilterWarning = val
     }
 
-    /**
-     * @param {boolean} [init]
-     */
-    #loadGraphData(init) {
-        const loadingModule = this.options.loadingModule
+    #loadGraphData() {
         this.force.stop()
         this.force.nodes([])
         this.force.links([])
@@ -1823,11 +1814,6 @@ export default class Graph {
         d3.select("#locateSearchResult").node().title = "Nothing to locate"
 
         this.clearGraphData()
-
-        if (init) {
-            this.force.stop()
-            return
-        }
 
         this.showFilterWarning = false
         this.parser = new Parser(this)
@@ -1878,6 +1864,7 @@ export default class Graph {
         this.options.warningModule.closeFilterHint()
 
         // loading handler
+        const loadingModule = this.options.loadingModule
         this.updateRenderingDuringSimulation = true
         const validOntology = this.options.loadingModule.loadingWasSuccessFul
         if (this.graphContainer && validOntology) {
@@ -2052,10 +2039,6 @@ export default class Graph {
         this.labelNodes = this.#computeLabelNodes(this.links)
         this.#storeLinksOnNodes(this.classNodes, this.links)
         this.#setForceLayoutData(this.classNodes, this.labelNodes, this.links)
-        // for (const i = 0; i < classNodes.length; i++) {
-        //     if (classNodes[i].rectangularRepresentation)
-        //         classNodes[i].rectangularRepresentation = this.options.rectangularRepresentation;
-        // }
     }
 
     /**
@@ -2088,7 +2071,7 @@ export default class Graph {
             nodes: Array.from(selectedNodes.values()),
             properties: selectedProperties,
         }
-        this.update(false, this.currentData)
+        this.update(this.currentData)
         this.resetSearchHighlight()
         this.highLightNodes([rootNodeID])
     }
@@ -3440,7 +3423,7 @@ export default class Graph {
                 d3.select("#compactNotationOption").style("color", "")
                 d3.select("#compactNotationOption").node().title = ""
                 this.options.emptyLiteralFilter.enabled = true
-                this.update()
+                // this.update() // REVIEW: Check if needed
             } else {
                 // if editor Mode
                 //1) uncheck the element
@@ -3452,7 +3435,7 @@ export default class Graph {
                 this.options.emptyLiteralFilter.enabled = false
                 this.executeCompactNotationModule()
                 this.executeEmptyLiteralFilter()
-                this.lazyRefresh()
+                // this.lazyRefresh() // REVIEW: Check if needed
                 compactNotationContainer.style("pointer-events", "none")
                 d3.select("#compactNotationOption").style("color", "#979797")
             }
