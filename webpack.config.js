@@ -128,7 +128,7 @@ function getConfig(args) {
                 // https://rustwasm.github.io/docs/wasm-pack/
                 // https://github.com/wasm-tool/wasm-pack-plugin
                 args: "--verbose",
-                extraArgs: "--no-typescript --target bundler --mode normal",
+                extraArgs: "--target bundler --mode normal",
                 forceMode: "production",
                 outDir: path.resolve(__dirname, paths.pkgPath),
                 pluginLogLevel: "info",
