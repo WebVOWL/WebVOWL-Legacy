@@ -31,14 +31,37 @@ impl StringResult {
     }
 }
 
+/// Converts a slice of bytes to a string, including invalid characters.
+///
+/// Strings are made of bytes ([`u8`]), and a slice of bytes
+/// ([`&[u8]`][byteslice]) is made of bytes, so this function converts
+/// between the two. Not all byte slices are valid strings, however: strings
+/// are required to be valid UTF-8. During this conversion,
+/// `from_utf8_lossy()` will replace any invalid UTF-8 sequences with
+/// [`U+FFFD REPLACEMENT CHARACTER`][U+FFFD], which looks like this: �
+pub fn from_utf8_lossy(v: &[u8]) -> String {
+    let iter = v.utf8_chunks();
+
+    const REPLACEMENT: &str = "\u{FFFD}";
+    let mut res = String::with_capacity(v.len());
+
+    for chunk in iter {
+        res.push_str(chunk.valid());
+        if !chunk.invalid().is_empty() {
+            res.push_str(REPLACEMENT);
+        }
+    }
+
+    res
+}
+
 fn convert_to_js<T: serde::ser::Serialize + ?Sized>(content: &T) -> JsValue {
     let serializer = serde_wasm_bindgen::Serializer::json_compatible();
-    // return match serde_wasm_bindgen::to_value(content) {
     return match serde::Serialize::serialize(&content, &serializer) {
         Ok(res) => res,
         Err(error) => {
             console::error_1(&JsValue::from_str(
-                format!("Failed to convert JSON struct to JavaScript object: {error}").as_str(),
+                format!("Failed to convert Rust value to JavaScript object: {error}").as_str(),
             ));
             return JsValue::null();
         }
@@ -70,6 +93,7 @@ pub async fn read_file_as_string(web_file: web_sys::File) -> JsValue {
             return convert_to_js(&err_object);
         }
     };
+
     let s: String = String::from_utf8_lossy(&bytes).into_owned();
     let ok_object = StringResult::new(Some(s), String::new());
     return convert_to_js(&ok_object);
@@ -91,12 +115,20 @@ pub async fn parse_json(web_file: web_sys::File) -> JsValue {
             return convert_to_js(&err_object);
         }
     };
+
     let slice_json_object: serde_json::Value = match serde_json::from_slice(&bytes) {
         Ok(res) => res,
-        Err(_err1) => {
+        Err(err1) => {
+            console::warn_1(&JsValue::from_str(
+                format!("Error in JSON file: {err1}").as_str(),
+            ));
+
             // Assuming an invalid UTF-8 code point in input.
-            // Try replacing invalids with placeholder char "�" (U+FFFD)
-            let s = String::from_utf8_lossy(&bytes).into_owned();
+            let s = from_utf8_lossy(&bytes);
+
+            // Clear from memory to conserve space
+            drop(bytes);
+
             let str_json_object: serde_json::Value = match serde_json::from_str(s.as_str()) {
                 Ok(res) => res,
                 Err(err2) => {
@@ -105,10 +137,12 @@ pub async fn parse_json(web_file: web_sys::File) -> JsValue {
                     return convert_to_js(&err_object);
                 }
             };
+
             let ok_object = JsonResult::new(Some(str_json_object), String::new());
             return convert_to_js(&ok_object);
         }
     };
+
     let ok_object = JsonResult::new(Some(slice_json_object), String::new());
     return convert_to_js(&ok_object);
 }
