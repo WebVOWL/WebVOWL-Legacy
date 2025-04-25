@@ -775,13 +775,14 @@ export default class OntologyLoading {
     #parseOntologyContent(content) {
         this.ontologyMenu.append_bulletPoint("Reading ontology graph ... ")
         this.graph.parser
-            .parseOntologyFromText(
+            .parseOntologyFromUser(
                 content,
                 this.ontologyIdentifierFromURL,
                 "noAlternativeNameYet",
             )
             .then(
                 (data) => {
+                    this.validOntology()
                     this.#loadOntologyContent(data)
                 },
                 (cause) => {
