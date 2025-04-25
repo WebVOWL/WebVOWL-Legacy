@@ -782,10 +782,10 @@ export default class OntologyLoading {
             )
             .then(
                 (data) => {
-                    this.loadOntologyContent(data)
+                    this.#loadOntologyContent(data)
                 },
                 (cause) => {
-                    console.error(cause)
+                    this.invalidOntology(cause)
                 },
             )
     }
@@ -794,12 +794,12 @@ export default class OntologyLoading {
      * Load parsed JSON object
      * @param {{ header?: any; class?: any[]; }} ontologyObject
      */
-    loadOntologyContent(ontologyObject) {
+    #loadOntologyContent(ontologyObject) {
         d3.select("#reloadCachedOntology").classed("hidden", true)
         this.graph.options.pauseMenu.reset()
         this.graph.options.navigationMenu.hideAllMenus()
 
-        this.setPercentMode()
+        // this.setPercentMode()
 
         this.graph.load()
         this.graph.options.sidebar.updateOntologyInformation(
@@ -828,7 +828,6 @@ export default class OntologyLoading {
         )
         this.loadingWasSuccessFul = false
         this.graph.handleOnLoadingError()
-        this.setErrorMode()
     }
 
     validOntology() {
