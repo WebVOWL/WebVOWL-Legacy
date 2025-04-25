@@ -177,7 +177,7 @@ export default class App {
             this.#adjustSize()
         })
 
-        this.graph.start()
+        // this.graph.start()
 
         const modeOp = d3.select("#modeOfOperationString")
         modeOp.style("font-size", "0.6em")
@@ -251,6 +251,7 @@ export default class App {
             this.options.statistics,
         )
         this.options.loadingModule.parseUrlAndLoadOntology() // loads automatically the ontology provided by the parameters
+        this.options.loadingModule.collapseDetails()
         this.options.debugMenu.updateSettings()
 
         // connect the reloadCachedVersionButton
