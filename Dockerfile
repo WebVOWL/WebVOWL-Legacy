@@ -7,8 +7,6 @@ RUN apt-get update && apt-get install bzip2 -y
 WORKDIR $PROJECT_PATH/webvowl
 COPY *.* ./
 COPY src src
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-RUN cargo install wasm-pack
 RUN mvn -B package --file pom.xml -P production -DskipTests
 
 # Build OWL2VOWL
