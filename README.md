@@ -1,10 +1,12 @@
 # WebVOWL Legacy
 
-The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) closely with the exception of some changes highligted below.
+The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) in look and feel.  
+Behind the scenes, however, a lot has been done to reduce loading time as well as memory consumption.
 
 ## Changes from the original WebVOWL
 
 ### Significant performance improvements
+NOTE: Additional improvement documentation pending
 
 > [!NOTE]
 > Profiling was done using:
@@ -54,8 +56,7 @@ Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
 1. Clone the project locally
 2. Install Node.js from http://nodejs.org/download/
 3. Install Maven from https://maven.apache.org/download.cgi
-4. Install Rust from https://www.rust-lang.org/tools/install
-5. Open the terminal in the `WebVOWL` directory
+4. Open the terminal in the `WebVOWL` directory
 
 Now you can execute these commands:
 
