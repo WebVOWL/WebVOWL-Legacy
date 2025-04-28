@@ -352,7 +352,7 @@ export default class App {
         const ws = d3
             .select("#drag_msg")
             .node()
-            .getBoundingClientRect().labelWidth
+            .getBoundingClientRect().width
         d3.select("#drag_icon_group").attr(
             "transform",
             "translate ( " + 0.25 * ws + " " + 0.25 * hs + ")",
