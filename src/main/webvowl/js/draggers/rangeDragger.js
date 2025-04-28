@@ -108,8 +108,8 @@ export default class RangeDragger extends AbstractDomainRangeDragger {
         let nX = dir_X / len
         let nY = dir_Y / len
 
-        const ep_range_x = dex + nX * this.parentNode.range.smallestRadius
-        const ep_range_y = dey + nY * this.parentNode.range.smallestRadius
+        const ep_range_x = dex + nX * this.parentNode.range.actualRadius()
+        const ep_range_y = dey + nY * this.parentNode.range.actualRadius()
 
         const dx = range_x - ep_range_x
         const dy = range_y - ep_range_y

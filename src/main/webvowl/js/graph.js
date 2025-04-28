@@ -1382,7 +1382,6 @@ export default class Graph {
             .call(this.dragBehaviour)
 
         this.nodeElements.each(function (node) {
-            // @ts-ignore
             node.draw(d3.select(this))
         })
 
@@ -2260,8 +2259,8 @@ export default class Graph {
 
         // divide by 2 to receive the length for a single link part
         let linkPartDistance = this.#getVisibleLinkDistance(link) / 2
-        linkPartDistance += linkPart.domain.smallestRadius
-        linkPartDistance += linkPart.range.smallestRadius
+        linkPartDistance += linkPart.domain.actualRadius()
+        linkPartDistance += linkPart.range.actualRadius()
         return linkPartDistance
     }
 
@@ -2453,7 +2452,7 @@ export default class Graph {
                 // this is a round node
                 nodeIsRect = false
                 roundHalo = node.haloGroupElement.select("circle")
-                const defaultRadius = node.smallestRadius
+                const defaultRadius = node.actualRadius()
                 roundHalo.attr("r", defaultRadius + offset)
                 halo = roundHalo
             } else {
@@ -2570,7 +2569,7 @@ export default class Graph {
             halo = container.haloGroupElement.select("circle")
             // sanity checks and setting new halo radius
             if (!nodeIsRect) {
-                const defaultRadius = node.smallestRadius + offset
+                const defaultRadius = node.actualRadius() + offset
                 if (newRadius < defaultRadius) {
                     newRadius = defaultRadius
                 }
@@ -2585,7 +2584,7 @@ export default class Graph {
         } else {
             // node is in viewport , render original;
             // reset the halo to original radius
-            const defaultRadius = node.smallestRadius + 15
+            const defaultRadius = node.actualRadius() + 15
             if (!nodeIsRect) {
                 halo.attr("r", defaultRadius)
             } else {
@@ -3548,23 +3547,23 @@ export default class Graph {
         }
 
         if (this.hoveredNodeElement) {
-            const offsetDist = this.hoveredNodeElement.smallestRadius + 30
+            const offsetDist = this.hoveredNodeElement.actualRadius() + 30
             if (minDist > offsetDist) return null
             if (tN.renderType === "rect") return null
             if (
                 tN === this.hoveredNodeElement &&
-                minDist <= this.hoveredNodeElement.smallestRadius
+                minDist <= this.hoveredNodeElement.actualRadius()
             ) {
                 return tN
             } else if (
                 tN === this.hoveredNodeElement &&
-                minDist > this.hoveredNodeElement.smallestRadius
+                minDist > this.hoveredNodeElement.actualRadius()
             ) {
                 return null
             }
             return tN
         } else {
-            return minDist > tN.smallestRadius + 30 ? null : tN
+            return minDist > tN.actualRadius() + 30 ? null : tN
         }
     }
 
@@ -3918,7 +3917,7 @@ export default class Graph {
             }
 
             // get domain actual raidus
-            const offset = 2 * domain.smallestRadius + 50
+            const offset = 2 * domain.actualRadius() + 50
             pX = domain.x + offset * nx
             pY = domain.y + offset * ny
         }
@@ -4000,8 +3999,8 @@ export default class Graph {
             }
         }
 
-        const nX = node.x - node.smallestRadius - 100
-        const nY = node.y + node.smallestRadius + 100
+        const nX = node.x - node.actualRadius() - 100
+        const nY = node.y + node.actualRadius() + 100
         aNode.x = nX
         aNode.y = nY
         aNode.px = aNode.x
@@ -4549,8 +4548,8 @@ export default class Graph {
     #setAddDataPropertyHoverElementPosition(node) {
         if (node.renderType === "round") {
             const scale = 0.5 * Math.sqrt(2.0)
-            const oX = scale * node.smallestRadius
-            const oY = scale * node.smallestRadius
+            const oX = scale * node.actualRadius()
+            const oY = scale * node.actualRadius()
             const delX = node.x - oX
             const delY = node.y + oY
             this.addDataPropertyGroupElement.attr(
@@ -4567,8 +4566,8 @@ export default class Graph {
         let delX, delY
         if (node.renderType === "round") {
             const scale = 0.5 * Math.sqrt(2.0)
-            const oX = scale * node.smallestRadius
-            const oY = scale * node.smallestRadius
+            const oX = scale * node.actualRadius()
+            const oY = scale * node.actualRadius()
             delX = node.x + oX
             delY = node.y - oY
         } else {

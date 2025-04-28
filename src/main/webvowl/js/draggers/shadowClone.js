@@ -229,8 +229,8 @@ export default class ShadowClone extends AbstractDragger {
 
             const nX = dir_X / len
             const nY = dir_Y / len
-            this.s_x = rex - nX * this.parent.range.smallestRadius
-            this.s_y = rey - nY * this.parent.range.smallestRadius
+            this.s_x = rex - nX * this.parent.range.actualRadius()
+            this.s_y = rey - nY * this.parent.range.actualRadius()
         }
         this.e_x = e_x
         this.e_y = e_y
@@ -257,8 +257,8 @@ export default class ShadowClone extends AbstractDragger {
         const nX = dir_X / len
         const nY = dir_Y / len
 
-        this.e_x = dex + nX * this.parent.domain.smallestRadius
-        this.e_y = dey + nY * this.parent.domain.smallestRadius
+        this.e_x = dex + nX * this.parent.domain.actualRadius()
+        this.e_y = dey + nY * this.parent.domain.actualRadius()
         this.updateElement()
     }
 }

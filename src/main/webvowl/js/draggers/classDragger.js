@@ -18,10 +18,10 @@ export default class ClassDragger extends AbstractDomainRangeDragger {
         if (this.mouseButtonPressed === false) {
             if (
                 this.parentNode.actualRadius() &&
-                this.parentNode.smallestRadius
+                this.parentNode.actualRadius()
             ) {
-                this.x = this.parentNode.x + 10 + this.parentNode.smallestRadius
-                this.y = this.parentNode.y + 10 + this.parentNode.smallestRadius
+                this.x = this.parentNode.x + 10 + this.parentNode.actualRadius()
+                this.y = this.parentNode.y + 10 + this.parentNode.actualRadius()
             } else {
                 this.x = this.parentNode.x + 60
                 this.y = this.parentNode.y + 60
@@ -50,8 +50,8 @@ export default class ClassDragger extends AbstractDomainRangeDragger {
             const nX = dirX / len
             const nY = dirY / len
 
-            const ppX = sX + nX * this.parentNode.smallestRadius
-            const ppY = sY + nY * this.parentNode.smallestRadius
+            const ppX = sX + nX * this.parentNode.actualRadius()
+            const ppY = sY + nY * this.parentNode.actualRadius()
 
             const ncx = nX * 15
             const ncy = nY * 15

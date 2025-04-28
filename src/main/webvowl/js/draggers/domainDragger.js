@@ -109,8 +109,8 @@ export default class DomainDragger extends AbstractDomainRangeDragger {
         const nX = dir_X / len
         const nY = dir_Y / len
 
-        const ep_range_x = dex + nX * this.parent.domain.smallestRadius
-        const ep_range_y = dey + nY * this.parent.domain.smallestRadius
+        const ep_range_x = dex + nX * this.parent.domain.actualRadius()
+        const ep_range_y = dey + nY * this.parent.domain.actualRadius()
 
         const angle =
             (Math.atan2(ep_range_y - range_y, ep_range_x - range_x) * 180) /

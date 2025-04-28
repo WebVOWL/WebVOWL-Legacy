@@ -1439,7 +1439,7 @@ export default class ExportMenu {
                 const width = node.labelWidth
                 widthString = ",minimum width=" + width + "pt"
             } else {
-                widthString = ",minimum size=" + 2 * node.smallestRadius + "pt"
+                widthString = ",minimum size=" + 2 * node.actualRadius() + "pt"
             }
             if (node.backgroundColor) {
                 let bgColor = node.backgroundColor
