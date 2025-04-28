@@ -1,0 +1,18 @@
+// https://www.typescriptlang.org/tsconfig/#compilerOptions
+{
+    "compilerOptions": {
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "target": "ES2022",
+        "allowImportingTsExtensions": true,
+        "checkJs": true,
+        "allowSyntheticDefaultImports": true,
+        "alwaysStrict": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
+    },
+    "exclude": ["node_modules", "**/node_modules/*", "target", "node"]
+}

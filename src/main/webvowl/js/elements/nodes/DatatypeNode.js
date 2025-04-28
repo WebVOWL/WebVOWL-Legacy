@@ -1,12 +1,11 @@
-var RectangularNode = require("./RectangularNode");
+import Graph from "../../graph"
+import RectangularNode from "./RectangularNode"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    RectangularNode.apply(this, arguments);
-  };
-  o.prototype = Object.create(RectangularNode.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class DatatypeNode extends RectangularNode {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+    }
+}

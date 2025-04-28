@@ -1,107 +1,122 @@
-/**
- * Parses the attributes an element has and sets the corresponding attributes.
- * @returns {Function}
- */
-module.exports = (function (){
-  var attributeParser = {},
-    // Style
-    ANONYMOUS = "anonymous",
-    DATATYPE = "datatype",
-    DEPRECATED = "deprecated",
-    EXTERNAL = "external",
-    OBJECT = "object",
-    RDF = "rdf",
-    // Representations
-    ASYMMETRIC = "asymmetric",
-    FUNCTIONAL = "functional",
-    INVERSE_FUNCTIONAL = "inverse functional",
-    IRREFLEXIVE = "irreflexive",
-    KEY = "key",
-    REFLEXIVE = "reflexive",
-    SYMMETRIC = "symmetric",
-    TRANSITIVE = "transitive",
-    // Attribute groups
-    VISUAL_ATTRIBUTE_GROUPS = [
-      [DEPRECATED, DATATYPE, OBJECT, RDF],
-      [ANONYMOUS]
-    ],
-    CLASS_INDICATIONS = [DEPRECATED, EXTERNAL],
-    PROPERTY_INDICATIONS = [ASYMMETRIC, FUNCTIONAL, INVERSE_FUNCTIONAL, IRREFLEXIVE, KEY, REFLEXIVE, SYMMETRIC,
-      TRANSITIVE];
-  
-  /**
-   * Parses and sets the attributes of a class.
-   * @param clazz
-   */
-  attributeParser.parseClassAttributes = function ( clazz ){
-    if ( !(clazz.attributes() instanceof Array) ) {
-      return;
+import BaseElement from "../elements/BaseElement"
+import BaseProperty from "../elements/properties/BaseProperty"
+
+// Style
+const ANONYMOUS = "anonymous"
+const DATATYPE = "datatype"
+const DEPRECATED = "deprecated"
+const EXTERNAL = "external"
+const OBJECT = "object"
+const RDF = "rdf"
+
+// Representations
+const ASYMMETRIC = "asymmetric"
+const FUNCTIONAL = "functional"
+const INVERSE_FUNCTIONAL = "inverse functional"
+const IRREFLEXIVE = "irreflexive"
+const KEY = "key"
+const REFLEXIVE = "reflexive"
+const SYMMETRIC = "symmetric"
+const TRANSITIVE = "transitive"
+
+// Attribute groups
+const VISUAL_ATTRIBUTE_GROUPS = [
+    [DEPRECATED, DATATYPE, OBJECT, RDF],
+    [ANONYMOUS],
+]
+const CLASS_INDICATIONS = [DEPRECATED, EXTERNAL]
+const PROPERTY_INDICATIONS = [
+    ASYMMETRIC,
+    FUNCTIONAL,
+    INVERSE_FUNCTIONAL,
+    IRREFLEXIVE,
+    KEY,
+    REFLEXIVE,
+    SYMMETRIC,
+    TRANSITIVE,
+]
+
+export default class AttributeParser {
+    /**
+     * Parses the attributes an element has and sets the corresponding attributes
+     * @param {BaseElement} property
+     */
+    static #parsePropertyIndications(property) {
+        for (const indication of PROPERTY_INDICATIONS) {
+            if (property.attributes.indexOf(indication) >= 0) {
+                if (property.indications instanceof Array) {
+                    property.indications.push(indication)
+                } else {
+                    property.indications = [indication]
+                }
+            }
+        }
     }
-    
-    parseVisualAttributes(clazz);
-    parseClassIndications(clazz);
-  };
-  
-  function parseVisualAttributes( element ){
-    VISUAL_ATTRIBUTE_GROUPS.forEach(function ( attributeGroup ){
-      setVisualAttributeOfGroup(element, attributeGroup);
-    });
-  }
-  
-  function setVisualAttributeOfGroup( element, group ){
-    var i, l, attribute;
-    
-    for ( i = 0, l = group.length; i < l; i++ ) {
-      attribute = group[i];
-      if ( element.attributes().indexOf(attribute) >= 0 ) {
-        element.visualAttributes().push(attribute);
-        
-        // Just a single attribute is possible
-        break;
-      }
+
+    /**
+     * @param {BaseElement} element
+     */
+    static #parseVisualAttributes(element) {
+        for (const attributeGroup of VISUAL_ATTRIBUTE_GROUPS) {
+            this.#setVisualAttributeOfGroup(element, attributeGroup)
+        }
     }
-  }
-  
-  function parseClassIndications( clazz ){
-    var i, l, indication;
-    
-    for ( i = 0, l = CLASS_INDICATIONS.length; i < l; i++ ) {
-      indication = CLASS_INDICATIONS[i];
-      
-      if ( clazz.attributes().indexOf(indication) >= 0 ) {
-        clazz.indications().push(indication);
-      }
+
+    /**
+     * @param {BaseElement} element
+     * @param {string[]} group
+     */
+    static #setVisualAttributeOfGroup(element, group) {
+        for (const attribute of group) {
+            if (element.attributes.indexOf(attribute) >= 0) {
+                if (element.visualAttributes instanceof Array) {
+                    element.visualAttributes.push(attribute)
+                    break // Just a single attribute is possible
+                } else {
+                    element.visualAttributes = [attribute]
+                }
+            }
+        }
     }
-  }
-  
-  /**
-   * Parses and sets the attributes of a property.
-   * @param property
-   */
-  attributeParser.parsePropertyAttributes = function ( property ){
-    if ( !(property.attributes() instanceof Array) ) {
-      return;
+
+    /**
+     * @param {BaseElement} element
+     */
+    static #parseClassIndications(element) {
+        for (const indication of CLASS_INDICATIONS) {
+            if (element.attributes.indexOf(indication) >= 0) {
+                if (element.indications instanceof Array) {
+                    element.indications.push(indication)
+                } else {
+                    element.indications = [indication]
+                }
+            }
+        }
     }
-    
-    parseVisualAttributes(property);
-    parsePropertyIndications(property);
-  };
-  
-  function parsePropertyIndications( property ){
-    var i, l, indication;
-    
-    for ( i = 0, l = PROPERTY_INDICATIONS.length; i < l; i++ ) {
-      indication = PROPERTY_INDICATIONS[i];
-      
-      if ( property.attributes().indexOf(indication) >= 0 ) {
-        property.indications().push(indication);
-      }
+
+    /**
+     * Parses and sets the attributes of a class.
+     * @param {BaseElement} element
+     */
+    static parseClassAttributes(element) {
+        if (!(element.attributes instanceof Array)) {
+            return
+        }
+        this.#parseVisualAttributes(element)
+        this.#parseClassIndications(element)
     }
-  }
-  
-  
-  return function (){
-    // Return a function to keep module interfaces consistent
-    return attributeParser;
-  };
-})();
+
+    /**
+     * Parses and sets the attributes of a property.
+     * @param {BaseProperty} property
+     */
+    static parsePropertyAttributes(property) {
+        if (!(property.attributes instanceof Array)) {
+            return
+        }
+        // @ts-ignore
+        this.#parseVisualAttributes(property)
+        // @ts-ignore
+        this.#parsePropertyIndications(property)
+    }
+}

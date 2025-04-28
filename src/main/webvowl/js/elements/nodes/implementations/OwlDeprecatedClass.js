@@ -1,17 +1,16 @@
-var RoundNode = require("../RoundNode");
+import Graph from "../../../graph"
+import RoundNode from "../RoundNode"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    RoundNode.apply(this, arguments);
-    
-    this.attributes(["deprecated"])
-      .type("owl:DeprecatedClass")
-      .styleClass("deprecated")
-      .indications(["deprecated"]);
-  };
-  o.prototype = Object.create(RoundNode.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class OwlDeprecatedClass extends RoundNode {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+
+        this.attributes = ["deprecated"]
+        this.type = "owl:DeprecatedClass"
+        this.styleClass = "deprecated"
+        this.indications = ["deprecated"]
+    }
+}

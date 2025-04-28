@@ -1,15 +1,14 @@
-var RoundNode = require("../RoundNode");
+import Graph from "../../../graph"
+import RoundNode from "../RoundNode"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    RoundNode.apply(this, arguments);
-    
-    this.attributes(["rdf"])
-      .type("rdfs:Class");
-  };
-  o.prototype = Object.create(RoundNode.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class RdfsClass extends RoundNode {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+
+        this.attributes = ["rdf"]
+        this.type = "rdfs:Class"
+    }
+}

@@ -1,7 +1,7 @@
-const { Trie } = require("../trie");
+import Trie from "../trie"
 
 function testTrie() {
-    let trie = new Trie();
+    let trie = new Trie()
     let testData = ["Rem", "Ram", "Fubuki", "Unicorn"]
 
     console.log("--- Testing Trie ---")
@@ -43,6 +43,6 @@ function testTrie() {
 }
 
 // Call testTrie from somewhere in the active code to test it
-// module.exports = {
+// export default {
 //     testTrie
-// }
+// };

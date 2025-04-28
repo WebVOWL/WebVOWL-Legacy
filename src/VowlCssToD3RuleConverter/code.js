@@ -1,4 +1,4 @@
-var css = require("css"),
+const css = require("css"),
     fs = require("fs"),
     filePath = "../webvowl/css/vowl.css";
 
@@ -14,7 +14,7 @@ fs.readFile(filePath, { encoding: "utf8" }, function (err, data) {
 });
 
 function createInlineStyleRemoveCommand(cssText) {
-    var selectors = [],
+    const selectors = [],
         obj = css.parse(cssText),
         rules = obj.stylesheet.rules;
 
@@ -28,20 +28,20 @@ function createInlineStyleRemoveCommand(cssText) {
 }
 
 function convertCssToD3Rules(cssText) {
-    var d3Rules = "",
+    const d3Rules = "",
         obj = css.parse(cssText),
         rules = obj.stylesheet.rules;
 
 
     rules.forEach(function (rule) {
         if (rule.type === "rule") {
-            var builder = d3RuleBuilder(),
+            const builder = d3RuleBuilder(),
                 selectors = rule.selectors,
                 declarations = rule.declarations,
                 declaration;
 
             builder.selectors(selectors);
-            for (var i = 0, l = declarations.length; i < l; i++) {
+            for (const i = 0, l = declarations.length; i < l; i++) {
                 declaration = declarations[i];
                 if (declaration.type === "declaration") {
                     builder.addRule(declaration.property, declaration.value);
@@ -56,7 +56,7 @@ function convertCssToD3Rules(cssText) {
 }
 
 function d3RuleBuilder() {
-    var builder = {},
+    const builder = {},
         selector = "",
         rules = [];
 
@@ -78,13 +78,13 @@ function d3RuleBuilder() {
     };
 
     builder.build = function () {
-        var result = "setStyleSensitively(\"" + selector + "\", [";
+        const result = "setStyleSensitively(\"" + selector + "\", [";
 
-        for (var i = 0, l = rules.length; i < l; i++) {
+        for (const i = 0, l = rules.length; i < l; i++) {
             if (i > 0) {
                 result = result.concat(", ");
             }
-            var rule = rules[i];
+            const rule = rules[i];
             result = result.concat("{name:\"", rule.name, "\", value:\"", rule.value, "\"}");
         }
         result = result.concat("]);");

@@ -1,28 +1,31 @@
 class TrieNode {
+    /**
+     * @param {string} key
+     */
     constructor(key) {
         // the "key" value will be the character in sequence
-        this.key = key;
+        this.key = key
         // the "data" value is the data associated with the whole word. Thus only present (not null) if this.end == true
-        this.data = null;
+        this.data = null
         // we keep a reference to parent
-        this.parent = null;
+        this.parent = null
         // we have a map of children
-        this.children = {};
+        this.children = {}
         // check to see if the node is at the end
-        this.end = false;
+        this.end = false
     }
     getWord() {
-        let output = [];
-        let node = this;
+        let output = []
+        let node = this
         while (node !== null) {
             output.push(node.key)
             node = node.parent
         }
-        return output.reverse().join('')
+        return output.reverse().join("")
     }
 }
 
-class Trie {
+export default class Trie {
     /**
      * A basic Trie of word/data pairs.
      * It allows O(k) worst-case additions and O(dk) worst-case searches,
@@ -64,55 +67,51 @@ class Trie {
      * @returns {boolean} Whether the word is in the trie
      */
     contains(word) {
-        let node = this.base;
-        const points = Array.from(word);
+        let node = this.base
+        const points = Array.from(word)
         for (const i in points) {
-            const point = points[i];
+            const point = points[i]
             if (node.children[point]) {
-                node = node.children[point];
+                node = node.children[point]
             } else {
-                return false;
+                return false
             }
         }
-        return node.end;
+        return node.end
     }
 
     /**
      * Find word/data pairs that contains `prefix`
      * @param {string} prefix
-     * @returns {Array} Array of arrays where a[i][0] is a word and a[i][1] is the word's data
+     * @returns {any[][]} Array of arrays where a[i][0] is a word and a[i][1] is the word's data
      * Ordered by word relevance such that more relevant words have a lower index i
      */
     find(prefix) {
-        let node = this.base;
-        let output = [];
+        let node = this.base
+        let output = []
         const points = Array.from(prefix)
         for (const i in points) {
-            const point = points[i];
+            const point = points[i]
             // make sure prefix actually has words
             if (node.children[point]) {
-                node = node.children[point];
+                node = node.children[point]
             } else {
                 // there's none. just return it.
-                return output;
+                return output
             }
         }
-        const stack = [node];
+        const stack = [node]
         while (stack.length) {
-            node = stack.shift();
+            node = stack.shift()
             // base case, if node is at a word, push to output
             if (node.end) {
-                output.push([node.getWord(), node.data]);
+                output.push([node.getWord(), node.data])
             }
             // iterate through each children, call recursive findAllWords
-            for (var child in node.children) {
-                stack.push(node.children[child]);
+            for (const child in node.children) {
+                stack.push(node.children[child])
             }
         }
-        return output.reverse();
+        return output.reverse()
     }
-}
-
-module.exports = {
-    Trie
 }

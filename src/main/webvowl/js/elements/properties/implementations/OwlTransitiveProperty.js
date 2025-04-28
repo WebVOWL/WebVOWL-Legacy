@@ -1,16 +1,15 @@
-var BaseProperty = require("../BaseProperty");
+import Graph from "../../../graph"
+import BaseProperty from "../BaseProperty"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    BaseProperty.apply(this, arguments);
-    
-    this.attributes(["transitive"])
-      .styleClass("transitiveproperty")
-      .type("owl:TransitiveProperty");
-  };
-  o.prototype = Object.create(BaseProperty.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class OwlTransitiveProperty extends BaseProperty {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+
+        this.attributes = ["transitive"]
+        this.styleClass = "transitiveproperty"
+        this.type = "owl:TransitiveProperty"
+    }
+}

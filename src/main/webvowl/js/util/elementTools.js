@@ -1,46 +1,66 @@
-var BaseProperty = require("../elements/properties/BaseProperty");
-var BaseNode = require("../elements/nodes/BaseNode");
-var DatatypeNode = require("../elements/nodes/DatatypeNode");
-var Thing = require("../elements/nodes/implementations/OwlThing");
-var ObjectProperty = require("../elements/properties/implementations/OwlObjectProperty");
-var DatatypeProperty = require("../elements/properties/implementations/OwlDatatypeProperty");
-var RdfsSubClassOf = require("../elements/properties/implementations/RdfsSubClassOf");
-var Label = require("../elements/links/Label");
+import Label from "../elements/links/Label"
+import BaseNode from "../elements/nodes/BaseNode"
+import DatatypeNode from "../elements/nodes/DatatypeNode"
+import OwlThing from "../elements/nodes/implementations/OwlThing"
+import BaseProperty from "../elements/properties/BaseProperty"
+import OwlDatatypeProperty from "../elements/properties/implementations/OwlDatatypeProperty"
+import OwlObjectProperty from "../elements/properties/implementations/OwlObjectProperty"
+import RdfsSubClassOf from "../elements/properties/implementations/RdfsSubClassOf"
 
+export default class ElementTools {
+    /**
+     * @param {any} element
+     */
+    static isLabel(element) {
+        return element instanceof Label
+    }
 
-var tools = {};
-module.exports = function (){
-  return tools;
-};
+    /**
+     * @param {any} element
+     */
+    static isNode(element) {
+        return element instanceof BaseNode
+    }
 
-tools.isLabel = function ( element ){
-  return element instanceof Label;
-};
+    /**
+     * @param {any} node
+     */
+    static isDatatype(node) {
+        return node instanceof DatatypeNode
+    }
 
-tools.isNode = function ( element ){
-  return element instanceof BaseNode;
-};
+    /**
+     * @param {any} node
+     */
+    static isThing(node) {
+        return node instanceof OwlThing
+    }
 
-tools.isDatatype = function ( node ){
-  return node instanceof DatatypeNode;
-};
+    /**
+     * @param {any} element
+     */
+    static isProperty(element) {
+        return element instanceof BaseProperty
+    }
 
-tools.isThing = function ( node ){
-  return node instanceof Thing;
-};
+    /**
+     * @param {any} element
+     */
+    static isObjectProperty(element) {
+        return element instanceof OwlObjectProperty
+    }
 
-tools.isProperty = function ( element ){
-  return element instanceof BaseProperty;
-};
+    /**
+     * @param {any} element
+     */
+    static isDatatypeProperty(element) {
+        return element instanceof OwlDatatypeProperty
+    }
 
-tools.isObjectProperty = function ( element ){
-  return element instanceof ObjectProperty;
-};
-
-tools.isDatatypeProperty = function ( element ){
-  return element instanceof DatatypeProperty;
-};
-
-tools.isRdfsSubClassOf = function ( property ){
-  return property instanceof RdfsSubClassOf;
-};
+    /**
+     * @param {any} property
+     */
+    static isRdfsSubClassOf(property) {
+        return property instanceof RdfsSubClassOf
+    }
+}

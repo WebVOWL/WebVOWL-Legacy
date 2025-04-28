@@ -1,193 +1,291 @@
-/**
- * The base element for all visual elements of webvowl.
- */
-module.exports = (function (){
-  
-  var Base = function ( graph ){
-    // Basic attributes
-    var equivalents = [],
-      id,
-      label,
-      type,
-      iri,
-      baseIri,
-      // Additional attributes
-      annotations,
-      attributes = [],
-      backgroundColor,
-      comment,
-      description,
-      equivalentBase,
-      visualAttributes = [],
-      // Style attributes
-      focused = false,
-      indications = [],
-      mouseEntered = false,
-      styleClass,
-      visible = true,
-      
-      backupLabel,
-      // Other
-      languageTools = require("../util/languageTools")();
-    
-    
-    this.backupLabel = function ( label ){
-      if ( !arguments.length ) return backupLabel;
-      backupLabel = label;
-    };
-    // Properties
-    this.attributes = function ( p ){
-      if ( !arguments.length ) return attributes;
-      attributes = p;
-      return this;
-    };
-    
-    this.annotations = function ( p ){
-      if ( !arguments.length ) return annotations;
-      annotations = p;
-      return this;
-    };
-    
-    this.redrawElement = function (){
-      // TODO: OVERLOADED BY INDIVIDUAL ELEMENTS
-    };
-    
-    this.backgroundColor = function ( p ){
-      if ( !arguments.length ) return backgroundColor;
-      backgroundColor = p;
-      return this;
-    };
-    
-    this.baseIri = function ( p ){
-      if ( !arguments.length ) return baseIri;
-      baseIri = p;
-      return this;
-    };
-    
-    this.comment = function ( p ){
-      if ( !arguments.length ) return comment;
-      comment = p;
-      return this;
-    };
-    
-    this.description = function ( p ){
-      if ( !arguments.length ) return description;
-      description = p;
-      return this;
-    };
-    
-    this.equivalents = function ( p ){
-      if ( !arguments.length ) return equivalents;
-      equivalents = p || [];
-      return this;
-    };
-    
-    this.equivalentBase = function ( p ){
-      if ( !arguments.length ) return equivalentBase;
-      equivalentBase = p;
-      return this;
-    };
-    
-    this.focused = function ( p ){
-      if ( !arguments.length ) return focused;
-      focused = p;
-      return this;
-    };
-    
-    this.id = function ( p ){
-      if ( !arguments.length ) return id;
-      id = p;
-      return this;
-    };
-    
-    this.indications = function ( p ){
-      if ( !arguments.length ) return indications;
-      indications = p;
-      return this;
-    };
-    
-    this.iri = function ( p ){
-      if ( !arguments.length ) return iri;
-      iri = p;
-      return this;
-    };
-    
-    this.label = function ( p ){
-      if ( !arguments.length ) return label;
-      label = p;
-      return this;
-    };
-    
-    this.mouseEntered = function ( p ){
-      if ( !arguments.length ) return mouseEntered;
-      mouseEntered = p;
-      return this;
-    };
-    
-    this.styleClass = function ( p ){
-      if ( !arguments.length ) return styleClass;
-      styleClass = p;
-      return this;
-    };
-    
-    this.type = function ( p ){
-      if ( !arguments.length ) return type;
-      type = p;
-      return this;
-    };
-    
-    this.visible = function ( p ){
-      if ( !arguments.length ) return visible;
-      visible = p;
-      return this;
-    };
-    
-    this.visualAttributes = function ( p ){
-      if ( !arguments.length ) return visualAttributes;
-      visualAttributes = p;
-      return this;
-    };
-    
-    
-    this.commentForCurrentLanguage = function (){
-      return languageTools.textInLanguage(this.comment(), graph.language());
-    };
-    
+import Graph from "../graph"
+import AbsoluteTextElement from "../util/AbsoluteTextElement"
+import CenteringTextElement from "../util/CenteringTextElement"
+import LanguageTools from "../util/languageTools"
+
+export default class BaseElement {
     /**
-     * @returns {string} the css class of this node..
+     * The base element for all visual elements of webvowl
+     * @param {Graph} graph
      */
-    this.cssClassOfNode = function (){
-      return "node" + this.id();
-    };
-    
-    this.descriptionForCurrentLanguage = function (){
-      return languageTools.textInLanguage(this.description(), graph.language());
-    };
-    
-    this.defaultLabel = function (){
-      return languageTools.textInLanguage(this.label(), "default");
-    };
-    
-    this.indicationString = function (){
-      return this.indications().join(", ");
-    };
-    
-    this.labelForCurrentLanguage = function (){
-      var preferredLanguage = graph && graph.language ? graph.language() : null;
-      return languageTools.textInLanguage(this.label(), preferredLanguage);
-    };
-  };
-  
-  Base.prototype.constructor = Base;
-  
-  Base.prototype.equals = function ( other ){
-    return other instanceof Base && this.id() === other.id();
-  };
-  
-  Base.prototype.toString = function (){
-    return this.labelForCurrentLanguage() + " (" + this.type() + ")";
-  };
-  
-  
-  return Base;
-}());
+    constructor(graph) {
+        if (this.constructor === BaseElement) {
+            throw new Error("Abstract classes can't be instantiated")
+        }
+
+        this.graph = graph
+
+        // Basic attributes
+        /**
+         * ID of equivalent elements
+         * @type {BaseElement[] | undefined} // Can also be a string[] during parser.js, but is omitted here as it causes the TS compiler to complain too much
+         */
+        this.equivalents = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.id = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.label = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.type = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.iri = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.baseIri = undefined
+
+        // Additional attributes
+        /**
+         * @type {{}[] | undefined}
+         */
+        this.annotations = undefined
+        /**
+         * @type {string[] | undefined}
+         */
+        this.attributes = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.backgroundColor = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.comment = undefined
+        /**
+         * @type {string | undefined}
+         */
+        this.description = undefined
+        /**
+         * @type {BaseElement | undefined}
+         */
+        this.equivalentBase = undefined
+        /**
+         * @type {string[] | undefined}
+         */
+        this.visualAttributes = undefined
+        /**
+         * @type {boolean}
+         */
+        this.ignoreLocalHoverEvents = false
+        /**
+         * @type {string | undefined}
+         */
+        this.backupFullIri = undefined
+
+        // Element containers
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.pinGroupElement = undefined
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.haloGroupElement = undefined
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.foreignerObject = undefined // foreigner object for editing
+
+        // Style attributes
+        /**
+         * @type {boolean}
+         */
+        this.focused = false
+        /**
+         * @type {string[] | undefined}
+         */
+        this.indications = undefined
+        /**
+         * @type {boolean}
+         */
+        this.mouseEntered = false
+        /**
+         * @type {string | undefined}
+         */
+        this.styleClass = undefined
+        /**
+         * @type {boolean}
+         */
+        this.visible = true
+        /**
+         * @type {string | undefined}
+         */
+        this.backupLabel = undefined
+
+        // Force layout attributes
+        /**
+         * @type {boolean}
+         */
+        this._locked = false
+        /**
+         * @type {boolean}
+         */
+        this._frozen = false
+        /**
+         * @type {boolean}
+         */
+        this._halo = false
+        /**
+         * @type {boolean}
+         */
+        this._pinned = false
+        /**
+         * @type {boolean}
+         */
+        this.fixed = false
+
+        // Other
+        /**
+         * @type {CenteringTextElement | AbsoluteTextElement | undefined}
+         */
+        this.textBlock = undefined
+    }
+
+    #applyFixedLocationAttributes() {
+        this.fixed = this.locked || this.frozen || this.pinned
+    }
+
+    redrawElement() {
+        throw new Error("Method redrawElement() must be implemented")
+    }
+
+    redrawLabelText() {
+        throw new Error("Method redrawLabelText() must be implemented")
+    }
+
+    /**
+     * @param {number} [val]
+     * @returns {number}
+     */
+    getTextWidth(val) {
+        throw new Error("Method getTextWidth() must be implemented")
+    }
+
+    /**
+     * @param {number} width
+     */
+    setTextWidth(width) {
+        throw new Error("Method setTextWidth() must be implemented")
+    }
+
+    /**
+     * @returns {number}
+     */
+    actualRadius() {
+        throw new Error("Method actualRadius() must be implemented")
+    }
+
+    toggleFocus() {
+        throw new Error("Method toggleFocus() must be implemented")
+    }
+
+    drawPin() {
+        throw new Error("Method drawPin() must be implemented")
+    }
+
+    /**
+     * @param {boolean} pulseAnimation
+     */
+    drawHalo(pulseAnimation = false) {
+        throw new Error("Method drawHalo() must be implemented")
+    }
+
+    get locked() {
+        return this._locked
+    }
+
+    set locked(p) {
+        this._locked = p
+        this.#applyFixedLocationAttributes()
+    }
+
+    get frozen() {
+        return this._frozen
+    }
+
+    set frozen(p) {
+        this._frozen = p
+        this.#applyFixedLocationAttributes()
+    }
+
+    get halo() {
+        return this._halo
+    }
+
+    set halo(p) {
+        this._halo = p
+        this.#applyFixedLocationAttributes()
+    }
+
+    get pinned() {
+        return this._pinned
+    }
+
+    set pinned(p) {
+        this._pinned = p
+        this.#applyFixedLocationAttributes()
+    }
+
+    /**
+     * Removes the pin and refreshs the graph to update the force layout.
+     */
+    removePin() {
+        this.pinned = false
+        if (this.pinGroupElement) {
+            this.pinGroupElement.remove()
+        }
+        this.graph.updateStyle()
+    }
+
+    removeHalo() {
+        this.halo = false
+        if (this.haloGroupElement) {
+            this.haloGroupElement.remove()
+            this.haloGroupElement = undefined
+        }
+    }
+
+    commentForCurrentLanguage() {
+        return LanguageTools.textInLanguage(this.comment, this.graph.language)
+    }
+
+    descriptionForCurrentLanguage() {
+        return LanguageTools.textInLanguage(
+            this.description,
+            this.graph.language,
+        )
+    }
+
+    defaultLabel() {
+        return LanguageTools.textInLanguage(this.label, "default")
+    }
+
+    indicationString() {
+        return this.indications ? this.indications.join(", ") : ""
+    }
+
+    labelForCurrentLanguage() {
+        const preferredLanguage =
+            this.graph && this.graph.language ? this.graph.language : null
+        return LanguageTools.textInLanguage(this.label, preferredLanguage)
+    }
+
+    /**
+     * @param {any} other
+     */
+    equals(other) {
+        return other instanceof BaseElement && this.id === other.id
+    }
+
+    toString() {
+        return this.labelForCurrentLanguage() + " (" + this.type + ")"
+    }
+}

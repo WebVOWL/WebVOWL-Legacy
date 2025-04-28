@@ -1,32 +1,25 @@
-var BaseProperty = require("../BaseProperty");
+import Graph from "../../../graph"
+import BaseProperty from "../BaseProperty"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    BaseProperty.apply(this, arguments);
-    
-    var superGenerateCardinalityText = this.generateCardinalityText;
-    
-    this.linkType("values-from")
-      .markerType("filled values-from")
-      .styleClass("allvaluesfromproperty")
-      .type("owl:allValuesFrom");
-    
-    this.generateCardinalityText = function (){
-      var cardinalityText = "A";
-      
-      var superCardinalityText = superGenerateCardinalityText();
-      if ( superCardinalityText ) {
-        cardinalityText += ", " + superCardinalityText;
-      }
-      
-      return cardinalityText;
-    };
-  };
-  o.prototype = Object.create(BaseProperty.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class OwlAllValuesFromProperty extends BaseProperty {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
 
+        this.linkType = "values-from"
+        this.markerType = "filled values-from"
+        this.styleClass = "allvaluesfromproperty"
+        this.type = "owl:allValuesFrom"
+    }
 
+    generateCardinalityText() {
+        let cardinalityText = "A"
+        const superCardinalityText = super.generateCardinalityText()
+        if (superCardinalityText) {
+            cardinalityText += ", " + superCardinalityText
+        }
+        return cardinalityText
+    }
+}

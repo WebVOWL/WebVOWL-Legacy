@@ -1,323 +1,343 @@
-const { Trie } = require("../../../webvowl/js/datastructures/trie");
+import Trie from "../../../webvowl/js/datastructures/trie"
+import Graph from "../../../webvowl/js/graph"
+import PrefixTools from "../../../webvowl/js/util/prefixTools"
 
-/**
- * Contains the search "engine"
- *
- * @param graph the associated webvowl graph
- * @returns {{}}
- */
-module.exports = function (graph) {
-    var searchMenu = {},
-        trie,
-        searchLineEdit,
-        maxEntries = 6,
-        dictionaryUpdateRequired = true,
-        viewStatusOfSearchEntries = false;
+export default class SearchMenu {
+    /**
+     * Contains the search "engine"
+     * @param {Graph} graph the associated webvowl graph
+     */
+    constructor(graph) {
+        this.graph = graph
 
-    var c_locate = d3.select("#locateSearchResult");
-    var c_search = d3.select("#c_search");
-    var m_search = d3.select("#m_search"); // << dropdown container;
+        /**
+         * @type {Trie | undefined}
+         */
+        this.trie = undefined
+        this.searchLineEdit = undefined
+        this.maxEntries = 6
+        this.dictionaryUpdateRequired = true
+        this.viewStatusOfSearchEntries = false
 
-    String.prototype.beginsWith = function (string) {
-        return (this.indexOf(string) === 0);
-    };
+        this.c_locate = d3.select("#locateSearchResult")
+        this.c_search = d3.select("#c_search")
+        this.m_search = d3.select("#m_search") // << dropdown container;
+    }
 
-    searchMenu.requestDictionaryUpdate = function () {
-        dictionaryUpdateRequired = true;
-        clearSearchEntries();
-    };
+    requestDictionaryUpdate() {
+        this.dictionaryUpdateRequired = true
+        this.clearSearchEntries()
+    }
 
-    function updateSearchDictionary() {
-        dictionaryUpdateRequired = false;
-        trie = new Trie();
-        let dict = graph.getUpdateDictionary();
+    updateSearchDictionary() {
+        this.dictionaryUpdateRequired = false
+        this.trie = new Trie()
+        let dict = this.graph.dictionary
 
         for (let i = 0; i < dict.length; i++) {
-            let item = dict[i];
-            trie.add(item.labelForCurrentLanguage().toLowerCase(), item.id());
+            let item = dict[i]
+            this.trie.add(item.labelForCurrentLanguage().toLowerCase(), item.id)
 
             // add all equivalents to the search space;
-            if (item.equivalents && item.equivalents().length > 0) {
-                let eqsLabels = item.equivalentsString().toLowerCase().split(", ");
+            if (item.equivalents && item.equivalents.length > 0) {
+                let eqsLabels = item
+                    .equivalentsString()
+                    .toLowerCase()
+                    .split(", ")
                 for (let e = 0; e < eqsLabels.length; e++) {
-                    trie.add(eqsLabels[e], item.id());
+                    this.trie.add(eqsLabels[e], item.id)
                 }
             }
         }
     }
 
-    searchMenu.setup = function () {
-        searchLineEdit = d3.select("#search-input-text");
-        searchLineEdit.on("input", userInput);
-        searchLineEdit.on("keydown", userNavigation);
-        searchLineEdit.on("click", toggleSearchEntryView);
-        searchLineEdit.on("mouseover", hoverSearchEntryView);
+    setup() {
+        this.searchLineEdit = d3.select("#search-input-text")
+        this.searchLineEdit.on("input", () => {
+            this.userInput()
+        })
+        this.searchLineEdit.on("keydown", () => {
+            this.userNavigation()
+        })
+        this.searchLineEdit.on("click", () => {
+            this.toggleSearchEntryView()
+        })
+        this.searchLineEdit.on("mouseover", () => {
+            this.hoverSearchEntryView()
+        })
 
-        c_locate.on("click", function () {
-            graph.locateSearchResult();
-        });
-
-        c_locate.on("mouseover", function () {
-            searchMenu.hideSearchEntries();
-        });
-
-        // Initialize dictionary
-        updateSearchDictionary();
+        this.c_locate.on("click", () => {
+            this.graph.locateSearchResult()
+        })
+        this.c_locate.on("mouseover", () => {
+            this.hideSearchEntries()
+        })
         // Reset text from previous searches
-        searchMenu.clearText()
-
-    };
-
-    function hoverSearchEntryView() {
-        if (m_search.node().children === 0) {
-            createDropDownElements();
-        }
-        searchMenu.showSearchEntries();
+        this.clearText()
     }
 
-    function toggleSearchEntryView() {
-        if (viewStatusOfSearchEntries) {
-            searchMenu.hideSearchEntries();
+    hoverSearchEntryView() {
+        if (this.m_search.node().children === 0) {
+            this.createDropDownElements()
+        }
+        this.showSearchEntries()
+    }
+
+    toggleSearchEntryView() {
+        if (this.viewStatusOfSearchEntries) {
+            this.hideSearchEntries()
         } else {
-            searchMenu.showSearchEntries();
+            this.showSearchEntries()
         }
     }
 
-    searchMenu.hideSearchEntries = function () {
-        m_search.style("display", "none");
-        viewStatusOfSearchEntries = false;
-    };
-
-    searchMenu.showSearchEntries = function () {
-        m_search.style("display", "block");
-        viewStatusOfSearchEntries = true;
-    };
-
-    function ValidURL(str) {
-        var urlregex = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/;
-        return urlregex.test(str);
-
+    hideSearchEntries() {
+        this.m_search.style("display", "none")
+        this.viewStatusOfSearchEntries = false
     }
 
-    function userNavigation() {
-        if (dictionaryUpdateRequired) {
-            updateSearchDictionary();
+    showSearchEntries() {
+        this.m_search.style("display", "block")
+        this.viewStatusOfSearchEntries = true
+    }
+
+    userNavigation() {
+        if (this.dictionaryUpdateRequired) {
+            this.updateSearchDictionary()
         }
 
-        var htmlCollection = m_search.node().children;
-        var numEntries = htmlCollection.length;
-        var move = 0;
-        var selectedEntry = -1;
+        const htmlCollection = this.m_search.node().children
+        const numEntries = htmlCollection.length
+        let move = 0
+        let selectedEntry = -1
         for (let i = 0; i < numEntries; i++) {
-            let atr = htmlCollection[i].getAttribute('class');
+            let atr = htmlCollection[i].getAttribute("class")
             if (atr === "dbEntrySelected") {
-                selectedEntry = i;
+                selectedEntry = i
             }
         }
         // Enter
         if (d3.event.keyCode === 13) {
             if (selectedEntry >= 0 && selectedEntry < numEntries) {
                 // simulate onClick event
-                htmlCollection[selectedEntry].onclick();
-                searchMenu.hideSearchEntries();
-            }
-            else if (numEntries === 0) {
-                let inputText = searchMenu.getSearchString();
+                htmlCollection[selectedEntry].onclick()
+                this.hideSearchEntries()
+            } else if (numEntries === 0) {
+                let inputText = this.getSearchString()
                 // check if input text ends or begins with with space
                 // remove first spaces
-                var clearedText = inputText.replace(/%20/g, " ");
-                while (clearedText.beginsWith(" ")) {
-                    clearedText = clearedText.substr(1, clearedText.length);
+                let clearedText = inputText.replace(/%20/g, " ")
+                while (clearedText.startsWith(" ")) {
+                    clearedText = clearedText.substr(1, clearedText.length)
                 }
                 // remove ending spaces
                 while (clearedText.endsWith(" ")) {
-                    clearedText = clearedText.substr(0, clearedText.length - 1);
+                    clearedText = clearedText.substr(0, clearedText.length - 1)
                 }
-                var iri = clearedText.replace(/ /g, "%20");
+                const iri = clearedText.replace(/ /g, "%20")
 
-                var valid = ValidURL(iri);
+                const valid = PrefixTools.validURL(iri)
                 // validate url:
                 if (valid) {
-                    var ontM = graph.options().ontologyMenu();
-                    ontM.setIriText(iri);
-                    searchLineEdit.node().value = "";
-                }
-                else {
-                    console.log(iri + " is not a valid URL!");
+                    const ontM = this.graph.options.ontologyMenu
+                    ontM.setIriText(iri)
+                    this.searchLineEdit.node().value = ""
+                } else {
+                    console.log(iri + " is not a valid URL!")
                 }
             }
         }
         // ArrowUp
         if (d3.event.keyCode === 38) {
-            move = -1;
-            searchMenu.showSearchEntries();
+            move = -1
+            this.showSearchEntries()
         }
         // ArrowDown
         if (d3.event.keyCode === 40) {
-            move = +1;
-            searchMenu.showSearchEntries();
+            move = +1
+            this.showSearchEntries()
         }
 
-        let newSelection = selectedEntry + move;
+        let newSelection = selectedEntry + move
         if (newSelection !== selectedEntry) {
             if (newSelection < 0 && selectedEntry <= 0) {
-                htmlCollection[0].setAttribute('class', "dbEntrySelected");
+                htmlCollection[0].setAttribute("class", "dbEntrySelected")
             }
             if (newSelection >= numEntries) {
-                htmlCollection[selectedEntry].setAttribute('class', "dbEntrySelected");
+                htmlCollection[selectedEntry].setAttribute(
+                    "class",
+                    "dbEntrySelected",
+                )
             }
             if (newSelection >= 0 && newSelection < numEntries) {
-                htmlCollection[newSelection].setAttribute('class', "dbEntrySelected");
+                htmlCollection[newSelection].setAttribute(
+                    "class",
+                    "dbEntrySelected",
+                )
                 if (selectedEntry >= 0)
-                    htmlCollection[selectedEntry].setAttribute('class', "dbEntry");
+                    htmlCollection[selectedEntry].setAttribute(
+                        "class",
+                        "dbEntry",
+                    )
             }
         }
     }
 
-    searchMenu.getSearchString = function () {
-        return searchLineEdit.node().value.toLowerCase().trim();
-    };
+    /**
+     * @returns {string}
+     */
+    getSearchString() {
+        return this.searchLineEdit.node().value.toLowerCase().trim()
+    }
 
-    function clearSearchEntries() {
-        let htmlCollection = m_search.node().children;
-        let numEntries = htmlCollection.length;
+    clearSearchEntries() {
+        let htmlCollection = this.m_search.node().children
+        let numEntries = htmlCollection.length
         for (let i = 0; i < numEntries; i++) {
-            htmlCollection[0].remove();
+            htmlCollection[0].remove()
         }
     }
 
-    function measureTextWidth(text, textStyle) {
+    /**
+     * @param {string} text
+     * @param {string} textStyle
+     */
+    measureTextWidth(text, textStyle) {
         // Set a default value
         if (!textStyle) {
-            textStyle = "text";
+            textStyle = "text"
         }
-        let d = d3.select("body")
-            .append("div")
-            .attr("class", textStyle)
-            .attr("id", "width-test") // tag this element to identify it
-            .attr("style", "position:absolute; float:left; white-space:nowrap; visibility:hidden;")
-            .text(text),
-            w = document.getElementById("width-test").offsetWidth;
-        d.remove();
-        return w;
+        let d = d3
+                .select("body")
+                .append("div")
+                .attr("class", textStyle)
+                .attr("id", "width-test") // tag this element to identify it
+                .attr(
+                    "style",
+                    "position:absolute; float:left; white-space:nowrap; visibility:hidden;",
+                )
+                .text(text),
+            w = document.getElementById("width-test").offsetWidth
+        d.remove()
+        return w
     }
 
-    function cropText(input) {
-        var maxWidth = 250;
-        var textStyle = "dbEntry";
-        var truncatedText = input;
-        var textWidth;
-        var ratio;
-        var newTruncatedTextLength;
+    /**
+     * @param {string} input
+     */
+    cropText(input) {
+        const maxWidth = 250
+        const textStyle = "dbEntry"
+        let truncatedText = input
+        let textWidth
         while (true) {
-            textWidth = measureTextWidth(truncatedText, textStyle);
+            textWidth = this.measureTextWidth(truncatedText, textStyle)
             if (textWidth <= maxWidth) {
-                break;
+                break
             }
-            ratio = textWidth / maxWidth;
-            newTruncatedTextLength = Math.floor(truncatedText.length / ratio);
+            const ratio = textWidth / maxWidth
+            const newTruncatedTextLength = Math.floor(
+                truncatedText.length / ratio,
+            )
 
             // detect if nothing changes
             if (truncatedText.length === newTruncatedTextLength) {
-                break;
+                break
             }
-            truncatedText = truncatedText.substring(0, newTruncatedTextLength);
+            truncatedText = truncatedText.substring(0, newTruncatedTextLength)
         }
 
         if (input.length > truncatedText.length) {
-            return input.substring(0, truncatedText.length - 6);
+            return input.substring(0, truncatedText.length - 6)
         }
-        return input;
+        return input
     }
 
-    function createDropDownElements() {
-        const searchString = searchMenu.getSearchString();
-        const searchMatches = trie.find(searchString);
+    createDropDownElements() {
+        const searchString = this.getSearchString()
+        const searchMatches = this.trie.find(searchString)
 
         // add the results to the entry menu
         //******************************************
-        let numEntries = searchMatches.length;
-        if (numEntries > maxEntries)
-            numEntries = maxEntries;
+        let numEntries = searchMatches.length
+        if (numEntries > this.maxEntries) numEntries = this.maxEntries
 
         for (let i = 0; i < numEntries; i++) {
             const nodeString = searchMatches[i][0]
             const nodeIDs = searchMatches[i][1]
-            let nodeMap = graph.getNodeMapForSearch();
+            const nodeMap = this.graph.nodeMap
 
             // TODO: Figure out how to show nodes in nodeIDs
             // Showing all of them (as is done below) causes nodeString to be repeated nodeIDs.length times
             // (as all nodeIDs nodes are pointing to nodeString by definition)
             for (const nodeID of nodeIDs) {
                 //add results to the dropdown menu
-                let testEntry = document.createElement('li');
-                testEntry.title = nodeString;
-                testEntry.setAttribute('elementID', nodeID);
-                testEntry.onclick = handleClick(nodeString, nodeIDs);
-                testEntry.setAttribute('class', "dbEntry");
+                let testEntry = document.createElement("li")
+                testEntry.title = nodeString
+                testEntry.setAttribute("elementID", nodeID)
+                testEntry.onclick = this.handleClick(nodeString, nodeIDs)
+                testEntry.setAttribute("class", "dbEntry")
 
-                let croppedText = cropText(nodeString);
-                let searchEntryNode = d3.select(testEntry);
-                if (nodeMap[nodeID] === undefined) {
-                    searchEntryNode.style("color", "#979797");
-                    testEntry.onclick = function () {
+                let croppedText = this.cropText(nodeString)
+                let searchEntryNode = d3.select(testEntry)
+                if (nodeMap.has(nodeID)) {
+                    searchEntryNode.style("color", "#979797")
+                    testEntry.onclick = () => {
                         try {
-                            graph.loadSearchData(nodeID);
-                            searchMenu.requestDictionaryUpdate();
-                            handleClick(nodeString, nodeIDs)();
+                            this.graph.loadSearchData(nodeID)
+                            this.requestDictionaryUpdate()
+                            this.handleClick(nodeString, nodeIDs)()
                         } catch (error) {
-                            console.error(error);
+                            console.error(error)
                         }
-                    };
-                    d3.select(testEntry).style("cursor", "default");
+                    }
+                    d3.select(testEntry).style("cursor", "default")
                 }
-                searchEntryNode.node().innerHTML = croppedText;
-                m_search.node().appendChild(testEntry);
+                searchEntryNode.node().innerHTML = croppedText
+                this.m_search.node().appendChild(testEntry)
             }
         }
     }
 
-    function userInput() {
-        c_locate.classed("highlighted", false);
-        c_locate.node().title = "Nothing to locate";
+    userInput() {
+        this.c_locate.classed("highlighted", false)
+        this.c_locate.node().title = "Nothing to locate"
 
-        if (dictionaryUpdateRequired) {
-            updateSearchDictionary();
+        if (this.dictionaryUpdateRequired) {
+            this.updateSearchDictionary()
         }
-        graph.resetSearchHighlight();
-        clearSearchEntries();
-        if (searchMenu.getSearchString().length !== 0) {
-            createDropDownElements();
+        this.graph.resetSearchHighlight()
+        this.clearSearchEntries()
+        if (this.getSearchString().length !== 0) {
+            this.createDropDownElements()
         }
-        searchMenu.showSearchEntries();
+        this.showSearchEntries()
     }
 
     /**
      * Autocomplete searched text and highlight relevant nodes in the d3 graph
      * @param {string} nodeString A string related to `nodeIDs`
-     * @param {Set} nodeIDs All node IDs that map to `nodeString`
-     * @returns
+     * @param {Set<string>} nodeIDs All node IDs that map to `nodeString`
      */
-    function handleClick(nodeString, nodeIDs) {
-        return function () {
-            const inputText = searchMenu.getSearchString();
-            searchLineEdit.node().value = nodeString;
-            graph.resetSearchHighlight();
-            graph.highLightNodes(Array.from(nodeIDs.values()));
-            c_locate.node().title = "Locate search term";
+    handleClick(nodeString, nodeIDs) {
+        return () => {
+            const inputText = this.getSearchString()
+            this.searchLineEdit.node().value = nodeString
+            this.graph.resetSearchHighlight()
+            this.graph.highLightNodes(Array.from(nodeIDs.values()))
+            this.c_locate.node().title = "Locate search term"
             if (nodeString !== inputText) {
-                clearSearchEntries();
-                createDropDownElements();
+                this.clearSearchEntries()
+                this.createDropDownElements()
             }
-            searchMenu.hideSearchEntries();
-        };
+            this.hideSearchEntries()
+        }
     }
 
-    searchMenu.clearText = function () {
-        searchLineEdit.node().value = "";
-        c_locate.classed("highlighted", false);
-        c_locate.node().title = "Nothing to locate";
-        clearSearchEntries()
-    };
-    return searchMenu;
-};
+    clearText() {
+        this.searchLineEdit.node().value = ""
+        this.c_locate.classed("highlighted", false)
+        this.c_locate.node().title = "Nothing to locate"
+        this.clearSearchEntries()
+    }
+}

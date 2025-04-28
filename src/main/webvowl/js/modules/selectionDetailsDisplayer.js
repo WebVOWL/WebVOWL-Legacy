@@ -1,44 +1,53 @@
-module.exports = function ( handlerFunction ){
-  var viewer = {},
-    lastSelectedElement;
-  
-  viewer.handle = function ( selectedElement ){
-    // Don't display details on a drag event, which will be prevented
-    if ( d3.event.defaultPrevented ) {
-      return;
+export default class SelectionDetailsDisplayer {
+    /**
+     * @param {Function} handlerFunction
+     */
+    constructor(handlerFunction) {
+        this.handlerFunction = handlerFunction
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.lastSelectedElement = undefined
     }
-    
-    var isSelection = true;
-    
-    // Deselection of the focused element
-    if ( lastSelectedElement === selectedElement ) {
-      isSelection = false;
+
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} selectedElement
+     */
+    handle(selectedElement) {
+        // Don't display details on a drag event, which will be prevented
+        if (d3.event.defaultPrevented) {
+            return
+        }
+
+        let isSelection = true
+
+        // Deselection of the focused element
+        if (this.lastSelectedElement === selectedElement) {
+            isSelection = false
+        }
+
+        if (this.handlerFunction instanceof Function) {
+            if (isSelection) {
+                this.handlerFunction(selectedElement)
+            } else {
+                this.handlerFunction(undefined)
+            }
+        }
+
+        if (isSelection) {
+            this.lastSelectedElement = selectedElement
+        } else {
+            this.lastSelectedElement = undefined
+        }
     }
-    
-    if ( handlerFunction instanceof Function ) {
-      if ( isSelection ) {
-        handlerFunction(selectedElement);
-      } else {
-        handlerFunction(undefined);
-      }
+
+    /**
+     * Resets the displayed information to its default.
+     */
+    reset() {
+        if (this.lastSelectedElement) {
+            this.handlerFunction(undefined)
+            this.lastSelectedElement = undefined
+        }
     }
-    
-    if ( isSelection ) {
-      lastSelectedElement = selectedElement;
-    } else {
-      lastSelectedElement = undefined;
-    }
-  };
-  
-  /**
-   * Resets the displayed information to its default.
-   */
-  viewer.reset = function (){
-    if ( lastSelectedElement ) {
-      handlerFunction(undefined);
-      lastSelectedElement = undefined;
-    }
-  };
-  
-  return viewer;
-};
+}

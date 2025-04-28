@@ -1,24 +1,24 @@
-var RoundNode = require("../RoundNode");
+import Graph from "../../../graph"
+import RoundNode from "../RoundNode"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    RoundNode.apply(this, arguments);
-    
-    var superDrawFunction = this.draw;
-    
-    this.attributes(["rdf"])
-      .label("Resource")
-      .radius(30)
-      .styleClass("rdfsresource")
-      .type("rdfs:Resource");
-    
-    this.draw = function ( element ){
-      superDrawFunction(element, ["rdf", "dashed"]);
-    };
-  };
-  o.prototype = Object.create(RoundNode.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class RdfsResource extends RoundNode {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+
+        this.attributes = ["rdf"]
+        this.label = "Resource"
+        this.radius = 30
+        this.styleClass = "rdfsresource"
+        this.type = "rdfs:Resource"
+    }
+
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} element
+     */
+    draw(element) {
+        super.draw(element, ["rdf", "dashed"])
+    }
+}

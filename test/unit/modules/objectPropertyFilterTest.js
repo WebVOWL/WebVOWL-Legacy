@@ -1,39 +1,40 @@
-var OwlClass = require("../../../src/webvowl/js/elements/nodes/implementations/OwlClass");
-var OwlThing = require("../../../src/webvowl/js/elements/nodes/implementations/OwlThing");
-var ObjectProperty = require(
+const OwlClass = require("../../../src/webvowl/js/elements/nodes/implementations/OwlClass");
+const OwlThing = require("../../../src/webvowl/js/elements/nodes/implementations/OwlThing");
+const ObjectProperty = require(
 	"../../../src/webvowl/js/elements/properties/implementations/OwlObjectProperty");
-var DatatypeProperty = require(
+const DatatypeProperty = require(
 	"../../../src/webvowl/js/elements/properties/implementations/OwlDatatypeProperty");
-var Link = require("../../../src/webvowl/js/elements/links/PlainLink");
+const Link = require("../../../src/webvowl/js/elements/links/PlainLink");
 
 describe("Filtering of object properties", function () {
-	var filter;
+	const filter;
 
 	beforeEach(function () {
 		jasmine.addMatchers({
-			                    toBeInstanceOf: function () {
-				                    return {
-					                    compare: function (actual, expected) {
-						                    return {
-							                    pass: actual instanceof expected
-						                    };
-					                    }
-				                    };
-			                    }
-		                    });
+			toBeInstanceOf: function () {
+				return {
+					compare: function (actual, expected) {
+						return {
+							pass: actual instanceof expected
+						};
+					}
+				};
+			}
+		});
 	});
 
 	beforeEach(function () {
 		filter = require("../../../src/webvowl/js/modules/objectPropertyFilter")();
-		filter.enabled(true);
+		filter.enabled = true;
 	});
 
 	it("should remove object properties", function () {
-		var domain = new OwlClass();
-		var range = new OwlClass();
-		var objectProperty = new ObjectProperty();
+		const domain = new OwlClass();
+		const range = new OwlClass();
+		const objectProperty = new ObjectProperty();
 
-		objectProperty.domain(domain).range(range);
+		objectProperty.domain = domain
+		objectProperty.range = range;
 
 		filter.filter([domain, range], [objectProperty]);
 
@@ -42,14 +43,15 @@ describe("Filtering of object properties", function () {
 	});
 
 	it("should remove things without any other properties", function () {
-		var domain = new OwlThing();
-		var range = new OwlThing();
-		var objectProperty = new ObjectProperty();
+		const domain = new OwlThing();
+		const range = new OwlThing();
+		const objectProperty = new ObjectProperty();
 
-		objectProperty.domain(domain).range(range);
-		var objectPropertyLink = new Link(domain, range, objectProperty);
-		domain.links([objectPropertyLink]);
-		range.links([objectPropertyLink]);
+		objectProperty.domain = domain
+		objectProperty.range = range;
+		const objectPropertyLink = new Link(domain, range, objectProperty);
+		domain.links = [objectPropertyLink];
+		range.links = [objectPropertyLink];
 
 		filter.filter([domain, range], [objectProperty]);
 
@@ -58,17 +60,21 @@ describe("Filtering of object properties", function () {
 	});
 
 	it("should keep things with any other properties", function () {
-		var domain = new OwlClass();
-		var range = new OwlThing();
-		var objectProperty = new ObjectProperty();
-		var datatypeProperty = new DatatypeProperty();
+		const domain = new OwlClass();
+		const range = new OwlThing();
+		const objectProperty = new ObjectProperty();
+		const datatypeProperty = new DatatypeProperty();
 
-		objectProperty.domain(domain).range(range);
-		datatypeProperty.domain(domain).range(range);
-		var objectPropertyLink = new Link(domain, range, objectProperty);
-		var datatypePropertyLink = new Link(domain, range, datatypeProperty);
-		domain.links([objectPropertyLink, datatypePropertyLink]);
-		range.links([objectPropertyLink, datatypePropertyLink]);
+		objectProperty.domain = domain
+		objectProperty.range = range;
+
+		datatypeProperty.domain = domain
+		datatypeProperty.range = range;
+
+		const objectPropertyLink = new Link(domain, range, objectProperty);
+		const datatypePropertyLink = new Link(domain, range, datatypeProperty);
+		domain.links = [objectPropertyLink, datatypePropertyLink];
+		range.links = [objectPropertyLink, datatypePropertyLink];
 
 		filter.filter([domain, range], [objectProperty, datatypeProperty]);
 
