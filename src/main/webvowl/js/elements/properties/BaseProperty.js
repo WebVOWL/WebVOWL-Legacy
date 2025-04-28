@@ -269,9 +269,9 @@ export default class BaseProperty extends RectangularElementToolsMixin(
             .append("rect")
             .classed(this.styleClass, true)
             .classed("property", true)
-            .attr("x", -this.labelWidth / 2)
+            .attr("x", -this.width / 2)
             .attr("y", -this.height / 2)
-            .attr("width", this.labelWidth)
+            .attr("width", this.width)
             .attr("height", this.height)
             .on("mouseover", () => {
                 this.#onMouseOver()
