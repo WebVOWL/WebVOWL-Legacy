@@ -7,7 +7,6 @@ const CopyWebpackPlugin = require("copy-webpack-plugin")
 const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin")
 const TerserPlugin = require("terser-webpack-plugin")
-const WasmPackPlugin = require("wasm-pack-plugin")
 
 function getConfig(args) {
     const isProdEnabled = args.mode === "production" ? true : false
@@ -28,7 +27,7 @@ function getConfig(args) {
             publicPath: "auto",
             filename: "js/[name].js",
             chunkFilename: "js/[chunkhash].js",
-            webassemblyModuleFilename: "wasm/[id].[hash].wasm",
+            // webassemblyModuleFilename: "wasm/[id].[hash].wasm",
             // enabledWasmLoadingTypes: ['fetch'],
             // workerChunkLoading: "universal",
             // globalObject: 'this',
@@ -42,7 +41,7 @@ function getConfig(args) {
             // futureDefaults: true,
             // css: false,
             // outputModule: true,
-            asyncWebAssembly: true,
+            // asyncWebAssembly: true,
             // syncWebAssembly: true,
         },
         optimization: {
@@ -87,18 +86,6 @@ function getConfig(args) {
                 ],
             }),
             new MiniCssExtractPlugin({ filename: "css/[name].css" }),
-            new WasmPackPlugin({
-                crateDirectory: path.resolve(__dirname, paths.rustPath),
-                // For available set of arguments check:
-                // https://rustwasm.github.io/docs/wasm-pack/
-                // https://github.com/WebVOWL/wasm-pack-plugin
-                args: "--verbose",
-                extraArgs: "--target bundler --mode normal",
-                forceMode: "production",
-                outDir: path.resolve(__dirname, paths.pkgPath),
-                pluginLogLevel: "info",
-                wasmInstaller: "rust",
-            }),
         ],
     }
 }
