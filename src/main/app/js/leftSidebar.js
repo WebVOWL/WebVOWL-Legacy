@@ -231,13 +231,6 @@ export default class LeftSideBar {
     }
 
     /**
-     * @param {boolean} init
-     */
-    updateSideBarVis(init) {
-        this.showSidebar(this.getSidebarVisibility(), init)
-    }
-
-    /**
      * @returns {boolean} Returns true if sidebar is hidden. Otherwise, false
      */
     getSidebarVisibility() {
