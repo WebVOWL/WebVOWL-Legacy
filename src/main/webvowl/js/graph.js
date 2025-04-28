@@ -1604,6 +1604,7 @@ export default class Graph {
             )
         }
         this.currentData = this.unfilteredData
+
         // window size
         const w = 0.5 * this.options.width
         const h = 0.5 * this.options.height
