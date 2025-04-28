@@ -20,7 +20,7 @@ The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWe
 | :-------------------: | :--------------------: | :------------------: | :----------------------------------: |
 |   CountAndSetLayers   |        $O(n^2)$        |        $O(n)$        |           $803s/385s=2.09$           |
 |   CountAndSetLoops    |        $O(n^2)$        |        $O(n)$        |           $803s/271s=2.96$           |
-|   StoreLinksOnNodes   |     $O(n \cdot m)$     |        $O(n)$        |           $803s/474s=1.69$           |
+|   StoreLinksOnNodes   |     $O(n \cdot m)$     |       $O(n+m)$       |           $803s/474s=1.69$           |
 | getOtherEqualProperty | $O(n^2)$ $\Omega(n^2)$ | $O(n^2)$ $\Omega(n)$ |           $803s/355s=2.26$           |
 |    Combined fixes     |                        |                      |           $803s/6s=133.83$           |
 

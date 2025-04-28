@@ -1596,11 +1596,12 @@ export default class Graph {
      * resetting the graph
      */
     reset() {
-        const _this = this
         if (this.unfilteredData) {
-            for (const module of this.options.filterModules) {
-                _this.#filterFunction(module, _this.unfilteredData, true)
-            }
+            this.#filterFunction(
+                this.options.nodeDegreeFilter,
+                this.unfilteredData,
+                true,
+            )
         }
         this.currentData = this.unfilteredData
         // window size
@@ -2025,8 +2026,6 @@ export default class Graph {
         this.options.emptyLiteralFilter.enabled = shouldExecuteEmptyFilter
 
         // Filter the data
-        this.links = LinkCreator.createLinks(preprocessedData.properties)
-        this.#storeLinksOnNodes(preprocessedData.nodes, this.links)
         for (const module of this.options.filterModules) {
             preprocessedData = this.#filterFunction(module, preprocessedData)
         }
@@ -2070,6 +2069,11 @@ export default class Graph {
             nodes: Array.from(selectedNodes.values()),
             properties: selectedProperties,
         }
+        this.#filterFunction(
+            this.options.nodeDegreeFilter,
+            this.currentData,
+            true,
+        )
         this.update(this.currentData)
         this.resetSearchHighlight()
         this.highLightNodes([rootNodeID])
@@ -2081,6 +2085,8 @@ export default class Graph {
      * @param {boolean} [initializing]
      */
     #filterFunction(module, data, initializing) {
+        this.links = LinkCreator.createLinks(this.unfilteredData.properties)
+        this.#storeLinksOnNodes(this.unfilteredData.nodes, this.links)
         if (initializing) {
             if (module.initialize) {
                 module.initialize(data.nodes, data.properties)

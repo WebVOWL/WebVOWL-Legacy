@@ -192,7 +192,8 @@ export default class SearchMenu {
 
     clearSearchEntries() {
         let htmlCollection = this.m_search.node().children
-        for (let i = 0; i < htmlCollection.length; i++) {
+        let numEntries = htmlCollection.length
+        for (let i = 0; i < numEntries; i++) {
             htmlCollection[0].remove()
         }
     }
