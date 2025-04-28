@@ -29,7 +29,6 @@
         "prettier": "3.5.3",
         "style-loader": "^4.0.0",
         "uglify-js": "^3.19.3",
-        "wasm-pack-plugin": "git://github.com/WebVOWL/wasm-pack-plugin.git#v1.7.2",
         "webpack": "~5.98.0",
         "webpack-dev-middleware": "^7.4.2",
         "webpack-dev-server": "^5.2.0",
