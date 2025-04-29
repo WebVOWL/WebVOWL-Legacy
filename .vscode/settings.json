@@ -6,7 +6,5 @@
         "source.organizeImports": "always",
         "source.sortImports": "always"
     },
-    "[javascript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
-    }
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
 }
