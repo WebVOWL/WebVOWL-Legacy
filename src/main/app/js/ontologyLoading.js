@@ -33,10 +33,7 @@ export default class OntologyLoading {
          * @type {number | undefined}
          */
         this.conversion_sessionId = undefined
-        /**
-         * @type {Statistics | undefined}
-         */
-        this.statistics = undefined
+        this.statistics = this.graph.options.statistics
         /**
          * @type {Function | undefined}
          */
