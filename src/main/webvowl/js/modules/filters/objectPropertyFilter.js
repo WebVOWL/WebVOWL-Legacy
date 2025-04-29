@@ -47,8 +47,8 @@ export default class ObjectPropertyFilter extends AbstractFilter {
         }
 
         return {
-            nodes: nodes.filter(this.#isNoFloatingThing),
-            properties: properties.filter(this.#isNoObjectProperty),
+            nodes: filteredNodes,
+            properties: filteredProperties,
         }
     }
 
@@ -70,7 +70,6 @@ export default class ObjectPropertyFilter extends AbstractFilter {
      * @param {BaseNode} node
      */
     #hasPropertiesOtherThanObjectProperties(node) {
-        // REVIEW: Nodes must have a reference to their links
         for (const link of node.links) {
             if (this.#isNoObjectProperty(link.property)) {
                 return true
