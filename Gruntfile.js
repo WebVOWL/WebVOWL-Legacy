@@ -55,7 +55,12 @@ module.exports = function (grunt) {
         "htmlbuild:prod",
         "clean:testOntology",
     ])
-    grunt.registerTask("devserver", ["server", "watch"])
+    grunt.registerTask("devserver", [
+        "pre-js",
+        "htmlbuild:dev",
+        "server",
+        "watch",
+    ])
     grunt.registerTask("server", () => {
         const Webpack = require("webpack")
         const WebpackDevServer = require("webpack-dev-server")
