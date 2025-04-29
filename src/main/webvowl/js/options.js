@@ -61,7 +61,7 @@ export class UntouchedOptions {
 
 class DefaultOptionsConfig {
     constructor() {
-        this.sidebar = false
+        this.sidebar = true
         this.doc = -1 // Degree of collapse
         this.cd = 200
         this.dd = 120
@@ -259,17 +259,17 @@ export default class Options {
         this.nodeScalingModule = new NodeScalingSwitch(this.graph)
         this.statistics = new Statistics()
         this.filterModules = [
-            this.emptyLiteralFilter,
+            this.emptyLiteralFilter, // Must be the first element
+            this.statistics, // Must to be the first element before filtering
             this.datatypeFilter,
             this.subclassFilter,
             this.setOperatorFilter,
             this.disjointPropertyFilter,
             this.objectPropertyFilter,
-            this.nodeDegreeFilter,
             this.colorExternalsModule,
             this.compactNotationModule,
             this.nodeScalingModule,
-            this.statistics,
+            this.nodeDegreeFilter,
         ]
 
         // Misc
@@ -477,7 +477,7 @@ export default class Options {
     }
 
     #updateConfigObject() {
-        this._defaultConfig.sidebar = this.sidebar.getSidebarVisibility()
+        this._defaultConfig.sidebar = this.sidebar.visibleSidebar
         this._defaultConfig.cd = this.classDistance
         this._defaultConfig.dd = this.datatypeDistance
         this._defaultConfig.filter_datatypes = this.filterMenu.getCheckBoxValue(

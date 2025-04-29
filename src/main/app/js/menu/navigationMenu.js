@@ -262,10 +262,10 @@ export default class NavigationMenu {
             const totalOffset = leftOffset - scrollOffset
             let finalOffset = Math.max(0, totalOffset)
             const fullContainer_width =
-                this.scrollContainer.getBoundingClientRect().labelWidth
+                this.scrollContainer.getBoundingClientRect().width
             const elementWidth = this.currentlyVisibleMenu
                 .node()
-                .getBoundingClientRect().labelWidth
+                .getBoundingClientRect().width
             // make priority > first check if we are right
             if (finalOffset + elementWidth > fullContainer_width) {
                 finalOffset = fullContainer_width - elementWidth

@@ -726,13 +726,6 @@ export default class SideBar {
     }
 
     /**
-     * @param {boolean} init
-     */
-    updateSideBarVis(init) {
-        this.showSidebar(this.getSidebarVisibility(), init)
-    }
-
-    /**
      * @note From WebVOWL v1.1.7: 0 === True, 1 === False
      * @returns {boolean} Returns true if sidebar is hidden. Otherwise, false
      */

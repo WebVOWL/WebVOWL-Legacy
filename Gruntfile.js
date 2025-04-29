@@ -17,8 +17,6 @@ module.exports = function (grunt) {
             deploy: paths.deployPath,
             webappDeploy: paths.webappDeployPath,
             testOntology: paths.deployPath + "/data/benchmark.json",
-            // redundantFolders: "pkg",
-            // misplacedBundle: "webvowl.js",
         },
         htmlbuild: {
             options: {
@@ -38,26 +36,6 @@ module.exports = function (grunt) {
                 dest: paths.deployPath,
             },
         },
-        replace: {
-            options: {
-                patterns: [
-                    {
-                        match: "WEBVOWL_VERSION",
-                        replacement: "<%= pkg.version %>",
-                    },
-                ],
-            },
-            dist: {
-                files: [
-                    {
-                        expand: true,
-                        cwd: `${paths.deployPath}/js/`,
-                        src: "webvowl*.js",
-                        dest: ".",
-                    },
-                ],
-            },
-        },
         webpack: {
             prod: prodConfig,
             dev: devConfig,
@@ -66,25 +44,18 @@ module.exports = function (grunt) {
     })
     grunt.registerTask("default", ["prod"])
     grunt.registerTask("pre-js", ["clean:deploy"])
-    grunt.registerTask("post-js", [
-        "replace",
-        // "clean:redundantFolders",
-        // "clean:misplacedBundle",
-    ])
     grunt.registerTask("development", [
         "pre-js",
         "webpack:dev",
-        "post-js",
         "htmlbuild:dev",
     ])
     grunt.registerTask("production", [
         "pre-js",
         "webpack:prod",
-        "post-js",
         "htmlbuild:prod",
         "clean:testOntology",
     ])
-    grunt.registerTask("devserver", ["development", "server", "watch"])
+    grunt.registerTask("devserver", ["server", "watch"])
     grunt.registerTask("server", () => {
         const Webpack = require("webpack")
         const WebpackDevServer = require("webpack-dev-server")

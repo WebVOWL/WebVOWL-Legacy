@@ -1469,18 +1469,6 @@ export default class Graph {
         }
     }
 
-    // Loads all settings, removes the old graph (if it exists) and draws a new one.
-    // start() {
-    //     this.force.stop()
-    //     this.#loadGraphData(true)
-    //     this.#redrawGraphContainer()
-    //     this.update(true)
-
-    //     if (!this.options.loadingModule.loadingWasSuccessFul) {
-    //         this.options.loadingModule.setErrorMode()
-    //     }
-    // }
-
     // Updates only the style of the graph.
     updateStyle() {
         this.#refreshGraphStyle()
@@ -1497,21 +1485,8 @@ export default class Graph {
     load() {
         this.#redrawGraphContainer()
         this.#loadGraphData()
-        // NOTE: Overridden in in update()
-        // this.labelNodes = this.#computeLabelNodes(
-        //     LinkCreator.createLinks(this.unfilteredData.properties),
-        // )
-        // for (let i = 0; i < this.labelNodes.length; i++) {
-        //     const label = this.labelNodes[i]
-        //     if (label.property.x && label.property.y) {
-        //         label.x = label.property.x
-        //         label.y = label.property.y
-        //         // also set the prev position of the label
-        //         label.px = label.x
-        //         label.py = label.y
-        //     }
-        // }
-        this.update(this.unfilteredData)
+        this.currentData = this.unfilteredData
+        this.update(this.unfilteredData, true)
     }
 
     fastUpdate() {
@@ -1578,12 +1553,12 @@ export default class Graph {
      * @note `data` will be mutated by this function, thus it should be cloned beforehand.
      * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} data
      */
-    update(data = this.currentData) {
+    update(data = this.currentData, init = false) {
         if (!this.options.loadingModule.loadingWasSuccessFul) {
             return
         }
         this.keepDetailsCollapsedOnLoading = false
-        this.#refreshGraphData(data)
+        this.#refreshGraphData(data, init)
         this.#updateNodeMap()
         this.force.start()
         this.#redrawContent()
@@ -1760,7 +1735,7 @@ export default class Graph {
         this.parser.dictionary = originalDictionary
 
         const literalFilter = this.options.emptyLiteralFilter
-        const idsToRemove = literalFilter.removedNodes // A set
+        const idsToRemove = literalFilter.removedNodes
         const originalDict = this.parser.dictionary
         const newDict = []
 
@@ -1856,10 +1831,6 @@ export default class Graph {
                 }
             }
         }
-
-        this.links = LinkCreator.createLinks(this.unfilteredData.properties)
-        this.#storeLinksOnNodes(this.unfilteredData.nodes, this.links)
-        this.currentData = this.unfilteredData
 
         this.initialLoad = true
         this.options.warningModule.closeFilterHint()
@@ -1965,19 +1936,6 @@ export default class Graph {
                 }
             }
         }
-        // update more meta OBJECT
-        // Initialize filters with data to replicate consecutive filtering
-        this.links = LinkCreator.createLinks(this.unfilteredData.properties)
-        this.#storeLinksOnNodes(this.unfilteredData.nodes, this.links)
-
-        // currentData = unfilteredData;
-        for (const module of this.options.filterModules) {
-            this.#filterFunction(module, this.unfilteredData, true)
-        }
-
-        // generate dictionary here ;
-        this.#generateDictionary(this.unfilteredData)
-
         this.parser.parseSettings()
         this.graphUpdateRequired = this.parser.settingsImported
         this.centerGraphViewOnLoad = true
@@ -2021,14 +1979,18 @@ export default class Graph {
      * @note `preprocessedData` will be mutated by this function, thus it should be cloned beforehand.
      * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} preprocessedData An object containing nodes and properties.
      */
-    #refreshGraphData(preprocessedData) {
-        let shouldExecuteEmptyFilter = this.options.emptyLiteralFilter.enabled
-        this.executeEmptyLiteralFilter()
-        this.options.emptyLiteralFilter.enabled = shouldExecuteEmptyFilter
-
+    #refreshGraphData(preprocessedData, init = false) {
         // Filter the data
         for (const module of this.options.filterModules) {
-            preprocessedData = this.#filterFunction(module, preprocessedData)
+            preprocessedData = this.#filterFunction(
+                module,
+                preprocessedData,
+                init,
+            )
+        }
+
+        if (init) {
+            this.#generateDictionary(this.unfilteredData)
         }
 
         this.options.focuserModule.handle(undefined, true)

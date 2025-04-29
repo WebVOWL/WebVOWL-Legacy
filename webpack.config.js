@@ -72,6 +72,14 @@ function getConfig(args) {
                         fullySpecified: false,
                     },
                 },
+                {
+                    test: /webvowl\.js$/,
+                    loader: "string-replace-loader",
+                    options: {
+                        search: "@@WEBVOWL_VERSION",
+                        replace: process.env.npm_package_version,
+                    },
+                },
             ],
         },
         plugins: [
@@ -121,7 +129,7 @@ function getServerConfig(args) {
             devMiddleware: {
                 index: true,
                 serverSideRender: false,
-                writeToDisk: false,
+                writeToDisk: true,
                 lastModified: true,
             },
         },

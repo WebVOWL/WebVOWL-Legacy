@@ -22,17 +22,16 @@
         "grunt-contrib-watch": "^1.1.0",
         "grunt-cli": "^1.5.0",
         "grunt-html-build": "^0.7.1",
-        "grunt-replace": "^2.0.2",
         "grunt-webpack": "^7.0.0",
         "load-grunt-tasks": "^5.1.0",
         "mini-css-extract-plugin": "^2.9.2",
         "prettier": "3.5.3",
         "style-loader": "^4.0.0",
         "uglify-js": "^3.19.3",
-        "wasm-pack-plugin": "git://github.com/WebVOWL/wasm-pack-plugin.git#v1.7.2",
         "webpack": "~5.98.0",
         "webpack-dev-middleware": "^7.4.2",
         "webpack-dev-server": "^5.2.0",
-        "webpack-merge": "^6.0.1"
+        "webpack-merge": "^6.0.1",
+        "string-replace-loader": "^3.1.0"
     }
 }

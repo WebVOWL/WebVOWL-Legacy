@@ -31,12 +31,10 @@ export default class Statistics extends AbstractFilter {
         this.#resetStoredData()
 
         this.#storeTotalCounts(classesAndDatatypes, properties)
-        // @ts-ignore
         this.#storeClassAndDatatypeCount(classesAndDatatypes)
         this.#storePropertyCount(properties)
 
         // this.#storeOccurencesOfTypes(classesAndDatatypes, this.occurencesOfClassAndDatatypeTypes);
-        // // @ts-ignore
         // this.#storeOccurencesOfTypes(properties, this.occurencesOfPropertyTypes);
 
         this.#storeTotalIndividualCount(classesAndDatatypes)
@@ -97,13 +95,11 @@ export default class Statistics extends AbstractFilter {
                 // @ts-ignore
                 this.classCount += 1 + this.#countElementArray(node.equivalents)
             }
-
-            // REVIEW: Check whether Things should only be counted once
-            // count things and nothings just a single time
-            this.classCount += hasThing ? 1 : 0
-            this.classCount += hasNothing ? 1 : 0
-            this.datatypeCount = datatypeSet.size
         }
+        // Count things and nothings just a single time
+        this.classCount += hasThing ? 1 : 0
+        this.classCount += hasNothing ? 1 : 0
+        this.datatypeCount = datatypeSet.size
     }
 
     /**
