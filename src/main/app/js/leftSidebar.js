@@ -9,7 +9,6 @@ export default class LeftSideBar {
         this.graph = graph
         this.collapseButton = d3.select("#leftSideBarCollapseButton")
         this.visibleSidebar = false
-        this.backupVisibility = false
         this.sideBarContent = d3.select("#leftSideBarContent")
         this.sideBarContainer = d3.select("#containerForLeftSideBar")
         /**
@@ -32,9 +31,7 @@ export default class LeftSideBar {
 
         this.collapseButton.on("click", () => {
             this.graph.options.navigationMenu.hideAllMenus()
-            const isVisible = this.getSidebarVisibility()
-            this.showSidebar(!isVisible)
-            this.backupVisibility = isVisible
+            this.showSidebar(this.getSidebarVisibility())
         })
 
         this.#setupSelectionContainers()
@@ -263,8 +260,8 @@ export default class LeftSideBar {
      */
     showSidebar(isVisible, init) {
         const collapseButton = d3.select("#leftSideBarCollapseButton")
+        this.visibleSidebar = isVisible
         if (init) {
-            this.visibleSidebar = this.backupVisibility === false
             this.sideBarContent.classed("hidden", !this.visibleSidebar)
             this.sideBarContainer.style("-webkit-animation-name", "none")
             d3.select("#WarningErrorMessages").style(
@@ -292,7 +289,6 @@ export default class LeftSideBar {
         d3.select("#leftSideBarCollapseButton").classed("hidden", true)
 
         if (isVisible) {
-            this.visibleSidebar = true
             collapseButton.node().innerHTML = "<"
             // call expand animation;
             this.sideBarContainer.style(
@@ -310,7 +306,6 @@ export default class LeftSideBar {
                 "0.5s",
             )
         } else {
-            this.visibleSidebar = false
             this.sideBarContent.classed("hidden", true)
             collapseButton.node().innerHTML = ">"
             // call collapse animation
