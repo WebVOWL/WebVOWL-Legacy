@@ -277,7 +277,7 @@ export default class ExportMenu {
             .node().parentNode.innerHTML
 
         // Insert the reference to VOWL
-        graphSvgCode = `<!-- Created with WebVOWL (version ${WebVOWL.version}), ${WebVOWL.link} -->\n" ${graphSvgCode}`
+        graphSvgCode = `<!-- Created with WebVOWL (version ${WebVOWL.version}), ${WebVOWL.link} -->\n ${graphSvgCode}`
 
         escapedGraphSvgCode = this.escapeUnicodeCharacters(graphSvgCode)
         //btoa(); Creates a base-64 encoded ASCII string from a "string" of binary data.
@@ -1453,7 +1453,7 @@ export default class ExportMenu {
                     "} \n "
                 bgColorStr = ", fill=Node" + i + "_COLOR "
             }
-            if (node.attributes.indexOf("deprecated") > -1) {
+            if (node.attributes && node.attributes.indexOf("deprecated") > -1) {
                 texString +=
                     "\\definecolor{Node" + i + "_COLOR}{HTML}{CCCCCC} \n "
                 bgColorStr = ", fill=Node" + i + "_COLOR "
