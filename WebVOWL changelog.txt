@@ -12,6 +12,13 @@ Methods
 - M3 (`merge`)
 - M4 (`mergeRangesOfEquivalentProperties`)
 - M5 (`*locationID`)
+- M6 (`createLinks`)
+- M7 (`storeLinksOnNodes`)
+- M8 (`executeEmptyLiteralFilter`)
+- M9 (`filterFunction`)
+- M10 (`refreshGraphData`)
+- M11 (`update`)
+- M13 (`load`)
 
 
 ::: Notes :::
@@ -60,3 +67,9 @@ Methods
   Change benefits:
 	- Preserve change benefits of A3 change
 	- One less stateful attribute to keep track of
+
+- Removed 2 calls each to M6 and M7
+  Reason: They are already called in the call chain: M13 -> M11 -> M10
+
+- Removed 1 call to M8
+  Reason: An equivalent call is already in place in the call chain: M11 -> M10 -> M9
