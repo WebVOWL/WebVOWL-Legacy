@@ -3,7 +3,7 @@ import BaseProperty from "../../elements/properties/BaseProperty"
 
 export default class AbstractFilter {
     /**
-     * @param {boolean} defaultState
+     * @param {boolean} defaultState Whether it's enabled by default
      */
     constructor(defaultState) {
         if (this.constructor === AbstractFilter) {
