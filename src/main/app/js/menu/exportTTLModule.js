@@ -156,9 +156,15 @@ export default class ExportTTLModule {
         const subject = node.prefixRepresentation
         const predicate = "rdf:type"
         let object = node.type
-        if (node.type === "owl:equivalentClass") object = "owl:Class"
-        if (node.type === "owl:disjointUnionOf") object = "owl:Class"
-        if (node.type === "owl:unionOf") object = "owl:Class"
+        if (node.type === "owl:equivalentClass") {
+            object = "owl:Class"
+        }
+        if (node.type === "owl:disjointUnionOf") {
+            object = "owl:Class"
+        }
+        if (node.type === "owl:unionOf") {
+            object = "owl:Class"
+        }
         const arrayOfNodes = []
         const arrayOfUnionNodes = []
 
@@ -369,7 +375,7 @@ export default class ExportTTLModule {
     extractPropertyDescription(property) {
         const subject = property.prefixRepresentation
         if (subject.length === 0) {
-            console.log("THIS SHOULD NOT HAPPEN")
+            console.warn("THIS SHOULD NOT HAPPEN")
             const propIRI = PrefixTools.getPrefixRepresentationForFullURI(
                 property.iri,
                 this.graph,
@@ -529,12 +535,9 @@ export default class ExportTTLModule {
         const prefixList = this.graph.options.prefixList
         const prefixDef = []
         prefixDef.push("@prefix : \t\t<" + ontoIri + "> .")
-        for (const name in prefixList) {
-            if (prefixList.hasOwnProperty(name)) {
-                prefixDef.push(
-                    "@prefix " + name + ": \t\t<" + prefixList[name] + "> .",
-                )
-            }
+        for (const entry of prefixList.entries()) {
+            const [name, value] = entry
+            prefixDef.push("@prefix " + name + ": \t\t<" + value + "> .")
         }
         prefixDef.push("@base \t\t\t<" + ontoIri + "> .\r\n")
         for (let i = 0; i < prefixDef.length; i++) {
