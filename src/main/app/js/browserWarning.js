@@ -37,7 +37,7 @@ function getInternetExplorerVersion() {
 
 function showBrowserWarningIfRequired() {
     const version = getInternetExplorerVersion()
-    console.log("Browser Version =" + version)
+    // console.log("Browser Version =" + version)
     if (version > 0 && version <= 11) {
         d3.select("#browserCheck").classed("hidden", false)
         d3.select("#killWarning").classed("hidden", true)
@@ -50,7 +50,7 @@ function showBrowserWarningIfRequired() {
         // connect the button;
         const pb_kill = d3.select("#killWarning")
         pb_kill.on("click", function () {
-            console.log("hide the warning please")
+            // console.log("hide the warning please")
             d3.select("#browserCheck").classed("hidden", true)
             d3.select("#logo").style("padding", "10px")
         })
