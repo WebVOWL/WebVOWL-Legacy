@@ -806,7 +806,6 @@ export default class EditSidebar {
             return
         }
         const prefixListContainer = d3.select("#prefixURL_Container")
-        const prefixElements = this.graph.options.prefixList
 
         /**
          * @param {any} sender
@@ -858,136 +857,135 @@ export default class EditSidebar {
             }
         }
 
-        for (const name in prefixElements) {
-            if (prefixElements.hasOwnProperty(name)) {
-                const _this = this
-                const prefixEditContainer = prefixListContainer.append("div")
-                prefixEditContainer.classed("prefixIRIElements", true)
-                prefixEditContainer.node().id = "prefixContainerFor_" + name
+        for (const entry of this.graph.options.prefixList.entries()) {
+            const [name, value] = entry
+            const _this = this
+            const prefixEditContainer = prefixListContainer.append("div")
+            prefixEditContainer.classed("prefixIRIElements", true)
+            prefixEditContainer.node().id = "prefixContainerFor_" + name
 
-                // create edit button which enables the input fields
-                const IconContainer = prefixEditContainer.append("div")
-                IconContainer.style("position", "absolute")
-                IconContainer.node().id = "containerFor_" + name
-                const editButton = IconContainer.append("svg")
-                editButton.style("width", "14px")
-                editButton.style("height", "20px")
-                editButton.classed("noselect", true)
-                editButton.node().id = "editButtonFor_" + name
-                IconContainer.node().title = "Edit prefix and IRI"
-                editButton.node().elementStyle = "save"
-                editButton.node().selectorName = name
+            // create edit button which enables the input fields
+            const IconContainer = prefixEditContainer.append("div")
+            IconContainer.style("position", "absolute")
+            IconContainer.node().id = "containerFor_" + name
+            const editButton = IconContainer.append("svg")
+            editButton.style("width", "14px")
+            editButton.style("height", "20px")
+            editButton.classed("noselect", true)
+            editButton.node().id = "editButtonFor_" + name
+            IconContainer.node().title = "Edit prefix and IRI"
+            editButton.node().elementStyle = "save"
+            editButton.node().selectorName = name
 
-                editButton.node().id = "editButtonFor_" + name
-                editButton.node().elementStyle = "edit"
-                const editIcon = editButton.append("g")
-                const editRect = editIcon.append("rect")
-                const editPath = editIcon.append("path")
-                editIcon.node().id = "iconFor_" + name
-                editPath.node().id = "pathFor_" + name
-                editRect.node().id = "rectFor_" + name
+            editButton.node().id = "editButtonFor_" + name
+            editButton.node().elementStyle = "edit"
+            const editIcon = editButton.append("g")
+            const editRect = editIcon.append("rect")
+            const editPath = editIcon.append("path")
+            editIcon.node().id = "iconFor_" + name
+            editPath.node().id = "pathFor_" + name
+            editRect.node().id = "rectFor_" + name
 
-                editIcon.node().selectorName = name
-                editPath.node().selectorName = name
-                editRect.node().selectorName = name
+            editIcon.node().selectorName = name
+            editPath.node().selectorName = name
+            editRect.node().selectorName = name
 
-                editPath.classed("editPrefixIcon")
-                editPath.style("stroke", "#fff")
-                editPath.style("stroke-width", "1px")
-                editRect.attr("width", "14px")
-                editRect.attr("height", "14px")
-                editRect.style("fill", "#18202A")
-                editRect.attr("transform", "matrix(1,0,0,1,-3,4)")
-                editButton.selectAll("g").on("mouseover", function () {
-                    setEnabledEditPath(this, false, true)
-                })
-                editButton.selectAll("g").on("mouseout", function () {
-                    setEnabledEditPath(this, false, true)
-                })
+            editPath.classed("editPrefixIcon")
+            editPath.style("stroke", "#fff")
+            editPath.style("stroke-width", "1px")
+            editRect.attr("width", "14px")
+            editRect.attr("height", "14px")
+            editRect.style("fill", "#18202A")
+            editRect.attr("transform", "matrix(1,0,0,1,-3,4)")
+            editButton.selectAll("g").on("mouseover", function () {
+                setEnabledEditPath(this, false, true)
+            })
+            editButton.selectAll("g").on("mouseout", function () {
+                setEnabledEditPath(this, false, true)
+            })
 
-                editPath.attr(
-                    "d",
-                    "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z",
-                )
-                editPath.attr("transform", "matrix(-0.45,0,0,0.45,10,5)")
+            editPath.attr(
+                "d",
+                "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z",
+            )
+            editPath.attr("transform", "matrix(-0.45,0,0,0.45,10,5)")
 
-                // create input field for prefix
-                const prefInput = prefixEditContainer.append("input")
-                prefInput.classed("prefixInput", true)
-                prefInput.node().type = "text"
-                prefInput.node().id = "prefixInputFor_" + name
-                prefInput.node().autocomplete = "off"
-                prefInput.node().value = name
-                prefInput.style("margin-left", "14px")
+            // create input field for prefix
+            const prefInput = prefixEditContainer.append("input")
+            prefInput.classed("prefixInput", true)
+            prefInput.node().type = "text"
+            prefInput.node().id = "prefixInputFor_" + name
+            prefInput.node().autocomplete = "off"
+            prefInput.node().value = name
+            prefInput.style("margin-left", "14px")
 
-                // create input field for prefix url
-                const prefURL = prefixEditContainer.append("input")
-                prefURL.classed("prefixURL", true)
-                prefURL.node().type = "text"
-                prefURL.node().id = "prefixURLFor_" + name
-                prefURL.node().autocomplete = "off"
-                prefURL.node().value = prefixElements[name]
-                prefURL.node().title = prefixElements[name]
-                // disable the input fields (already defined elements can be edited later)
-                prefInput.node().disabled = true
-                prefURL.node().disabled = true
+            // create input field for prefix url
+            const prefURL = prefixEditContainer.append("input")
+            prefURL.classed("prefixURL", true)
+            prefURL.node().type = "text"
+            prefURL.node().id = "prefixURLFor_" + name
+            prefURL.node().autocomplete = "off"
+            prefURL.node().value = value
+            prefURL.node().title = value
+            // disable the input fields (already defined elements can be edited later)
+            prefInput.node().disabled = true
+            prefURL.node().disabled = true
 
-                // create the delete button
-                const deleteContainer = prefixEditContainer.append("div")
-                deleteContainer.style("float", "right")
-                const deleteButton = deleteContainer.append("svg")
-                deleteButton.node().id = "deleteButtonFor_" + name
-                deleteContainer.node().title = "Delete prefix and IRI"
-                deleteButton.style("width", "10px")
-                deleteButton.style("height", "20px")
-                const deleteIcon = deleteButton.append("g")
-                const deleteRect = deleteIcon.append("rect")
-                const deletePath = deleteIcon.append("path")
-                deleteIcon.node().id = "del_iconFor_" + name
-                deletePath.node().id = "del_pathFor_" + name
-                deleteRect.node().id = "del_rectFor_" + name
+            // create the delete button
+            const deleteContainer = prefixEditContainer.append("div")
+            deleteContainer.style("float", "right")
+            const deleteButton = deleteContainer.append("svg")
+            deleteButton.node().id = "deleteButtonFor_" + name
+            deleteContainer.node().title = "Delete prefix and IRI"
+            deleteButton.style("width", "10px")
+            deleteButton.style("height", "20px")
+            const deleteIcon = deleteButton.append("g")
+            const deleteRect = deleteIcon.append("rect")
+            const deletePath = deleteIcon.append("path")
+            deleteIcon.node().id = "del_iconFor_" + name
+            deletePath.node().id = "del_pathFor_" + name
+            deleteRect.node().id = "del_rectFor_" + name
 
-                deleteIcon.node().selectorName = name
-                deletePath.node().selectorName = name
-                deleteRect.node().selectorName = name
+            deleteIcon.node().selectorName = name
+            deletePath.node().selectorName = name
+            deleteRect.node().selectorName = name
 
-                deletePath.style("stroke", "#f00")
-                deleteRect.attr("width", "10px")
-                deleteRect.attr("height", "14px")
-                deleteRect.style("fill", "#18202A")
-                deleteRect.attr("transform", "matrix(1,0,0,1,-3,4)")
+            deletePath.style("stroke", "#f00")
+            deleteRect.attr("width", "10px")
+            deleteRect.attr("height", "14px")
+            deleteRect.style("fill", "#18202A")
+            deleteRect.attr("transform", "matrix(1,0,0,1,-3,4)")
 
-                deletePath.attr(
-                    "d",
-                    "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z",
-                )
-                deletePath.attr("transform", "matrix(0.45,0,0,0.45,0,5)")
+            deletePath.attr(
+                "d",
+                "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z",
+            )
+            deletePath.attr("transform", "matrix(0.45,0,0,0.45,0,5)")
 
-                deleteButton.selectAll("g").on("mouseover", function () {
-                    setEnabledDeletePath(this, true)
-                })
-                deleteButton.selectAll("g").on("mouseout", function () {
-                    setEnabledDeletePath(this, false)
-                })
-                editButton.on("click", function () {
-                    _this.#enablePrefixEdit(this)
-                })
-                deleteButton.on("click", function () {
-                    _this.#deletePrefixLine(this)
-                })
+            deleteButton.selectAll("g").on("mouseover", function () {
+                setEnabledDeletePath(this, true)
+            })
+            deleteButton.selectAll("g").on("mouseout", function () {
+                setEnabledDeletePath(this, false)
+            })
+            editButton.on("click", function () {
+                _this.#enablePrefixEdit(this)
+            })
+            deleteButton.on("click", function () {
+                _this.#deletePrefixLine(this)
+            })
 
-                // EXPERIMENTAL
-                if (
-                    name === "rdf" ||
-                    name === "rdfs" ||
-                    name === "xsd" ||
-                    name === "dc" ||
-                    name === "owl"
-                ) {
-                    // make them invis so the spacing does not change
-                    IconContainer.classed("hidden", true)
-                    deleteContainer.classed("hidden", true)
-                }
+            // EXPERIMENTAL
+            if (
+                name === "rdf" ||
+                name === "rdfs" ||
+                name === "xsd" ||
+                name === "dc" ||
+                name === "owl"
+            ) {
+                // make them invis so the spacing does not change
+                IconContainer.classed("hidden", true)
+                deleteContainer.classed("hidden", true)
             }
         }
     }
@@ -1164,7 +1162,7 @@ export default class EditSidebar {
                 const pr = tokens[0]
                 const name = tokens[1]
                 if (pr.length > 0) {
-                    const basePref = this.graph.options.prefixList[pr]
+                    const basePref = this.graph.options.prefixList.get(pr)
                     if (basePref === undefined) {
                         console.log("ERROR __________________")
                         this.graph.options.warningModule.showWarning(
