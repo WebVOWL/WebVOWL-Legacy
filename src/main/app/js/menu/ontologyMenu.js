@@ -218,6 +218,8 @@ export default class OntologyMenu {
         const _this = this
         const iriConverterButton = d3.select("#iri-converter-button")
         const iriConverterInput = d3.select("#iri-converter-input")
+        const odiniLoaderButton = d3.select("#odini-loader-button");
+        const odiniLoaderInput = d3.select("#odini-loader-input");
 
         iriConverterInput
             .on("input", function () {
@@ -228,6 +230,15 @@ export default class OntologyMenu {
             .on("click", function () {
                 _this.keepOntologySelectionOpenShortly()
             })
+        odiniLoaderInput
+            .on("input", function () {
+                _this.keepOntologySelectionOpenShortly();
+            
+                var inputIsEmpty = odiniLoaderInput.property("value") === "";
+                odiniLoaderButton.attr("disabled", inputIsEmpty || undefined);
+                }).on("click", function () {
+                _this.keepOntologySelectionOpenShortly();
+            });
 
         d3.select("#iri-converter-form").on("submit", function () {
             /**
@@ -237,13 +248,7 @@ export default class OntologyMenu {
 
             // remove first spaces
             let clearedName = inputName.replace(/%20/g, " ")
-            while (clearedName.startsWith(" ")) {
-                clearedName = clearedName.substr(1, clearedName.length)
-            }
-            // remove ending spaces
-            while (clearedName.endsWith(" ")) {
-                clearedName = clearedName.substr(0, clearedName.length - 1)
-            }
+            clearedName = clearedName.trim();
             // check if iri is actually an url for a json file (ends with .json)
             // create lowercase filenames;
             inputName = clearedName
@@ -260,6 +265,21 @@ export default class OntologyMenu {
             d3.event.preventDefault()
             return false
         })
+        
+        d3.select("#odini-loader-form").on("submit", function () {
+            var inputName = odiniLoaderInput.property("value");
+    
+            // remove first spaces
+            var clearedName = inputName.replace(/%20/g, " ");
+            clearedName = clearedName.trim();
+    
+            inputName = clearedName;
+            location.hash = "url=https://vowl-ontology-service-596980641683.europe-west4.run.app/ontology/vowl?identifier=https%3A%2F%2Fodini.net%2Fconcept%2F" + inputName + "&degrees=3";
+            iriConverterInput.property("value", "");
+            iriConverterInput.on("input")();
+            d3.event.preventDefault();
+            return false;
+        });
     }
 
     setupUploadButton() {
@@ -434,7 +454,7 @@ export default class OntologyMenu {
                     clearTimeout(this.loadingStatusTimer)
                     this.stopTimer = true
                     this.getLoadingStatusOnceCallBacked(
-                        this.callbackFromIRI_URL_ERROR,
+                        this.callbackFromIRI_URL_ERROR.bind(this),
                         [error, request, localThreadId],
                     )
                 }
@@ -442,7 +462,7 @@ export default class OntologyMenu {
                     clearTimeout(this.loadingStatusTimer)
                     this.stopTimer = true
                     this.getLoadingStatusOnceCallBacked(
-                        this.callbackFromIRI_Success,
+                        this.callbackFromIRI_Success.bind(this),
                         [request.responseText, filename, localThreadId],
                     )
                 }
@@ -469,7 +489,7 @@ export default class OntologyMenu {
         xhr.onload = () => {
             clearTimeout(this.loadingStatusTimer)
             this.stopTimer = true
-            this.getLoadingStatusOnceCallBacked(this.callbackForConvert, [
+            this.getLoadingStatusOnceCallBacked(this.callbackForConvert.bind(this), [
                 xhr,
                 input,
                 sessionId,
@@ -522,7 +542,7 @@ export default class OntologyMenu {
                     console.log(request)
                     console.log(request.responseText.length)
                     this.getLoadingStatusOnceCallBacked(
-                        this.callbackFromJSON_URL_ERROR,
+                        this.callbackFromJSON_URL_ERROR.bind(this),
                         [error, request, local_conversionId],
                     )
                 }
@@ -530,7 +550,7 @@ export default class OntologyMenu {
                     clearTimeout(this.loadingStatusTimer)
                     this.stopTimer = true
                     this.getLoadingStatusOnceCallBacked(
-                        this.callbackFromJSON_Success,
+                        this.callbackFromJSON_Success.bind(this),
                         [request.responseText, filename, local_conversionId],
                     )
                 }
@@ -636,7 +656,7 @@ export default class OntologyMenu {
         xhr.onload = () => {
             clearTimeout(this.loadingStatusTimer)
             this.stopTimer = true
-            this.getLoadingStatusOnceCallBacked(this.callbackForConvert, [
+            this.getLoadingStatusOnceCallBacked(this.callbackForConvert.bind(this), [
                 xhr,
                 filename,
                 local_threadId,
