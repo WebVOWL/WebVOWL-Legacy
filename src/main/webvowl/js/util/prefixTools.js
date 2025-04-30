@@ -6,7 +6,7 @@ export default class PrefixTools {
      * @param {Graph} graph
      */
     static getPrefixRepresentationForFullURI(fullURL, graph) {
-        let currentPrefixModel = graph.options.prefixList
+        let currentPrefixModel = graph.options.inversePrefixList
         const splittedURL = this.#splitURLIntoBaseAndResource(fullURL, graph)
         // THIS IS CASE SENSITIVE!
         const name = currentPrefixModel.get(splittedURL.base)

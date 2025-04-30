@@ -209,6 +209,11 @@ export default class Options {
             xml: "http://www.w3.org/XML/1998/namespace",
         }
         this.prefixList = new Map(Object.entries(prefixes))
+        this.inversePrefixList = new Map()
+        for (const entry of this.prefixList.entries()) {
+            const [key, value] = entry
+            this.inversePrefixList.set(value, key)
+        }
     }
 
     get defaultConfig() {
@@ -391,6 +396,7 @@ export default class Options {
      */
     addPrefix(prefix, url) {
         this.prefixList.set(prefix, url)
+        this.inversePrefixList.set(url, prefix)
     }
 
     /**
@@ -408,7 +414,7 @@ export default class Options {
             oldURL !== newURL &&
             PrefixTools.validURL(newURL)
         ) {
-            this.prefixList.set(oldPrefix, newURL)
+            this.addPrefix(oldPrefix, newURL)
         } else if (
             oldPrefix === newPrefix &&
             oldURL !== newURL &&
@@ -459,7 +465,9 @@ export default class Options {
      * @param {string} prefix
      */
     removePrefix(prefix) {
+        const value = this.prefixList.get(prefix)
         this.prefixList.delete(prefix)
+        this.inversePrefixList.delete(value)
     }
 
     /**
