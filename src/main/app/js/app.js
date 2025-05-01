@@ -174,8 +174,6 @@ export default class App {
             this.#adjustSize()
         })
 
-        // this.graph.start()
-
         const modeOp = d3.select("#modeOfOperationString")
         modeOp.style("font-size", "0.6em")
         modeOp.style("font-style", "italic")
@@ -349,10 +347,7 @@ export default class App {
         this.options.editSidebar.updateElementWidth()
 
         const hs = d3.select("#drag_msg").node().getBoundingClientRect().height
-        const ws = d3
-            .select("#drag_msg")
-            .node()
-            .getBoundingClientRect().width
+        const ws = d3.select("#drag_msg").node().getBoundingClientRect().width
         d3.select("#drag_icon_group").attr(
             "transform",
             "translate ( " + 0.25 * ws + " " + 0.25 * hs + ")",

@@ -15,7 +15,6 @@ export default class ColorExternalsSwitch extends AbstractFilter {
         this.colorModeType = "same"
     }
 
-    // REVIEW: This does not filter anything. Check if this method can be combined in a class elsewhere
     /**
      * Applies color to "external" nodes or properties.
      * @note This mutates the input!
