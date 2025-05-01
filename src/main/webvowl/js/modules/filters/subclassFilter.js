@@ -159,36 +159,6 @@ export default class SubclassFilter extends AbstractFilter {
                 }
             }
         }
-        // for (const property of allProperties) {
-        //     if (property.domain === node || property.range === node) {
-        //         connectedProperties.push(property)
-        //         /* Special case: SuperClass <-(1) Subclass <-(2) Subclass ->(3) e.g. Datatype
-        //          * We need to find the last property recursively. Otherwise, we would remove the subClassOf
-        //          * property (1) because we didn't see the datatype property (3).
-        //          */
-
-        //         // Look only for subclass properties, because these are the relevant properties
-        //         if (ElementTools.isRdfsSubClassOf(property)) {
-        //             const domain = property.domain
-        //             // If we have the range, there might be a nested property on the domain
-        //             if (
-        //                 node === property.range &&
-        //                 !visitedNodeIDs.has(domain.id)
-        //             ) {
-        //                 visitedNodeIDs.add(domain.id)
-        //                 const nestedConnectedProperties =
-        //                     this.#findRelevantConnectedProperties(
-        //                         domain,
-        //                         allProperties,
-        //                         visitedNodeIDs,
-        //                     )
-        //                 connectedProperties = connectedProperties.concat(
-        //                     nestedConnectedProperties,
-        //                 )
-        //             }
-        //         }
-        //     }
-        // }
         return connectedProperties
     }
 
