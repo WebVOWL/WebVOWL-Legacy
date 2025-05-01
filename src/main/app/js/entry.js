@@ -1,4 +1,5 @@
-require("../css/toolstyle.css");
-require("./browserWarning");
+import "../css/toolstyle.css"
+import "../css/vowl.css"
+import "./browserWarning"
 
-module.exports = require("./app");
+export { default } from "./app"

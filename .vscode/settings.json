@@ -1,5 +1,10 @@
 {
     "[markdown]": {
         "files.trimTrailingWhitespace": false
-    }
+    },
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "always",
+        "source.sortImports": "always"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
 }

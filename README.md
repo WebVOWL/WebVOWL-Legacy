@@ -1,32 +1,38 @@
 # WebVOWL Legacy
-The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) closely with the exception of some changes highligted below.
+
+The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) in look and feel.  
+Behind the scenes, however, a lot has been done to reduce loading time as well as memory consumption.
 
 ## Changes from the original WebVOWL
+
 ### Significant performance improvements
+NOTE: Additional improvement documentation pending
+
 > [!NOTE]
 > Profiling was done using:
+>
 > - HP ENVY Laptop 13-aq1xxx (Windows 11 Home)
 > - Intel(R) Core(TM) i5-10210U
 > - 8 GB RAM
-> -  The Firefox profiler running Firefox v136.0.1 (64-bit)
+> - The Firefox profiler running Firefox v136.0.1 (64-bit)
 >
 > The ontology profiled is [ENVO](https://github.com/EnvironmentOntology/envo) (7k nodes, 12k edges)
 
-
-Improvement | Original Complexity | Improved Complexity | Load Time Improvement (original/new)
-:---: | :---: | :---: | :---:
-CountAndSetLayers | $O(n^2)$ | $O(n)$ | $803s/385s=2.09$
-CountAndSetLoops | $O(n^2)$ | $O(n)$ | $803s/271s=2.96$
-StoreLinksOnNodes | $O(n \cdot m)$ | $O(n+m)$ | $803s/474s=1.69$
-getOtherEqualProperty | $O(n^2)$ $\Omega(n^2)$ | $O(n^2)$ $\Omega(n)$ | $803s/355s=2.26$
-Combined fixes | | | $803s/6s=133.83$
+|      Improvement      |  Original Complexity   | Improved Complexity  | Load Time Improvement (original/new) |
+| :-------------------: | :--------------------: | :------------------: | :----------------------------------: |
+|   CountAndSetLayers   |        $O(n^2)$        |        $O(n)$        |           $803s/385s=2.09$           |
+|   CountAndSetLoops    |        $O(n^2)$        |        $O(n)$        |           $803s/271s=2.96$           |
+|   StoreLinksOnNodes   |     $O(n \cdot m)$     |       $O(n+m)$       |           $803s/474s=1.69$           |
+| getOtherEqualProperty | $O(n^2)$ $\Omega(n^2)$ | $O(n^2)$ $\Omega(n)$ |           $803s/355s=2.26$           |
+|    Combined fixes     |                        |                      |           $803s/6s=133.83$           |
 
 where:  
 $~~~~~~~~$ $n=\text{edges}$,  
-$~~~~~~~~$ $m=\text{nodes}$ 
+$~~~~~~~~$ $m=\text{nodes}$
 
 ## Run Using Docker
-Pull image: `docker pull ghcr.io/webvowl/webvowl-legacy:v1.2.8`  
+
+Pull image: `docker pull ghcr.io/webvowl/webvowl-legacy:v1.2.8`
 
 Or use the [docker compose file](/docker-compose.yml) with command `docker-compose up -d`
 
@@ -37,26 +43,30 @@ Make sure you are inside the `WebVOWL` directory and you have Docker installed.
 Run the following command to build the docker image:
 
 `docker build . -t webvowl:legacy_dev`
+
 </details>
 
 Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
 
 ## Development setup
+
 > [!NOTE]
 > The [OWL2VOWL converter](https://github.com/VisualDataWeb/OWL2VOWL) is not supported on the local development server
 
 1. Clone the project locally
-2. Download and install Node.js from http://nodejs.org/download/
-3. Open the terminal in the `WebVOWL` directory
-4. Run `npm install` to install dependencies
+2. Install Node.js from http://nodejs.org/download/
+3. Install Maven from https://maven.apache.org/download.cgi
+4. Open the terminal in the `WebVOWL` directory
 
-Now you can execute these commands in the terminal:
-* `npm run webserver` to start a local live-updating webserver with the current development version
-* `npm run release` builds the release files into the deploy directory
+Now you can execute these commands:
+
+- `npm run webserver` to start a local live-updating webserver in development mode
+- `npm run release` builds the release files into the deploy directory
 
 Visit [http://localhost:8080](http://localhost:8080) to use WebVOWL.
 
 ## Additional information
+
 To export the VOWL visualization to an SVG image, all css styles have to be included into the SVG code.
 This means that if you change the CSS code in the `vowl.css` file, you also have to update the code that
 inlines the styles - otherwise the exported SVG will not look the same as the displayed graph.

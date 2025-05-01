@@ -1,16 +1,15 @@
-var OwlThing = require("./OwlThing");
+import Graph from "../../../graph"
+import OwlThing from "./OwlThing"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    OwlThing.apply(this, arguments);
-    
-    this.label("Nothing")
-      .type("owl:Nothing")
-      .iri("http://www.w3.org/2002/07/owl#Nothing");
-  };
-  o.prototype = Object.create(OwlThing.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class OwlNothing extends OwlThing {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+
+        this.label = "Nothing"
+        this.type = "owl:Nothing"
+        this.iri = "http://www.w3.org/2002/07/owl#Nothing"
+    }
+}

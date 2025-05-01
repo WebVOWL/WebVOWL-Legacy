@@ -1,399 +1,422 @@
-var BaseElement = require("../BaseElement");
-var forceLayoutNodeFunctions = require("../forceLayoutNodeFunctions")();
+import Graph from "../../graph"
+import PrefixTools from "../../util/prefixTools"
+import BaseElement from "../BaseElement"
+import ArrowLink from "../links/ArrowLink"
+import BoxArrowLink from "../links/BoxArrowLink"
+import PlainLink from "../links/PlainLink"
+import BaseProperty from "../properties/BaseProperty"
 
-module.exports = (function (){
-  
-  var Base = function ( graph ){
-    BaseElement.apply(this, arguments);
-    
-    var that = this,
-      // Basic attributes
-      complement,
-      disjointUnion,
-      disjointWith,
-      individuals = [],
-      intersection,
-      union,
-      links,
-      rendertype = "round",
-      // Additional attributes
-      maxIndividualCount,
-      fobj, // foreigner object for editing
-      ignoreLocalHoverEvents = false,
-      backupFullIri,
-      // Element containers
-      nodeElement;
-    
-    // array to store my properties; // we will need this also later for semantic zooming stuff
-    var assignedProperties = [];
-    that.editingTextElement = false;
-    
-    this.isPropertyAssignedToThisElement = function ( property ){
-      // this goes via IRIS
-      console.log("Element IRI :" + property.iri());
-      if ( property.type() === "rdfs:subClassOf" )
-        for ( var i = 0; i < assignedProperties.length; i++ ) {
-          var iriEl = assignedProperties[i].iri();
-          if ( property.iri() === iriEl ) {
-            return true;
-          }
-          if ( property.type() === "rdfs:subClassOf" && assignedProperties[i].type() === "rdfs:subClassOf" )
-            return true;
-          if ( property.type() === "owl:disjointWith" && assignedProperties[i].type() === "owl:disjointWith" )
-            return true;
-          
+export default class BaseNode extends BaseElement {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+        if (this.constructor === BaseNode) {
+            throw new Error("Abstract classes can't be instantiated")
         }
-      return false;
-    };
-    
-    
-    this.existingPropertyIRI = function ( url ){
-      // this goes via IRIS
-      for ( var i = 0; i < assignedProperties.length; i++ ) {
-        var iriEl = assignedProperties[i].iri();
-        if ( iriEl === url ) {
-          return true;
-        }
-      }
-      return false;
-    };
-    
-    this.addProperty = function ( property ){
-      if ( assignedProperties.indexOf(property) === -1 ) {
-        assignedProperties.push(property);
-      }
-    };
-    
-    this.removePropertyElement = function ( property ){
-      // console.log("Calling removing old property!"+ property.iri());
-      if ( assignedProperties.indexOf(property) !== -1 ) {
-        // console.log("Found it!");
-        assignedProperties.splice(assignedProperties.indexOf(property), 1);
-      }
-    };
-    this.getMyProperties = function (){
-      return assignedProperties;
-    };
-    this.copyOtherProperties = function ( otherProperties ){
-      assignedProperties = otherProperties;
-    };
-    
-    this.copyInformation = function ( other ){
-      console.log(other.labelForCurrentLanguage());
-      if ( other.type() !== "owl:Thing" )
-        that.label(other.label());
-      that.complement(other.complement());
-      that.iri(other.iri());
-      that.copyOtherProperties(other.getMyProperties());
-      that.baseIri(other.baseIri());
-      if ( other.type() === "owl:Class" ) {
-        that.backupLabel(other.label());
-        // console.log("copied backup label"+that.backupLabel());
-      }
-      if ( other.backupLabel() !== undefined ) {
-        that.backupLabel(other.backupLabel());
-      }
-    };
-    
-    this.enableEditing = function ( autoEditing ){
-      if ( autoEditing === false )
-        return;
-      that.raiseDoubleClickEdit(true);
-    };
-    
-    this.raiseDoubleClickEdit = function ( forceIRISync ){
-      d3.selectAll(".foreignelements").remove();
-      if ( nodeElement === undefined || this.type() === "owl:Thing" || this.type() === "rdfs:Literal" ) {
-        console.log("No Container found");
-        return;
-      }
-      if ( fobj !== undefined ) {
-        nodeElement.selectAll(".foreignelements").remove();
-      }
-      
-      backupFullIri = undefined;
-      graph.options().focuserModule().handle(undefined);
-      graph.options().focuserModule().handle(that);
-      // add again the editing elements to that one
-      if ( graph.isTouchDevice() === true ) {
-        graph.activateHoverElements(true, that, true);
-      }
-      that.editingTextElement = true;
-      ignoreLocalHoverEvents = true;
-      that.nodeElement().selectAll("circle").classed("hoveredForEditing", true);
-      graph.killDelayedTimer();
-      graph.ignoreOtherHoverEvents(false);
-      fobj = nodeElement.append("foreignObject")
-        .attr("x", -0.5 * (that.textWidth() - 2))
-        .attr("y", -12)
-        .attr("height", 30)
-        .attr("class", "foreignelements")
-        .on("dragstart", function (){
-          return false;
-        }) // remove drag operations of text element)
-        .attr("width", that.textWidth() - 2);
-      
-      var editText = fobj.append("xhtml:input")
-        .attr("class", "nodeEditSpan")
-        .attr("id", that.id())
-        .attr("align", "center")
-        .attr("contentEditable", "true")
-        .on("dragstart", function (){
-          return false;
-        }); // remove drag operations of text element)
-      
-      var bgColor = '#f00';
-      var txtWidth = that.textWidth() - 2;
-      editText.style({
-        
-        'align': 'center',
-        'color': 'black',
-        'width': txtWidth + "px",
-        'height': '15px',
-        'background-color': bgColor,
-        'border-bottom': '2px solid black'
-      });
-      var txtNode = editText.node();
-      txtNode.value = that.labelForCurrentLanguage();
-      txtNode.focus();
-      txtNode.select();
-      that.frozen(true); // << releases the not after selection
-      that.locked(true);
-      
-      
-      d3.event.stopPropagation();
-      // ignoreNodeHoverEvent=true;
-      // // add some events that relate to this object
-      editText.on("click", function (){
-        d3.event.stopPropagation();
-      });
-      // // remove hover Events for now;
-      editText.on("mouseout", function (){
-        d3.event.stopPropagation();
-        
-        
-      });
-      editText.on("mousedown", function (){
-        d3.event.stopPropagation();
-      })
-        .on("keydown", function (){
-          d3.event.stopPropagation();
-          if ( d3.event.keyCode === 13 ) {
-            this.blur();
-            that.frozen(false); // << releases the not after selection
-            that.locked(false);
-          }
-        })
-        .on("keyup", function (){
-          if ( forceIRISync ) {
-            var labelName = editText.node().value;
-            var resourceName = labelName.replaceAll(" ", "_");
-            var syncedIRI = that.baseIri() + resourceName;
-            backupFullIri = syncedIRI;
-            
-            d3.select("#element_iriEditor").node().title = syncedIRI;
-            d3.select("#element_iriEditor").node().value = graph.options().prefixModule().getPrefixRepresentationForFullURI(syncedIRI);
-          }
-          d3.select("#element_labelEditor").node().value = editText.node().value;
-          
-        })
-        .on("blur", function (){
-          that.editingTextElement = false;
-          ignoreLocalHoverEvents = false;
-          that.nodeElement().selectAll("circle").classed("hoveredForEditing", false);
-          var newLabel = editText.node().value;
-          nodeElement.selectAll(".foreignelements").remove();
-          // that.setLabelForCurrentLanguage(classNameConvention(editText.node().value));
-          that.label(newLabel);
-          that.backupLabel(newLabel);
-          that.redrawLabelText();
-          that.frozen(graph.paused());
-          that.locked(graph.paused());
-          graph.ignoreOtherHoverEvents(false);
-          // console.log("Calling blur on Node!");
-          if ( backupFullIri ) {
-            var sanityCheckResult = graph.checkIfIriClassAlreadyExist(backupFullIri);
-            if ( sanityCheckResult === false ) {
-              that.iri(backupFullIri);
-            } else {
-              // throw warnign
-              graph.options().warningModule().showWarning("Already seen this class",
-                "Input IRI: " + backupFullIri + " for element: " + that.labelForCurrentLanguage() + " already been set",
-                "Restoring previous IRI for Element : " + that.iri(), 2, false, sanityCheckResult);
-              
+
+        // Basic attributes
+        /**
+         * @type {string[] | undefined}
+         */
+        this.complement = undefined
+        /**
+         * @type {string[] | undefined}
+         */
+        this.disjointUnion = undefined
+        /**
+         * @type {BaseNode[] | undefined}
+         */
+        this.disjointWith = undefined
+        /**
+         * @type {BaseNode[] | undefined}
+         */
+        this.individuals = undefined
+        /**
+         * @type {string[] | undefined}
+         */
+        this.intersection = undefined
+        /**
+         * @type {string[] | undefined}
+         */
+        this.union = undefined
+        /**
+         * @type {(PlainLink | BoxArrowLink | ArrowLink)[]}
+         */
+        this.links = []
+        /**
+         * @type {string}
+         */
+        this.renderType = "round"
+
+        // Element containers
+        /**
+         * @type {d3.Selection<any,any,null,undefined> | undefined}
+         */
+        this.nodeElement = undefined
+
+        // Editing attributes
+        /**
+         * @type {BaseProperty[] | undefined}
+         */
+        this.assignedProperties = undefined
+        /**
+         * @type {boolean}
+         */
+        this.editingTextElement = false
+    }
+
+    /**
+     * @param {boolean} enable
+     */
+    setHoverHighlighting(enable) {
+        throw new Error("Method setHoverHighlighting() must be implemented")
+    }
+
+    /**
+     * @param {BaseProperty} property
+     */
+    isPropertyAssignedToThisElement(property) {
+        // this goes via IRIS
+        // console.log("Element IRI :" + property.iri);
+        if (property.type === "rdfs:subClassOf")
+            for (const property of this.assignedProperties) {
+                if (property.iri === property.iri) {
+                    return true
+                }
+                if (
+                    property.type === "rdfs:subClassOf" &&
+                    property.type === "rdfs:subClassOf"
+                ) {
+                    return true
+                }
+                if (
+                    property.type === "owl:disjointWith" &&
+                    property.type === "owl:disjointWith"
+                ) {
+                    return true
+                }
             }
-          }
-          if ( graph.isADraggerActive() === false ) {
-            graph.options().focuserModule().handle(undefined);
-            graph.options().focuserModule().handle(that);
-          }
-        });	// add a foreiner element to this thing;
-    };
-    
-    
-    this.renderType = function ( t ){
-      if ( !arguments.length ) return rendertype;
-      rendertype = t;
-      return this;
-    };
-    // Properties
-    this.complement = function ( p ){
-      if ( !arguments.length ) return complement;
-      complement = p;
-      return this;
-    };
-    
-    this.disjointUnion = function ( p ){
-      if ( !arguments.length ) return disjointUnion;
-      disjointUnion = p;
-      return this;
-    };
-    
-    this.disjointWith = function ( p ){
-      if ( !arguments.length ) return disjointWith;
-      disjointWith = p;
-      return this;
-    };
-    
-    this.individuals = function ( p ){
-      if ( !arguments.length ) return individuals;
-      individuals = p || [];
-      return this;
-    };
-    
-    this.intersection = function ( p ){
-      if ( !arguments.length ) return intersection;
-      intersection = p;
-      return this;
-    };
-    
-    this.links = function ( p ){
-      if ( !arguments.length ) return links;
-      links = p;
-      return this;
-    };
-    
-    this.maxIndividualCount = function ( p ){
-      if ( !arguments.length ) return maxIndividualCount;
-      maxIndividualCount = p;
-      return this;
-    };
-    
-    this.nodeElement = function ( p ){
-      if ( !arguments.length ) return nodeElement;
-      nodeElement = p;
-      return this;
-    };
-    
-    this.union = function ( p ){
-      if ( !arguments.length ) return union;
-      union = p;
-      return this;
-    };
-    
-    
+        return false
+    }
+
+    // NOTE: Disabled to save memory while this method is not used
+    // existingPropertyIRI(url) {
+    //     // this goes via IRIS
+    //     for (const property of this.assignedProperties) {
+    //         if (property.iri === url) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
+
+    /**
+     * @param {BaseProperty} property
+     */
+    addProperty(property) {
+        if (this.assignedProperties instanceof Array) {
+            if (this.assignedProperties.indexOf(property) === -1) {
+                this.assignedProperties.push(property)
+            }
+        } else {
+            this.assignedProperties = [property]
+        }
+    }
+
+    /**
+     * @param {BaseProperty} property
+     */
+    removePropertyElement(property) {
+        if (this.assignedProperties) {
+            const i = this.assignedProperties.indexOf(property)
+            if (i !== -1) {
+                this.assignedProperties.splice(i, 1)
+            }
+        }
+    }
+
+    /**
+     * @param {BaseNode} other
+     */
+    copyInformation(other) {
+        if (other.type !== "owl:Thing") {
+            this.label = other.label
+        }
+        this.complement = other.complement
+        this.iri = other.iri
+        this.assignedProperties = other.assignedProperties
+        this.baseIri = other.baseIri
+        if (other.type === "owl:Class") {
+            this.backupLabel = other.label
+        }
+        if (other.backupLabel !== undefined) {
+            this.backupLabel = other.backupLabel
+        }
+    }
+
+    /**
+     * @param {boolean} autoEditing
+     */
+    enableEditing(autoEditing) {
+        if (!autoEditing) {
+            return
+        }
+        this.raiseDoubleClickEdit(true)
+    }
+
+    /**
+     * @param {boolean} forceIRISync
+     */
+    raiseDoubleClickEdit(forceIRISync) {
+        d3.selectAll(".foreignelements").remove()
+        if (
+            this.nodeElement === undefined ||
+            this.type === "owl:Thing" ||
+            this.type === "rdfs:Literal"
+        ) {
+            console.log("No Container found")
+            return
+        }
+        if (this.foreignerObject !== undefined) {
+            this.nodeElement.selectAll(".foreignelements").remove()
+        }
+
+        this.backupFullIri = undefined
+        this.graph.options.focuserModule.handle(undefined)
+        this.graph.options.focuserModule.handle(this)
+        // add again the editing elements to this one
+        if (this.graph.touchDevice) {
+            this.graph.activateHoverElements(true, this, true)
+        }
+        this.editingTextElement = true
+        this.ignoreLocalHoverEvents = true
+        this.nodeElement.selectAll("circle").classed("hoveredForEditing", true)
+        this.graph.killDelayedTimer()
+        this.graph.ignoreOtherHoverEvents = false
+        const textWidth = this.getTextWidth()
+        this.foreignerObject = this.nodeElement
+            .append("foreignObject")
+            .attr("x", -0.5 * (textWidth - 2))
+            .attr("y", -12)
+            .attr("height", 30)
+            .attr("class", "foreignelements")
+            // remove drag operations of text element)
+            .on("dragstart", function () {
+                return false
+            })
+            .attr("width", textWidth - 2)
+
+        const editText = this.foreignerObject
+            .append("xhtml:input")
+            .attr("class", "nodeEditSpan")
+            .attr("id", this.id)
+            .attr("align", "center")
+            .attr("contentEditable", "true")
+            // remove drag operations of text element)
+            .on("dragstart", function () {
+                return false
+            })
+        // @ts-ignore
+        editText.style({
+            align: "center",
+            color: "black",
+            width: textWidth - 2 + "px",
+            height: "15px",
+            "background-color": "#f00",
+            "border-bottom": "2px solid black",
+        })
+        const txtNode = editText.node()
+        txtNode.value = this.labelForCurrentLanguage()
+        txtNode.focus()
+        txtNode.select()
+        this.frozen = true // << releases the not after selection
+        this.locked = true
+
+        const _this = this
+        d3.event.stopPropagation()
+        // ignoreNodeHoverEvent=true;
+        // add some events this relate to this object
+        editText.on("click", function () {
+            d3.event.stopPropagation()
+        })
+        // remove hover Events for now;
+        editText.on("mouseout", function () {
+            d3.event.stopPropagation()
+        })
+        editText
+            .on("mousedown", function () {
+                d3.event.stopPropagation()
+            })
+            .on("keydown", function () {
+                d3.event.stopPropagation()
+                if (d3.event.keyCode === 13) {
+                    this.blur() // REVIEW: Check how this should be called
+                    _this.frozen = false // << releases the not after selection
+                    _this.locked = false
+                }
+            })
+            .on("keyup", function () {
+                if (forceIRISync) {
+                    const labelName = editText.node().value
+                    const resourceName = labelName.replaceAll(" ", "_")
+                    const syncedIRI = _this.baseIri + resourceName
+                    _this.backupFullIri = syncedIRI
+
+                    d3.select("#element_iriEditor").node().title = syncedIRI
+                    d3.select("#element_iriEditor").node().value =
+                        PrefixTools.getPrefixRepresentationForFullURI(
+                            syncedIRI,
+                            _this.graph,
+                        )
+                }
+                d3.select("#element_labelEditor").node().value =
+                    editText.node().value
+            })
+            .on("blur", function () {
+                // add a foreiner element to this thing;
+                _this.editingTextElement = false
+                _this.ignoreLocalHoverEvents = false
+                _this.nodeElement
+                    .selectAll("circle")
+                    .classed("hoveredForEditing", false)
+                const newLabel = editText.node().value
+                _this.nodeElement.selectAll(".foreignelements").remove()
+                // this.setLabelForCurrentLanguage(classNameConvention(editText.node().value));
+                _this.label = newLabel
+                _this.backupLabel = newLabel
+                _this.redrawLabelText()
+                _this.frozen = _this.graph.paused
+                _this.locked = _this.graph.paused
+                _this.graph.ignoreOtherHoverEvents = false
+                if (_this.backupFullIri) {
+                    const sanityCheckResult =
+                        _this.graph.checkIfIriClassAlreadyExist(
+                            _this.backupFullIri,
+                        )
+                    if (!sanityCheckResult) {
+                        _this.iri = _this.backupFullIri
+                    } else {
+                        // throw warning
+                        _this.graph.options.warningModule.showWarning(
+                            "Already seen this class",
+                            "Input IRI: " +
+                                _this.backupFullIri +
+                                " for element: " +
+                                _this.labelForCurrentLanguage() +
+                                " already been set",
+                            "Restoring previous IRI for Element : " + _this.iri,
+                            2,
+                            _this,
+                        )
+                    }
+                }
+                if (!_this.graph.isADraggerActive()) {
+                    _this.graph.options.focuserModule.handle(undefined)
+                    _this.graph.options.focuserModule.handle(_this)
+                }
+            })
+    }
+
+    /**
+     * @returns {string} the css class of this node
+     */
+    cssClassOfNode() {
+        return "node" + this.id
+    }
+
     /**
      * Returns css classes generated from the data of this object.
-     * @returns {Array}
+     * @returns {string[]}
      */
-    that.collectCssClasses = function (){
-      var cssClasses = [];
-      
-      if ( typeof that.styleClass() === "string" ) {
-        cssClasses.push(that.styleClass());
-      }
-      
-      cssClasses = cssClasses.concat(that.visualAttributes());
-      
-      return cssClasses;
-    };
-    
-    
+    collectCssClasses() {
+        let cssClasses = []
+        if (typeof this.styleClass === "string") {
+            cssClasses.push(this.styleClass)
+        }
+        if (this.visualAttributes) {
+            cssClasses = cssClasses.concat(this.visualAttributes)
+        }
+        return cssClasses
+    }
+
     // Reused functions TODO refactor
-    this.addMouseListeners = function (){
-      // Empty node
-      if ( !that.nodeElement() ) {
-        console.warn(this);
-        return;
-      }
-      
-      that.nodeElement().selectAll("*")
-        .on("mouseover", onMouseOver)
-        .on("mouseout", onMouseOut);
-    };
-    
-    this.animationProcess = function (){
-      var animRuns = false;
-      if ( that.getHalos() ) {
-        var haloGr = that.getHalos();
-        var haloEls = haloGr.selectAll(".searchResultA");
-        animRuns = haloGr.attr("animationRunning");
-        if ( typeof animRuns !== "boolean" ) {
-          // parse this to a boolean value
-          animRuns = (animRuns === 'true');
+    addMouseListeners() {
+        // Empty node
+        if (!this.nodeElement) {
+            console.warn(
+                `Cannot add mouse listeners to empty nodeElement of ${this}`,
+            )
+            return
         }
-        if ( animRuns === false ) {
-          haloEls.classed("searchResultA", false);
-          haloEls.classed("searchResultB", true);
+        this.nodeElement
+            .selectAll("*")
+            .on("mouseover", () => {
+                this.#onMouseOver()
+            })
+            .on("mouseout", () => {
+                this.#onMouseOut()
+            })
+    }
+
+    animationProcess() {
+        let animRuns = false
+        if (this.haloGroupElement) {
+            const haloGr = this.haloGroupElement
+            const haloEls = haloGr.selectAll(".searchResultA")
+            const animRunsString = haloGr.attr("animationRunning")
+            if (typeof animRunsString !== "boolean") {
+                // parse this to a boolean value
+                animRuns = animRunsString === "true"
+            }
+            if (animRuns === false) {
+                haloEls.classed("searchResultA", false)
+                haloEls.classed("searchResultB", true)
+            }
         }
-      }
-      return animRuns;
-    };
-    
-    this.foreground = function (){
-      var selectedNode = that.nodeElement().node(),
-        nodeContainer = selectedNode.parentNode;
-      // check if the halo is present and an animation is running
-      if ( that.animationProcess() === false ) {
+        return animRuns
+    }
+
+    foreground() {
+        const selectedNode = this.nodeElement.node()
+        const nodeContainer = selectedNode.parentNode
+        // check if the halo is present and an animation is running
+        if (!this.animationProcess()) {
+            // Append hovered element as last child to the container list.
+            nodeContainer.appendChild(selectedNode)
+        }
+    }
+
+    #onMouseOver() {
+        if (this.mouseEntered || this.ignoreLocalHoverEvents) {
+            return
+        }
+
+        const selectedNode = this.nodeElement.node()
+        const nodeContainer = selectedNode.parentNode
         // Append hovered element as last child to the container list.
-        nodeContainer.appendChild(selectedNode);
-      }
-      
-    };
-    
-    function onMouseOver(){
-      if ( that.mouseEntered() || ignoreLocalHoverEvents === true ) {
-        return;
-      }
-      
-      var selectedNode = that.nodeElement().node(),
-        nodeContainer = selectedNode.parentNode;
-      
-      // Append hovered element as last child to the container list.
-      if ( that.animationProcess() === false ) {
-        nodeContainer.appendChild(selectedNode);
-      }
-      if ( graph.isTouchDevice() === false ) {
-        that.setHoverHighlighting(true);
-        that.mouseEntered(true);
-        if ( graph.editorMode() === true && graph.ignoreOtherHoverEvents() === false ) {
-          graph.activateHoverElements(true, that);
+        if (this.animationProcess() === false) {
+            nodeContainer.appendChild(selectedNode)
         }
-      } else {
-        if ( graph.editorMode() === true && graph.ignoreOtherHoverEvents() === false ) {
-          graph.activateHoverElements(true, that, true);
+        if (!this.graph.touchDevice) {
+            this.setHoverHighlighting(true)
+            this.mouseEntered = true
+            if (this.graph.editorMode && !this.graph.ignoreOtherHoverEvents) {
+                this.graph.activateHoverElements(true, this, false)
+            }
+        } else {
+            if (this.graph.editorMode && !this.graph.ignoreOtherHoverEvents) {
+                this.graph.activateHoverElements(true, this, true)
+            }
         }
-        
-      }
-      
-      
     }
-    
-    function onMouseOut(){
-      that.setHoverHighlighting(false);
-      that.mouseEntered(false);
-      if ( graph.editorMode() === true && graph.ignoreOtherHoverEvents() === false ) {
-        graph.activateHoverElements(false);
-      }
+
+    #onMouseOut() {
+        this.setHoverHighlighting(false)
+        this.mouseEntered = false
+        if (this.graph.editorMode && !this.graph.ignoreOtherHoverEvents) {
+            this.graph.activateHoverElements(false, undefined, false)
+        }
     }
-    
-    
-    forceLayoutNodeFunctions.addTo(this);
-  };
-  
-  Base.prototype = Object.create(BaseElement.prototype);
-  Base.prototype.constructor = Base;
-  
-  
-  return Base;
-}());
+}

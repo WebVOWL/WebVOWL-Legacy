@@ -1,1286 +1,1548 @@
-var Deque = require("collections/deque");
-var _ = require("lodash/core");
-var math = require("./util/math")();
-var linkCreator = require("./parsing/linkCreator")();
-var elementTools = require("./util/elementTools")();
-// add some maps for nodes and properties -- used for object generation
-var nodePrototypeMap = require("./elements/nodes/nodeMap")();
-var propertyPrototypeMap = require("./elements/properties/propertyMap")();
+import Deque from "collections/deque"
+import AbstractDomainRangeDragger from "./draggers/abstractDomainRangeDragger"
+import AbstractDragger from "./draggers/abstractDragger"
+import ClassDragger from "./draggers/classDragger"
+import DomainDragger from "./draggers/domainDragger"
+import RangeDragger from "./draggers/rangeDragger"
+import ShadowClone from "./draggers/shadowClone"
+import BaseElement from "./elements/BaseElement"
+import ArrowLink from "./elements/links/ArrowLink"
+import BoxArrowLink from "./elements/links/BoxArrowLink"
+import Label from "./elements/links/Label"
+import LinkPart from "./elements/links/linkPart"
+import PlainLink from "./elements/links/PlainLink"
+import BaseNode from "./elements/nodes/BaseNode"
+import nodeClassMap from "./elements/nodes/nodeMap"
+import BaseProperty from "./elements/properties/BaseProperty"
+import propertyClassMap from "./elements/properties/propertyMap"
+import AbstractFilter from "./modules/filters/abstractFilter"
+import Options from "./options"
+import Parser from "./parser"
+import LinkCreator from "./parsing/linkCreator"
+import ElementTools from "./util/elementTools"
+import MathUtils from "./util/math"
 
+export default class Graph {
+    CARDINALITY_HDISTANCE = 20
+    CARDINALITY_VDISTANCE = 10
 
-module.exports = function (graphContainerSelector) {
-    var graph = {},
-        CARDINALITY_HDISTANCE = 20,
-        CARDINALITY_VDISTANCE = 10,
-        curveFunction = d3.svg.line()
-            .x(function (d) {
-                return d.x;
-            })
-            .y(function (d) {
-                return d.y;
-            })
-            .interpolate("cardinal"),
-        options = require("./options")(),
-        parser = require("./parser")(graph),
-        language = "default",
-        paused = false,
+    curveFunction = d3.svg
+        .line()
+        .x(function (/** @type {{ x: any; }} */ d) {
+            return d.x
+        })
+        .y(function (/** @type {{ y: any; }} */ d) {
+            return d.y
+        })
+        .interpolate("cardinal")
+
+    constructor() {
+        /**
+         * @type {Options | undefined}
+         */
+        this.options = undefined
+        /**
+         * @type {Parser | undefined}
+         */
+        this.parser = undefined
+        this._language = "default"
+        this._paused = false
+
         // Container for visual elements
-        graphContainer,
-        nodeContainer,
-        labelContainer,
-        cardinalityContainer,
-        linkContainer,
+        this.graphContainer = undefined
+        this.nodeContainer = undefined
+        this.labelContainer = undefined
+        this.cardinalityContainer = undefined
+        this.linkContainer = undefined
+
         // Visual elements
-        nodeElements,
-        initialLoad = true,
-        updateRenderingDuringSimulation = false,
-        labelGroupElements,
-        linkGroups,
-        linkPathElements,
-        cardinalityElements,
+        this.nodeElements = undefined
+        this.initialLoad = true
+        this.updateRenderingDuringSimulation = false
+        this.labelGroupElements = undefined
+        this.linkGroups = undefined
+        this.linkPathElements = undefined
+        this.cardinalityElements = undefined
+
         // Internal data
-        classNodes,
-        labelNodes,
-        links,
-        properties,
-        unfilteredData,
-        currentData,
-        unfilteredDataMap = { nodes: new Map(), properties: new Map() },
+        /**
+         * Currently active nodes.
+         * These are the same nodes as rendered by d3-force but without d3-force attributes.
+         * @type {BaseNode[] | undefined}
+         */
+        this.classNodes = []
+        /**
+         * Currently active label nodes.
+         * These are the same nodes as rendered by d3-force but without d3-force attributes.
+         * @type {Label[]}
+         */
+        this.labelNodes = []
+        /**
+         * Currently active label nodes.
+         * These are the same links as rendered by d3-force but without d3-force attributes.
+         * @type {(PlainLink | BoxArrowLink | ArrowLink)[]}
+         */
+        this.links = []
+        /**
+         * Currently active properties.
+         * These are the same properties as rendered by d3-force but without d3-force attributes.
+         * @type {BaseProperty[]}
+         */
+        this.properties = []
+        /**
+         * All graph data untouched
+         * @type {{ nodes: BaseNode[]; properties: BaseProperty[]; }}
+         */
+        this.unfilteredData = { nodes: [], properties: [] }
+        /**
+         * Copy of currently active data.
+         * @type {{ nodes: BaseNode[]; properties: BaseProperty[]; }}
+         */
+        this.currentData = { nodes: [], properties: [] }
+
         // Graph behaviour
-        force,
-        dragBehaviour,
-        zoomFactor = 1.0,
-        centerGraphViewOnLoad = false,
-        transformAnimation = false,
-        graphTranslation = [0, 0],
-        graphUpdateRequired = false,
-        pulseNodeIds = [],
-        nodeArrayForPulse = [],
-        nodeMap = [],
-        locationId = 0,
-        defaultZoom = 1.0,
-        defaultTargetZoom = 0.8,
-        global_dof = -1,
-        touchDevice = false,
-        last_touch_time,
-        originalD3_dblClickFunction = null,
-        originalD3_touchZoomFunction = null,
+        this.force = undefined
+        this.dragBehaviour = undefined
+        this.zoomFactor = 1.0
+        this.centerGraphViewOnLoad = false
+        this.transformAnimation = false
+        this.graphTranslation = [0, 0]
+        this.graphUpdateRequired = false
+        /**
+         * The currently rendered node IDs that have a pulsating halo
+         * @note The ID is a force node ID
+         * @type {Set<number>}
+         */
+        this.visiblePulseNodeIDs = new Set()
+        /**
+         * All node IDs that have a pulsating halo
+         * @note The ID is a node ID, i.e., a string (of a number)
+         * @type {string[]}
+         */
+        this.allPulseNodeIDs = []
+        /**
+         * A mapping of node IDs to force node IDs
+         * @type {Map<string,number>}
+         */
+        this.forceNodeMap = new Map()
+        this.defaultZoom = 1.0
+        this.defaultTargetZoom = 0.8
+        this.global_dof = -1
+        this.touchDevice = false
+        this.last_touch_time = undefined
+        this.originalD3_dblClickFunction = null
+        this.originalD3_touchZoomFunction = null
 
-        // editing elements
-        deleteGroupElement,
-        addDataPropertyGroupElement,
-        editContainer,
-        draggerLayer = null,
-        draggerObjectsArray = [],
-        delayedHider,
-        nodeFreezer,
-        hoveredNodeElement = null,
-        currentlySelectedNode = null,
-        hoveredPropertyElement = null,
-        draggingStarted = false,
-        frozenDomainForPropertyDragger,
-        frozenRangeForPropertyDragger,
+        // Editing elements
+        this.deleteGroupElement = undefined
+        this.addDataPropertyGroupElement = undefined
+        this.editContainer = undefined
+        this.draggerLayer = null
+        /**
+         * @type {(AbstractDragger | AbstractDomainRangeDragger)[]}
+         */
+        this.draggerObjectsArray = []
+        this.delayedHider = undefined
+        this.nodeFreezer = undefined
+        this.hoveredNodeElement = null
+        this.currentlySelectedNode = null
+        this.hoveredPropertyElement = null
+        this.draggingStarted = false
+        this.frozenDomainForPropertyDragger = undefined
+        this.frozenRangeForPropertyDragger = undefined
 
-        eP = 0, // id for new properties
-        eN = 0, // id for new Nodes
-        editMode = true,
-        debugContainer = d3.select("#FPS_Statistics"),
-        finishedLoadingSequence = false,
+        this.eP = 0 // id for new properties
+        this.eN = 0 // id for new Nodes
+        this.isEditorMode = false
+        this.debugContainer = d3.select("#FPS_Statistics")
+        this.finishedLoadingSequence = false
 
-        ignoreOtherHoverEvents = false,
-        forceNotZooming = false,
-        now, then, // used for fps computation
-        showFPS = false,
-        seenEditorHint = false,
-        seenFilterWarning = false,
-        showFilterWarning = false,
+        this.ignoreOtherHoverEvents = false
+        this.forceNotZooming = false
+        this.seenEditorHint = false
+        this.seenFilterWarning = false
+        this.showFilterWarning = false
 
-        keepDetailsCollapsedOnLoading = true,
-        adjustingGraphSize = false,
-        showReloadButtonAfterLayoutOptimization = false,
-        zoom;
-    //var prefixModule=require("./prefixRepresentationModule")(graph);
-    var NodePrototypeMap = createLowerCasePrototypeMap(nodePrototypeMap);
-    var PropertyPrototypeMap = createLowerCasePrototypeMap(propertyPrototypeMap);
-    var classDragger = require("./classDragger")(graph);
-    var rangeDragger = require("./rangeDragger")(graph);
-    var domainDragger = require("./domainDragger")(graph);
-    var shadowClone = require("./shadowClone")(graph);
+        // used for fps computation
+        this.now = undefined
+        this.then = undefined
+        this.showFPS = false
 
-    graph.math = function () {
-        return math;
-    };
-    /** --------------------------------------------------------- **/
-    /** -- getter and setter definitions                       -- **/
-    /** --------------------------------------------------------- **/
-    graph.isEditorMode = function () {
-        return editMode;
-    };
-    graph.getGlobalDOF = function () {
-        return global_dof;
-    };
-    graph.setGlobalDOF = function (val) {
-        global_dof = val;
-    };
+        this.keepDetailsCollapsedOnLoading = true
+        this.adjustingGraphSize = false
+        this.showReloadButtonAfterLayoutOptimization = false
+        this.zoom = undefined
+        this.classDragger = new ClassDragger(this)
+        this.rangeDragger = new RangeDragger(this)
+        this.domainDragger = new DomainDragger(this)
+        this.shadowClone = new ShadowClone(this)
+        this.cachedJsonOBJ = null
+    }
 
-    graph.updateZoomSliderValueFromOutside = function () {
-        graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
-    };
+    //** --------------------------------------------------------- **/
+    //** -- getter and setter definitions                       -- **/
+    //** --------------------------------------------------------- **/
 
-    graph.setDefaultZoom = function (val) {
-        defaultZoom = val;
-        graph.reset();
-        graph.options().zoomSlider().updateZoomSliderValue(defaultZoom);
-    };
-    graph.setTargetZoom = function (val) {
-        defaultTargetZoom = val;
-    };
-    graph.graphOptions = function () {
-        return options;
-    };
+    get nodeMap() {
+        return this.parser.nodeMap
+    }
 
-    graph.scaleFactor = function () {
-        return zoomFactor;
-    };
-    graph.translation = function () {
-        return graphTranslation;
-    };
+    get propertyMap() {
+        return this.parser.propertyMap
+    }
 
-    // Returns the visible nodes
-    graph.graphNodeElements = function () {
-        return nodeElements;
-    };
-    // Returns the visible Label Nodes
-    graph.graphLabelElements = function () {
-        return labelNodes;
-    };
-    graph.graphLinkElements = function () {
-        return links;
-    };
+    // search functionality
+    get dictionary() {
+        return this.parser.dictionary
+    }
 
-    graph.setSliderZoom = function (val) {
-        var cx = 0.5 * graph.options().width();
-        var cy = 0.5 * graph.options().height();
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
-        var sP = [cp.x, cp.y, graph.options().height() / zoomFactor];
-        var eP = [cp.x, cp.y, graph.options().height() / val];
-        var pos_intp = d3.interpolateZoom(sP, eP);
+    get paused() {
+        return this._paused
+    }
 
-        graphContainer.attr("transform", transform(sP, cx, cy))
+    set paused(p) {
+        this._paused = p
+        this.updateStyle()
+    }
+
+    get language() {
+        return this._language
+    }
+
+    /**
+     * @param {string} newLanguage
+     */
+    set language(newLanguage) {
+        // Just update if the language changes
+        if (this._language !== newLanguage) {
+            this._language = newLanguage || "default"
+            this.#redrawContent()
+            this.#recalculatePositions()
+            this.options.searchMenu.requestDictionaryUpdate()
+            this.resetSearchHighlight()
+        }
+    }
+
+    updateZoomSliderValueFromOutside() {
+        this.options.zoomSlider.updateZoomSliderValue(this.zoomFactor)
+    }
+
+    /**
+     * @param {number} zoom
+     */
+    setDefaultZoom(zoom) {
+        this.defaultZoom = zoom
+        this.reset()
+        this.options.zoomSlider.updateZoomSliderValue(this.defaultZoom)
+    }
+
+    /**
+     * @param {number} zoom
+     */
+    setTargetZoom(zoom) {
+        this.defaultTargetZoom = zoom
+    }
+
+    /**
+     * @param {number} zoom
+     */
+    setSliderZoom(zoom) {
+        const cx = 0.5 * this.options.width
+        const cy = 0.5 * this.options.height
+        const cp = this.#getWorldPosFromScreen(
+            cx,
+            cy,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const sP = [cp.x, cp.y, this.options.height / this.zoomFactor]
+        const eP = [cp.x, cp.y, this.options.height / zoom]
+        const pos_intp = d3.interpolateZoom(sP, eP)
+
+        const _this = this
+        this.graphContainer
+            .attr("transform", this.#transform(sP, cx, cy))
             .transition()
             .duration(1)
             .attrTween("transform", function () {
                 return function (t) {
-                    return transform(pos_intp(t), cx, cy);
-                };
+                    return _this.#transform(pos_intp(t), cx, cy)
+                }
             })
+            // @ts-ignore
             .each("end", function () {
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
-            });
-    };
-    graph.setZoom = function (value) {
-        zoom.scale(value);
-    };
-    graph.setTranslation = function (translation) {
-        zoom.translate([translation[0], translation[1]]);
-    };
-    graph.options = function () {
-        return options;
-    };
-    // search functionality
-    graph.getUpdateDictionary = function () {
-        return parser.getDictionary();
-    };
-    graph.language = function (newLanguage) {
-        if (!arguments.length) return language;
-
-        // Just update if the language changes
-        if (language !== newLanguage) {
-            language = newLanguage || "default";
-            redrawContent();
-            recalculatePositions();
-            graph.options().searchMenu().requestDictionaryUpdate();
-            graph.resetSearchHighlight();
-        }
-        return graph;
-    };
-
-
-    /** --------------------------------------------------------- **/
-    /** graph / rendering  related functions                      **/
-    /** --------------------------------------------------------- **/
-
-    // Initializes the graph.
-    function initializeGraph() {
-        options.graphContainerSelector(graphContainerSelector);
-        var moved = false;
-        force = d3.layout.force()
-            .on("tick", hiddenRecalculatePositions);
-
-        dragBehaviour = d3.behavior.drag()
-            .origin(function (d) {
-                return d;
+                _this.graphContainer.attr(
+                    "transform",
+                    "translate(" +
+                        _this.graphTranslation +
+                        ")scale(" +
+                        _this.zoomFactor +
+                        ")",
+                )
+                _this.zoom.translate(_this.graphTranslation)
+                _this.zoom.scale(_this.zoomFactor)
+                _this.options.zoomSlider.updateZoomSliderValue(_this.zoomFactor)
             })
-            .on("dragstart", function (d) {
-                d3.event.sourceEvent.stopPropagation(); // Prevent panning
-                graph.ignoreOtherHoverEvents(true);
-                if (d.type && d.type() === "Class_dragger") {
-                    classDragger.mouseButtonPressed = true;
-                    clearTimeout(delayedHider);
-                    classDragger.selectedViaTouch(true);
-                    d.parentNode().locked(true);
-                    draggingStarted = true;
-                } else if (d.type && d.type() === "Range_dragger") {
-                    graph.ignoreOtherHoverEvents(true);
-                    clearTimeout(delayedHider);
-                    frozenDomainForPropertyDragger = shadowClone.parentNode().domain();
-                    frozenRangeForPropertyDragger = shadowClone.parentNode().range();
-                    shadowClone.setInitialPosition();
-                    shadowClone.hideClone(false);
-                    shadowClone.hideParentProperty(true);
-                    shadowClone.updateElement();
-                    deleteGroupElement.classed("hidden", true);
-                    addDataPropertyGroupElement.classed("hidden", true);
-                    frozenDomainForPropertyDragger.frozen(true);
-                    frozenDomainForPropertyDragger.locked(true);
-                    frozenRangeForPropertyDragger.frozen(true);
-                    frozenRangeForPropertyDragger.locked(true);
-                    domainDragger.updateElement();
-                    domainDragger.mouseButtonPressed = true;
-                    rangeDragger.updateElement();
-                    rangeDragger.mouseButtonPressed = true;
-                    //  shadowClone.setPosition(d.x, d.y);
+    }
 
+    /**
+     * @param {number} zoom
+     */
+    setZoom(zoom) {
+        this.zoom.scale(zoom)
+    }
 
-                } else if (d.type && d.type() === "Domain_dragger") {
-                    graph.ignoreOtherHoverEvents(true);
-                    clearTimeout(delayedHider);
-                    frozenDomainForPropertyDragger = shadowClone.parentNode().domain();
-                    frozenRangeForPropertyDragger = shadowClone.parentNode().range();
-                    shadowClone.setInitialPosition();
-                    shadowClone.hideClone(false);
-                    shadowClone.hideParentProperty(true);
-                    shadowClone.updateElement();
-                    deleteGroupElement.classed("hidden", true);
-                    addDataPropertyGroupElement.classed("hidden", true);
+    getScaleFactor() {
+        return this.zoomFactor
+    }
 
-                    frozenDomainForPropertyDragger.frozen(true);
-                    frozenDomainForPropertyDragger.locked(true);
-                    frozenRangeForPropertyDragger.frozen(true);
-                    frozenRangeForPropertyDragger.locked(true);
-                    domainDragger.updateElement();
-                    domainDragger.mouseButtonPressed = true;
-                    rangeDragger.updateElement();
-                    rangeDragger.mouseButtonPressed = true;
-                }
-                else {
-                    d.locked(true);
-                    moved = false;
-                }
+    /**
+     * @param {any[]} translation
+     */
+    setTranslation(translation) {
+        this.zoom.translate([translation[0], translation[1]])
+    }
+
+    getTranslation() {
+        return this.graphTranslation
+    }
+
+    getVisibleNodeElements() {
+        return this.nodeElements
+    }
+
+    getVisibleLabelNodes() {
+        return this.labelNodes
+    }
+
+    getVisibleLinks() {
+        return this.links
+    }
+
+    //** --------------------------------------------------------- **/
+    //** graph / rendering  related functions                      **/
+    //** --------------------------------------------------------- **/
+
+    /**
+     * First-time graph initialization
+     */
+    initializeGraph() {
+        this.parser = new Parser(this)
+        let moved = false
+        this.force = d3.layout.force().on("tick", () => {
+            this.#hiddenRecalculatePositions()
+        })
+
+        const _this = this
+        this.dragBehaviour = d3.behavior
+            .drag()
+            .origin(function (/** @type {AbstractDragger} */ d) {
+                return d
             })
-            .on("drag", function (d) {
-
-                if (d.type && d.type() === "Class_dragger") {
-                    clearTimeout(delayedHider);
-                    classDragger.setPosition(d3.event.x, d3.event.y);
-                } else if (d.type && d.type() === "Range_dragger") {
-                    clearTimeout(delayedHider);
-                    rangeDragger.setPosition(d3.event.x, d3.event.y);
-                    shadowClone.setPosition(d3.event.x, d3.event.y);
-                    domainDragger.updateElementViaRangeDragger(d3.event.x, d3.event.y);
-                }
-                else if (d.type && d.type() === "Domain_dragger") {
-                    clearTimeout(delayedHider);
-                    domainDragger.setPosition(d3.event.x, d3.event.y);
-                    shadowClone.setPositionDomain(d3.event.x, d3.event.y);
-                    rangeDragger.updateElementViaDomainDragger(d3.event.x, d3.event.y);
-                }
-
-                else {
-                    d.px = d3.event.x;
-                    d.py = d3.event.y;
-                    force.resume();
-                    updateHaloRadius();
-                    moved = true;
-                    if (d.renderType && d.renderType() === "round") {
-                        classDragger.setParentNode(d);
+            .on(
+                "dragstart",
+                function (
+                    /** @type {AbstractDomainRangeDragger | BaseElement} */ d,
+                ) {
+                    d3.event.sourceEvent.stopPropagation() // Prevent panning
+                    _this.ignoreOtherHoverEvents = true
+                    if (d instanceof ClassDragger) {
+                        _this.classDragger.mouseButtonPressed = true
+                        clearTimeout(_this.delayedHider)
+                        _this.classDragger.selectedViaTouch(true)
+                        d.parentNode.locked = true
+                        _this.draggingStarted = true
+                    } else if (d instanceof RangeDragger) {
+                        _this.ignoreOtherHoverEvents = true
+                        clearTimeout(_this.delayedHider)
+                        _this.frozenDomainForPropertyDragger =
+                            _this.shadowClone.parentNode.domain
+                        _this.frozenRangeForPropertyDragger =
+                            _this.shadowClone.parentNode.range
+                        _this.shadowClone.setInitialPosition()
+                        _this.shadowClone.hideClone(false)
+                        _this.shadowClone.hideParentProperty(true)
+                        _this.shadowClone.updateElement()
+                        _this.deleteGroupElement.classed("hidden", true)
+                        _this.addDataPropertyGroupElement.classed(
+                            "hidden",
+                            true,
+                        )
+                        _this.frozenDomainForPropertyDragger.frozen = true
+                        _this.frozenDomainForPropertyDragger.locked = true
+                        _this.frozenRangeForPropertyDragger.frozen = true
+                        _this.frozenRangeForPropertyDragger.locked = true
+                        _this.domainDragger.updateElement()
+                        _this.domainDragger.mouseButtonPressed = true
+                        _this.rangeDragger.updateElement()
+                        _this.rangeDragger.mouseButtonPressed = true
+                        //  shadowClone.setPosition(d.x, d.y);
+                    } else if (d instanceof DomainDragger) {
+                        _this.ignoreOtherHoverEvents = true
+                        clearTimeout(_this.delayedHider)
+                        _this.frozenDomainForPropertyDragger =
+                            _this.shadowClone.parentNode.domain
+                        _this.frozenRangeForPropertyDragger =
+                            _this.shadowClone.parentNode.range
+                        _this.shadowClone.setInitialPosition()
+                        _this.shadowClone.hideClone(false)
+                        _this.shadowClone.hideParentProperty(true)
+                        _this.shadowClone.updateElement()
+                        _this.deleteGroupElement.classed("hidden", true)
+                        _this.addDataPropertyGroupElement.classed(
+                            "hidden",
+                            true,
+                        )
+                        _this.frozenDomainForPropertyDragger.frozen = true
+                        _this.frozenDomainForPropertyDragger.locked = true
+                        _this.frozenRangeForPropertyDragger.frozen = true
+                        _this.frozenRangeForPropertyDragger.locked = true
+                        _this.domainDragger.updateElement()
+                        _this.domainDragger.mouseButtonPressed = true
+                        _this.rangeDragger.updateElement()
+                        _this.rangeDragger.mouseButtonPressed = true
+                    } else {
+                        d.locked = true
+                        moved = false
                     }
-
-                }
-            })
-            .on("dragend", function (d) {
-                graph.ignoreOtherHoverEvents(false);
-                if (d.type && d.type() === "Class_dragger") {
-                    var nX = classDragger.x;
-                    var nY = classDragger.y;
-                    clearTimeout(delayedHider);
-                    classDragger.mouseButtonPressed = false;
-                    classDragger.selectedViaTouch(false);
-                    d.setParentNode(d.parentNode());
-
-                    var draggerEndPos = [nX, nY];
-                    var targetNode = graph.getTargetNode(draggerEndPos);
-                    if (targetNode) {
-                        createNewObjectProperty(d.parentNode(), targetNode, draggerEndPos);
-                    }
-                    if (touchDevice === false) {
-                        editElementHoverOut();
-                    }
-                    draggingStarted = false;
-                } else if (d.type && d.type() === "Range_dragger") {
-                    graph.ignoreOtherHoverEvents(false);
-                    frozenDomainForPropertyDragger.frozen(false);
-                    frozenDomainForPropertyDragger.locked(false);
-                    frozenRangeForPropertyDragger.frozen(false);
-                    frozenRangeForPropertyDragger.locked(false);
-                    rangeDragger.mouseButtonPressed = false;
-                    domainDragger.mouseButtonPressed = false;
-                    domainDragger.updateElement();
-                    rangeDragger.updateElement();
-                    shadowClone.hideClone(true);
-                    var rX = rangeDragger.x;
-                    var rY = rangeDragger.y;
-                    var rangeDraggerEndPos = [rX, rY];
-                    var targetRangeNode = graph.getTargetNode(rangeDraggerEndPos);
-                    if (elementTools.isDatatype(targetRangeNode) === true) {
-                        targetRangeNode = null;
-                        console.log("---------------TARGET NODE IS A DATATYPE/ LITERAL ------------");
-                    }
-
-                    if (targetRangeNode === null) {
-                        d.reDrawEverthing();
-                        shadowClone.hideParentProperty(false);
-                    }
-                    else {
-                        d.updateRange(targetRangeNode);
-                        graph.update();
-                        shadowClone.hideParentProperty(false);
-                    }
-                } else if (d.type && d.type() === "Domain_dragger") {
-                    graph.ignoreOtherHoverEvents(false);
-                    frozenDomainForPropertyDragger.frozen(false);
-                    frozenDomainForPropertyDragger.locked(false);
-                    frozenRangeForPropertyDragger.frozen(false);
-                    frozenRangeForPropertyDragger.locked(false);
-                    rangeDragger.mouseButtonPressed = false;
-                    domainDragger.mouseButtonPressed = false;
-                    domainDragger.updateElement();
-                    rangeDragger.updateElement();
-                    shadowClone.hideClone(true);
-
-                    var dX = domainDragger.x;
-                    var dY = domainDragger.y;
-                    var domainDraggerEndPos = [dX, dY];
-                    var targetDomainNode = graph.getTargetNode(domainDraggerEndPos);
-                    if (elementTools.isDatatype(targetDomainNode) === true) {
-                        targetDomainNode = null;
-                        console.log("---------------TARGET NODE IS A DATATYPE/ LITERAL ------------");
-                    }
-                    shadowClone.hideClone(true);
-                    if (targetDomainNode === null) {
-                        d.reDrawEverthing();
-                        shadowClone.hideParentProperty(false);
-                    }
-                    else {
-                        d.updateDomain(targetDomainNode);
-                        graph.update();
-                        shadowClone.hideParentProperty(false);
-                    }
-                }
-
-                else {
-                    d.locked(false);
-                    var pnp = graph.options().pickAndPinModule();
-                    if (pnp.enabled() === true && moved === true) {
-                        if (d.id) { // node
-                            pnp.handle(d, true);
-                        }
-                        if (d.property) {
-                            pnp.handle(d.property(), true);
+                },
+            )
+            .on(
+                "drag",
+                function (
+                    /** @type {AbstractDomainRangeDragger | BaseElement} */ d,
+                ) {
+                    if (d instanceof ClassDragger) {
+                        clearTimeout(_this.delayedHider)
+                        _this.classDragger.setPosition(d3.event.x, d3.event.y)
+                    } else if (d instanceof RangeDragger) {
+                        clearTimeout(_this.delayedHider)
+                        _this.rangeDragger.setPosition(d3.event.x, d3.event.y)
+                        _this.shadowClone.setPosition(d3.event.x, d3.event.y)
+                        _this.domainDragger.updateElementViaRangeDragger(
+                            d3.event.x,
+                            d3.event.y,
+                        )
+                    } else if (d instanceof DomainDragger) {
+                        clearTimeout(_this.delayedHider)
+                        _this.domainDragger.setPosition(d3.event.x, d3.event.y)
+                        _this.shadowClone.setPositionDomain(
+                            d3.event.x,
+                            d3.event.y,
+                        )
+                        _this.rangeDragger.updateElementViaDomainDragger(
+                            d3.event.x,
+                            d3.event.y,
+                        )
+                    } else {
+                        d.px = d3.event.x
+                        d.py = d3.event.y
+                        _this.force.resume()
+                        _this.#updateHaloRadius()
+                        moved = true
+                        if (d.renderType && d.renderType === "round") {
+                            _this.classDragger.setParentNode(d)
                         }
                     }
-                }
-            });
+                },
+            )
+            .on(
+                "dragend",
+                function (
+                    /** @type {AbstractDomainRangeDragger | BaseElement} */ d,
+                ) {
+                    _this.ignoreOtherHoverEvents = false
+                    if (d instanceof ClassDragger) {
+                        const nX = _this.classDragger.x
+                        const nY = _this.classDragger.y
+                        clearTimeout(_this.delayedHider)
+                        _this.classDragger.mouseButtonPressed = false
+                        _this.classDragger.selectedViaTouch(false)
+                        d.setParentNode(d.parentNode)
+
+                        const draggerEndPos = [nX, nY]
+                        const targetNode = _this.getTargetNode(draggerEndPos)
+                        if (targetNode) {
+                            _this.#createNewObjectProperty(
+                                d.parentNode,
+                                targetNode,
+                                draggerEndPos,
+                            )
+                        }
+                        if (!_this.touchDevice) {
+                            _this.#editElementHoverOut()
+                        }
+                        _this.draggingStarted = false
+                    } else if (d instanceof RangeDragger) {
+                        _this.ignoreOtherHoverEvents = false
+                        _this.frozenDomainForPropertyDragger.frozen = false
+                        _this.frozenDomainForPropertyDragger.locked = false
+                        _this.frozenRangeForPropertyDragger.frozen = false
+                        _this.frozenRangeForPropertyDragger.locked = false
+                        _this.rangeDragger.mouseButtonPressed = false
+                        _this.domainDragger.mouseButtonPressed = false
+                        _this.domainDragger.updateElement()
+                        _this.rangeDragger.updateElement()
+                        _this.shadowClone.hideClone(true)
+                        const rX = _this.rangeDragger.x
+                        const rY = _this.rangeDragger.y
+                        const rangeDraggerEndPos = [rX, rY]
+                        let targetRangeNode =
+                            _this.getTargetNode(rangeDraggerEndPos)
+                        if (ElementTools.isDatatype(targetRangeNode)) {
+                            targetRangeNode = null
+                            console.log(
+                                "---------------TARGET NODE IS A DATATYPE/ LITERAL ------------",
+                            )
+                        }
+                        if (targetRangeNode === null) {
+                            d.redrawEverything()
+                            _this.shadowClone.hideParentProperty(false)
+                        } else {
+                            d.updateRange(targetRangeNode)
+                            _this.update()
+                            _this.shadowClone.hideParentProperty(false)
+                        }
+                    } else if (d instanceof DomainDragger) {
+                        _this.ignoreOtherHoverEvents = false
+                        _this.frozenDomainForPropertyDragger.frozen = false
+                        _this.frozenDomainForPropertyDragger.locked = false
+                        _this.frozenRangeForPropertyDragger.frozen = false
+                        _this.frozenRangeForPropertyDragger.locked = false
+                        _this.rangeDragger.mouseButtonPressed = false
+                        _this.domainDragger.mouseButtonPressed = false
+                        _this.domainDragger.updateElement()
+                        _this.rangeDragger.updateElement()
+                        _this.shadowClone.hideClone(true)
+
+                        const dX = _this.domainDragger.x
+                        const dY = _this.domainDragger.y
+                        const domainDraggerEndPos = [dX, dY]
+                        let targetDomainNode =
+                            _this.getTargetNode(domainDraggerEndPos)
+                        if (ElementTools.isDatatype(targetDomainNode)) {
+                            targetDomainNode = null
+                            console.log(
+                                "---------------TARGET NODE IS A DATATYPE/ LITERAL ------------",
+                            )
+                        }
+                        _this.shadowClone.hideClone(true)
+                        if (targetDomainNode === null) {
+                            d.redrawEverything()
+                            _this.shadowClone.hideParentProperty(false)
+                        } else {
+                            d.updateDomain(targetDomainNode)
+                            _this.update()
+                            _this.shadowClone.hideParentProperty(false)
+                        }
+                    } else {
+                        d.locked = false
+                        const pnp = _this.options.pickAndPinModule
+                        if (pnp.enabled && moved) {
+                            if (d.id) {
+                                // node
+                                pnp.handle(d, true)
+                            }
+                            if (d.property) {
+                                pnp.handle(d.property, true)
+                            }
+                        }
+                    }
+                },
+            )
 
         // Apply the zooming factor.
-        zoom = d3.behavior.zoom()
+        this.zoom = d3.behavior
+            .zoom()
             .duration(150)
-            .scaleExtent([options.minMagnification(), options.maxMagnification()])
-            .on("zoom", zoomed);
-
-        draggerObjectsArray.push(classDragger);
-        draggerObjectsArray.push(rangeDragger);
-        draggerObjectsArray.push(domainDragger);
-        draggerObjectsArray.push(shadowClone);
-        force.stop();
+            .scaleExtent([
+                this.options.minMagnification,
+                this.options.maxMagnification,
+            ])
+            .on("zoom", () => {
+                this.#zoomed()
+            })
+        this.draggerObjectsArray.push(this.classDragger)
+        this.draggerObjectsArray.push(this.rangeDragger)
+        this.draggerObjectsArray.push(this.domainDragger)
+        this.draggerObjectsArray.push(this.shadowClone)
+        this.force.stop()
     }
 
-    graph.lazyRefresh = function () {
-        redrawContent();
-        recalculatePositions();
-    };
+    lazyRefresh() {
+        this.#redrawContent()
+        this.#recalculatePositions()
+    }
 
-    graph.adjustingGraphSize = function (val) {
-        adjustingGraphSize = val;
-    };
-
-    graph.showReloadButtonAfterLayoutOptimization = function (show) {
-        showReloadButtonAfterLayoutOptimization = show;
-    };
-
-
-    function hiddenRecalculatePositions() {
-        finishedLoadingSequence = false;
-        if (graph.options().loadingModule().successfullyLoadedOntology() === false) {
-            force.stop();
-            d3.select("#progressBarValue").node().innerHTML = "";
-            graph.updateProgressBarMode();
-            graph.options().loadingModule().showErrorDetailsMessage(hiddenRecalculatePositions);
-            if (keepDetailsCollapsedOnLoading && adjustingGraphSize === false) {
-                graph.options().loadingModule().collapseDetails("hiddenRecalculatePositions");
+    #hiddenRecalculatePositions() {
+        this.finishedLoadingSequence = false
+        if (!this.options.loadingModule.loadingWasSuccessFul) {
+            this.force.stop()
+            d3.select("#progressBarValue").node().innerHTML = ""
+            this.updateProgressBarMode()
+            this.options.loadingModule.showErrorDetailsMessage()
+            if (
+                this.keepDetailsCollapsedOnLoading &&
+                !this.adjustingGraphSize
+            ) {
+                this.options.loadingModule.collapseDetails()
             }
-            return;
+            return
         }
-        if (updateRenderingDuringSimulation === false) {
-            var value = 1.0 - 10 * force.alpha();
-            var percent = parseInt(200 * value) + "%";
-            graph.options().loadingModule().setPercentValue(percent);
-            d3.select("#progressBarValue").style("width", percent);
-            d3.select("#progressBarValue").node().innerHTML = percent;
+        if (!this.updateRenderingDuringSimulation) {
+            const value = 1.0 - 10 * this.force.alpha()
+            let percent = Math.round(200 * value) + "%"
+            this.options.loadingModule.setPercentValue(percent)
+            d3.select("#progressBarValue").style("width", percent)
+            d3.select("#progressBarValue").node().innerHTML = percent
 
             if (value > 0.49) {
-                updateRenderingDuringSimulation = true;
+                this.updateRenderingDuringSimulation = true
                 // show graph container;
-                if (graphContainer) {
-                    graphContainer.style("opacity", "1");
-                    percent = "100%";
-                    d3.select("#progressBarValue").style("width", percent);
-                    d3.select("#progressBarValue").node().innerHTML = percent;
-                    graph.options().ontologyMenu().append_message_toLastBulletPoint("done");
-                    d3.select("#reloadCachedOntology").classed("hidden", !showReloadButtonAfterLayoutOptimization);
-                    if (showFilterWarning === true && seenFilterWarning === false) {
-                        graph.options().warningModule().showFilterHint();
-                        seenFilterWarning = true;
+                if (this.graphContainer) {
+                    this.graphContainer.style("opacity", "1")
+                    percent = "100%"
+                    d3.select("#progressBarValue").style("width", percent)
+                    d3.select("#progressBarValue").node().innerHTML = percent
+                    this.options.ontologyMenu.append_message_toLastBulletPoint(
+                        "done",
+                    )
+                    d3.select("#reloadCachedOntology").classed(
+                        "hidden",
+                        !this.showReloadButtonAfterLayoutOptimization,
+                    )
+                    if (this.showFilterWarning && !this.seenFilterWarning) {
+                        this.options.warningModule.showFilterHint()
+                        this.seenFilterWarning = true
                     }
                 }
 
-                if (initialLoad) {
-                    if (graph.paused() === false)
-                        force.resume(); // resume force
-                    initialLoad = false;
-
+                if (this.initialLoad) {
+                    if (!this._paused) {
+                        this.force.resume() // resume force
+                    }
+                    this.initialLoad = false
                 }
-
-
-                finishedLoadingSequence = true;
-                if (showFPS === true) {
-                    force.on("tick", recalculatePositionsWithFPS);
-                    recalculatePositionsWithFPS();
-                }
-                else {
-                    force.on("tick", recalculatePositions);
-                    recalculatePositions();
-                }
-
-                if (centerGraphViewOnLoad === true && force.nodes().length > 0) {
-                    if (force.nodes().length < 10) graph.forceRelocationEvent(true); // uses dynamic zoomer;
-                    else graph.forceRelocationEvent();
-                    centerGraphViewOnLoad = false;
-                    // console.log("--------------------------------------")
-                }
-
-
-                graph.showEditorHintIfNeeded();
-
-                if (graph.options().loadingModule().missingImportsWarning() === false) {
-                    graph.options().loadingModule().hideLoadingIndicator();
-                    graph.options().ontologyMenu().append_bulletPoint("Successfully loaded ontology");
-                    graph.options().loadingModule().setSuccessful();
+                this.finishedLoadingSequence = true
+                if (this.showFPS) {
+                    this.force.on("tick", () => {
+                        this.#recalculatePositionsWithFPS()
+                    })
+                    this.#recalculatePositionsWithFPS()
                 } else {
-                    graph.options().loadingModule().showWarningDetailsMessage();
-                    graph.options().ontologyMenu().append_bulletPoint("Loaded ontology with warnings");
+                    this.force.on("tick", () => {
+                        this.#recalculatePositions()
+                    })
+                    this.#recalculatePositions()
+                }
+                if (
+                    this.centerGraphViewOnLoad &&
+                    this.force.nodes().length > 0
+                ) {
+                    if (this.force.nodes().length < 10) {
+                        this.forceRelocationEvent(true) // uses dynamic zoomer;
+                    } else {
+                        this.forceRelocationEvent()
+                    }
+                    this.centerGraphViewOnLoad = false
+                }
+                this.showEditorHintIfNeeded()
+
+                if (!this.options.loadingModule.missingImportsWarning) {
+                    this.options.loadingModule.hideLoadingIndicator()
+                    this.options.ontologyMenu.append_bulletPoint(
+                        "Successfully loaded ontology",
+                    )
+                    this.options.loadingModule.setSuccessful()
+                } else {
+                    this.options.loadingModule.showWarningDetailsMessage()
+                    this.options.ontologyMenu.append_bulletPoint(
+                        "Loaded ontology with warnings",
+                    )
                 }
             }
         }
     }
 
-    graph.showEditorHintIfNeeded = function () {
-        if (seenEditorHint === false && editMode === true) {
-            seenEditorHint = true;
-            graph.options().warningModule().showEditorHint();
+    showEditorHintIfNeeded() {
+        if (!this.seenEditorHint && this.isEditorMode) {
+            this.seenEditorHint = true
+            this.options.warningModule.showEditorHint()
         }
-    };
-
-    graph.setForceTickFunctionWithFPS = function () {
-        showFPS = true;
-        if (force && finishedLoadingSequence === true) {
-            force.on("tick", recalculatePositionsWithFPS);
-        }
-
-    };
-    graph.setDefaultForceTickFunction = function () {
-        showFPS = false;
-        if (force && finishedLoadingSequence === true) {
-            force.on("tick", recalculatePositions);
-        }
-    };
-    function recalculatePositionsWithFPS() {
-        // compute the fps
-
-        recalculatePositions();
-        now = Date.now();
-        var diff = now - then;
-        var fps = (1000 / (diff)).toFixed(2);
-
-        debugContainer.node().innerHTML = "FPS: " + fps + "<br>" + "Nodes: " + force.nodes().length + "<br>" + "Links: " + force.links().length;
-        then = Date.now();
-
+        this.showFPS
     }
 
-    function recalculatePositions() {
-        // Set node positions
+    setForceTickFunctionWithFPS() {
+        this.showFPS = true
+        if (this.force && this.finishedLoadingSequence) {
+            this.force.on("tick", () => {
+                this.#recalculatePositionsWithFPS()
+            })
+        }
+    }
 
+    setDefaultForceTickFunction() {
+        this.showFPS = false
+        if (this.force && this.finishedLoadingSequence) {
+            this.force.on("tick", () => {
+                this.#recalculatePositions()
+            })
+        }
+    }
 
+    #recalculatePositionsWithFPS() {
+        // compute the fps
+        this.#recalculatePositions()
+        this.now = Date.now()
+        const diff = this.now - this.then
+        const fps = (1000 / diff).toFixed(2)
+
+        this.debugContainer.node().innerHTML =
+            "FPS: " +
+            fps +
+            "<br>" +
+            "Nodes: " +
+            this.force.nodes().length +
+            "<br>" +
+            "Links: " +
+            this.force.links().length
+        this.then = Date.now()
+    }
+
+    #recalculatePositions() {
+        const _this = this
         // add switch for edit mode to make this faster;
-        if (!editMode) {
-            nodeElements.attr("transform", function (node) {
-                return "translate(" + node.x + "," + node.y + ")";
-            });
+        if (!this.isEditorMode) {
+            this.nodeElements.attr("transform", function (node) {
+                return "translate(" + node.x + "," + node.y + ")"
+            })
 
             // Set label group positions
-            labelGroupElements.attr("transform", function (label) {
-                var position;
-
+            this.labelGroupElements.attr("transform", function (label) {
                 // force centered positions on single-layered links
-                var link = label.link();
-                if (link.layerSize === 1 && !link.loops()) {
-                    var linkDomainIntersection = math.calculateIntersection(link.range(), link.domain(), 0);
-                    var linkRangeIntersection = math.calculateIntersection(link.domain(), link.range(), 0);
-                    position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
-                    label.x = position.x;
-                    label.y = position.y;
+                const link = label.link
+                if (link.layers === 1 && !link.loops) {
+                    const linkDomainIntersection =
+                        MathUtils.calculateIntersection(
+                            link.range,
+                            link.domain,
+                            0,
+                        )
+                    const linkRangeIntersection =
+                        MathUtils.calculateIntersection(
+                            link.domain,
+                            link.range,
+                            0,
+                        )
+                    const position = MathUtils.calculateCenter(
+                        linkDomainIntersection,
+                        linkRangeIntersection,
+                    )
+                    label.x = position.x
+                    label.y = position.y
                 }
-                return "translate(" + label.x + "," + label.y + ")";
-            });
+                return "translate(" + label.x + "," + label.y + ")"
+            })
             // Set link paths and calculate additional information
-            linkPathElements.attr("d", function (l) {
+            this.linkPathElements.attr("d", function (l) {
                 if (l.isLoop()) {
-                    return math.calculateLoopPath(l);
+                    return MathUtils.calculateLoopPath(l)
                 }
-                var curvePoint = l.label();
-                var pathStart = math.calculateIntersection(curvePoint, l.domain(), 1);
-                var pathEnd = math.calculateIntersection(curvePoint, l.range(), 1);
-
-                return curveFunction([pathStart, curvePoint, pathEnd]);
-            });
+                const curvePoint = l.label
+                const pathStart = MathUtils.calculateIntersection(
+                    curvePoint,
+                    l.domain,
+                    1,
+                )
+                const pathEnd = MathUtils.calculateIntersection(
+                    curvePoint,
+                    l.range,
+                    1,
+                )
+                return _this.curveFunction([pathStart, curvePoint, pathEnd])
+            })
 
             // Set cardinality positions
-            cardinalityElements.attr("transform", function (property) {
-
-                var label = property.link().label(),
-                    pos = math.calculateIntersection(label, property.range(), CARDINALITY_HDISTANCE),
-                    normalV = math.calculateNormalVector(label, property.range(), CARDINALITY_VDISTANCE);
-
-                return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
-            });
-
-
-            updateHaloRadius();
-            return;
+            this.cardinalityElements.attr("transform", function (property) {
+                const label = property.link.label,
+                    pos = MathUtils.calculateIntersection(
+                        label,
+                        property.range,
+                        _this.CARDINALITY_HDISTANCE,
+                    ),
+                    normalV = MathUtils.calculateNormalVector(
+                        label,
+                        property.range,
+                        _this.CARDINALITY_VDISTANCE,
+                    )
+                return (
+                    "translate(" +
+                    (pos.x + normalV.x) +
+                    "," +
+                    (pos.y + normalV.y) +
+                    ")"
+                )
+            })
+            this.#updateHaloRadius()
+            return
         }
 
         // TODO: this is Editor redraw function // we need to make this faster!!
-
-
-        nodeElements.attr("transform", function (node) {
-            return "translate(" + node.x + "," + node.y + ")";
-        });
+        this.nodeElements.attr("transform", function (node) {
+            return "translate(" + node.x + "," + node.y + ")"
+        })
 
         // Set label group positions
-        labelGroupElements.attr("transform", function (label) {
-            var position;
-
+        this.labelGroupElements.attr("transform", function (label) {
             // force centered positions on single-layered links
-            var link = label.link();
-            if (link.layerSize === 1 && !link.loops()) {
-                var linkDomainIntersection = math.calculateIntersection(link.range(), link.domain(), 0);
-                var linkRangeIntersection = math.calculateIntersection(link.domain(), link.range(), 0);
-                position = math.calculateCenter(linkDomainIntersection, linkRangeIntersection);
-                label.x = position.x;
-                label.y = position.y;
-                label.linkRangeIntersection = linkRangeIntersection;
-                label.linkDomainIntersection = linkDomainIntersection;
-                if (link.property().focused() === true || hoveredPropertyElement !== undefined) {
-                    rangeDragger.updateElement();
-                    domainDragger.updateElement();
-                    // shadowClone.setPosition(link.property().range().x,link.property().range().y);
-                    // shadowClone.setPositionDomain(link.property().domain().x,link.property().domain().y);
+            const link = label.link
+            if (link.layers === 1 && !link.loops) {
+                const linkDomainIntersection = MathUtils.calculateIntersection(
+                    link.range,
+                    link.domain,
+                    0,
+                )
+                const linkRangeIntersection = MathUtils.calculateIntersection(
+                    link.domain,
+                    link.range,
+                    0,
+                )
+                const position = MathUtils.calculateCenter(
+                    linkDomainIntersection,
+                    linkRangeIntersection,
+                )
+                label.x = position.x
+                label.y = position.y
+                label.linkRangeIntersection = linkRangeIntersection
+                label.linkDomainIntersection = linkDomainIntersection
+                if (
+                    link.property.focused ||
+                    _this.hoveredPropertyElement !== undefined
+                ) {
+                    _this.rangeDragger.updateElement()
+                    _this.domainDragger.updateElement()
+                    // shadowClone.setPosition(link.property.range.x,link.property.range.y);
+                    // shadowClone.setPositionDomain(link.property.domain.x,link.property.domain.y);
                 }
             } else {
-                label.linkDomainIntersection = math.calculateIntersection(link.label(), link.domain(), 0);
-                label.linkRangeIntersection = math.calculateIntersection(link.label(), link.range(), 0);
-                if (link.property().focused() === true || hoveredPropertyElement !== undefined) {
-                    rangeDragger.updateElement();
-                    domainDragger.updateElement();
-                    // shadowClone.setPosition(link.property().range().x,link.property().range().y);
-                    // shadowClone.setPositionDomain(link.property().domain().x,link.property().domain().y);
+                label.linkDomainIntersection = MathUtils.calculateIntersection(
+                    link.label,
+                    link.domain,
+                    0,
+                )
+                label.linkRangeIntersection = MathUtils.calculateIntersection(
+                    link.label,
+                    link.range,
+                    0,
+                )
+                if (
+                    link.property.focused ||
+                    _this.hoveredPropertyElement !== undefined
+                ) {
+                    _this.rangeDragger.updateElement()
+                    _this.domainDragger.updateElement()
+                    // shadowClone.setPosition(link.property.range.x,link.property.range.y);
+                    // shadowClone.setPositionDomain(link.property.domain.x,link.property.domain.y);
                 }
-
             }
-            return "translate(" + label.x + "," + label.y + ")";
-        });
+            return "translate(" + label.x + "," + label.y + ")"
+        })
         // Set link paths and calculate additional information
-        linkPathElements.attr("d", function (l) {
+        this.linkPathElements.attr("d", function (l) {
             if (l.isLoop()) {
+                const ptrAr = MathUtils.getLoopPoints(l)
+                l.label.linkRangeIntersection = ptrAr[1]
+                l.label.linkDomainIntersection = ptrAr[0]
 
-                var ptrAr = math.getLoopPoints(l);
-                l.label().linkRangeIntersection = ptrAr[1];
-                l.label().linkDomainIntersection = ptrAr[0];
-
-                if (l.property().focused() === true || hoveredPropertyElement !== undefined) {
-                    rangeDragger.updateElement();
-                    domainDragger.updateElement();
+                if (
+                    l.property.focused ||
+                    _this.hoveredPropertyElement !== undefined
+                ) {
+                    _this.rangeDragger.updateElement()
+                    _this.domainDragger.updateElement()
                 }
-                return math.calculateLoopPath(l);
+                return MathUtils.calculateLoopPath(l)
             }
-            var curvePoint = l.label();
-            var pathStart = math.calculateIntersection(curvePoint, l.domain(), 1);
-            var pathEnd = math.calculateIntersection(curvePoint, l.range(), 1);
-            l.linkRangeIntersection = pathStart;
-            l.linkDomainIntersection = pathEnd;
-            if (l.property().focused() === true || hoveredPropertyElement !== undefined) {
-                domainDragger.updateElement();
-                rangeDragger.updateElement();
-                // shadowClone.setPosition(l.property().range().x,l.property().range().y);
-                // shadowClone.setPositionDomain(l.property().domain().x,l.property().domain().y);
+            const curvePoint = l.label
+            const pathStart = MathUtils.calculateIntersection(
+                curvePoint,
+                l.domain,
+                1,
+            )
+            const pathEnd = MathUtils.calculateIntersection(
+                curvePoint,
+                l.range,
+                1,
+            )
+            l.linkRangeIntersection = pathStart
+            l.linkDomainIntersection = pathEnd
+            if (
+                l.property.focused ||
+                _this.hoveredPropertyElement !== undefined
+            ) {
+                _this.domainDragger.updateElement()
+                _this.rangeDragger.updateElement()
+                // shadowClone.setPosition(l.property.range.x,l.property.range.y);
+                // shadowClone.setPositionDomain(l.property.domain.x,l.property.domain.y);
             }
-            return curveFunction([pathStart, curvePoint, pathEnd]);
-        });
+            return _this.curveFunction([pathStart, curvePoint, pathEnd])
+        })
 
         // Set cardinality positions
-        cardinalityElements.attr("transform", function (property) {
+        this.cardinalityElements.attr("transform", function (property) {
+            const label = property.link.label,
+                pos = MathUtils.calculateIntersection(
+                    label,
+                    property.range,
+                    _this.CARDINALITY_HDISTANCE,
+                ),
+                normalV = MathUtils.calculateNormalVector(
+                    label,
+                    property.range,
+                    _this.CARDINALITY_VDISTANCE,
+                )
+            return (
+                "translate(" +
+                (pos.x + normalV.x) +
+                "," +
+                (pos.y + normalV.y) +
+                ")"
+            )
+        })
 
-            var label = property.link().label(),
-                pos = math.calculateIntersection(label, property.range(), CARDINALITY_HDISTANCE),
-                normalV = math.calculateNormalVector(label, property.range(), CARDINALITY_VDISTANCE);
-
-            return "translate(" + (pos.x + normalV.x) + "," + (pos.y + normalV.y) + ")";
-        });
-
-        if (hoveredNodeElement) {
-            setDeleteHoverElementPosition(hoveredNodeElement);
-            setAddDataPropertyHoverElementPosition(hoveredNodeElement);
-            if (draggingStarted === false) {
-                classDragger.setParentNode(hoveredNodeElement);
+        if (this.hoveredNodeElement) {
+            this.#setDeleteHoverElementPosition(this.hoveredNodeElement)
+            this.#setAddDataPropertyHoverElementPosition(
+                this.hoveredNodeElement,
+            )
+            if (!this.draggingStarted) {
+                this.classDragger.setParentNode(this.hoveredNodeElement)
             }
         }
-        if (hoveredPropertyElement) {
-            setDeleteHoverElementPositionProperty(hoveredPropertyElement);
+        if (this.hoveredPropertyElement) {
+            this.#setDeleteHoverElementPositionProperty(
+                this.hoveredPropertyElement,
+            )
         }
-
-        updateHaloRadius();
+        this.#updateHaloRadius()
     }
 
-    graph.updatePropertyDraggerElements = function (property) {
-        if (property.type() !== "owl:DatatypeProperty") {
-
-            shadowClone.setParentProperty(property);
-            rangeDragger.setParentProperty(property);
-            rangeDragger.hideDragger(false);
-            rangeDragger.addMouseEvents();
-            domainDragger.setParentProperty(property);
-            domainDragger.hideDragger(false);
-            domainDragger.addMouseEvents();
-
+    /**
+     * @param {d3.Selection<any, any, null, undefined>} property
+     */
+    updatePropertyDraggerElements(property) {
+        if (property.type !== "owl:DatatypeProperty") {
+            this.shadowClone.setParentProperty(property)
+            this.rangeDragger.setParentProperty(property)
+            this.rangeDragger.hideDragger(false)
+            this.rangeDragger.addMouseEvents()
+            this.domainDragger.setParentProperty(property)
+            this.domainDragger.hideDragger(false)
+            this.domainDragger.addMouseEvents()
+        } else {
+            this.rangeDragger.hideDragger(true)
+            this.domainDragger.hideDragger(true)
+            this.shadowClone.hideClone(true)
         }
-        else {
-            rangeDragger.hideDragger(true);
-            domainDragger.hideDragger(true);
-            shadowClone.hideClone(true);
-        }
-    };
+    }
 
-    function addClickEvents() {
+    #addClickEvents() {
+        const _this = this
+
+        /**
+         * @param {any} selectedElement
+         */
         function executeModules(selectedElement) {
-            options.selectionModules().forEach(function (module) {
-                module.handle(selectedElement);
-            });
+            for (const module of _this.options.selectionModules) {
+                module.handle(selectedElement)
+            }
         }
 
-        nodeElements.on("click", function (clickedNode) {
-
+        this.nodeElements.on("click", function (clickedNode) {
             // manaual double clicker // helper for iphone 6 etc...
-            if (touchDevice === true && doubletap() === true) {
-                d3.event.stopPropagation();
-                if (editMode === true) {
-                    clickedNode.raiseDoubleClickEdit(defaultIriValue(clickedNode));
+            if (_this.touchDevice && _this.#doubletap()) {
+                d3.event.stopPropagation()
+                if (_this.isEditorMode) {
+                    clickedNode.raiseDoubleClickEdit(
+                        _this.#defaultIriValue(clickedNode),
+                    )
                 }
+            } else {
+                executeModules(clickedNode)
             }
-            else {
-                executeModules(clickedNode);
+        })
+
+        this.nodeElements.on("dblclick", function (clickedNode) {
+            d3.event.stopPropagation()
+            if (_this.isEditorMode) {
+                clickedNode.raiseDoubleClickEdit(
+                    _this.#defaultIriValue(clickedNode),
+                )
             }
-        });
+        })
 
-        nodeElements.on("dblclick", function (clickedNode) {
-
-            d3.event.stopPropagation();
-            if (editMode === true) {
-                clickedNode.raiseDoubleClickEdit(defaultIriValue(clickedNode));
-            }
-        });
-
-        labelGroupElements.selectAll(".label").on("click", function (clickedProperty) {
-            executeModules(clickedProperty);
-
-            // this is for enviroments that do not define dblClick function;
-            if (touchDevice === true && doubletap() === true) {
-                d3.event.stopPropagation();
-                if (editMode === true) {
-                    clickedProperty.raiseDoubleClickEdit(defaultIriValue(clickedProperty));
+        this.labelGroupElements
+            .selectAll(".label")
+            .on("click", function (clickedProperty) {
+                executeModules(clickedProperty)
+                // this is for enviroments that do not define dblClick function;
+                if (_this.touchDevice && _this.#doubletap()) {
+                    d3.event.stopPropagation()
+                    if (_this.isEditorMode) {
+                        clickedProperty.raiseDoubleClickEdit(
+                            _this.#defaultIriValue(clickedProperty),
+                        )
+                    }
                 }
-            }
 
-            // currently removed the selection of an element to invoke the dragger
-            // if (editMode===true && clickedProperty.editingTextElement!==true) {
-            //     return;
-            //      // We say that Datatype properties are not allowed to have domain range draggers
-            //      if (clickedProperty.focused() && clickedProperty.type() !== "owl:DatatypeProperty") {
-            //          shadowClone.setParentProperty(clickedProperty);
-            //          rangeDragger.setParentProperty(clickedProperty);
-            //          rangeDragger.hideDragger(false);
-            //          rangeDragger.addMouseEvents();
-            //          domainDragger.setParentProperty(clickedProperty);
-            //          domainDragger.hideDragger(false);
-            //          domainDragger.addMouseEvents();
-            //
-            //          if (clickedProperty.domain()===clickedProperty.range()){
-            //              clickedProperty.labelObject().increasedLoopAngle=true;
-            //              recalculatePositions();
-            //
-            //          }
-            //
-            //      } else if (clickedProperty.focused() && clickedProperty.type() === "owl:DatatypeProperty") {
-            //          shadowClone.setParentProperty(clickedProperty);
-            //          rangeDragger.setParentProperty(clickedProperty);
-            //          rangeDragger.hideDragger(true);
-            //          rangeDragger.addMouseEvents();
-            //          domainDragger.setParentProperty(clickedProperty);
-            //          domainDragger.hideDragger(false);
-            //          domainDragger.addMouseEvents();
-            //
-            //      }
-            //      else {
-            //          rangeDragger.hideDragger(true);
-            //          domainDragger.hideDragger(true);
-            //          if (clickedProperty.domain()===clickedProperty.range()){
-            //              clickedProperty.labelObject().increasedLoopAngle=false;
-            //              recalculatePositions();
-            //
-            //          }
-            //      }
-            //  }
-        });
-        labelGroupElements.selectAll(".label").on("dblclick", function (clickedProperty) {
-            d3.event.stopPropagation();
-            if (editMode === true) {
-                clickedProperty.raiseDoubleClickEdit(defaultIriValue(clickedProperty));
-            }
-
-        });
+                // currently removed the selection of an element to invoke the dragger
+                // if (isEditorMode===true && clickedProperty.editingTextElement!==true) {
+                //     return;
+                //      // We say that Datatype properties are not allowed to have domain range draggers
+                //      if (clickedProperty.focused && clickedProperty.type !== "owl:DatatypeProperty") {
+                //          shadowClone.setParentProperty(clickedProperty);
+                //          rangeDragger.setParentProperty(clickedProperty);
+                //          rangeDragger.hideDragger(false);
+                //          rangeDragger.addMouseEvents();
+                //          domainDragger.setParentProperty(clickedProperty);
+                //          domainDragger.hideDragger(false);
+                //          domainDragger.addMouseEvents();
+                //
+                //          if (clickedProperty.domain===clickedProperty.range){
+                //              clickedProperty.labelObject.increasedLoopAngle=true;
+                //              #recalculatePositions();
+                //
+                //          }
+                //
+                //      } else if (clickedProperty.focused && clickedProperty.type === "owl:DatatypeProperty") {
+                //          shadowClone.setParentProperty(clickedProperty);
+                //          rangeDragger.setParentProperty(clickedProperty);
+                //          rangeDragger.hideDragger(true);
+                //          rangeDragger.addMouseEvents();
+                //          domainDragger.setParentProperty(clickedProperty);
+                //          domainDragger.hideDragger(false);
+                //          domainDragger.addMouseEvents();
+                //
+                //      }
+                //      else {
+                //          rangeDragger.hideDragger(true);
+                //          domainDragger.hideDragger(true);
+                //          if (clickedProperty.domain===clickedProperty.range){
+                //              clickedProperty.labelObject.increasedLoopAngle=false;
+                //              #recalculatePositions();
+                //
+                //          }
+                //      }
+                //  }
+            })
+        this.labelGroupElements
+            .selectAll(".label")
+            .on("dblclick", function (clickedProperty) {
+                d3.event.stopPropagation()
+                if (_this.isEditorMode) {
+                    clickedProperty.raiseDoubleClickEdit(
+                        _this.#defaultIriValue(clickedProperty),
+                    )
+                }
+            })
     }
 
-    function defaultIriValue(element) {
+    /**
+     * @param {BaseElement} element
+     */
+    #defaultIriValue(element) {
         // get the iri of that element;
-        if (graph.options().getGeneralMetaObject().iri) {
-            var str2Compare = graph.options().getGeneralMetaObject().iri + element.id();
-            return element.iri() === str2Compare;
+        if (this.options.generalOntologyMetaData.iri) {
+            const str2Compare =
+                this.options.generalOntologyMetaData.iri + element.id
+            return element.iri === str2Compare
         }
-        return false;
+        return false
     }
 
     /** Adjusts the containers current scale and position. */
-    function zoomed() {
-        if (forceNotZooming === true) {
-            zoom.translate(graphTranslation);
-            zoom.scale(zoomFactor);
-            return;
+    #zoomed() {
+        if (this.forceNotZooming) {
+            this.zoom.translate(this.graphTranslation)
+            this.zoom.scale(this.zoomFactor)
+            return
         }
 
-
-        var zoomEventByMWheel = false;
+        let zoomEventByMWheel = false
         if (d3.event.sourceEvent) {
-            if (d3.event.sourceEvent.deltaY) zoomEventByMWheel = true;
-        }
-        if (zoomEventByMWheel === false) {
-            if (transformAnimation === true) {
-                return;
+            if (d3.event.sourceEvent.deltaY) {
+                zoomEventByMWheel = true
             }
-            zoomFactor = d3.event.scale;
-            graphTranslation = d3.event.translate;
-            graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-            updateHaloRadius();
-            graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
-            return;
+        }
+        if (!zoomEventByMWheel) {
+            if (this.transformAnimation) {
+                return
+            }
+            this.zoomFactor = d3.event.scale
+            this.graphTranslation = d3.event.translate
+            this.graphContainer.attr(
+                "transform",
+                "translate(" +
+                    this.graphTranslation +
+                    ")scale(" +
+                    this.zoomFactor +
+                    ")",
+            )
+            this.#updateHaloRadius()
+            this.options.zoomSlider.updateZoomSliderValue(this.zoomFactor)
+            return
         }
         /** animate the transition **/
-        zoomFactor = d3.event.scale;
-        graphTranslation = d3.event.translate;
-        graphContainer.transition()
+        const _this = this
+        this.zoomFactor = d3.event.scale
+        this.graphTranslation = d3.event.translate
+        this.graphContainer
+            .transition()
             .tween("attr.translate", function () {
                 return function (t) {
-                    transformAnimation = true;
-                    var tr = d3.transform(graphContainer.attr("transform"));
-                    graphTranslation[0] = tr.translate[0];
-                    graphTranslation[1] = tr.translate[1];
-                    zoomFactor = tr.scale[0];
-                    updateHaloRadius();
-                    graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
-                };
+                    _this.transformAnimation = true
+                    const tr = d3.transform(
+                        _this.graphContainer.attr("transform"),
+                    )
+                    _this.graphTranslation[0] = tr.translate[0]
+                    _this.graphTranslation[1] = tr.translate[1]
+                    _this.zoomFactor = tr.scale[0]
+                    _this.#updateHaloRadius()
+                    _this.options.zoomSlider.updateZoomSliderValue(
+                        _this.zoomFactor,
+                    )
+                }
             })
+            // @ts-ignore
             .each("end", function () {
-                transformAnimation = false;
+                _this.transformAnimation = false
             })
-            .attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")")
-            .ease('linear')
-            .duration(250);
-    }// end of zoomed function
-
-    function redrawGraph() {
-        remove();
-
-        graphContainer = d3.selectAll(options.graphContainerSelector())
-            .append("svg")
-            .classed("vowlGraph", true)
-            .attr("width", options.width())
-            .attr("height", options.height())
-            .call(zoom)
-            .append("g");
-        // add touch and double click functions
-
-        var svgGraph = d3.selectAll(".vowlGraph");
-        originalD3_dblClickFunction = svgGraph.on("dblclick.zoom");
-        originalD3_touchZoomFunction = svgGraph.on("touchstart");
-        svgGraph.on("touchstart", touchzoomed);
-        if (editMode === true) {
-            svgGraph.on("dblclick.zoom", graph.modified_dblClickFunction);
-        }
-        else {
-            svgGraph.on("dblclick.zoom", originalD3_dblClickFunction);
-        }
-
+            .attr(
+                "transform",
+                "translate(" +
+                    this.graphTranslation +
+                    ")scale(" +
+                    this.zoomFactor +
+                    ")",
+            )
+            .ease("linear")
+            .duration(250)
     }
 
-    function generateEditElements() {
-        addDataPropertyGroupElement = editContainer.append('g')
+    #redrawGraphContainer() {
+        this.#remove()
+        this.graphContainer = d3
+            .selectAll(this.options.graphContainerSelector)
+            .append("svg")
+            .classed("vowlGraph", true)
+            .attr("width", this.options.width)
+            .attr("height", this.options.height)
+            .call(this.zoom)
+            .append("g")
+
+        // add touch and double click functions
+        const svgGraph = d3.selectAll(".vowlGraph")
+        this.originalD3_dblClickFunction = svgGraph.on("dblclick.zoom")
+        this.originalD3_touchZoomFunction = svgGraph.on("touchstart")
+        svgGraph.on("touchstart", () => {
+            this.#touchzoomed()
+        })
+        if (this.isEditorMode) {
+            svgGraph.on("dblclick.zoom", () => {
+                this.modified_dblClickFunction()
+            })
+        } else {
+            svgGraph.on("dblclick.zoom", this.originalD3_dblClickFunction)
+        }
+    }
+
+    #generateEditElements() {
+        this.addDataPropertyGroupElement = this.editContainer
+            .append("g")
             .classed("hidden-in-export", true)
             .classed("hidden", true)
             .classed("addDataPropertyElement", true)
-            .attr("transform", "translate(" + 0 + "," + 0 + ")");
-
-
-        addDataPropertyGroupElement.append("circle")
+            .attr("transform", "translate(" + 0 + "," + 0 + ")")
+        this.addDataPropertyGroupElement
+            .append("circle")
             // .classed("deleteElement", true)
             .attr("r", 12)
             .attr("cx", 0)
             .attr("cy", 0)
-            .append("title").text("Add Datatype Property");
-
-        addDataPropertyGroupElement.append("line")
+            .append("title")
+            .text("Add Datatype Property")
+        this.addDataPropertyGroupElement
+            .append("line")
             // .classed("deleteElementIcon ",true)
             .attr("x1", -8)
             .attr("y1", 0)
             .attr("x2", 8)
             .attr("y2", 0)
-            .append("title").text("Add Datatype Property");
-
-        addDataPropertyGroupElement.append("line")
+            .append("title")
+            .text("Add Datatype Property")
+        this.addDataPropertyGroupElement
+            .append("line")
             // .classed("deleteElementIcon",true)
             .attr("x1", 0)
             .attr("y1", -8)
             .attr("x2", 0)
             .attr("y2", 8)
-            .append("title").text("Add Datatype Property");
-
-        if (graph.options().useAccuracyHelper()) {
-            addDataPropertyGroupElement.append("circle")
+            .append("title")
+            .text("Add Datatype Property")
+        if (this.options.useAccuracyHelper) {
+            this.addDataPropertyGroupElement
+                .append("circle")
                 .attr("r", 15)
                 .attr("cx", -7)
                 .attr("cy", 7)
                 .classed("superHiddenElement", true)
-                .classed("superOpacityElement", !graph.options().showDraggerObject());
+                .classed("superOpacityElement", !this.options.showDraggerObject)
         }
-
-
-        deleteGroupElement = editContainer.append('g')
+        this.deleteGroupElement = this.editContainer
+            .append("g")
             .classed("hidden-in-export", true)
             .classed("hidden", true)
             .classed("deleteParentElement", true)
-            .attr("transform", "translate(" + 0 + "," + 0 + ")");
-
-        deleteGroupElement.append("circle")
+            .attr("transform", "translate(" + 0 + "," + 0 + ")")
+        this.deleteGroupElement
+            .append("circle")
             .attr("r", 12)
             .attr("cx", 0)
             .attr("cy", 0)
-            .append("title").text("Delete This Node");
-
-        var crossLen = 5;
-        deleteGroupElement.append("line")
+            .append("title")
+            .text("Delete This Node")
+        const crossLen = 5
+        this.deleteGroupElement
+            .append("line")
             .attr("x1", -crossLen)
             .attr("y1", -crossLen)
             .attr("x2", crossLen)
             .attr("y2", crossLen)
-            .append("title").text("Delete This Node");
-
-        deleteGroupElement.append("line")
+            .append("title")
+            .text("Delete This Node")
+        this.deleteGroupElement
+            .append("line")
             .attr("x1", crossLen)
             .attr("y1", -crossLen)
             .attr("x2", -crossLen)
             .attr("y2", crossLen)
-            .append("title").text("Delete This Node");
-
-        if (graph.options().useAccuracyHelper()) {
-            deleteGroupElement.append("circle")
+            .append("title")
+            .text("Delete This Node")
+        if (this.options.useAccuracyHelper) {
+            this.deleteGroupElement
+                .append("circle")
                 .attr("r", 15)
                 .attr("cx", 7)
                 .attr("cy", -7)
                 .classed("superHiddenElement", true)
-                .classed("superOpacityElement", !graph.options().showDraggerObject());
+                .classed("superOpacityElement", !this.options.showDraggerObject)
         }
-
-
     }
 
-    graph.getUnfilteredData = function () {
-        return unfilteredData;
-    };
-
-    graph.getClassDataForTtlExport = function () {
-        var allNodes = unfilteredData.nodes;
-        var nodeData = [];
-        for (var i = 0; i < allNodes.length; i++) {
-            if (allNodes[i].type() !== "rdfs:Literal" &&
-                allNodes[i].type() !== "rdfs:Datatype" &&
-                allNodes[i].type() !== "owl:Thing") {
-                nodeData.push(allNodes[i]);
-            }
-        }
-        return nodeData;
-    };
-
-    graph.getPropertyDataForTtlExport = function () {
-        var propertyData = [];
-        var allProperties = unfilteredData.properties;
-        for (var i = 0; i < allProperties.length; i++) {
-            // currently using only the object properties
-            if (allProperties[i].type() === "owl:ObjectProperty" ||
-                allProperties[i].type() === "owl:DatatypeProperty" ||
-                allProperties[i].type() === "owl:ObjectProperty"
-
+    getClassDataForTtlExport() {
+        const allNodes = this.unfilteredData.nodes
+        const nodeData = []
+        for (let i = 0; i < allNodes.length; i++) {
+            const node = allNodes[i]
+            if (
+                node.type !== "rdfs:Literal" &&
+                node.type !== "rdfs:Datatype" &&
+                node.type !== "owl:Thing"
             ) {
-                propertyData.push(allProperties[i]);
-            } else {
-                if (allProperties[i].type() === "rdfs:subClassOf") {
-                    allProperties[i].baseIri("http://www.w3.org/2000/01/rdf-schema#");
-                    allProperties[i].iri("http://www.w3.org/2000/01/rdf-schema#subClassOf");
-                }
-                if (allProperties[i].type() === "owl:disjointWith") {
-                    allProperties[i].baseIri("http://www.w3.org/2002/07/owl#");
-                    allProperties[i].iri("http://www.w3.org/2002/07/owl#disjointWith");
-                }
+                nodeData.push(node)
             }
         }
-        return propertyData;
-    };
+        return nodeData
+    }
 
-    graph.getAxiomsForTtlExport = function () {
-        var axioms = [];
-        var allProperties = unfilteredData.properties;
-        for (var i = 0; i < allProperties.length; i++) {
+    getPropertyDataForTtlExport() {
+        const propertyData = []
+        const allProperties = this.unfilteredData.properties
+        for (let i = 0; i < allProperties.length; i++) {
+            const property = allProperties[i]
             // currently using only the object properties
-            if (allProperties[i].type() === "owl:ObjectProperty" ||
-                allProperties[i].type() === "owl:DatatypeProperty" ||
-                allProperties[i].type() === "owl:ObjectProperty" ||
-                allProperties[i].type() === "rdfs:subClassOf"
+            if (
+                property.type === "owl:ObjectProperty" ||
+                property.type === "owl:DatatypeProperty" ||
+                property.type === "owl:ObjectProperty"
             ) {
+                propertyData.push(property)
             } else {
+                if (property.type === "rdfs:subClassOf") {
+                    property.baseIri = "http://www.w3.org/2000/01/rdf-schema#"
+                    property.iri =
+                        "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+                }
+                if (property.type === "owl:disjointWith") {
+                    property.baseIri = "http://www.w3.org/2002/07/owl#"
+                    property.iri = "http://www.w3.org/2002/07/owl#disjointWith"
+                }
             }
         }
-        return axioms;
-    };
+        return propertyData
+    }
 
-    graph.getClassDataForTtlExport = function () {
-        var allNodes = unfilteredData.nodes;
-        var nodeData = [];
-        for (var i = 0; i < allNodes.length; i++) {
-            if (allNodes[i].type() !== "rdfs:Literal" &&
-                allNodes[i].type() !== "rdfs:Datatype" &&
-                allNodes[i].type() !== "owl:Thing") {
-                nodeData.push(allNodes[i]);
-            }
-        }
-        return nodeData;
-    };
+    // NOTE: Disabled to save memory while this method is not used
+    // /**
+    //  * This function is a no-op. It is currently not used anywhere in the code base.
+    //  * @returns An empty array. Always.
+    //  */
+    // graph.getAxiomsForTtlExport = function () {
+    //     const axioms = [];
+    //     const allProperties = unfilteredData.properties;
+    //     for (const i = 0; i < allProperties.length; i++) {
+    //         // currently using only the object properties
+    //         if (allProperties[i].type === "owl:ObjectProperty" ||
+    //             allProperties[i].type === "owl:DatatypeProperty" ||
+    //             allProperties[i].type === "owl:ObjectProperty" ||
+    //             allProperties[i].type === "rdfs:subClassOf"
+    //         ) { } else { }
+    //     }
+    //     return axioms;
+    // }
 
-
-    function redrawContent() {
-        var markerContainer;
-
-        if (!graphContainer) {
-            return;
+    #redrawContent() {
+        if (!this.graphContainer) {
+            return
         }
 
         // Empty the graph container
-        graphContainer.selectAll("*").remove();
+        this.graphContainer.selectAll("*").remove()
 
         // Last container -> elements of this container overlap others
-        linkContainer = graphContainer.append("g").classed("linkContainer", true);
-        cardinalityContainer = graphContainer.append("g").classed("cardinalityContainer", true);
-        labelContainer = graphContainer.append("g").classed("labelContainer", true);
-        nodeContainer = graphContainer.append("g").classed("nodeContainer", true);
+        this.linkContainer = this.graphContainer
+            .append("g")
+            .classed("linkContainer", true)
+        this.cardinalityContainer = this.graphContainer
+            .append("g")
+            .classed("cardinalityContainer", true)
+        this.labelContainer = this.graphContainer
+            .append("g")
+            .classed("labelContainer", true)
+        this.nodeContainer = this.graphContainer
+            .append("g")
+            .classed("nodeContainer", true)
 
         // adding editing Elements
-        var draggerPathLayer = graphContainer.append("g").classed("linkContainer", true);
-        draggerLayer = graphContainer.append("g").classed("editContainer", true);
-        editContainer = graphContainer.append("g").classed("editContainer", true);
+        const draggerPathLayer = this.graphContainer
+            .append("g")
+            .classed("linkContainer", true)
+        this.draggerLayer = this.graphContainer
+            .append("g")
+            .classed("editContainer", true)
+        this.editContainer = this.graphContainer
+            .append("g")
+            .classed("editContainer", true)
 
-        draggerPathLayer.classed("hidden-in-export", true);
-        editContainer.classed("hidden-in-export", true);
-        draggerLayer.classed("hidden-in-export", true);
+        draggerPathLayer.classed("hidden-in-export", true)
+        this.editContainer.classed("hidden-in-export", true)
+        this.draggerLayer.classed("hidden-in-export", true)
 
         // Add an extra container for all markers
-        markerContainer = linkContainer.append("defs");
-        var drElement = draggerLayer.selectAll(".node")
-            .data(draggerObjectsArray).enter()
+        let markerContainer = this.linkContainer.append("defs")
+
+        const _this = this
+        const drElement = this.draggerLayer
+            .selectAll(".node")
+            .data(_this.draggerObjectsArray)
+            .enter()
             .append("g")
             .classed("node", true)
             .classed("hidden-in-export", true)
             .attr("id", function (d) {
-                return d.id();
+                return d.id
             })
-            .call(dragBehaviour);
+            .call(_this.dragBehaviour)
         drElement.each(function (node) {
-            node.svgRoot(d3.select(this));
-            node.svgPathLayer(draggerPathLayer);
-            if (node.type() === "shadowClone") {
-                node.drawClone();
-                node.hideClone(true);
+            node.svgRoot = d3.select(this)
+            node.svgPathLayer(draggerPathLayer)
+            if (node instanceof ShadowClone) {
+                node.drawClone()
+                node.hideClone(true)
             } else {
-                node.drawNode();
-                node.hideDragger(true);
+                node.drawNode()
+                node.hideDragger(true)
             }
-        });
-        generateEditElements();
-
+        })
+        this.#generateEditElements()
 
         // Add an extra container for all markers
-        markerContainer = linkContainer.append("defs");
+        markerContainer = this.linkContainer.append("defs")
 
         // Draw nodes
-
-        if (classNodes === undefined) classNodes = [];
-
-        nodeElements = nodeContainer.selectAll(".node")
-            .data(classNodes).enter()
+        this.nodeElements = this.nodeContainer
+            .selectAll(".node")
+            .data(this.classNodes)
+            .enter()
             .append("g")
             .classed("node", true)
             .attr("id", function (d) {
-                return d.id();
+                return d.id
             })
-            .call(dragBehaviour);
-        nodeElements.each(function (node) {
-            node.draw(d3.select(this));
-        });
+            .call(this.dragBehaviour)
 
-
-        if (labelNodes === undefined) labelNodes = [];
+        this.nodeElements.each(function (node) {
+            node.draw(d3.select(this))
+        })
 
         // Draw label groups (property + inverse)
-        labelGroupElements = labelContainer.selectAll(".labelGroup")
-            .data(labelNodes).enter()
+        this.labelGroupElements = this.labelContainer
+            .selectAll(".labelGroup")
+            .data(this.labelNodes)
+            .enter()
             .append("g")
             .classed("labelGroup", true)
-            .call(dragBehaviour);
-
-        labelGroupElements.each(function (label) {
-            var success = label.draw(d3.select(this));
-            label.property().labelObject(label);
+            .call(this.dragBehaviour)
+        this.labelGroupElements.each(function (label) {
+            const success = label.draw(d3.select(this))
+            label.property.labelObject = label
             // Remove empty groups without a label.
             if (!success) {
-                d3.select(this).remove();
+                d3.select(this).remove()
             }
-        });
+        })
+
         // Place subclass label groups on the bottom of all labels
-        labelGroupElements.each(function (label) {
+        this.labelGroupElements.each(function (label) {
             // the label might be hidden e.g. in compact notation
             if (!this.parentNode) {
-                return;
+                return
             }
 
-            if (elementTools.isRdfsSubClassOf(label.property())) {
-                var parentNode = this.parentNode;
-                parentNode.insertBefore(this, parentNode.firstChild);
+            if (ElementTools.isRdfsSubClassOf(label.property)) {
+                const parentNode = this.parentNode
+                parentNode.insertBefore(this, parentNode.firstChild)
             }
-        });
-        if (properties === undefined) properties = [];
+        })
+
         // Draw cardinality elements
-        cardinalityElements = cardinalityContainer.selectAll(".cardinality")
-            .data(properties).enter()
+        this.cardinalityElements = this.cardinalityContainer
+            .selectAll(".cardinality")
+            .data(this.properties)
+            .enter()
             .append("g")
-            .classed("cardinality", true);
-
-        cardinalityElements.each(function (property) {
-            var success = property.drawCardinality(d3.select(this));
-
+            .classed("cardinality", true)
+        this.cardinalityElements.each(function (property) {
+            const success = property.drawCardinality(d3.select(this))
             // Remove empty groups without a label.
             if (!success) {
-                d3.select(this).remove();
+                d3.select(this).remove()
             }
-        });
+        })
+
         // Draw links
-        if (links === undefined) links = [];
-        linkGroups = linkContainer.selectAll(".link")
-            .data(links).enter()
+        this.linkGroups = this.linkContainer
+            .selectAll(".link")
+            .data(this.links)
+            .enter()
             .append("g")
-            .classed("link", true);
+            .classed("link", true)
+        this.linkGroups.each(function (link) {
+            link.draw(d3.select(this), markerContainer)
+        })
 
-        linkGroups.each(function (link) {
-            link.draw(d3.select(this), markerContainer);
-        });
-        linkPathElements = linkGroups.selectAll("path");
+        this.linkPathElements = this.linkGroups.selectAll("path")
         // Select the path for direct access to receive a better performance
-        addClickEvents();
+        this.#addClickEvents()
     }
 
-    function remove() {
-        if (graphContainer) {
+    #remove() {
+        if (this.graphContainer) {
             // Select the parent element because the graph container is a group (e.g. for zooming)
-            d3.select(graphContainer.node().parentNode).remove();
+            d3.select(this.graphContainer.node().parentNode).remove()
         }
     }
 
-    initializeGraph(); // << call the initialization function
-
-    graph.updateCanvasContainerSize = function () {
-        if (graphContainer) {
-            var svgElement = d3.selectAll(".vowlGraph");
-            svgElement.attr("width", options.width());
-            svgElement.attr("height", options.height());
-            graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
+    updateCanvasContainerSize() {
+        if (this.graphContainer) {
+            const svgElement = d3.selectAll(".vowlGraph")
+            svgElement.attr("width", this.options.width)
+            svgElement.attr("height", this.options.height)
+            this.graphContainer.attr(
+                "transform",
+                "translate(" +
+                    this.graphTranslation +
+                    ")scale(" +
+                    this.zoomFactor +
+                    ")",
+            )
         }
-    };
-
-    // Loads all settings, removes the old graph (if it exists) and draws a new one.
-    graph.start = function () {
-        force.stop();
-        loadGraphData(true);
-        redrawGraph();
-        graph.update(true);
-
-        if (graph.options().loadingModule().successfullyLoadedOntology() === false) {
-            graph.options().loadingModule().setErrorMode();
-        }
-
-    };
+    }
 
     // Updates only the style of the graph.
-    graph.updateStyle = function () {
-        refreshGraphStyle();
-        if (graph.options().loadingModule().successfullyLoadedOntology() === false) {
-            force.stop();
+    updateStyle() {
+        this.#refreshGraphStyle()
+        if (!this.options.loadingModule.loadingWasSuccessFul) {
+            this.force.stop()
         } else {
-            force.start();
+            this.force.start()
         }
-    };
+    }
 
-    graph.reload = function () {
-        loadGraphData();
-        graph.update();
+    /**
+     * Entrypoint for repeated ontology loading
+     */
+    load() {
+        this.#redrawGraphContainer()
+        this.#loadGraphData()
+        this.currentData = this.unfilteredData
+        this.update(this.unfilteredData, true)
+    }
 
-    };
-
-    graph.load = function () {
-        force.stop();
-        loadGraphData();
-        labelNodes = computeLabelNodes(linkCreator.createLinks(unfilteredData.properties));
-        for (var i = 0; i < labelNodes.length; i++) {
-            var label = labelNodes[i];
-            if (label.property().x && label.property().y) {
-                label.x = label.property().x;
-                label.y = label.property().y;
-                // also set the prev position of the label
-                label.px = label.x;
-                label.py = label.y;
-            }
-        }
-        graph.update(false, unfilteredData);
-    };
-
-    graph.fastUpdate = function () {
+    fastUpdate() {
         // fast update function for editor calls;
         // -- experimental ;
-        quick_refreshGraphData();
-        updateNodeMap();
-        force.start();
-        redrawContent();
-        graph.updatePulseIds(nodeArrayForPulse);
-        refreshGraphStyle();
-        updateHaloStyles();
+        this.#quick_refreshGraphData()
+        this.#updateNodeMap()
+        this.force.start()
+        this.#redrawContent()
+        this.updatePulseIds(this.allPulseNodeIDs)
+        this.#refreshGraphStyle()
+        this.#updateHaloStyles()
+    }
 
-    };
-
-    graph.getNodeMapForSearch = function () {
-        return nodeMap;
-    };
-    function updateNodeMap() {
-        nodeMap = [];
-        var node;
-        for (var j = 0; j < force.nodes().length; j++) {
-            node = force.nodes()[j];
+    #updateNodeMap() {
+        this.forceNodeMap.clear()
+        const forceNodes = this.force.nodes()
+        for (let i = 0; i < forceNodes.length; i++) {
+            const node = forceNodes[i]
             if (node.id) {
-                nodeMap[node.id()] = j;
+                this.forceNodeMap.set(node.id, i)
                 // check for equivalents
-                var eqs = node.equivalents();
-                if (eqs.length > 0) {
-                    for (var e = 0; e < eqs.length; e++) {
-                        var eqObject = eqs[e];
-                        nodeMap[eqObject.id()] = j;
+                const eqs = node.equivalents
+                if (eqs && eqs.length > 0) {
+                    for (let j = 0; j < eqs.length; j++) {
+                        const eqObject = eqs[j]
+                        this.forceNodeMap.set(eqObject.id, i)
                     }
                 }
             }
             if (node.property) {
-                nodeMap[node.property().id()] = j;
-                var inverse = node.inverse();
+                this.forceNodeMap.set(node.property.id, i)
+                const inverse = node.inverse
                 if (inverse) {
-                    nodeMap[inverse.id()] = j;
+                    this.forceNodeMap.set(inverse.id, i)
                 }
             }
         }
     }
 
-    function updateHaloStyles() {
-        var haloElement;
-        var halo;
-        var node;
-        for (var j = 0; j < force.nodes().length; j++) {
-            node = force.nodes()[j];
+    #updateHaloStyles() {
+        for (const node of this.force.nodes()) {
             if (node.id) {
-                haloElement = node.getHalos();
+                const haloElement = node.haloGroupElement
                 if (haloElement) {
-                    halo = haloElement.selectAll(".searchResultA");
-                    halo.classed("searchResultA", false);
-                    halo.classed("searchResultB", true);
+                    const halo = haloElement.selectAll(".searchResultA")
+                    halo.classed("searchResultA", false)
+                    halo.classed("searchResultB", true)
                 }
             }
-
             if (node.property) {
-                haloElement = node.property().getHalos();
+                const haloElement = node.property.haloGroupElement
                 if (haloElement) {
-                    halo = haloElement.selectAll(".searchResultA");
-                    halo.classed("searchResultA", false);
-                    halo.classed("searchResultB", true);
+                    const halo = haloElement.selectAll(".searchResultA")
+                    halo.classed("searchResultA", false)
+                    halo.classed("searchResultB", true)
                 }
             }
         }
@@ -1289,446 +1551,471 @@ module.exports = function (graphContainerSelector) {
     /**
      * Updates the graphs displayed data and style.
      * @note `data` will be mutated by this function, thus it should be cloned beforehand.
-     * @param {boolean} init Is first time load?
-     * @param {object} data An object containing nodes and properties.
-     *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
-     * @returns
+     * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} data
      */
-    graph.update = function (init, data = currentData) {
-        var validOntology = graph.options().loadingModule().successfullyLoadedOntology();
-        if (validOntology === false && init === true) {
-            graph.options().loadingModule().collapseDetails();
-            return;
+    update(data = this.currentData, init = false) {
+        if (!this.options.loadingModule.loadingWasSuccessFul) {
+            return
         }
-        if (validOntology === false) {
-            return;
+        this.keepDetailsCollapsedOnLoading = false
+        this.#refreshGraphData(data, init)
+        this.#updateNodeMap()
+        this.force.start()
+        this.#redrawContent()
+        this.updatePulseIds(this.allPulseNodeIDs)
+        this.#refreshGraphStyle()
+        this.#updateHaloStyles()
+    }
+
+    /**
+     * resetting the graph
+     */
+    reset() {
+        if (this.unfilteredData) {
+            this.#filterFunction(
+                this.options.nodeDegreeFilter,
+                this.unfilteredData,
+                true,
+            )
         }
+        this.currentData = this.unfilteredData
 
-        keepDetailsCollapsedOnLoading = false;
-        refreshGraphData(data);
-        updateNodeMap();
-
-        force.start();
-        redrawContent();
-        graph.updatePulseIds(nodeArrayForPulse);
-        refreshGraphStyle();
-        updateHaloStyles();
-    };
-
-    graph.paused = function (p) {
-        if (!arguments.length) return paused;
-        paused = p;
-        graph.updateStyle();
-        return graph;
-    };
-
-    // resetting the graph
-    graph.reset = function () {
-        if(unfilteredData) {
-            filterFunction(options.nodeDegreeFilter(), unfilteredData, true);
-        }
-        currentData = unfilteredData;
         // window size
-        let w = 0.5 * graph.options().width();
-        let h = 0.5 * graph.options().height();
+        const w = 0.5 * this.options.width
+        const h = 0.5 * this.options.height
         // computing initial translation for the graph due to the dynamic default zoom level
-        let tx = w - defaultZoom * w;
-        let ty = h - defaultZoom * h;
-        zoom.translate([tx, ty])
-            .scale(defaultZoom);
-    };
+        const tx = w - this.defaultZoom * w
+        const ty = h - this.defaultZoom * h
+        this.zoom.translate([tx, ty]).scale(this.defaultZoom)
+    }
 
-    graph.zoomOut = function () {
+    zoomOut() {
+        const minMag = this.options.minMagnification
+        const maxMag = this.options.maxMagnification
+        const stepSize = (maxMag - minMag) / 10
+        let val = this.zoomFactor - stepSize
+        if (val < minMag) {
+            val = minMag
+        }
+        const cx = 0.5 * this.options.width
+        const cy = 0.5 * this.options.height
+        const cp = this.#getWorldPosFromScreen(
+            cx,
+            cy,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const sP = [cp.x, cp.y, this.options.height / this.zoomFactor]
+        const eP = [cp.x, cp.y, this.options.height / val]
+        const pos_intp = d3.interpolateZoom(sP, eP)
 
-        var minMag = options.minMagnification(),
-            maxMag = options.maxMagnification();
-        var stepSize = (maxMag - minMag) / 10;
-        var val = zoomFactor - stepSize;
-        if (val < minMag) val = minMag;
-
-        var cx = 0.5 * graph.options().width();
-        var cy = 0.5 * graph.options().height();
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
-        var sP = [cp.x, cp.y, graph.options().height() / zoomFactor];
-        var eP = [cp.x, cp.y, graph.options().height() / val];
-        var pos_intp = d3.interpolateZoom(sP, eP);
-
-        graphContainer.attr("transform", transform(sP, cx, cy))
+        const _this = this
+        this.graphContainer
+            .attr("transform", this.#transform(sP, cx, cy))
             .transition()
             .duration(250)
             .attrTween("transform", function () {
                 return function (t) {
-                    return transform(pos_intp(t), cx, cy);
-                };
+                    return _this.#transform(pos_intp(t), cx, cy)
+                }
             })
+            // @ts-ignore
             .each("end", function () {
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                updateHaloRadius();
-                options.zoomSlider().updateZoomSliderValue(zoomFactor);
-            });
+                _this.graphContainer.attr(
+                    "transform",
+                    "translate(" +
+                        _this.graphTranslation +
+                        ")scale(" +
+                        _this.zoomFactor +
+                        ")",
+                )
+                _this.zoom.translate(_this.graphTranslation)
+                _this.zoom.scale(_this.zoomFactor)
+                _this.#updateHaloRadius()
+                _this.options.zoomSlider.updateZoomSliderValue(_this.zoomFactor)
+            })
+    }
 
-    };
+    zoomIn() {
+        const minMag = this.options.minMagnification
+        const maxMag = this.options.maxMagnification
+        const stepSize = (maxMag - minMag) / 10
+        let val = this.zoomFactor + stepSize
+        if (val > maxMag) {
+            val = maxMag
+        }
+        const cx = 0.5 * this.options.width
+        const cy = 0.5 * this.options.height
+        const cp = this.#getWorldPosFromScreen(
+            cx,
+            cy,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const sP = [cp.x, cp.y, this.options.height / this.zoomFactor]
+        const eP = [cp.x, cp.y, this.options.height / val]
+        const pos_intp = d3.interpolateZoom(sP, eP)
 
-    graph.zoomIn = function () {
-        var minMag = options.minMagnification(),
-            maxMag = options.maxMagnification();
-        var stepSize = (maxMag - minMag) / 10;
-        var val = zoomFactor + stepSize;
-        if (val > maxMag) val = maxMag;
-        var cx = 0.5 * graph.options().width();
-        var cy = 0.5 * graph.options().height();
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
-        var sP = [cp.x, cp.y, graph.options().height() / zoomFactor];
-        var eP = [cp.x, cp.y, graph.options().height() / val];
-        var pos_intp = d3.interpolateZoom(sP, eP);
-
-        graphContainer.attr("transform", transform(sP, cx, cy))
+        const _this = this
+        this.graphContainer
+            .attr("transform", this.#transform(sP, cx, cy))
             .transition()
             .duration(250)
             .attrTween("transform", function () {
                 return function (t) {
-                    return transform(pos_intp(t), cx, cy);
-                };
+                    return _this.#transform(pos_intp(t), cx, cy)
+                }
             })
+            // @ts-ignore
             .each("end", function () {
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                updateHaloRadius();
-                options.zoomSlider().updateZoomSliderValue(zoomFactor);
-            });
+                _this.graphContainer.attr(
+                    "transform",
+                    "translate(" +
+                        _this.graphTranslation +
+                        ")scale(" +
+                        _this.zoomFactor +
+                        ")",
+                )
+                _this.zoom.translate(_this.graphTranslation)
+                _this.zoom.scale(_this.zoomFactor)
+                _this.#updateHaloRadius()
+                _this.options.zoomSlider.updateZoomSliderValue(_this.zoomFactor)
+            })
+    }
 
+    //** --------------------------------------------------------- **/
+    //** -- data related handling                               -- **/
+    //** --------------------------------------------------------- **/
 
-    };
-
-    /** --------------------------------------------------------- **/
-    /** -- data related handling                               -- **/
-    /** --------------------------------------------------------- **/
-
-    var cachedJsonOBJ = null;
-    graph.clearAllGraphData = function () {
-        if (graph.graphNodeElements() && graph.graphNodeElements().length > 0) {
-            cachedJsonOBJ = graph.options().exportMenu().createJSON_exportObject();
+    clearAllGraphData() {
+        if (
+            this.getVisibleNodeElements() &&
+            !this.getVisibleNodeElements().empty()
+        ) {
+            this.cachedJsonOBJ =
+                this.options.exportMenu.createJSON_exportObject()
         } else {
-            cachedJsonOBJ = null;
+            this.cachedJsonOBJ = null
         }
-        force.stop();
-        if (unfilteredData) {
-            unfilteredData.nodes = [];
-            unfilteredData.properties = [];
+        this.force.stop()
+        if (this.unfilteredData) {
+            this.unfilteredData.nodes = []
+            this.unfilteredData.properties = []
         }
-    };
-    graph.getCachedJsonObj = function () {
-        return cachedJsonOBJ;
-    };
+    }
 
     // removes data when data could not be loaded
-    graph.clearGraphData = function () {
-        force.stop();
-        var sidebar = graph.options().sidebar();
-        if (sidebar)
-            sidebar.clearOntologyInformation();
-        if (graphContainer)
-            redrawGraph();
-    };
+    clearGraphData() {
+        this.force.stop()
+        const sidebar = this.options.sidebar
+        if (sidebar) {
+            sidebar.clearOntologyInformation()
+        }
+        if (this.graphContainer) {
+            this.#redrawGraphContainer()
+        }
+    }
 
-    function generateDictionary(data) {
-        var originalDictionary = [];
-        var nodes = data.nodes;
+    /**
+     * @param {{ nodes: any; properties: any; }} data
+     */
+    #generateDictionary(data) {
+        const originalDictionary = []
+        const nodes = data.nodes
         for (let i = 0; i < nodes.length; i++) {
             // check if node has a label
             if (nodes[i].labelForCurrentLanguage() !== undefined)
-                originalDictionary.push(nodes[i]);
+                originalDictionary.push(nodes[i])
         }
-        var props = data.properties;
+        const props = data.properties
         for (let i = 0; i < props.length; i++) {
             if (props[i].labelForCurrentLanguage() !== undefined)
-                originalDictionary.push(props[i]);
+                originalDictionary.push(props[i])
         }
-        parser.setDictionary(originalDictionary);
+        this.parser.dictionary = originalDictionary
 
-        var literFilter = graph.options().literalFilter();
-        var idsToRemove = literFilter.removedNodes(); // A set
-        var originalDict = parser.getDictionary();
-        var newDict = [];
+        const literalFilter = this.options.emptyLiteralFilter
+        const idsToRemove = literalFilter.removedNodes
+        const originalDict = this.parser.dictionary
+        const newDict = []
 
         // go through the dictionary and remove the ids;
         for (let i = 0; i < originalDict.length; i++) {
-            let dictElement = originalDict[i];
-            let dictElementId = dictElement.property ? dictElement.property().id() : dictElement.id();
+            let dictElement = originalDict[i]
+            let dictElementId = dictElement.property
+                ? dictElement.property.id
+                : dictElement.id
             if (!idsToRemove.has(dictElementId)) {
-                newDict.push(dictElement);
+                newDict.push(dictElement)
             }
         }
         // tell the parser that the dictionary is updated
-        parser.setDictionary(newDict);
-
+        this.parser.dictionary = newDict
     }
 
-    graph.updateProgressBarMode = function () {
-        var loadingModule = graph.options().loadingModule();
+    updateProgressBarMode() {
+        const loadingModule = this.options.loadingModule
+        const state = loadingModule.progressBarMode
 
-        var state = loadingModule.getProgressBarMode();
         switch (state) {
             case 0:
-                loadingModule.setErrorMode();
-                break;
+                loadingModule.setErrorMode()
+                break
             case 1:
-                loadingModule.setBusyMode();
-                break;
+                loadingModule.setBusyMode()
+                break
             case 2:
-                loadingModule.setPercentMode();
-                break;
+                loadingModule.setPercentMode()
+                break
             default:
-                loadingModule.setPercentMode();
+                loadingModule.setPercentMode()
         }
-    };
+    }
 
-    graph.setFilterWarning = function (val) {
-        showFilterWarning = val;
-    };
-    function loadGraphData(init) {
+    /**
+     * @param {boolean} val
+     */
+    setFilterWarning(val) {
+        this.showFilterWarning = val
+    }
+
+    #loadGraphData() {
+        this.force.stop()
+        this.force.nodes([])
+        this.force.links([])
+        this.visiblePulseNodeIDs.clear()
+
         // reset the locate button and previously selected locations and other variables
+        d3.select("#locateSearchResult").classed("highlighted", false)
+        d3.select("#locateSearchResult").node().title = "Nothing to locate"
 
-        var loadingModule = graph.options().loadingModule();
-        force.stop();
+        this.clearGraphData()
 
-        force.nodes([]);
-        force.links([]);
-        nodeArrayForPulse = [];
-        pulseNodeIds = [];
-        locationId = 0;
-        d3.select("#locateSearchResult").classed("highlighted", false);
-        d3.select("#locateSearchResult").node().title = "Nothing to locate";
-        graph.clearGraphData();
-
-        if (init) {
-            force.stop();
-            return;
+        this.showFilterWarning = false
+        this.parser = new Parser(this)
+        this.parser.parse(this.options.data)
+        this.unfilteredData = {
+            nodes: this.parser.nodes,
+            properties: this.parser.properties,
         }
-
-        showFilterWarning = false;
-        parser.parse(options.data());
-        unfilteredData = {
-            nodes: parser.nodes(),
-            properties: parser.properties()
-        };
 
         // fixing class and property id counter for the editor
-        eN = unfilteredData.nodes.length + 1;
-        eP = unfilteredData.properties.length + 1;
-
+        this.eN = this.unfilteredData.nodes.length + 1
+        this.eP = this.unfilteredData.properties.length + 1
 
         // using the ids of elements if to ensure that loaded elements will not get the same id;
-        for (var p = 0; p < unfilteredData.properties.length; p++) {
-            var currentId = unfilteredData.properties[p].id();
-            if (currentId.indexOf('objectProperty') !== -1) {
+        for (let p = 0; p < this.unfilteredData.properties.length; p++) {
+            const currentId = this.unfilteredData.properties[p].id
+            if (currentId.indexOf("objectProperty") !== -1) {
                 // could be ours;
-                var idStr = currentId.split('objectProperty');
+                const idStr = currentId.split("objectProperty")
                 if (idStr[0].length === 0) {
-                    var idInt = parseInt(idStr[1]);
-                    if (eP < idInt) {
-                        eP = idInt + 1;
+                    const idInt = parseInt(idStr[1])
+                    if (this.eP < idInt) {
+                        this.eP = idInt + 1
                     }
                 }
             }
         }
         // using the ids of elements if to ensure that loaded elements will not get the same id;
-        for (var n = 0; n < unfilteredData.nodes.length; n++) {
-            var currentId_Nodes = unfilteredData.nodes[n].id();
-            if (currentId_Nodes.indexOf('Class') !== -1) {
+        for (let n = 0; n < this.unfilteredData.nodes.length; n++) {
+            const currentId_Nodes = this.unfilteredData.nodes[n].id
+            if (currentId_Nodes.indexOf("Class") !== -1) {
                 // could be ours;
-                var idStr_Nodes = currentId_Nodes.split('Class');
+                const idStr_Nodes = currentId_Nodes.split("Class")
                 if (idStr_Nodes[0].length === 0) {
-                    var idInt_Nodes = parseInt(idStr_Nodes[1]);
-                    if (eN < idInt_Nodes) {
-                        eN = idInt_Nodes + 1;
+                    const idInt_Nodes = parseInt(idStr_Nodes[1])
+                    if (this.eN < idInt_Nodes) {
+                        this.eN = idInt_Nodes + 1
                     }
                 }
             }
         }
 
-        links = linkCreator.createLinks(unfilteredData.properties);
-        storeLinksOnNodes(unfilteredData.nodes, links);
-        currentData = unfilteredData;
-
-        initialLoad = true;
-        graph.options().warningModule().closeFilterHint();
+        this.initialLoad = true
+        this.options.warningModule.closeFilterHint()
 
         // loading handler
-        updateRenderingDuringSimulation = true;
-        var validOntology = graph.options().loadingModule().successfullyLoadedOntology();
-        if (graphContainer && validOntology === true) {
+        const loadingModule = this.options.loadingModule
+        this.updateRenderingDuringSimulation = true
+        const validOntology = this.options.loadingModule.loadingWasSuccessFul
+        if (this.graphContainer && validOntology) {
+            this.updateRenderingDuringSimulation = false
+            this.options.ontologyMenu.append_bulletPoint(
+                "Generating visualization ... ",
+            )
+            loadingModule.setPercentMode()
 
-            updateRenderingDuringSimulation = false;
-            graph.options().ontologyMenu().append_bulletPoint("Generating visualization ... ");
-            loadingModule.setPercentMode();
-
-            if (unfilteredData.nodes.length > 0) {
-                graphContainer.style("opacity", "0");
-                force.on("tick", hiddenRecalculatePositions);
+            if (this.unfilteredData.nodes.length > 0) {
+                this.graphContainer.style("opacity", "0")
+                this.force.on("tick", () => {
+                    this.#hiddenRecalculatePositions()
+                })
             } else {
-                graphContainer.style("opacity", "1");
-                if (showFPS === true) {
-                    force.on("tick", recalculatePositionsWithFPS);
-                }
-                else {
-                    force.on("tick", recalculatePositions);
+                this.graphContainer.style("opacity", "1")
+                if (this.showFPS === true) {
+                    this.force.on("tick", () => {
+                        this.#recalculatePositionsWithFPS()
+                    })
+                } else {
+                    this.force.on("tick", () => {
+                        this.#recalculatePositions()
+                    })
                 }
             }
-
-            force.start();
+            this.force.start()
         } else {
-            force.stop();
-            graph.options().ontologyMenu().append_bulletPoint("Failed to load ontology");
-            loadingModule.setErrorMode();
+            this.force.stop()
+            this.options.ontologyMenu.append_bulletPoint(
+                "Failed to load ontology",
+            )
+            loadingModule.setErrorMode()
         }
-        // update prefixList(
         // update general MetaOBJECT
-        graph.options().clearMetaObject();
-        graph.options().clearGeneralMetaObject();
-        graph.options().editSidebar().clearMetaObjectValue();
-        if (options.data() !== undefined) {
-            var header = options.data().header;
+        this.options.clearGeneralMetaObject()
+        this.options.editSidebar.clearMetaObjectValue()
+        if (this.options.data !== undefined) {
+            const header = this.options.data.header
             if (header) {
                 if (header.iri) {
-                    graph.options().addOrUpdateGeneralObjectEntry("iri", header.iri);
+                    this.options.addOrUpdateGeneralObjectEntry(
+                        "iri",
+                        header.iri,
+                    )
                 }
                 if (header.title) {
-                    graph.options().addOrUpdateGeneralObjectEntry("title", header.title);
+                    this.options.addOrUpdateGeneralObjectEntry(
+                        "title",
+                        header.title,
+                    )
                 }
                 if (header.author) {
-                    graph.options().addOrUpdateGeneralObjectEntry("author", header.author);
+                    this.options.addOrUpdateGeneralObjectEntry(
+                        "author",
+                        header.author,
+                    )
                 }
                 if (header.version) {
-                    graph.options().addOrUpdateGeneralObjectEntry("version", header.version);
+                    this.options.addOrUpdateGeneralObjectEntry(
+                        "version",
+                        header.version,
+                    )
                 }
                 if (header.description) {
-                    graph.options().addOrUpdateGeneralObjectEntry("description", header.description);
+                    this.options.addOrUpdateGeneralObjectEntry(
+                        "description",
+                        header.description,
+                    )
                 }
                 if (header.prefixList) {
-                    var pL = header.prefixList;
-                    for (var pr in pL) {
+                    const pL = header.prefixList
+                    for (const pr in pL) {
                         if (pL.hasOwnProperty(pr)) {
-                            var val = pL[pr];
-                            graph.options().addPrefix(pr, val);
+                            const val = pL[pr]
+                            this.options.addPrefix(pr, val)
                         }
                     }
                 }
                 // get other metadata;
                 if (header.other) {
-                    var otherObjects = header.other;
-                    for (var name in otherObjects) {
+                    const otherObjects = header.other
+                    for (const name in otherObjects) {
                         if (otherObjects.hasOwnProperty(name)) {
-                            var otherObj = otherObjects[name];
-                            if (otherObj.hasOwnProperty("identifier") && otherObj.hasOwnProperty("value")) {
-                                graph.options().addOrUpdateMetaObjectEntry(otherObj.identfier, otherObj.value);
+                            const otherObj = otherObjects[name]
+                            if (
+                                otherObj.hasOwnProperty("identifier") &&
+                                otherObj.hasOwnProperty("value")
+                            ) {
+                                this.options.addOrUpdateMetaObjectEntry(
+                                    otherObj.identfier,
+                                    otherObj.value,
+                                )
                             }
                         }
                     }
                 }
             }
         }
-        // update more meta OBJECT
-        // Initialize filters with data to replicate consecutive filtering
-        links = linkCreator.createLinks(unfilteredData.properties);
-        storeLinksOnNodes(unfilteredData.nodes, links);
-
-        // Create a map of all nodes and properties for fast lookup
-        unfilteredData.nodes.forEach((node) => {
-            unfilteredDataMap.nodes.set(node.id(), node);
-        });
-        unfilteredData.properties.forEach((property) => {
-            unfilteredDataMap.properties.set(property.id(), property);
-        });
-
-        // currentData = unfilteredData;
-        options.filterModules().forEach(function (module) {
-            filterFunction(module, unfilteredData, true);
-        });
-
-        // generate dictionary here ;
-        generateDictionary(unfilteredData);
-
-        parser.parseSettings();
-        graphUpdateRequired = parser.settingsImported();
-        centerGraphViewOnLoad = true;
-        if (parser.settingsImportGraphZoomAndTranslation() === true) {
-            centerGraphViewOnLoad = false;
+        this.parser.parseSettings()
+        this.graphUpdateRequired = this.parser.settingsImported
+        this.centerGraphViewOnLoad = true
+        if (this.parser.settingsImportGraphZoomAndTranslation) {
+            this.centerGraphViewOnLoad = false
         }
-        graph.options().searchMenu().requestDictionaryUpdate();
-        graph.options().editSidebar().updateGeneralOntologyInfo();
-        graph.options().editSidebar().updatePrefixUi();
-        graph.options().editSidebar().updateElementWidth();
+        this.options.searchMenu.requestDictionaryUpdate()
+        this.options.editSidebar.updateGeneralOntologyInfo()
+        this.options.editSidebar.updatePrefixUi()
+        this.options.editSidebar.updateElementWidth()
     }
 
-    graph.handleOnLoadingError = function () {
-        force.stop();
-        graph.clearGraphData();
-        graph.options().ontologyMenu().append_bulletPoint("Failed to load ontology");
-        d3.select("#progressBarValue").node().innherHTML = "";
-        d3.select("#progressBarValue").classed("busyProgressBar", false);
-        graph.options().loadingModule().setErrorMode();
-        graph.options().loadingModule().showErrorDetailsMessage();
-    };
-
-    function quick_refreshGraphData() {
-        links = linkCreator.createLinks(properties);
-        labelNodes = computeLabelNodes(links);
-
-        storeLinksOnNodes(classNodes, links);
-        setForceLayoutData(classNodes, labelNodes, links);
+    handleOnLoadingError() {
+        this.force.stop()
+        this.clearGraphData()
+        this.options.ontologyMenu.append_bulletPoint("Failed to load ontology")
+        d3.select("#progressBarValue").node().innerHTML = ""
+        d3.select("#progressBarValue").classed("busyProgressBar", false)
+        this.options.loadingModule.setErrorMode()
+        this.options.loadingModule.showErrorDetailsMessage()
     }
 
-    function computeLabelNodes(links) {
-        return links.map(function (link) {
-            return link.label();
-        });
+    #quick_refreshGraphData() {
+        this.links = LinkCreator.createLinks(this.properties)
+        this.labelNodes = this.#computeLabelNodes(this.links)
+        this.#storeLinksOnNodes(this.classNodes, this.links)
+        this.#setForceLayoutData(this.classNodes, this.labelNodes, this.links)
+    }
+
+    /**
+     * @param {(PlainLink | BoxArrowLink | ArrowLink)[]} links
+     */
+    #computeLabelNodes(links) {
+        return links.map(function (/** @type {{ label: Label; }} */ link) {
+            return link.label
+        })
     }
 
     /**
      * Applies the data of the graph options object and parses it. The graph is not redrawn.
      * @note `preprocessedData` will be mutated by this function, thus it should be cloned beforehand.
-     * @param {object} preprocessedData An object containing nodes and properties.
-     *  I.e. `preprocessedData.nodes` && `preprocessedData.properties`.
+     * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} preprocessedData An object containing nodes and properties.
      */
-    function refreshGraphData(preprocessedData) {
-        let shouldExecuteEmptyFilter = options.literalFilter().enabled();
-        graph.executeEmptyLiteralFilter();
-        options.literalFilter().enabled(shouldExecuteEmptyFilter);
-
+    #refreshGraphData(preprocessedData, init = false) {
         // Filter the data
-        options.filterModules().forEach(function (module) {
-            preprocessedData = filterFunction(module, preprocessedData);
-        });
-        options.focuserModule().handle(undefined, true);
-        classNodes = preprocessedData.nodes;
-        properties = preprocessedData.properties;
-        links = linkCreator.createLinks(properties);
-        labelNodes = computeLabelNodes(links);
-        storeLinksOnNodes(classNodes, links);
-        setForceLayoutData(classNodes, labelNodes, links);
-        // for (var i = 0; i < classNodes.length; i++) {
-        //     if (classNodes[i].setRectangularRepresentation)
-        //         classNodes[i].setRectangularRepresentation(graph.options().rectangularRepresentation());
-        // }
+        for (const module of this.options.filterModules) {
+            preprocessedData = this.#filterFunction(
+                module,
+                preprocessedData,
+                init,
+            )
+        }
+
+        if (init) {
+            this.#generateDictionary(this.unfilteredData)
+        }
+
+        this.options.focuserModule.handle(undefined, true)
+        this.classNodes = preprocessedData.nodes
+        this.properties = preprocessedData.properties
+        this.links = LinkCreator.createLinks(this.properties)
+        this.labelNodes = this.#computeLabelNodes(this.links)
+        this.#storeLinksOnNodes(this.classNodes, this.links)
+        this.#setForceLayoutData(this.classNodes, this.labelNodes, this.links)
     }
 
     /**
      * Create a subgraph with `rootNodeID` as root.
      * @param {string} rootNodeID
      */
-    graph.loadSearchData = function (rootNodeID) {
+    loadSearchData(rootNodeID) {
         let rootNodes = [];
         for(nodeID of rootNodeID) {
-            let tempNode = unfilteredDataMap.nodes.get(nodeID);
+            let tempNode = this.nodeMap.get(nodeID);
             if (tempNode === undefined) {
                 // this is not a node - maybe a link?
-                let prop = unfilteredDataMap.properties.get(nodeID);
+                let prop = this.propertyMap.get(nodeID);
                 if (prop !== undefined) {
-                    rootNodes.push(prop.domain(), prop.range());
+                    rootNodes.push(prop.domain())
+                    rootNodes.push(prop.range())
                 } else {
                     console.log(`Failed to find a node or property with id ${rootNodeID}`);
                 }
@@ -1736,2280 +2023,2672 @@ module.exports = function (graphContainerSelector) {
                 rootNodes.push(tempNode);
             }
             
-        }/*
-        let nodes = [unfilteredDataMap.nodes.get(rootNodeID)];
-        if (nodes[0] === undefined) {
-            let prop = unfilteredDataMap.properties.get(rootNodeID);
-            if (prop !== undefined) {
-                nodes = [prop.domain(), prop.range()];
-            } else {
-                console.log(`Failed to find a node or property with id ${rootNodeID}`);
-            }
-        }*/
-        let selectedNodes = breadthFirstSearchDepth(rootNodes, 2);
-        let selectedProperties = [];
-        for (const property of unfilteredData.properties) {
-            if (selectedNodes.get(property.domain().id()) && selectedNodes.get(property.range().id())) {
-                selectedProperties.push(property);
+        }
+        let selectedNodes = this.#breadthFirstSearchDepth(nodes, 2)
+        let selectedProperties = []
+        for (const property of this.unfilteredData.properties) {
+            if (
+                selectedNodes.get(property.domain.id) &&
+                selectedNodes.get(property.range.id)
+            ) {
+                selectedProperties.push(property)
             }
         }
-        currentData = { nodes: Array.from(selectedNodes.values()), properties: selectedProperties };
-        filterFunction(options.nodeDegreeFilter(), currentData, true);
-        graph.update(false, currentData);
-        graph.resetSearchHighlight();
-        graph.highLightNodes(rootNodeID);
+        this.currentData = {
+            nodes: Array.from(selectedNodes.values()),
+            properties: selectedProperties,
+        }
+        this.#filterFunction(
+            this.options.nodeDegreeFilter,
+            this.currentData,
+            true,
+        )
+        this.update(this.currentData)
+        this.resetSearchHighlight()
+        this.highLightNodes([rootNodeID])
     }
 
-    function filterFunction(module, data, initializing) {
-        links = linkCreator.createLinks(unfilteredData.properties);
-        storeLinksOnNodes(unfilteredData.nodes, links);
+    /**
+     * @param {AbstractFilter} module
+     * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} data
+     * @param {boolean} [initializing]
+     */
+    #filterFunction(module, data, initializing) {
+        this.links = LinkCreator.createLinks(this.unfilteredData.properties)
+        this.#storeLinksOnNodes(this.unfilteredData.nodes, this.links)
         if (initializing) {
             if (module.initialize) {
-                module.initialize(data.nodes, data.properties);
+                module.initialize(data.nodes, data.properties)
             }
         }
-        module.filter(data.nodes, data.properties);
+        module.filter(data.nodes, data.properties)
         return {
-            nodes: module.filteredNodes(),
-            properties: module.filteredProperties()
-        };
+            nodes: module.filteredNodes,
+            properties: module.filteredProperties,
+        }
     }
 
     /**
      * Breadth First Search to a certain depth
-     * @param {Array} rootNodes Begin search from these nodes
-     * @param {integer} depth How many edges, starting from `rootNodes`, should be explored.
-     * @returns {Map<string, object>} Nodes visited. A map of nodeIDs to nodes.
+     * @param {BaseNode[]} rootNodes Begin search from these nodes
+     * @param {number} depth How many edges, starting from `rootNodes`, should be explored.
+     * @returns {Map<string,BaseNode>} Nodes visited. A map of nodeIDs to nodes.
      */
-    function breadthFirstSearchDepth(rootNodes, depth) {
-        let visited = new Map();
-        let frontier = new Deque(rootNodes);
+    #breadthFirstSearchDepth(rootNodes, depth) {
+        let visited = new Map()
+        let frontier = new Deque(rootNodes)
 
         // For every depth
         for (let i = 0; i < depth; i++) {
             // Keep static reference to the length
-            let length = frontier.length;
+            let length = frontier.length
 
             // For every node
             for (let j = 0; j < length; j++) {
-                let currentNode = frontier.shift();
-                let linkArr = currentNode.links();
+                let currentNode = frontier.shift()
+                let linkArr = currentNode.links
 
                 // For every edge
                 for (let k = 0; k < linkArr.length; k++) {
-                    let currentLink = linkArr[k];
-                    let domainNode = currentLink.domain();
-                    let rangeNode = currentLink.range();
+                    let currentLink = linkArr[k]
+                    let domainNode = currentLink.domain
+                    let rangeNode = currentLink.range
 
-                    // If the edge is connected to our current node, add the other end of the edge only if it hasn't already been visited or appended to our frontier
+                    // If the edge is connected to our current node, add the other end of the
+                    // edge only if it hasn't already been visited or appended to our frontier
                     if (domainNode === currentNode) {
-                        if (!visited.get(rangeNode.id())) {
-                            frontier.push(rangeNode);
+                        if (!visited.get(rangeNode.id)) {
+                            frontier.push(rangeNode)
                         }
-                    }
-                    else if (rangeNode === currentNode) {
-                        if (!visited.get(domainNode.id())) {
-                            frontier.push(domainNode);
+                    } else if (rangeNode === currentNode) {
+                        if (!visited.get(domainNode.id)) {
+                            frontier.push(domainNode)
                         }
                     }
                 }
-                visited.set(currentNode.id(), currentNode);
+                visited.set(currentNode.id, currentNode)
             }
         }
-        return visited;
+        return visited
     }
 
-    /** --------------------------------------------------------- **/
-    /** -- force-layout related functions                      -- **/
-    /** --------------------------------------------------------- **/
-    function storeLinksOnNodes(nodes, links) {
+    //** --------------------------------------------------------- **/
+    //** -- force-layout related functions                      -- **/
+    //** --------------------------------------------------------- **/
+    /**
+     * @param {BaseNode[]} nodes
+     * @param {(PlainLink | BoxArrowLink | ArrowLink)[]} links
+     */
+    #storeLinksOnNodes(nodes, links) {
         for (let i = 0; i < nodes.length; i++) {
-            nodes[i].links([]);
+            nodes[i].links = []
         }
         // look for properties where this node is the domain or range
         for (let i = 0; i < links.length; i++) {
-            var link = links[i];
-            var domainobj = link.domain();
-            var existingDomainLinks = domainobj.links();
+            const link = links[i]
+            const domainobj = link.domain
+            let existingDomainLinks = domainobj.links
             if (existingDomainLinks === undefined) {
-                existingDomainLinks = [link];
+                existingDomainLinks = [link]
             } else {
-                existingDomainLinks.push(link);
+                existingDomainLinks.push(link)
             }
-            link.domain().links(existingDomainLinks);
+            link.domain.links = existingDomainLinks
 
-            var rangeobj = link.range();
-            var existingRangeLinks = rangeobj.links();
+            const rangeobj = link.range
+            let existingRangeLinks = rangeobj.links
             if (existingRangeLinks === undefined) {
-                existingRangeLinks = [link];
+                existingRangeLinks = [link]
             } else {
-                existingRangeLinks.push(link);
+                existingRangeLinks.push(link)
             }
-            link.range().links(existingRangeLinks);
+            link.range.links = existingRangeLinks
         }
     }
 
-    function setForceLayoutData(classNodes, labelNodes, links) {
-        var d3Links = [];
-        links.forEach(function (link) {
-            d3Links = d3Links.concat(link.linkParts());
-        });
+    /**
+     * @param {BaseNode[]} classNodes
+     * @param {Label[]} labelNodes
+     * @param {(PlainLink | BoxArrowLink | ArrowLink)[]} links
+     */
+    #setForceLayoutData(classNodes, labelNodes, links) {
+        /**
+         * @type {LinkPart[]}
+         */
+        let d3Links = []
+        for (const link of links) {
+            d3Links = d3Links.concat(link.linkParts())
+        }
 
-        var d3Nodes = [].concat(classNodes).concat(labelNodes);
-        setPositionOfOldLabelsOnNewLabels(force.nodes(), labelNodes);
+        /**
+         * @type {(BaseNode | Label)[]}
+         */
+        const d3Nodes = [].concat(classNodes).concat(labelNodes)
+        this.#setPositionOfOldLabelsOnNewLabels(this.force.nodes(), labelNodes)
 
-        force.nodes(d3Nodes)
-            .links(d3Links);
+        this.force.nodes(d3Nodes).links(d3Links)
     }
 
     // The label nodes are positioned randomly, because they are created from scratch if the data changes and lose
     // their position information. With this hack the position of old labels is copied to the new labels.
-    function setPositionOfOldLabelsOnNewLabels(oldLabelNodes, labelNodes) {
-        labelNodes.forEach(function (labelNode) {
-            for (var i = 0; i < oldLabelNodes.length; i++) {
-                var oldNode = oldLabelNodes[i];
+    /**
+     * @param {string | any[]} oldLabelNodes
+     * @param {any[]} labelNodes
+     */
+    #setPositionOfOldLabelsOnNewLabels(oldLabelNodes, labelNodes) {
+        for (const labelNode of labelNodes) {
+            // FIXME: Very expensive!
+            for (let i = 0; i < oldLabelNodes.length; i++) {
+                const oldNode = oldLabelNodes[i]
                 if (oldNode.equals(labelNode)) {
-                    labelNode.x = oldNode.x;
-                    labelNode.y = oldNode.y;
-                    labelNode.px = oldNode.px;
-                    labelNode.py = oldNode.py;
-                    break;
+                    labelNode.x = oldNode.x
+                    labelNode.y = oldNode.y
+                    labelNode.px = oldNode.px
+                    labelNode.py = oldNode.py
+                    break
                 }
             }
-        });
+        }
     }
 
     // Applies all options that don't change the graph data.
-    function refreshGraphStyle() {
-        zoom = zoom.scaleExtent([options.minMagnification(), options.maxMagnification()]);
-        if (graphContainer) {
-            zoom.event(graphContainer);
+    #refreshGraphStyle() {
+        this.zoom = this.zoom.scaleExtent([
+            this.options.minMagnification,
+            this.options.maxMagnification,
+        ])
+        if (this.graphContainer) {
+            this.zoom.event(this.graphContainer)
         }
 
-        force.charge(function (element) {
-            var charge = options.charge();
-            if (elementTools.isLabel(element)) {
-                charge *= 0.8;
-            }
-            return charge;
-        })
-            .size([options.width(), options.height()])
-            .linkDistance(calculateLinkPartDistance)
-            .gravity(options.gravity())
-            .linkStrength(options.linkStrength()); // Flexibility of links
+        const _this = this
+        this.force
+            .charge(function (/** @type {BaseElement} */ element) {
+                let charge = _this.options.charge
+                if (ElementTools.isLabel(element)) {
+                    charge *= 0.8
+                }
+                return charge
+            })
+            .size([this.options.width, this.options.height])
+            .linkDistance((/** @type {LinkPart} */ linkPart) => {
+                return this.#calculateLinkPartDistance(linkPart)
+            })
+            .gravity(this.options.gravity)
+            .linkStrength(this.options.linkStrength) // Flexibility of links
 
-        force.nodes().forEach(function (n) {
-            n.frozen(paused);
-        });
+        for (const node of this.force.nodes()) {
+            node.frozen = this.paused
+        }
     }
 
-    function calculateLinkPartDistance(linkPart) {
-        var link = linkPart.link();
+    /**
+     * @param {LinkPart} linkPart
+     */
+    #calculateLinkPartDistance(linkPart) {
+        const link = linkPart.link
 
         if (link.isLoop()) {
-            return options.loopDistance();
+            return this.options.loopDistance
         }
 
         // divide by 2 to receive the length for a single link part
-        var linkPartDistance = getVisibleLinkDistance(link) / 2;
-        linkPartDistance += linkPart.domain().actualRadius();
-        linkPartDistance += linkPart.range().actualRadius();
-        return linkPartDistance;
+        let linkPartDistance = this.#getVisibleLinkDistance(link) / 2
+        linkPartDistance += linkPart.domain.actualRadius()
+        linkPartDistance += linkPart.range.actualRadius()
+        return linkPartDistance
     }
 
-    function getVisibleLinkDistance(link) {
-        if (elementTools.isDatatype(link.domain()) || elementTools.isDatatype(link.range())) {
-            return options.datatypeDistance();
+    /**
+     * @param {PlainLink} link
+     */
+    #getVisibleLinkDistance(link) {
+        if (
+            ElementTools.isDatatype(link.domain) ||
+            ElementTools.isDatatype(link.range)
+        ) {
+            return this.options.datatypeDistance
         } else {
-            return options.classDistance();
+            return this.options.classDistance
         }
     }
 
-    /** --------------------------------------------------------- **/
-    /** -- animation functions for the nodes --                   **/
-    /** --------------------------------------------------------- **/
-
-    graph.animateDynamicLabelWidth = function () {
-        var wantedWidth = options.dynamicLabelWidth();
-        var i;
-        for (i = 0; i < classNodes.length; i++) {
-            var nodeElement = classNodes[i];
-            if (elementTools.isDatatype(nodeElement)) {
-                nodeElement.animateDynamicLabelWidth(wantedWidth);
+    //** --------------------------------------------------------- **/
+    //** -- animation functions for the nodes --                   **/
+    //** --------------------------------------------------------- **/
+    animateDynamicLabelWidth() {
+        const wantedWidth = this.options.dynamicLabelWidth
+        for (const node of this.classNodes) {
+            if (ElementTools.isDatatype(node)) {
+                node.animateDynamicLabelWidth(wantedWidth)
             }
         }
-        for (i = 0; i < properties.length; i++) {
-            properties[i].animateDynamicLabelWidth(wantedWidth);
+        for (const property of this.properties) {
+            property.animateDynamicLabelWidth(wantedWidth)
         }
-    };
+    }
 
+    //** --------------------------------------------------------- **/
+    //** -- halo and localization functions --                     **/
+    //** --------------------------------------------------------- **/
+    /**
+     * @param {BaseNode} element A d3-force rendered node
+     */
+    updateHaloRadius(element) {
+        this.#computeDistanceToCenter(element)
+    }
 
-    /** --------------------------------------------------------- **/
-    /** -- halo and localization functions --                     **/
-    /** --------------------------------------------------------- **/
-    function updateHaloRadius() {
-        if (pulseNodeIds && pulseNodeIds.length > 0) {
-            var forceNodes = force.nodes();
-            for (var i = 0; i < pulseNodeIds.length; i++) {
-                var node = forceNodes[pulseNodeIds[i]];
+    #updateHaloRadius() {
+        if (this.visiblePulseNodeIDs.size > 0) {
+            const forceNodes = this.force.nodes()
+            for (const pulseNodeID of this.visiblePulseNodeIDs) {
+                const node = forceNodes[pulseNodeID]
                 if (node) {
                     if (node.property) {
                         // match search strings with property label
-                        if (node.property().inverse) {
-                            var searchString = graph.options().searchMenu().getSearchString().toLowerCase();
-                            var name = node.property().labelForCurrentLanguage().toLowerCase();
-                            if (name === searchString) computeDistanceToCenter(node);
-                            else {
-                                node.property().removeHalo();
-                                if (node.property().inverse()) {
-                                    if (!node.property().inverse().getHalos())
-                                        node.property().inverse().drawHalo();
-                                    computeDistanceToCenter(node, true);
-                                }
-                                if (node.property().equivalents()) {
-                                    var eq = node.property().equivalents();
-                                    for (var e = 0; e < eq.length; e++) {
-                                        if (!eq[e].getHalos())
-                                            eq[e].drawHalo();
+                        if (node.property.inverse) {
+                            const searchString = this.options.searchMenu
+                                .getSearchString()
+                                .toLowerCase()
+                            const name = node.property
+                                .labelForCurrentLanguage()
+                                .toLowerCase()
+                            if (name === searchString) {
+                                this.#computeDistanceToCenter(node)
+                            } else {
+                                node.property.removeHalo()
+                                if (node.property.inverse) {
+                                    if (
+                                        !node.property.inverse.haloGroupElement
+                                    ) {
+                                        node.property.inverse.drawHalo()
                                     }
-                                    if (!node.property().getHalos())
-                                        node.property().drawHalo();
-                                    computeDistanceToCenter(node, false);
-
+                                    this.#computeDistanceToCenter(node, true)
+                                }
+                                if (node.property.equivalents) {
+                                    const eq = node.property.equivalents
+                                    for (let e = 0; e < eq.length; e++) {
+                                        if (!eq[e].haloGroupElement)
+                                            eq[e].drawHalo()
+                                    }
+                                    if (!node.property.haloGroupElement) {
+                                        node.property.drawHalo()
+                                    }
+                                    this.#computeDistanceToCenter(node)
                                 }
                             }
                         }
                     }
-                    computeDistanceToCenter(node);
+                    this.#computeDistanceToCenter(node)
                 }
             }
         }
     }
 
-    function getScreenCoords(x, y, translate, scale) {
-        var xn = translate[0] + x * scale;
-        var yn = translate[1] + y * scale;
-        return { x: xn, y: yn };
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number[]} translate
+     * @param {number} scale
+     */
+    #getScreenCoords(x, y, translate, scale) {
+        const xn = translate[0] + x * scale
+        const yn = translate[1] + y * scale
+        return { x: xn, y: yn }
     }
 
-    function getClickedScreenCoords(x, y, translate, scale) {
-        var xn = (x - translate[0]) / scale;
-        var yn = (y - translate[1]) / scale;
-        return { x: xn, y: yn };
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number[]} translate
+     * @param {number} scale
+     */
+    #getClickedScreenCoords(x, y, translate, scale) {
+        const xn = (x - translate[0]) / scale
+        const yn = (y - translate[1]) / scale
+        return { x: xn, y: yn }
     }
 
+    /**
+     * @param {BaseNode | Label} node A d3-force rendered node
+     * @param {boolean} inverse
+     */
+    #computeDistanceToCenter(node, inverse = false) {
+        let container = node
+        const w = this.options.width
+        const h = this.options.height
 
-    function computeDistanceToCenter(node, inverse) {
-        var container = node;
-        var w = graph.options().width();
-        var h = graph.options().height();
-        var posXY = getScreenCoords(node.x, node.y, graphTranslation, zoomFactor);
+        let posXY = this.#getScreenCoords(
+            node.x,
+            node.y,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        let highlightOfInv = false
 
-        var highlightOfInv = false;
-
-        if (inverse && inverse === true) {
-            highlightOfInv = true;
-            posXY = getScreenCoords(node.x, node.y + 20, graphTranslation, zoomFactor);
+        if (inverse) {
+            highlightOfInv = true
+            posXY = this.#getScreenCoords(
+                node.x,
+                node.y + 20,
+                this.graphTranslation,
+                this.zoomFactor,
+            )
         }
-        var x = posXY.x;
-        var y = posXY.y;
-        var nodeIsRect = false;
-        var halo;
-        var roundHalo;
-        var rectHalo;
-        var borderPoint_x = 0;
-        var borderPoint_y = 0;
-        var defaultRadius;
-        var offset = 15;
-        var radius;
+        const x = posXY.x
+        const y = posXY.y
+        let nodeIsRect = false
+        let halo
+        let roundHalo
+        let rectHalo
+        let borderPoint_x = 0
+        let borderPoint_y = 0
+        const offset = 15
 
-        if (node.property && highlightOfInv === true) {
-            if (node.property().inverse()) {
-                rectHalo = node.property().inverse().getHalos().select("rect");
-
+        if (node.property && highlightOfInv) {
+            if (node.property.inverse) {
+                rectHalo = node.property.inverse.haloGroupElement.select("rect")
             } else {
-                if (node.property().getHalos())
-                    rectHalo = node.property().getHalos().select("rect");
-                else {
-                    node.property().drawHalo();
-                    rectHalo = node.property().getHalos().select("rect");
+                if (node.property.haloGroupElement) {
+                    rectHalo = node.property.haloGroupElement.select("rect")
+                } else {
+                    node.property.drawHalo()
+                    rectHalo = node.property.haloGroupElement.select("rect")
                 }
             }
-            rectHalo.classed("hidden", true);
-            if (node.property().inverse()) {
-                if (node.property().inverse().getHalos()) {
-                    roundHalo = node.property().inverse().getHalos().select("circle");
+            rectHalo.classed("hidden", true)
+            if (node.property.inverse) {
+                if (node.property.inverse.haloGroupElement) {
+                    roundHalo =
+                        node.property.inverse.haloGroupElement.select("circle")
                 }
             } else {
-                roundHalo = node.property().getHalos().select("circle");
+                roundHalo = node.property.haloGroupElement.select("circle")
             }
             if (roundHalo.node() === null) {
-                radius = node.property().inverse().width() + 15;
-
-                roundHalo = node.property().inverse().getHalos().append("circle")
+                const radius = node.property.inverse.labelWidth + 15
+                roundHalo = node.property.inverse.haloGroupElement
+                    .append("circle")
                     .classed("searchResultB", true)
                     .classed("searchResultA", false)
-                    .attr("r", radius + 15);
-
+                    .attr("r", radius + 15)
             }
-            halo = roundHalo; // swap the halo to be round
-            nodeIsRect = true;
-            container = node.property().inverse();
+            halo = roundHalo // swap the halo to be round
+            nodeIsRect = true
+            container = node.property.inverse
         }
 
         if (node.id) {
-            if (!node.getHalos()) return; // something went wrong before
-            halo = node.getHalos().select("rect");
+            if (!node.haloGroupElement) {
+                return // something went wrong before
+            }
+            halo = node.haloGroupElement.select("rect")
             if (halo.node() === null) {
                 // this is a round node
-                nodeIsRect = false;
-                roundHalo = node.getHalos().select("circle");
-                defaultRadius = node.actualRadius();
-                roundHalo.attr("r", defaultRadius + offset);
-                halo = roundHalo;
-            } else { // this is a rect node
-                nodeIsRect = true;
-                rectHalo = node.getHalos().select("rect");
-                rectHalo.classed("hidden", true);
-                roundHalo = node.getHalos().select("circle");
+                nodeIsRect = false
+                roundHalo = node.haloGroupElement.select("circle")
+                const defaultRadius = node.actualRadius()
+                roundHalo.attr("r", defaultRadius + offset)
+                halo = roundHalo
+            } else {
+                // this is a rect node
+                nodeIsRect = true
+                rectHalo = node.haloGroupElement.select("rect")
+                rectHalo.classed("hidden", true)
+                roundHalo = node.haloGroupElement.select("circle")
                 if (roundHalo.node() === null) {
-                    radius = node.width();
-                    roundHalo = node.getHalos().append("circle")
+                    const radius = node.labelWidth
+                    roundHalo = node.haloGroupElement
+                        .append("circle")
                         .classed("searchResultB", true)
                         .classed("searchResultA", false)
-                        .attr("r", radius + offset);
+                        .attr("r", radius + offset)
                 }
-                halo = roundHalo;
+                halo = roundHalo
             }
         }
         if (node.property && !inverse) {
-            if (!node.property().getHalos()) return; // something went wrong before
-            rectHalo = node.property().getHalos().select("rect");
-            rectHalo.classed("hidden", true);
+            if (!node.property.haloGroupElement) {
+                return // something went wrong before
+            }
+            rectHalo = node.property.haloGroupElement.select("rect")
+            rectHalo.classed("hidden", true)
 
-            roundHalo = node.property().getHalos().select("circle");
+            roundHalo = node.property.haloGroupElement.select("circle")
             if (roundHalo.node() === null) {
-                radius = node.property().width();
-
-                roundHalo = node.property().getHalos().append("circle")
+                const radius = node.property.width
+                roundHalo = node.property.haloGroupElement
+                    .append("circle")
                     .classed("searchResultB", true)
                     .classed("searchResultA", false)
-                    .attr("r", radius + 15);
-
+                    .attr("r", radius + 15)
             }
-            halo = roundHalo; // swap the halo to be round
-            nodeIsRect = true;
-            container = node.property();
+            halo = roundHalo // swap the halo to be round
+            nodeIsRect = true
+            container = node.property
         }
 
         if (x < 0 || x > w || y < 0 || y > h) {
             // node outside viewport;
             // check for quadrant and get the correct boarder point (intersection with viewport)
             if (x < 0 && y < 0) {
-                borderPoint_x = 0;
-                borderPoint_y = 0;
+                borderPoint_x = 0
+                borderPoint_y = 0
             } else if (x > 0 && x < w && y < 0) {
-                borderPoint_x = x;
-                borderPoint_y = 0;
+                borderPoint_x = x
+                borderPoint_y = 0
             } else if (x > w && y < 0) {
-                borderPoint_x = w;
-                borderPoint_y = 0;
+                borderPoint_x = w
+                borderPoint_y = 0
             } else if (x > w && y > 0 && y < h) {
-                borderPoint_x = w;
-                borderPoint_y = y;
+                borderPoint_x = w
+                borderPoint_y = y
             } else if (x > w && y > h) {
-                borderPoint_x = w;
-                borderPoint_y = h;
+                borderPoint_x = w
+                borderPoint_y = h
             } else if (x > 0 && x < w && y > h) {
-                borderPoint_x = x;
-                borderPoint_y = h;
+                borderPoint_x = x
+                borderPoint_y = h
             } else if (x < 0 && y > h) {
-                borderPoint_x = 0;
-                borderPoint_y = h;
+                borderPoint_x = 0
+                borderPoint_y = h
             } else if (x < 0 && y > 0 && y < h) {
-                borderPoint_x = 0;
-                borderPoint_y = y;
+                borderPoint_x = 0
+                borderPoint_y = y
             }
             // kill all pulses of nodes that are outside the viewport
-            container.getHalos().select("rect").classed("searchResultA", false);
-            container.getHalos().select("circle").classed("searchResultA", false);
-            container.getHalos().select("rect").classed("searchResultB", true);
-            container.getHalos().select("circle").classed("searchResultB", true);
-            halo.classed("hidden", false);
+            container.haloGroupElement
+                .select("rect")
+                .classed("searchResultA", false)
+            container.haloGroupElement
+                .select("circle")
+                .classed("searchResultA", false)
+            container.haloGroupElement
+                .select("rect")
+                .classed("searchResultB", true)
+            container.haloGroupElement
+                .select("circle")
+                .classed("searchResultB", true)
+            halo.classed("hidden", false)
             // compute in pixel coordinates length of difference vector
-            var borderRadius_x = borderPoint_x - x;
-            var borderRadius_y = borderPoint_y - y;
+            const borderRadius_x = borderPoint_x - x
+            const borderRadius_y = borderPoint_y - y
 
-            var len = borderRadius_x * borderRadius_x + borderRadius_y * borderRadius_y;
-            len = Math.sqrt(len);
+            let len =
+                borderRadius_x * borderRadius_x +
+                borderRadius_y * borderRadius_y
+            len = Math.sqrt(len)
 
-            var normedX = borderRadius_x / len;
-            var normedY = borderRadius_y / len;
+            const normedX = borderRadius_x / len
+            const normedY = borderRadius_y / len
 
-            len = len + 20; // add 20 px;
+            len = len + 20 // add 20 px;
 
             // re-normalized vector
-            var newVectorX = normedX * len + x;
-            var newVectorY = normedY * len + y;
+            const newVectorX = normedX * len + x
+            const newVectorY = normedY * len + y
             // compute world coordinates of this point
-            var wX = (newVectorX - graphTranslation[0]) / zoomFactor;
-            var wY = (newVectorY - graphTranslation[1]) / zoomFactor;
+            const wX = (newVectorX - this.graphTranslation[0]) / this.zoomFactor
+            const wY = (newVectorY - this.graphTranslation[1]) / this.zoomFactor
 
             // compute distance in world coordinates
-            var dx = wX - node.x;
-            var dy = wY - node.y;
-            if (highlightOfInv === true)
-                dy = wY - node.y - 20;
+            const dx = wX - node.x
+            let dy = wY - node.y
+            if (highlightOfInv) {
+                dy = wY - node.y - 20
+            }
+            if (!highlightOfInv && node.property && node.property.inverse)
+                dy = wY - node.y + 20
 
-            if (highlightOfInv === false && node.property && node.property().inverse())
-                dy = wY - node.y + 20;
-
-            var newRadius = Math.sqrt(dx * dx + dy * dy);
-            halo = container.getHalos().select("circle");
+            let newRadius = Math.sqrt(dx * dx + dy * dy)
+            halo = container.haloGroupElement.select("circle")
             // sanity checks and setting new halo radius
             if (!nodeIsRect) {
-                defaultRadius = node.actualRadius() + offset;
+                const defaultRadius = node.actualRadius() + offset
                 if (newRadius < defaultRadius) {
-                    newRadius = defaultRadius;
+                    newRadius = defaultRadius
                 }
-                halo.attr("r", newRadius);
+                halo.attr("r", newRadius)
             } else {
-                defaultRadius = 0.5 * container.width();
-                if (newRadius < defaultRadius)
-                    newRadius = defaultRadius;
-                halo.attr("r", newRadius);
+                const defaultRadius = 0.5 * container.width
+                if (newRadius < defaultRadius) {
+                    newRadius = defaultRadius
+                }
+                halo.attr("r", newRadius)
             }
-        } else { // node is in viewport , render original;
+        } else {
+            // node is in viewport , render original;
             // reset the halo to original radius
-            defaultRadius = node.actualRadius() + 15;
+            const defaultRadius = node.actualRadius() + 15
             if (!nodeIsRect) {
-                halo.attr("r", defaultRadius);
-            } else { // this is rectangular node render as such
-                halo = container.getHalos().select("rect");
-                halo.classed("hidden", false);
+                halo.attr("r", defaultRadius)
+            } else {
+                // this is rectangular node render as such
+                halo = container.haloGroupElement.select("rect")
+                halo.classed("hidden", false)
                 //halo.classed("searchResultB", true);
                 //halo.classed("searchResultA", false);
-                var aCircHalo = container.getHalos().select("circle");
-                aCircHalo.classed("hidden", true);
+                const aCircHalo = container.haloGroupElement.select("circle")
+                aCircHalo.classed("hidden", true)
 
-                container.getHalos().select("rect").classed("hidden", false);
-                container.getHalos().select("circle").classed("hidden", true);
+                container.haloGroupElement
+                    .select("rect")
+                    .classed("hidden", false)
+                container.haloGroupElement
+                    .select("circle")
+                    .classed("hidden", true)
             }
         }
     }
 
-    function transform(p, cx, cy) {
+    /**
+     * @param {number[]} p
+     * @param {number} cx
+     * @param {number} cy
+     */
+    #transform(p, cx, cy) {
         // one iteration step for the locate target animation
-        zoomFactor = graph.options().height() / p[2];
-        graphTranslation = [(cx - p[0] * zoomFactor), (cy - p[1] * zoomFactor)];
-        updateHaloRadius();
+        this.zoomFactor = this.options.height / p[2]
+        this.graphTranslation = [
+            cx - p[0] * this.zoomFactor,
+            cy - p[1] * this.zoomFactor,
+        ]
+        this.#updateHaloRadius()
         // update the values in case the user wants to break the animation
-        zoom.translate(graphTranslation);
-        zoom.scale(zoomFactor);
-        graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
-        return "translate(" + graphTranslation[0] + "," + graphTranslation[1] + ")scale(" + zoomFactor + ")";
+        this.zoom.translate(this.graphTranslation)
+        this.zoom.scale(this.zoomFactor)
+        this.options.zoomSlider.updateZoomSliderValue(this.zoomFactor)
+        return (
+            "translate(" +
+            this.graphTranslation[0] +
+            "," +
+            this.graphTranslation[1] +
+            ")scale(" +
+            this.zoomFactor +
+            ")"
+        )
     }
 
-    graph.zoomToElementInGraph = function (element) {
-        targetLocationZoom(element);
-    };
-    graph.updateHaloRadius = function (element) {
-        computeDistanceToCenter(element);
-    };
+    /**
+     * @param {{ x: any; y: any; }} element
+     */
+    zoomToElementInGraph(element) {
+        this.#targetLocationZoom(element)
+    }
 
-    function targetLocationZoom(target) {
+    /**
+     * @param {{ x: any; y: any; }} target
+     */
+    #targetLocationZoom(target) {
         // store the original information
-        var cx = 0.5 * graph.options().width();
-        var cy = 0.5 * graph.options().height();
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
-        var sP = [cp.x, cp.y, graph.options().height() / zoomFactor];
+        const cx = 0.5 * this.options.width
+        const cy = 0.5 * this.options.height
+        const cp = this.#getWorldPosFromScreen(
+            cx,
+            cy,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const sP = [cp.x, cp.y, this.options.height / this.zoomFactor]
 
-        var zoomLevel = Math.max(defaultZoom + 0.5 * defaultZoom, defaultTargetZoom);
-        var eP = [target.x, target.y, graph.options().height() / zoomLevel];
-        var pos_intp = d3.interpolateZoom(sP, eP);
+        const zoomLevel = Math.max(
+            this.defaultZoom + 0.5 * this.defaultZoom,
+            this.defaultTargetZoom,
+        )
+        const eP = [target.x, target.y, this.options.height / zoomLevel]
+        const pos_intp = d3.interpolateZoom(sP, eP)
 
-        var lenAnimation = pos_intp.duration;
+        let lenAnimation = pos_intp.duration
         if (lenAnimation > 2500) {
-            lenAnimation = 2500;
+            lenAnimation = 2500
         }
 
-        graphContainer.attr("transform", transform(sP, cx, cy))
+        const _this = this
+        this.graphContainer
+            .attr("transform", _this.#transform(sP, cx, cy))
             .transition()
             .duration(lenAnimation)
             .attrTween("transform", function () {
                 return function (t) {
-                    return transform(pos_intp(t), cx, cy);
-                };
+                    return _this.#transform(pos_intp(t), cx, cy)
+                }
             })
+            // @ts-ignore
             .each("end", function () {
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                updateHaloRadius();
-            });
+                _this.graphContainer.attr(
+                    "transform",
+                    "translate(" +
+                        _this.graphTranslation +
+                        ")scale(" +
+                        _this.zoomFactor +
+                        ")",
+                )
+                _this.zoom.translate(_this.graphTranslation)
+                _this.zoom.scale(_this.zoomFactor)
+                _this.#updateHaloRadius()
+            })
     }
 
-    function getWorldPosFromScreen(x, y, translate, scale) {
-        var temp = scale[0], xn, yn;
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number[]} translate
+     * @param {number[] | any} scale
+     */
+    #getWorldPosFromScreen(x, y, translate, scale) {
+        const temp = scale[0]
+        let xn, yn
         if (temp) {
-            xn = (x - translate[0]) / temp;
-            yn = (y - translate[1]) / temp;
+            xn = (x - translate[0]) / temp
+            yn = (y - translate[1]) / temp
         } else {
-            xn = (x - translate[0]) / scale;
-            yn = (y - translate[1]) / scale;
+            xn = (x - translate[0]) / scale
+            yn = (y - translate[1]) / scale
         }
-        return { x: xn, y: yn };
+        return { x: xn, y: yn }
     }
 
-    graph.locateSearchResult = function () {
-        if (pulseNodeIds && pulseNodeIds.length > 0) {
-            // move the center of the viewport to this location
-            if (transformAnimation === true) return; // << prevents incrementing the location id if we are in an animation
-            var node = force.nodes()[pulseNodeIds[locationId]];
-            locationId++;
-            locationId = locationId % pulseNodeIds.length;
-            if (node.id) node.foreground();
-            if (node.property) node.property().foreground();
-
-            targetLocationZoom(node);
+    /**
+     * Cycle through `visiblePulseNodeIDs` safely
+     */
+    *locationID() {
+        let visibleIDArr = Array.from(this.visiblePulseNodeIDs)
+        let location = 0
+        // Only cycle while we have visible pulse nodes
+        while (this.visiblePulseNodeIDs.size > 0) {
+            yield visibleIDArr[location]
+            location = (location + 1) % visibleIDArr.length
         }
-    };
+        // If we reach this point, the cycle is reset with new visible pulse nodes
+    }
 
-    graph.resetSearchHighlight = function () {
+    /**
+     * Move the center of the viewport to this location
+     */
+    locateSearchResult() {
+        if (this.transformAnimation) {
+            return // << prevents incrementing the location id if we are in an animation
+        }
+        const nextID = this.locationID().next().value
+        if (nextID !== undefined) {
+            const node = this.force.nodes()[nextID]
+            if (node.id) {
+                node.foreground()
+            }
+            if (node.property) {
+                node.property.foreground()
+            }
+            this.#targetLocationZoom(node)
+        }
+    }
+
+    resetSearchHighlight() {
         // get all nodes (handle also already filtered nodes )
-        pulseNodeIds = [];
-        nodeArrayForPulse = [];
+        this.visiblePulseNodeIDs.clear()
+
         // clear from stored nodes
-        var nodes = unfilteredData.nodes;
-        var props = unfilteredData.properties;
-        var j;
-        for (j = 0; j < nodes.length; j++) {
-            var node = nodes[j];
-            if (node.removeHalo)
-                node.removeHalo();
+        const nodes = this.unfilteredData.nodes
+        const props = this.unfilteredData.properties
+        for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i]
+            if (node.removeHalo) node.removeHalo()
         }
-        for (j = 0; j < props.length; j++) {
-            var prop = props[j];
-            if (prop.removeHalo)
-                prop.removeHalo();
+        for (let i = 0; i < props.length; i++) {
+            const prop = props[i]
+            if (prop.removeHalo) prop.removeHalo()
         }
-    };
-
-    graph.updatePulseIds = function (nodeIdArray) {
-        pulseNodeIds = [];
-        for (var i = 0; i < nodeIdArray.length; i++) {
-            var selectedId = nodeIdArray[i];
-            var forceId = nodeMap[selectedId];
-            if (forceId !== undefined) {
-                var le_node = force.nodes()[forceId];
-                if (le_node.id) {
-                    if (pulseNodeIds.indexOf(forceId) === -1) {
-                        pulseNodeIds.push(forceId);
-                    }
-                }
-                if (le_node.property) {
-                    if (pulseNodeIds.indexOf(forceId) === -1) {
-                        pulseNodeIds.push(forceId);
-                    }
-                }
-            }
-        }
-        locationId = 0;
-        if (pulseNodeIds.length > 0) {
-            d3.select("#locateSearchResult").classed("highlighted", true);
-            d3.select("#locateSearchResult").node().title = "Locate search term";
-        }
-        else {
-            d3.select("#locateSearchResult").classed("highlighted", false);
-            d3.select("#locateSearchResult").node().title = "Nothing to locate";
-        }
-    };
-
-    graph.highLightNodes = function (nodeIdArray) {
-        if (nodeIdArray.length === 0) {
-            return; // nothing to highlight
-        }
-        pulseNodeIds = [];
-        nodeArrayForPulse = nodeIdArray;
-        var missedIds = [];
-
-        // identify the force id to highlight
-        for (var i = 0; i < nodeIdArray.length; i++) {
-            var selectedId = nodeIdArray[i];
-            var forceId = nodeMap[selectedId];
-            if (forceId !== undefined) {
-                var le_node = force.nodes()[forceId];
-                if (le_node.id) {
-                    if (pulseNodeIds.indexOf(forceId) === -1) {
-                        pulseNodeIds.push(forceId);
-                        le_node.foreground();
-                        le_node.drawHalo();
-                    }
-                }
-                if (le_node.property) {
-                    if (pulseNodeIds.indexOf(forceId) === -1) {
-                        pulseNodeIds.push(forceId);
-                        le_node.property().foreground();
-                        le_node.property().drawHalo();
-                    }
-                }
-            }
-            else {
-                missedIds.push(selectedId);
-            }
-        }
-
-        if (missedIds.length === nodeIdArray.length) {
-
-        }
-        // store the highlight on the missed nodes;
-        var s_nodes = unfilteredData.nodes;
-        var s_props = unfilteredData.properties;
-        for (i = 0; i < missedIds.length; i++) {
-            var missedId = missedIds[i];
-            // search for this in the nodes;
-            for (var n = 0; n < s_nodes.length; n++) {
-                var nodeId = s_nodes[n].id();
-                if (nodeId === missedId) {
-                    s_nodes[n].drawHalo();
-                }
-            }
-            for (var p = 0; p < s_props.length; p++) {
-                var propId = s_props[p].id();
-                if (propId === missedId) {
-                    s_props[p].drawHalo();
-                }
-            }
-        }
-        if (missedIds.length === nodeIdArray.length) {
-            d3.select("#locateSearchResult").classed("highlighted", false);
-        }
-        else {
-            d3.select("#locateSearchResult").classed("highlighted", true);
-        }
-        locationId = 0;
-        updateHaloRadius();
-    };
-
-    graph.hideHalos = function () {
-        var haloElements = d3.selectAll(".searchResultA,.searchResultB");
-        haloElements.classed("hidden", true);
-        return haloElements;
-    };
-
-    function nodeInViewport(node, property) {
-
-        var w = graph.options().width();
-        var h = graph.options().height();
-        var posXY = getScreenCoords(node.x, node.y, graphTranslation, zoomFactor);
-        var x = posXY.x;
-        var y = posXY.y;
-
-        var retVal = !(x < 0 || x > w || y < 0 || y > h);
-        return retVal;
     }
 
-    graph.getBoundingBoxForTex = function () {
-        var halos = graph.hideHalos();
-        var bbox = graphContainer.node().getBoundingClientRect();
-        halos.classed("hidden", false);
-        var w = graph.options().width();
-        var h = graph.options().height();
+    /**
+     * Determines which nodes of `nodeIDs` are currently rendered in d3-force
+     * and stores them in attribute `visiblePulseNodeIDs`.
+     * @param {string[]} nodeIDs
+     * @returns {Set<string>} The IDs of `nodeIDs` which are not rendered
+     */
+    updatePulseIds(nodeIDs) {
+        this.visiblePulseNodeIDs.clear()
+        const forceNodes = this.force.nodes()
+        let missedIDs = new Set()
+        for (const nodeID of nodeIDs) {
+            const forceID = this.forceNodeMap.get(nodeID)
+            if (forceID !== undefined) {
+                const forceNode = forceNodes[forceID]
+                if (forceNode.id || forceNode.property) {
+                    this.visiblePulseNodeIDs.add(forceID)
+                }
+            } else {
+                missedIDs.add(nodeID)
+            }
+        }
+        if (this.visiblePulseNodeIDs.size > 0) {
+            d3.select("#locateSearchResult").classed("highlighted", true)
+            d3.select("#locateSearchResult").node().title = "Locate search term"
+        } else {
+            d3.select("#locateSearchResult").classed("highlighted", false)
+            d3.select("#locateSearchResult").node().title = "Nothing to locate"
+        }
+        return missedIDs
+    }
+
+    /**
+     * @param {string[]} nodeIDs
+     */
+    highLightNodes(nodeIDs) {
+        if (nodeIDs.length === 0) {
+            return // Nothing to highlight
+        }
+
+        this.allPulseNodeIDs = nodeIDs
+        const missedIDs = this.updatePulseIds(nodeIDs)
+        const forceNodes = this.force.nodes()
+        for (const pulseID of this.visiblePulseNodeIDs) {
+            const node = forceNodes[pulseID]
+            if (node.id) {
+                node.foreground()
+                node.drawHalo()
+            }
+            if (node.property) {
+                node.property.foreground()
+                node.property.drawHalo()
+            }
+        }
+
+        // Highlight the nodes not currently rendered
+        for (const missedID of missedIDs) {
+            const node = this.nodeMap.get(missedID)
+            if (node) {
+                node.drawHalo()
+            } else {
+                const property = this.propertyMap.get(missedID)
+                if (property) {
+                    property.drawHalo()
+                }
+            }
+        }
+        this.#updateHaloRadius()
+    }
+
+    hideHalos() {
+        const haloElements = d3.selectAll(".searchResultA,.searchResultB")
+        haloElements.classed("hidden", true)
+        return haloElements
+    }
+
+    /**
+     * @param {{ x: number; y: number; }} node
+     */
+    #nodeInViewport(node) {
+        const w = this.options.width
+        const h = this.options.height
+        const posXY = this.#getScreenCoords(
+            node.x,
+            node.y,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const x = posXY.x
+        const y = posXY.y
+        const retVal = !(x < 0 || x > w || y < 0 || y > h)
+        return retVal
+    }
+
+    getBoundingBoxForTex() {
+        const halos = this.hideHalos()
+        const bbox = this.graphContainer.node().getBoundingClientRect()
+        halos.classed("hidden", false)
+        const w = this.options.width
+        const h = this.options.height
 
         // get the graph coordinates
-        var topLeft = getWorldPosFromScreen(0, 0, graphTranslation, zoomFactor);
-        var botRight = getWorldPosFromScreen(w, h, graphTranslation, zoomFactor);
-
-
-        var t_topLeft = getWorldPosFromScreen(bbox.left, bbox.top, graphTranslation, zoomFactor);
-        var t_botRight = getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
+        const topLeft = this.#getWorldPosFromScreen(
+            0,
+            0,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const botRight = this.#getWorldPosFromScreen(
+            w,
+            h,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const t_topLeft = this.#getWorldPosFromScreen(
+            bbox.left,
+            bbox.top,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const t_botRight = this.#getWorldPosFromScreen(
+            bbox.right,
+            bbox.bottom,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
 
         // tighten up the bounding box;
-
-        var tX = Math.max(t_topLeft.x, topLeft.x);
-        var tY = Math.max(t_topLeft.y, topLeft.y);
-
-        var bX = Math.min(t_botRight.x, botRight.x);
-        var bY = Math.min(t_botRight.y, botRight.y);
-
+        let tX = Math.max(t_topLeft.x, topLeft.x)
+        let tY = Math.max(t_topLeft.y, topLeft.y)
+        let bX = Math.min(t_botRight.x, botRight.x)
+        let bY = Math.min(t_botRight.y, botRight.y)
 
         // tighten further;
-        var allForceNodes = force.nodes();
-        var numNodes = allForceNodes.length;
-        var visibleNodes = [];
-        var bbx;
-
-
-        var contentBBox = { tx: 1000000000000, ty: 1000000000000, bx: -1000000000000, by: -1000000000000 };
-
-        for (var i = 0; i < numNodes; i++) {
-            var node = allForceNodes[i];
+        const forceNodes = this.force.nodes()
+        const contentBBox = {
+            tx: 1000000000000,
+            ty: 1000000000000,
+            bx: -1000000000000,
+            by: -1000000000000,
+        }
+        for (let i = 0; i < forceNodes.length; i++) {
+            const node = forceNodes[i]
             if (node) {
                 if (node.property) {
-                    if (nodeInViewport(node, true)) {
-                        if (node.property().labelElement() === undefined) continue;
-                        bbx = node.property().labelElement().node().getBoundingClientRect();
+                    if (this.#nodeInViewport(node)) {
+                        if (node.property.labelElement === undefined) {
+                            continue
+                        }
+                        const bbx = node.property.labelElement
+                            .node()
+                            .getBoundingClientRect()
                         if (bbx) {
-                            contentBBox.tx = Math.min(contentBBox.tx, bbx.left);
-                            contentBBox.bx = Math.max(contentBBox.bx, bbx.right);
-                            contentBBox.ty = Math.min(contentBBox.ty, bbx.top);
-                            contentBBox.by = Math.max(contentBBox.by, bbx.bottom);
+                            contentBBox.tx = Math.min(contentBBox.tx, bbx.left)
+                            contentBBox.bx = Math.max(contentBBox.bx, bbx.right)
+                            contentBBox.ty = Math.min(contentBBox.ty, bbx.top)
+                            contentBBox.by = Math.max(
+                                contentBBox.by,
+                                bbx.bottom,
+                            )
                         }
                     }
-                } else {
-                    if (nodeInViewport(node, false)) {
-                        bbx = node.nodeElement().node().getBoundingClientRect();
-                        if (bbx) {
-                            contentBBox.tx = Math.min(contentBBox.tx, bbx.left);
-                            contentBBox.bx = Math.max(contentBBox.bx, bbx.right);
-                            contentBBox.ty = Math.min(contentBBox.ty, bbx.top);
-                            contentBBox.by = Math.max(contentBBox.by, bbx.bottom);
-                        }
+                } else if (this.#nodeInViewport(node)) {
+                    const bbx = node.nodeElement.node().getBoundingClientRect()
+                    if (bbx) {
+                        contentBBox.tx = Math.min(contentBBox.tx, bbx.left)
+                        contentBBox.bx = Math.max(contentBBox.bx, bbx.right)
+                        contentBBox.ty = Math.min(contentBBox.ty, bbx.top)
+                        contentBBox.by = Math.max(contentBBox.by, bbx.bottom)
                     }
                 }
             }
         }
+        const tt_topLeft = this.#getWorldPosFromScreen(
+            contentBBox.tx,
+            contentBBox.ty,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const tt_botRight = this.#getWorldPosFromScreen(
+            contentBBox.bx,
+            contentBBox.by,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
 
-        var tt_topLeft = getWorldPosFromScreen(contentBBox.tx, contentBBox.ty, graphTranslation, zoomFactor);
-        var tt_botRight = getWorldPosFromScreen(contentBBox.bx, contentBBox.by, graphTranslation, zoomFactor);
+        tX = Math.max(tX, tt_topLeft.x)
+        tY = Math.max(tY, tt_topLeft.y)
 
-        tX = Math.max(tX, tt_topLeft.x);
-        tY = Math.max(tY, tt_topLeft.y);
-
-        bX = Math.min(bX, tt_botRight.x);
-        bY = Math.min(bY, tt_botRight.y);
+        bX = Math.min(bX, tt_botRight.x)
+        bY = Math.min(bY, tt_botRight.y)
         // y axis flip for tex
-        return [tX, -tY, bX, -bY];
+        return [tX, -tY, bX, -bY]
+    }
 
-    };
-
-    var updateTargetElement = function () {
-        var bbox = graphContainer.node().getBoundingClientRect();
-
-
+    #updateTargetElement() {
+        const bbox = this.graphContainer.node().getBoundingClientRect()
         // get the graph coordinates
-        var bboxOffset = 50; // default radius of a node;
-        var topLeft = getWorldPosFromScreen(bbox.left, bbox.top, graphTranslation, zoomFactor);
-        var botRight = getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
+        const bboxOffset = 50 // default radius of a node;
+        const topLeft = this.#getWorldPosFromScreen(
+            bbox.left,
+            bbox.top,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const botRight = this.#getWorldPosFromScreen(
+            bbox.right,
+            bbox.bottom,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
 
-        var w = graph.options().width();
-        if (graph.options().leftSidebar().isSidebarVisible() === true)
-            w -= 200;
-        var h = graph.options().height();
-        topLeft.x += bboxOffset;
-        topLeft.y -= bboxOffset;
-        botRight.x -= bboxOffset;
-        botRight.y += bboxOffset;
+        let w = this.options.width
+        if (this.options.leftSidebar.visibleSidebar) {
+            w -= 200
+        }
+        const h = this.options.height
+        topLeft.x += bboxOffset
+        topLeft.y -= bboxOffset
+        botRight.x -= bboxOffset
+        botRight.y += bboxOffset
 
-        var g_w = botRight.x - topLeft.x;
-        var g_h = botRight.y - topLeft.y;
+        const g_w = botRight.x - topLeft.x
+        const g_h = botRight.y - topLeft.y
 
         // endpoint position calculations
-        var posX = 0.5 * (topLeft.x + botRight.x);
-        var posY = 0.5 * (topLeft.y + botRight.y);
-        var cx = 0.5 * w,
-            cy = 0.5 * h;
+        const posX = 0.5 * (topLeft.x + botRight.x)
+        const posY = 0.5 * (topLeft.y + botRight.y)
+        let cx = 0.5 * w
+        const cy = 0.5 * h
 
-        if (graph.options().leftSidebar().isSidebarVisible() === true)
-            cx += 200;
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
+        if (this.options.leftSidebar.visibleSidebar) {
+            cx += 200
+        }
+        const cp = this.#getWorldPosFromScreen(
+            cx,
+            cy,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
 
         // zoom factor calculations and fail safes;
-        var newZoomFactor = 1.0; // fail save if graph and window are squares
+        let newZoomFactor = 1.0 // fail save if graph and window are squares
         //get the smaller one
-        var a = w / g_w;
-        var b = h / g_h;
-        if (a < b) newZoomFactor = a;
-        else newZoomFactor = b;
-
+        const a = w / g_w
+        const b = h / g_h
+        newZoomFactor = a < b ? a : b
 
         // fail saves
-        if (newZoomFactor > zoom.scaleExtent()[1]) {
-            newZoomFactor = zoom.scaleExtent()[1];
+        if (newZoomFactor > this.zoom.scaleExtent()[1]) {
+            newZoomFactor = this.zoom.scaleExtent()[1]
         }
-        if (newZoomFactor < zoom.scaleExtent()[0]) {
-            newZoomFactor = zoom.scaleExtent()[0];
+        if (newZoomFactor < this.zoom.scaleExtent()[0]) {
+            newZoomFactor = this.zoom.scaleExtent()[0]
         }
 
         // apply Zooming
-        var sP = [cp.x, cp.y, h / zoomFactor];
-        var eP = [posX, posY, h / newZoomFactor];
+        const sP = [cp.x, cp.y, h / this.zoomFactor]
+        const eP = [posX, posY, h / newZoomFactor]
 
+        const pos_intp = d3.interpolateZoom(sP, eP)
+        return [pos_intp, cx, cy]
+    }
 
-        var pos_intp = d3.interpolateZoom(sP, eP);
-        return [pos_intp, cx, cy];
-
-    };
-
-    graph.forceRelocationEvent = function (dynamic) {
+    /**
+     * @param {boolean} [dynamic]
+     */
+    forceRelocationEvent(dynamic) {
         // we need to kill the halo to determine the bounding box;
-        var halos = graph.hideHalos();
-        var bbox = graphContainer.node().getBoundingClientRect();
-        halos.classed("hidden", false);
+        const halos = this.hideHalos()
+        const bbox = this.graphContainer.node().getBoundingClientRect()
+        halos.classed("hidden", false)
 
         // get the graph coordinates
-        var bboxOffset = 50; // default radius of a node;
-        var topLeft = getWorldPosFromScreen(bbox.left, bbox.top, graphTranslation, zoomFactor);
-        var botRight = getWorldPosFromScreen(bbox.right, bbox.bottom, graphTranslation, zoomFactor);
+        const bboxOffset = 50 // default radius of a node;
+        const topLeft = this.#getWorldPosFromScreen(
+            bbox.left,
+            bbox.top,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
+        const botRight = this.#getWorldPosFromScreen(
+            bbox.right,
+            bbox.bottom,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
 
-        var w = graph.options().width();
-        if (graph.options().leftSidebar().isSidebarVisible() === true)
-            w -= 200;
-        var h = graph.options().height();
-        topLeft.x += bboxOffset;
-        topLeft.y -= bboxOffset;
-        botRight.x -= bboxOffset;
-        botRight.y += bboxOffset;
+        let w = this.options.width
+        if (this.options.leftSidebar.visibleSidebar) {
+            w -= 200
+        }
+        const h = this.options.height
+        topLeft.x += bboxOffset
+        topLeft.y -= bboxOffset
+        botRight.x -= bboxOffset
+        botRight.y += bboxOffset
 
-        var g_w = botRight.x - topLeft.x;
-        var g_h = botRight.y - topLeft.y;
+        const g_w = botRight.x - topLeft.x
+        const g_h = botRight.y - topLeft.y
 
         // endpoint position calculations
-        var posX = 0.5 * (topLeft.x + botRight.x);
-        var posY = 0.5 * (topLeft.y + botRight.y);
-        var cx = 0.5 * w,
-            cy = 0.5 * h;
+        const posX = 0.5 * (topLeft.x + botRight.x)
+        const posY = 0.5 * (topLeft.y + botRight.y)
+        let cx = 0.5 * w
+        const cy = 0.5 * h
 
-        if (graph.options().leftSidebar().isSidebarVisible() === true)
-            cx += 200;
-        var cp = getWorldPosFromScreen(cx, cy, graphTranslation, zoomFactor);
+        if (this.options.leftSidebar.visibleSidebar) {
+            cx += 200
+        }
+        const cp = this.#getWorldPosFromScreen(
+            cx,
+            cy,
+            this.graphTranslation,
+            this.zoomFactor,
+        )
 
         // zoom factor calculations and fail safes;
-        var newZoomFactor = 1.0; // fail save if graph and window are squares
+        let newZoomFactor = 1.0 // fail save if graph and window are squares
         //get the smaller one
-        var a = w / g_w;
-        var b = h / g_h;
-        if (a < b) newZoomFactor = a;
-        else newZoomFactor = b;
-
+        const a = w / g_w
+        const b = h / g_h
+        newZoomFactor = a < b ? a : b
 
         // fail saves
-        if (newZoomFactor > zoom.scaleExtent()[1]) {
-            newZoomFactor = zoom.scaleExtent()[1];
+        if (newZoomFactor > this.zoom.scaleExtent()[1]) {
+            newZoomFactor = this.zoom.scaleExtent()[1]
         }
-        if (newZoomFactor < zoom.scaleExtent()[0]) {
-            newZoomFactor = zoom.scaleExtent()[0];
+        if (newZoomFactor < this.zoom.scaleExtent()[0]) {
+            newZoomFactor = this.zoom.scaleExtent()[0]
         }
 
         // apply Zooming
-        var sP = [cp.x, cp.y, h / zoomFactor];
-        var eP = [posX, posY, h / newZoomFactor];
+        const sP = [cp.x, cp.y, h / this.zoomFactor]
+        const eP = [posX, posY, h / newZoomFactor]
 
-
-        var pos_intp = d3.interpolateZoom(sP, eP);
-        var lenAnimation = pos_intp.duration;
+        const pos_intp = d3.interpolateZoom(sP, eP)
+        let lenAnimation = pos_intp.duration
         if (lenAnimation > 2500) {
-            lenAnimation = 2500;
+            lenAnimation = 2500
         }
-        graphContainer.attr("transform", transform(sP, cx, cy))
+        const _this = this
+        this.graphContainer
+            .attr("transform", this.#transform(sP, cx, cy))
             .transition()
             .duration(lenAnimation)
             .attrTween("transform", function () {
                 return function (t) {
                     if (dynamic) {
-                        var param = updateTargetElement();
-                        var nV = param[0](t);
-                        return transform(nV, cx, cy);
+                        const param = _this.#updateTargetElement()
+                        // @ts-ignore
+                        const nV = param[0](t)
+                        return _this.#transform(nV, cx, cy)
                     }
-                    return transform(pos_intp(t), cx, cy);
-                };
+                    return _this.#transform(pos_intp(t), cx, cy)
+                }
             })
+            // @ts-ignore
             .each("end", function () {
                 if (dynamic) {
-                    return;
+                    return
                 }
+                _this.graphContainer.attr(
+                    "transform",
+                    "translate(" +
+                        _this.graphTranslation +
+                        ")scale(" +
+                        _this.zoomFactor +
+                        ")",
+                )
+                _this.zoom.translate(_this.graphTranslation)
+                _this.zoom.scale(_this.zoomFactor)
+                _this.options.zoomSlider.updateZoomSliderValue(_this.zoomFactor)
+            })
+    }
 
-                graphContainer.attr("transform", "translate(" + graphTranslation + ")scale(" + zoomFactor + ")");
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                graph.options().zoomSlider().updateZoomSliderValue(zoomFactor);
+    isADraggerActive() {
+        return (
+            this.classDragger.mouseButtonPressed ||
+            this.domainDragger.mouseButtonPressed ||
+            this.rangeDragger.mouseButtonPressed
+        )
+    }
 
+    //** --------------------------------------------------------- **/
+    //** -- VOWL EDITOR  create/ edit /delete functions --         **/
+    //** --------------------------------------------------------- **/
+    /**
+     * @note This mutates `unfilteredData` and `properties`
+     * @param {BaseNode} element
+     * @returns {boolean} True if the node was changed succesfully
+     */
+    changeNodeType(element) {
+        const typeString = d3.select("#typeEditor").node().value
 
-            });
-    };
-
-
-    graph.isADraggerActive = function () {
-        if (classDragger.mouseButtonPressed === true ||
-            domainDragger.mouseButtonPressed === true ||
-            rangeDragger.mouseButtonPressed === true) {
-            return true;
-        }
-        return false;
-    };
-
-    /** --------------------------------------------------------- **/
-    /** -- VOWL EDITOR  create/ edit /delete functions --         **/
-    /** --------------------------------------------------------- **/
-
-    graph.changeNodeType = function (element) {
-
-        var typeString = d3.select("#typeEditor").node().value;
-
-        if (graph.classesSanityCheck(element, typeString) === false) {
+        if (!this.sanityCheckClasses(element, typeString)) {
             // call reselection to restore previous type selection
-            graph.options().editSidebar().updateSelectionInformation(element);
-            return;
+            this.options.editSidebar.updateSelectionInformation(element)
+            return false
         }
 
-        var prototype = NodePrototypeMap.get(typeString.toLowerCase());
-        var aNode = new prototype(graph);
-
-        aNode.x = element.x;
-        aNode.y = element.y;
-        aNode.px = element.x;
-        aNode.py = element.y;
-        aNode.id(element.id());
-        aNode.copyInformation(element);
+        const prototype = nodeClassMap.get(typeString.toLowerCase())
+        const aNode = new prototype(this)
+        aNode.x = element.x
+        aNode.y = element.y
+        aNode.px = element.x
+        aNode.py = element.y
+        aNode.id = element.id
+        aNode.copyInformation(element)
 
         if (typeString === "owl:Thing") {
-            aNode.label("Thing");
-        }
-        else if (elementTools.isDatatype(element) === false) {
-            if (element.backupLabel() !== undefined) {
-                aNode.label(element.backupLabel());
-            } else if (aNode.backupLabel() !== undefined) {
-                aNode.label(aNode.backupLabel());
+            aNode.label = "Thing"
+        } else if (!ElementTools.isDatatype(element)) {
+            if (element.backupLabel !== undefined) {
+                aNode.label = element.backupLabel
+            } else if (aNode.backupLabel !== undefined) {
+                aNode.label = aNode.backupLabel
             } else {
-                aNode.label("NewClass");
+                aNode.label = "NewClass"
             }
         }
 
         if (typeString === "rdfs:Datatype") {
-            if (aNode.dType() === "undefined")
-                aNode.label("undefined");
-            else {
-                var identifier = aNode.dType().split(":")[1];
-                aNode.label(identifier);
+            if (aNode.dType === "undefined") {
+                aNode.label = "undefined"
+            } else {
+                const identifier = aNode.dType.split(":")[1]
+                aNode.label = identifier
             }
         }
-        var i;
+
         // updates the property domain and range
-        for (i = 0; i < unfilteredData.properties.length; i++) {
-            if (unfilteredData.properties[i].domain() === element) {
-                //  unfilteredData.properties[i].toString();
-                unfilteredData.properties[i].domain(aNode);
+        for (let i = 0; i < this.unfilteredData.properties.length; i++) {
+            const property = this.unfilteredData.properties[i]
+            if (property.domain === element) {
+                property.domain = aNode
             }
-            if (unfilteredData.properties[i].range() === element) {
-                unfilteredData.properties[i].range(aNode);
-                //  unfilteredData.properties[i].toString();
+            if (property.range === element) {
+                property.range = aNode
             }
         }
 
         // update for fastUpdate:
-        for (i = 0; i < properties.length; i++) {
-            if (properties[i].domain() === element) {
-                //  unfilteredData.properties[i].toString();
-                properties[i].domain(aNode);
+        for (let i = 0; i < this.properties.length; i++) {
+            const property = this.properties[i]
+            if (property.domain === element) {
+                property.domain = aNode
             }
-            if (properties[i].range() === element) {
-                properties[i].range(aNode);
-                //  unfilteredData.properties[i].toString();
+            if (property.range === element) {
+                property.range = aNode
             }
         }
 
-        var remId = unfilteredData.nodes.indexOf(element);
-        if (remId !== -1)
-            unfilteredData.nodes.splice(remId, 1);
-        remId = classNodes.indexOf(element);
-        if (remId !== -1)
-            classNodes.splice(remId, 1);
-        // very important thing for selection!;
-        addNewNodeElement(aNode);
-        // handle focuser!
-        options.focuserModule().handle(aNode);
-        generateDictionary(unfilteredData);
-        graph.getUpdateDictionary();
-        element = null;
-    };
-
-
-    graph.changePropertyType = function (element) {
-        var typeString = d3.select("#typeEditor").node().value;
-
-        // create warning
-        if (graph.sanityCheckProperty(element.domain(), element.range(), typeString) === false) return false;
-
-        var propPrototype = PropertyPrototypeMap.get(typeString.toLowerCase());
-        var aProp = new propPrototype(graph);
-        aProp.copyInformation(element);
-        aProp.id(element.id());
-
-        element.domain().removePropertyElement(element);
-        element.range().removePropertyElement(element);
-        aProp.domain(element.domain());
-        aProp.range(element.range());
-
-        if (element.backupLabel() !== undefined) {
-            aProp.label(element.backupLabel());
+        // Update internal data with the new node
+        this.nodeMap.set(element.id, aNode)
+        let i = this.unfilteredData.nodes.indexOf(element)
+        if (i !== -1) {
+            this.unfilteredData.nodes[i] = aNode
         } else {
-            aProp.label("newObjectProperty");
+            this.unfilteredData.nodes.push(aNode)
         }
-
-        if (aProp.type() === "rdfs:subClassOf") {
-            aProp.iri("http://www.w3.org/2000/01/rdf-schema#subClassOf");
+        i = this.classNodes.indexOf(element)
+        if (i !== -1) {
+            this.classNodes[i] = aNode
         } else {
-            if (element.iri() === "http://www.w3.org/2000/01/rdf-schema#subClassOf")
-                aProp.iri(graph.options().getGeneralMetaObjectProperty('iri') + aProp.id());
-
+            this.classNodes.push(aNode)
         }
 
+        this.#generateDictionary(this.unfilteredData)
+        this.fastUpdate()
 
-        if (graph.propertyCheckExistenceChecker(aProp, element.domain(), element.range()) === false) {
-            graph.options().editSidebar().updateSelectionInformation(element);
-            return;
-        }
-        // // TODO: change its base IRI to proper value
-        // var ontoIRI="http://someTest.de";
-        // aProp.baseIri(ontoIRI);
-        // aProp.iri(aProp.baseIri()+aProp.id());
-
-
-        // add this to the data;
-        unfilteredData.properties.push(aProp);
-        if (properties.indexOf(aProp) === -1)
-            properties.push(aProp);
-        var remId = unfilteredData.properties.indexOf(element);
-        if (remId !== -1)
-            unfilteredData.properties.splice(remId, 1);
-        if (properties.indexOf(aProp) === -1)
-            properties.push(aProp);
-        remId = properties.indexOf(element);
-        if (remId !== -1)
-            properties.splice(remId, 1);
-        graph.fastUpdate();
-        aProp.domain().addProperty(aProp);
-        aProp.range().addProperty(aProp);
-        if (element.labelObject() && aProp.labelObject()) {
-            aProp.labelObject().x = element.labelObject().x;
-            aProp.labelObject().px = element.labelObject().px;
-            aProp.labelObject().y = element.labelObject().y;
-            aProp.labelObject().py = element.labelObject().py;
-        }
-
-        options.focuserModule().handle(aProp);
-        element = null;
-    };
-
-    graph.removeEditElements = function () {
-        // just added to be called form outside
-        removeEditElements();
-    };
-
-    function removeEditElements() {
-        rangeDragger.hideDragger(true);
-        domainDragger.hideDragger(true);
-        shadowClone.hideClone(true);
-
-        classDragger.hideDragger(true);
-        if (addDataPropertyGroupElement)
-            addDataPropertyGroupElement.classed("hidden", true);
-        if (deleteGroupElement)
-            deleteGroupElement.classed("hidden", true);
-
-
-        if (hoveredNodeElement) {
-            if (hoveredNodeElement.pinned() === false) {
-                hoveredNodeElement.locked(graph.paused());
-                hoveredNodeElement.frozen(graph.paused());
-            }
-        }
-        if (hoveredPropertyElement) {
-            if (hoveredPropertyElement.pinned() === false) {
-                hoveredPropertyElement.locked(graph.paused());
-                hoveredPropertyElement.frozen(graph.paused());
-            }
-        }
-
-
+        this.options.focuserModule.handle(aNode)
+        element = null
+        return true
     }
 
-    graph.editorMode = function (val) {
-        var create_entry = d3.select("#empty");
-        var create_container = d3.select("#emptyContainer");
+    /**
+     * @note This mutates `unfilteredData` and `properties`
+     * @param {BaseProperty} element
+     * @returns {boolean} True if the property was changed succesfully
+     */
+    changePropertyType(element) {
+        const typeString = d3.select("#typeEditor").node().value
 
-        var modeOfOpString = d3.select("#modeOfOperationString").node();
-        if (!arguments.length) {
-            create_entry.node().checked = editMode;
-            if (editMode === false) {
-                create_container.node().title = "Enable editing in modes menu to create a new ontology";
-                create_entry.node().title = "Enable editing in modes menu to create a new ontology";
-                create_entry.style("pointer-events", "none");
-            } else {
-                create_container.node().title = "Creates a new empty ontology";
-                create_entry.node().title = "Creates a new empty ontology";
-                d3.select("#useAccuracyHelper").style("color", "#2980b9");
-                d3.select("#useAccuracyHelper").style("pointer-events", "auto");
-                create_entry.node().disabled = false;
-                create_entry.style("pointer-events", "auto");
-            }
-
-            return editMode;
+        // create warning
+        if (
+            !this.sanityCheckProperty(element.domain, element.range, typeString)
+        ) {
+            return false
         }
-        graph.options().setEditorModeForDefaultObject(val);
 
+        const propPrototype = propertyClassMap.get(typeString.toLowerCase())
+        const aProp = new propPrototype(this)
+        aProp.copyInformation(element)
+        aProp.id = element.id
+
+        element.domain.removePropertyElement(element)
+        element.range.removePropertyElement(element)
+        aProp.domain = element.domain
+        aProp.range = element.range
+
+        if (element.backupLabel !== undefined) {
+            aProp.label = element.backupLabel
+        } else {
+            aProp.label = "newObjectProperty"
+        }
+
+        if (aProp.type === "rdfs:subClassOf") {
+            aProp.iri = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+        } else if (
+            element.iri === "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+        ) {
+            aProp.iri =
+                this.options.getGeneralMetaObjectProperty("iri") + aProp.id
+        }
+
+        if (
+            !this.propertyCheckExistenceChecker(
+                aProp,
+                element.domain,
+                element.range,
+            )
+        ) {
+            this.options.editSidebar.updateSelectionInformation(element)
+            return false
+        }
+
+        aProp.domain.addProperty(aProp)
+        aProp.range.addProperty(aProp)
+        if (element.labelObject && aProp.labelObject) {
+            aProp.labelObject.x = element.labelObject.x
+            aProp.labelObject.px = element.labelObject.px
+            aProp.labelObject.y = element.labelObject.y
+            aProp.labelObject.py = element.labelObject.py
+        }
+
+        // // TODO: change its base IRI to proper value
+        // const ontoIRI="http://someTest.de";
+        // aProp.baseIri=ontoIRI;
+        // aProp.iri=aProp.baseIri+aProp.id;
+
+        // Update internal data with the new property
+        this.propertyMap.set(element.id, aProp)
+        let i = this.unfilteredData.properties.indexOf(element)
+        if (i !== -1) {
+            this.unfilteredData.properties[i] = aProp
+        } else {
+            this.unfilteredData.properties.push(aProp)
+        }
+        i = this.properties.indexOf(element)
+        if (i !== -1) {
+            this.properties[i] = aProp
+        } else {
+            this.properties.push(aProp)
+        }
+
+        this.fastUpdate()
+        this.options.focuserModule.handle(aProp)
+        element = null
+        return true
+    }
+
+    removeEditElements() {
+        this.rangeDragger.hideDragger(true)
+        this.domainDragger.hideDragger(true)
+        this.shadowClone.hideClone(true)
+
+        this.classDragger.hideDragger(true)
+        if (this.addDataPropertyGroupElement)
+            this.addDataPropertyGroupElement.classed("hidden", true)
+        if (this.deleteGroupElement)
+            this.deleteGroupElement.classed("hidden", true)
+
+        if (this.hoveredNodeElement) {
+            if (this.hoveredNodeElement.pinned === false) {
+                this.hoveredNodeElement.locked = this._paused
+                this.hoveredNodeElement.frozen = this._paused
+            }
+        }
+        if (this.hoveredPropertyElement) {
+            if (this.hoveredPropertyElement.pinned === false) {
+                this.hoveredPropertyElement.locked = this._paused
+                this.hoveredPropertyElement.frozen = this._paused
+            }
+        }
+    }
+
+    get editorMode() {
+        const create_entry = d3.select("#empty")
+        const create_container = d3.select("#emptyContainer")
+
+        create_entry.node().checked = this.isEditorMode
+        if (!this.isEditorMode) {
+            create_container.node().title =
+                "Enable editing in modes menu to create a new ontology"
+            create_entry.node().title =
+                "Enable editing in modes menu to create a new ontology"
+            create_entry.style("pointer-events", "none")
+        } else {
+            create_container.node().title = "Creates a new empty ontology"
+            create_entry.node().title = "Creates a new empty ontology"
+            d3.select("#useAccuracyHelper").style("color", "#2980b9")
+            d3.select("#useAccuracyHelper").style("pointer-events", "auto")
+            create_entry.node().disabled = false
+            create_entry.style("pointer-events", "auto")
+        }
+        return this.isEditorMode
+    }
+
+    /**
+     * @param {boolean} val
+     */
+    set editorMode(val) {
+        const create_entry = d3.select("#empty")
+        const create_container = d3.select("#emptyContainer")
+        const modeOfOpString = d3.select("#modeOfOperationString").node()
+
+        this.options.setEditorModeForDefaultObject(val)
         // if (seenEditorHint===false  && val===true){
         //     seenEditorHint=true;
-        //     graph.options().warningModule().showEditorHint();
+        //     this.options.warningModule.showEditorHint();
         // }
-        editMode = val;
+        this.isEditorMode = val
 
         if (create_entry) {
-            create_entry.classed("disabled", !editMode);
-            if (!editMode) {
-                create_container.node().title = "Enable editing in modes menu to create a new ontology";
-                create_entry.node().title = "Enable editing in modes menu to create a new ontology";
-                create_entry.node().disabled = true;
-                d3.select("#useAccuracyHelper").style("color", "#979797");
-                d3.select("#useAccuracyHelper").style("pointer-events", "none");
-                create_entry.style("pointer-events", "none");
+            create_entry.classed("disabled", !this.isEditorMode)
+            if (!this.isEditorMode) {
+                create_container.node().title =
+                    "Enable editing in modes menu to create a new ontology"
+                create_entry.node().title =
+                    "Enable editing in modes menu to create a new ontology"
+                create_entry.node().disabled = true
+                d3.select("#useAccuracyHelper").style("color", "#979797")
+                d3.select("#useAccuracyHelper").style("pointer-events", "none")
+                create_entry.style("pointer-events", "none")
             } else {
-                create_container.node().title = "Creates a new empty ontology";
-                create_entry.node().title = "Creates a new empty ontology";
-                d3.select("#useAccuracyHelper").style("color", "#2980b9");
-                d3.select("#useAccuracyHelper").style("pointer-events", "auto");
-                create_entry.style("pointer-events", "auto");
+                create_container.node().title = "Creates a new empty ontology"
+                create_entry.node().title = "Creates a new empty ontology"
+                d3.select("#useAccuracyHelper").style("color", "#2980b9")
+                d3.select("#useAccuracyHelper").style("pointer-events", "auto")
+                create_entry.style("pointer-events", "auto")
             }
         }
 
         // adjust compact notation
         // selector = compactNotationOption;
         // box =ModuleCheckbox
-        var compactNotationContainer = d3.select("#compactnotationModuleCheckbox");
+        const compactNotationContainer = d3.select(
+            "#compactnotationModuleCheckbox",
+        )
         if (compactNotationContainer) {
-            compactNotationContainer.classed("disabled", !editMode);
-            if (!editMode) {
-                compactNotationContainer.node().title = "";
-                compactNotationContainer.node().disabled = false;
-                compactNotationContainer.style("pointer-events", "auto");
-                d3.select("#compactNotationOption").style("color", "");
-                d3.select("#compactNotationOption").node().title = "";
-                options.literalFilter().enabled(true);
-                graph.update();
+            compactNotationContainer.classed("disabled", !this.isEditorMode)
+            if (this.isEditorMode === false) {
+                compactNotationContainer.node().title = ""
+                compactNotationContainer.node().disabled = false
+                compactNotationContainer.style("pointer-events", "auto")
+                d3.select("#compactNotationOption").style("color", "")
+                d3.select("#compactNotationOption").node().title = ""
+                this.options.emptyLiteralFilter.enabled = true
+                // this.update() // REVIEW: Check if needed
             } else {
                 // if editor Mode
                 //1) uncheck the element
-                d3.select("#compactNotationOption").node().title = "Compact notation can only be used in view mode";
-                compactNotationContainer.node().disabled = true;
-                compactNotationContainer.node().checked = false;
-                options.compactNotationModule().enabled(false);
-                options.literalFilter().enabled(false);
-                graph.executeCompactNotationModule();
-                graph.executeEmptyLiteralFilter();
-                graph.lazyRefresh();
-                compactNotationContainer.style("pointer-events", "none");
-                d3.select("#compactNotationOption").style("color", "#979797");
+                d3.select("#compactNotationOption").node().title =
+                    "Compact notation can only be used in view mode"
+                compactNotationContainer.node().disabled = true
+                compactNotationContainer.node().checked = false
+                this.options.compactNotationModule.enabled = false
+                this.options.emptyLiteralFilter.enabled = false
+                this.executeCompactNotationModule()
+                this.executeEmptyLiteralFilter()
+                // this.lazyRefresh() // REVIEW: Check if needed
+                compactNotationContainer.style("pointer-events", "none")
+                d3.select("#compactNotationOption").style("color", "#979797")
             }
         }
 
         if (modeOfOpString) {
-            if (touchDevice === true) {
-                modeOfOpString.innerHTML = "touch able device detected";
+            if (this.touchDevice) {
+                modeOfOpString.innerHTML = "touch able device detected"
             } else {
-                modeOfOpString.innerHTML = "point & click device detected";
+                modeOfOpString.innerHTML = "point & click device detected"
             }
         }
-        var svgGraph = d3.selectAll(".vowlGraph");
 
-        if (editMode === true) {
-            options.leftSidebar().showSidebar(options.leftSidebar().getSidebarVisibility(), true);
-            options.leftSidebar().hideCollapseButton(false);
-            graph.options().editSidebar().updatePrefixUi();
-            graph.options().editSidebar().updateElementWidth();
-            svgGraph.on("dblclick.zoom", graph.modified_dblClickFunction);
-
+        const svgGraph = d3.selectAll(".vowlGraph")
+        if (this.isEditorMode) {
+            this.options.leftSidebar.showSidebar(
+                this.options.leftSidebar.getSidebarVisibility(),
+                true,
+            )
+            this.options.leftSidebar.hideCollapseButton(false)
+            this.options.editSidebar.updatePrefixUi()
+            this.options.editSidebar.updateElementWidth()
+            svgGraph.on("dblclick.zoom", () => {
+                this.modified_dblClickFunction()
+            })
         } else {
-            svgGraph.on("dblclick.zoom", originalD3_dblClickFunction);
-            options.leftSidebar().showSidebar(0);
-            options.leftSidebar().hideCollapseButton(true);
+            svgGraph.on("dblclick.zoom", this.originalD3_dblClickFunction)
+            this.options.leftSidebar.showSidebar(false)
+            this.options.leftSidebar.hideCollapseButton(true)
             // hide hovered edit elements
-            removeEditElements();
+            this.removeEditElements()
         }
-        options.sidebar().updateShowedInformation();
-        options.editSidebar().updateElementWidth();
-
-    };
-
-    function createLowerCasePrototypeMap(prototypeMap) {
-        return d3.map(prototypeMap.values(), function (Prototype) {
-            return new Prototype().type().toLowerCase();
-        });
+        this.options.sidebar.updateShowedInformation()
+        this.options.editSidebar.updateElementWidth()
     }
 
-    function createNewNodeAtPosition(pos) {
-        var aNode, prototype;
-        var forceUpdate = true;
-        // create a node of that id;
+    /**
+     * @param {{ x: any; y: any; }} pos
+     */
+    #createNewNodeAtPosition(pos) {
+        const typeToCreate = d3.select("#defaultClass").node().title
+        const prototype = nodeClassMap.get(typeToCreate.toLowerCase())
+        const aNode = new prototype(this)
+        let autoEditElement = false
 
-        var typeToCreate = d3.select("#defaultClass").node().title;
-        prototype = NodePrototypeMap.get(typeToCreate.toLowerCase());
-        aNode = new prototype(graph);
-        var autoEditElement = false;
         if (typeToCreate === "owl:Thing") {
-            aNode.label("Thing");
+            aNode.label = "Thing"
+        } else {
+            aNode.label = "NewClass"
+            autoEditElement = true
         }
-        else {
-            aNode.label("NewClass");
-            autoEditElement = true;
-        }
-        aNode.x = pos.x;
-        aNode.y = pos.y;
-        aNode.px = aNode.x;
-        aNode.py = aNode.y;
-        aNode.id("Class" + eN++);
-        // aNode.paused(true);
+        aNode.x = pos.x
+        aNode.y = pos.y
+        aNode.px = aNode.x
+        aNode.py = aNode.y
+        aNode.id = "Class" + this.eN++
+        // aNode._paused=true;
+        aNode.baseIri = d3.select("#iriEditor").node().value
+        aNode.iri = aNode.baseIri + aNode.id
 
-        aNode.baseIri(d3.select("#iriEditor").node().value);
-        aNode.iri(aNode.baseIri() + aNode.id());
-        addNewNodeElement(aNode, forceUpdate);
-        options.focuserModule().handle(aNode, true);
-        aNode.frozen(graph.paused());
-        aNode.locked(graph.paused());
-        aNode.enableEditing(autoEditElement);
+        this.#addNewNodeElement(aNode)
+        this.#generateDictionary(this.unfilteredData)
+        this.fastUpdate()
+        this.options.focuserModule.handle(aNode, true)
+        aNode.frozen = this._paused
+        aNode.locked = this._paused
+        aNode.enableEditing(autoEditElement)
     }
 
-
-    function addNewNodeElement(element) {
-        unfilteredData.nodes.push(element);
-        if (classNodes.indexOf(element) === -1)
-            classNodes.push(element);
-
-        generateDictionary(unfilteredData);
-        graph.getUpdateDictionary();
-        graph.fastUpdate();
+    /**
+     * @param {BaseNode} element
+     */
+    #addNewNodeElement(element) {
+        this.nodeMap.set(element.id, element)
+        this.unfilteredData.nodes.push(element)
+        if (this.classNodes.indexOf(element) === -1) {
+            this.classNodes.push(element)
+        }
     }
 
-    graph.getTargetNode = function (position) {
-        var dx = position[0];
-        var dy = position[1];
-        var tN = null;
-        var minDist = 1000000000000;
+    /**
+     * @param {BaseProperty} element
+     */
+    #addNewPropertyElement(element) {
+        this.propertyMap.set(element.id, element)
+        this.unfilteredData.properties.push(element)
+        if (this.properties.indexOf(element) === -1) {
+            this.properties.push(element)
+        }
+    }
+
+    /**
+     * @param {any[]} position
+     */
+    getTargetNode(position) {
+        const dx = position[0]
+        const dy = position[1]
+        let tN = null
+        let minDist = 1000000000000
+
         // This is a bit OVERKILL for the computation of one node >> TODO: KD-TREE SEARCH
-        unfilteredData.nodes.forEach(function (el) {
-            var cDist = Math.sqrt((el.x - dx) * (el.x - dx) + (el.y - dy) * (el.y - dy));
+        for (const node of this.unfilteredData.nodes) {
+            const cDist = Math.sqrt(
+                (node.x - dx) * (node.x - dx) + (node.y - dy) * (node.y - dy),
+            )
             if (cDist < minDist) {
-                minDist = cDist;
-                tN = el;
+                minDist = cDist
+                tN = node
             }
-        });
-        if (hoveredNodeElement) {
-            var offsetDist = hoveredNodeElement.actualRadius() + 30;
-            if (minDist > offsetDist) return null;
-            if (tN.renderType() === "rect") return null;
-            if (tN === hoveredNodeElement && minDist <= hoveredNodeElement.actualRadius()) {
-                return tN;
-            } else if (tN === hoveredNodeElement && minDist > hoveredNodeElement.actualRadius()) {
-                return null;
+        }
+
+        if (this.hoveredNodeElement) {
+            const offsetDist = this.hoveredNodeElement.actualRadius() + 30
+            if (minDist > offsetDist) return null
+            if (tN.renderType === "rect") return null
+            if (
+                tN === this.hoveredNodeElement &&
+                minDist <= this.hoveredNodeElement.actualRadius()
+            ) {
+                return tN
+            } else if (
+                tN === this.hoveredNodeElement &&
+                minDist > this.hoveredNodeElement.actualRadius()
+            ) {
+                return null
             }
-            return tN;
+            return tN
+        } else {
+            return minDist > tN.actualRadius() + 30 ? null : tN
         }
-        else {
+    }
 
-            if (minDist > (tN.actualRadius() + 30))
-                return null;
-            else return tN;
-
-        }
-    };
-
-    graph.genericPropertySanityCheck = function (domain, range, typeString, header, action) {
+    /**
+     * @param {BaseNode} domain
+     * @param {BaseNode} range
+     * @param {string} typeString
+     * @param {any} header
+     * @param {any} action
+     */
+    genericPropertySanityCheck(domain, range, typeString, header, action) {
         if (domain === range && typeString === "rdfs:subClassOf") {
-            graph.options().warningModule().showWarning(header,
+            this.options.warningModule.showWarning(
+                header,
                 "rdfs:subClassOf can not be created as loops (domain == range)",
-                action, 1, false);
-            return false;
+                action,
+                1,
+                domain,
+            )
+            return false
         }
         if (domain === range && typeString === "owl:disjointWith") {
-            graph.options().warningModule().showWarning(header,
-                "owl:disjointWith  can not be created as loops (domain == range)",
-                action, 1, false);
-            return false;
+            this.options.warningModule.showWarning(
+                header,
+                "owl:disjointWith can not be created as loops (domain == range)",
+                action,
+                1,
+                domain,
+            )
+            return false
         }
-        // allProps[i].type()==="owl:allValuesFrom"  ||
-        // allProps[i].type()==="owl:someValuesFrom"
-        if (domain.type() === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning(header,
+        // allProps[i].type==="owl:allValuesFrom"  ||
+        // allProps[i].type==="owl:someValuesFrom"
+        if (domain.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
+            this.options.warningModule.showWarning(
+                header,
                 "owl:allValuesFrom can not originate from owl:Thing",
-                action, 1, false);
-            return false;
+                action,
+                1,
+                domain,
+            )
+            return false
         }
-        if (domain.type() === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning(header,
+        if (
+            domain.type === "owl:Thing" &&
+            typeString === "owl:someValuesFrom"
+        ) {
+            this.options.warningModule.showWarning(
+                header,
                 "owl:someValuesFrom can not originate from owl:Thing",
-                action, 1, false);
-            return false;
+                action,
+                1,
+                domain,
+            )
+            return false
         }
-
-        if (range.type() === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning(header,
+        if (range.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
+            this.options.warningModule.showWarning(
+                header,
                 "owl:allValuesFrom can not be connected to owl:Thing",
-                action, 1, false);
-            return false;
+                action,
+                1,
+                range,
+            )
+            return false
         }
-        if (range.type() === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning(header,
+        if (range.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
+            this.options.warningModule.showWarning(
+                header,
                 "owl:someValuesFrom can not be connected to owl:Thing",
-                action, 1, false);
-            return false;
+                action,
+                1,
+                range,
+            )
+            return false
         }
+        return true // we can Change the domain or range
+    }
 
-        return true; // we can Change the domain or range
-    };
-
-    graph.checkIfIriClassAlreadyExist = function (url) {
+    /**
+     * @param {string} url
+     */
+    checkIfIriClassAlreadyExist(url) {
         // search for a class node with this url
-        var allNodes = unfilteredData.nodes;
-        for (var i = 0; i < allNodes.length; i++) {
-            if (elementTools.isDatatype(allNodes[i]) === true || allNodes[i].type() === "owl:Thing")
-                continue;
-
+        const allNodes = this.unfilteredData.nodes
+        for (let i = 0; i < allNodes.length; i++) {
+            if (
+                ElementTools.isDatatype(allNodes[i]) ||
+                allNodes[i].type === "owl:Thing"
+            ) {
+                continue
+            }
             // now we are a real class;
-            //get class IRI
-            var classIRI = allNodes[i].iri();
+            // get class IRI
+            const classIRI = allNodes[i].iri
 
             // this gives me the node for halo
             if (url === classIRI) {
-                return allNodes[i];
+                return allNodes[i]
             }
         }
-        return false;
-    };
+        return false
+    }
 
-    graph.classesSanityCheck = function (classElement, targetType) {
+    /**
+     * @param {BaseNode} classElement
+     * @param {string} targetType
+     */
+    sanityCheckClasses(classElement, targetType) {
         // this is added due to someValuesFrom properties
         // we should not be able to change a classElement to a owl:Thing
         // when it has a property attached to it that uses these restrictions
-        //
-
-        if (targetType === "owl:Class") return true;
-
-        else {
+        if (targetType === "owl:Class") {
+            return true
+        } else {
             // collect all properties which have that one as a domain or range
-            var allProps = unfilteredData.properties;
-            for (var i = 0; i < allProps.length; i++) {
-                if (allProps[i].range() === classElement || allProps[i].domain() === classElement) {
+            const allProps = this.unfilteredData.properties
+            for (let i = 0; i < allProps.length; i++) {
+                const property = allProps[i]
+                if (
+                    property.range === classElement ||
+                    property.domain === classElement
+                ) {
                     // check for the type of that property
-                    if (allProps[i].type() === "owl:someValuesFrom") {
-                        graph.options().warningModule().showWarning("Can not change class type",
+                    if (property.type === "owl:someValuesFrom") {
+                        this.options.warningModule.showWarning(
+                            "Can not change class type",
                             "The element has a property that is of type owl:someValuesFrom",
-                            "Element type not changed!", 1, true);
-                        return false;
+                            "Element type not changed!",
+                            1,
+                            classElement,
+                        )
+                        return false
                     }
-                    if (allProps[i].type() === "owl:allValuesFrom") {
-                        graph.options().warningModule().showWarning("Can not change class type",
+                    if (property.type === "owl:allValuesFrom") {
+                        this.options.warningModule.showWarning(
+                            "Can not change class type",
                             "The element has a property that is of type owl:allValuesFrom",
-                            "Element type not changed!", 1, true);
-                        return false;
+                            "Element type not changed!",
+                            1,
+                            classElement,
+                        )
+                        return false
                     }
                 }
             }
-
-
         }
-        return true;
-    };
+        return true
+    }
 
-    graph.propertyCheckExistenceChecker = function (property, domain, range) {
-        var allProps = unfilteredData.properties;
-        var i;
-        if (property.type() === "rdfs:subClassOf" || property.type() === "owl:disjointWith") {
-
-            for (i = 0; i < allProps.length; i++) {
-                if (allProps[i] === property) continue;
-                if (allProps[i].domain() === domain && allProps[i].range() === range && allProps[i].type() === property.type()) {
-                    graph.options().warningModule().showWarning("Warning",
-                        "This triple already exist!",
-                        "Element not created!", 1, false);
-                    return false;
+    /**
+     * @param {BaseProperty} property
+     * @param {BaseNode} domain
+     * @param {BaseNode} range
+     */
+    propertyCheckExistenceChecker(property, domain, range) {
+        if (
+            property.type === "rdfs:subClassOf" ||
+            property.type === "owl:disjointWith"
+        ) {
+            const allProps = this.unfilteredData.properties
+            for (let i = 0; i < allProps.length; i++) {
+                const _property = allProps[i]
+                if (_property === property) {
+                    continue
                 }
-                if (allProps[i].domain() === range && allProps[i].range() === domain && allProps[i].type() === property.type()) {
-                    graph.options().warningModule().showWarning("Warning",
+                if (
+                    _property.domain === domain &&
+                    _property.range === range &&
+                    _property.type === property.type
+                ) {
+                    this.options.warningModule.showWarning(
+                        "Warning",
+                        "This triple already exist!",
+                        "Element not created!",
+                        1,
+                        undefined,
+                    )
+                    return false
+                }
+                if (
+                    _property.domain === range &&
+                    _property.range === domain &&
+                    _property.type === property.type
+                ) {
+                    this.options.warningModule.showWarning(
+                        "Warning",
                         "Inverse assignment already exist! ",
-                        "Element not created!", 1, false);
-                    return false;
+                        "Element not created!",
+                        1,
+                        undefined,
+                    )
+                    return false
                 }
             }
-            return true;
         }
-        return true;
-    };
+        return true
+    }
 
-    // graph.checkForTripleDuplicate=function(property){
-    //     var domain=property.domain();
-    //     var range=property.range();
-    //     console.log("checking for duplicates");
-    //     var b1= domain.isPropertyAssignedToThisElement(property);
-    //     var b2= range.isPropertyAssignedToThisElement(property);
-    //
-    //     console.log("test domain results in "+ b1);
-    //     console.log("test range results in "+ b1);
-    //
-    //     if (b1  && b2 ){
-    //         graph.options().warningModule().showWarning("Warning",
-    //             "This triple already exist!",
-    //             "Element not created!",1,false);
-    //         return false;
-    //     }
-    //     return true;
-    // };
-
-    graph.sanityCheckProperty = function (domain, range, typeString) {
-
+    /**
+     * @param {BaseNode} domain
+     * @param {BaseNode} range
+     * @param {string} typeString
+     */
+    sanityCheckProperty(domain, range, typeString) {
         // check for duplicate triple in the element;
-
-
-        if (typeString === "owl:objectProperty" && graph.options().objectPropertyFilter().enabled() === true) {
-            graph.options().warningModule().showWarning("Warning",
+        if (
+            typeString === "owl:objectProperty" &&
+            this.options.objectPropertyFilter.enabled
+        ) {
+            this.options.warningModule.showWarning(
+                "Warning",
                 "Object properties are filtered out in the visualization!",
-                "Element not created!", 1, false);
-            return false;
+                "Element not created!",
+                1,
+                undefined,
+            )
+            return false
         }
-
-        if (typeString === "owl:disjointWith" && graph.options().disjointPropertyFilter().enabled() === true) {
-            graph.options().warningModule().showWarning("Warning",
+        if (
+            typeString === "owl:disjointWith" &&
+            this.options.disjointPropertyFilter.enabled
+        ) {
+            this.options.warningModule.showWarning(
+                "Warning",
                 "owl:disjointWith properties are filtered out in the visualization!",
-                "Element not created!", 1, false);
-            return false;
+                "Element not created!",
+                1,
+                undefined,
+            )
+            return false
         }
-
-
         if (domain === range && typeString === "rdfs:subClassOf") {
-            graph.options().warningModule().showWarning("Warning",
+            this.options.warningModule.showWarning(
+                "Warning",
                 "rdfs:subClassOf can not be created as loops (domain == range)",
-                "Element not created!", 1, false);
-            return false;
+                "Element not created!",
+                1,
+                domain,
+            )
+            return false
         }
         if (domain === range && typeString === "owl:disjointWith") {
-            graph.options().warningModule().showWarning("Warning",
+            this.options.warningModule.showWarning(
+                "Warning",
                 "owl:disjointWith  can not be created as loops (domain == range)",
-                "Element not created!", 1, false);
-            return false;
+                "Element not created!",
+                1,
+                domain,
+            )
+            return false
         }
-
-        if (domain.type() === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning("Warning",
+        if (
+            domain.type === "owl:Thing" &&
+            typeString === "owl:someValuesFrom"
+        ) {
+            this.options.warningModule.showWarning(
+                "Warning",
                 "owl:someValuesFrom can not originate from owl:Thing",
-                "Element not created!", 1, false);
-            return false;
+                "Element not created!",
+                1,
+                domain,
+            )
+            return false
         }
-        if (domain.type() === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning("Warning",
+        if (domain.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
+            this.options.warningModule.showWarning(
+                "Warning",
                 "owl:allValuesFrom can not originate from owl:Thing",
-                "Element not created!", 1, false);
-            return false;
+                "Element not created!",
+                1,
+                domain,
+            )
+            return false
         }
-
-        if (range.type() === "owl:Thing" && typeString === "owl:allValuesFrom") {
-            graph.options().warningModule().showWarning("Warning",
+        if (range.type === "owl:Thing" && typeString === "owl:allValuesFrom") {
+            this.options.warningModule.showWarning(
+                "Warning",
                 "owl:allValuesFrom can not be connected to owl:Thing",
-                "Element not created!", 1, false);
-            return false;
+                "Element not created!",
+                1,
+                range,
+            )
+            return false
         }
-        if (range.type() === "owl:Thing" && typeString === "owl:someValuesFrom") {
-            graph.options().warningModule().showWarning("Warning",
+        if (range.type === "owl:Thing" && typeString === "owl:someValuesFrom") {
+            this.options.warningModule.showWarning(
+                "Warning",
                 "owl:someValuesFrom can not be connected to owl:Thing",
-                "Element not created!", 1, false);
-            return false;
+                "Element not created!",
+                1,
+                range,
+            )
+            return false
         }
-        return true; // we can create a property
-    };
+        return true // we can create a property
+    }
 
-    function createNewObjectProperty(domain, range, draggerEndposition) {
+    /**
+     * @param {BaseNode} domain
+     * @param {BaseNode} range
+     * @param {number[]} draggerEndposition
+     */
+    #createNewObjectProperty(domain, range, draggerEndposition) {
         // check type of the property that we want to create;
-
-        var defaultPropertyName = d3.select("#defaultProperty").node().title;
+        const defaultPropertyName = d3.select("#defaultProperty").node().title
 
         // check if we are allow to create that property
-        if (graph.sanityCheckProperty(domain, range, defaultPropertyName) === false) return false;
+        if (!this.sanityCheckProperty(domain, range, defaultPropertyName)) {
+            return false
+        }
 
-
-        var propPrototype = PropertyPrototypeMap.get(defaultPropertyName.toLowerCase());
-        var aProp = new propPrototype(graph);
-        aProp.id("objectProperty" + eP++);
-        aProp.domain(domain);
-        aProp.range(range);
-        aProp.label("newObjectProperty");
-        aProp.baseIri(d3.select("#iriEditor").node().value);
-        aProp.iri(aProp.baseIri() + aProp.id());
+        const propPrototype = propertyClassMap.get(
+            defaultPropertyName.toLowerCase(),
+        )
+        const aProp = new propPrototype(this)
+        aProp.id = "objectProperty" + this.eP++
+        aProp.domain = domain
+        aProp.range = range
+        aProp.label = "newObjectProperty"
+        aProp.baseIri = d3.select("#iriEditor").node().value
+        aProp.iri = aProp.baseIri + aProp.id
 
         // check for duplicate;
-        if (graph.propertyCheckExistenceChecker(aProp, domain, range) === false) {
-            // delete aProp;
-            // hope for garbage collection here -.-
-            return false;
+        if (!this.propertyCheckExistenceChecker(aProp, domain, range)) {
+            return false
         }
 
-        var autoEditElement = false;
-
+        let autoEditElement = false
         if (defaultPropertyName === "owl:objectProperty") {
-            autoEditElement = true;
+            autoEditElement = true
         }
-        var pX = 0.49 * (domain.x + range.x);
-        var pY = 0.49 * (domain.y + range.y);
+        let pX = 0.49 * (domain.x + range.x)
+        let pY = 0.49 * (domain.y + range.y)
 
         if (domain === range) {
             // we use the dragger endposition to determine an angle to put the loop there;
-            var dirD_x = draggerEndposition[0] - domain.x;
-            var dirD_y = draggerEndposition[1] - domain.y;
+            const dirD_x = draggerEndposition[0] - domain.x
+            const dirD_y = draggerEndposition[1] - domain.y
 
             // normalize;
-            var len = Math.sqrt(dirD_x * dirD_x + dirD_y * dirD_y);
+            const len = Math.sqrt(dirD_x * dirD_x + dirD_y * dirD_y)
+
             // it should be very hard to set the position on the same sport but why not handling this
-            var nx = dirD_x / len;
-            var ny = dirD_y / len;
-            // is Nan in javascript like in c len==len returns false when it is not a number?
+            let nx = dirD_x / len
+            let ny = dirD_y / len
+
             if (isNaN(len)) {
-                nx = 0;
-                ny = -1;
+                nx = 0
+                ny = -1
             }
 
             // get domain actual raidus
-            var offset = 2 * domain.actualRadius() + 50;
-            pX = domain.x + offset * nx;
-            pY = domain.y + offset * ny;
+            const offset = 2 * domain.actualRadius() + 50
+            pX = domain.x + offset * nx
+            pY = domain.y + offset * ny
         }
 
         // add this property to domain and range;
-        domain.addProperty(aProp);
-        range.addProperty(aProp);
+        domain.addProperty(aProp)
+        range.addProperty(aProp)
 
+        this.#addNewPropertyElement(aProp)
+        this.#generateDictionary(this.unfilteredData)
+        this.fastUpdate()
 
-        // add this to the data;
-        unfilteredData.properties.push(aProp);
-        if (properties.indexOf(aProp) === -1)
-            properties.push(aProp);
-        graph.fastUpdate();
-        aProp.labelObject().x = pX;
-        aProp.labelObject().px = pX;
-        aProp.labelObject().y = pY;
-        aProp.labelObject().py = pY;
+        aProp.labelObject.x = pX
+        aProp.labelObject.px = pX
+        aProp.labelObject.y = pY
+        aProp.labelObject.py = pY
 
-        aProp.frozen(graph.paused());
-        aProp.locked(graph.paused());
-        domain.frozen(graph.paused());
-        domain.locked(graph.paused());
-        range.frozen(graph.paused());
-        range.locked(graph.paused());
-
-
-        generateDictionary(unfilteredData);
-        graph.getUpdateDictionary();
-
-        options.focuserModule().handle(aProp);
-        graph.activateHoverElementsForProperties(true, aProp, false, touchDevice);
-        aProp.labelObject().increasedLoopAngle = true;
-        aProp.enableEditing(autoEditElement);
+        aProp.frozen = this._paused
+        aProp.locked = this._paused
+        domain.frozen = this._paused
+        domain.locked = this._paused
+        range.frozen = this._paused
+        range.locked = this._paused
+        this.options.focuserModule.handle(aProp)
+        this.activateHoverElementsForProperties(
+            true,
+            aProp,
+            false,
+            this.touchDevice,
+        )
+        aProp.labelObject.increasedLoopAngle = true
+        aProp.enableEditing(autoEditElement)
+        return true
     }
 
-    graph.createDataTypeProperty = function (node) {
+    /**
+     * @param {BaseNode} node
+     */
+    createDataTypeProperty(node) {
         // random postion issues;
-        clearTimeout(nodeFreezer);
+        clearTimeout(this.nodeFreezer)
         // tells user when element is filtered out
-        if (graph.options().datatypeFilter().enabled() === true) {
-            graph.options().warningModule().showWarning("Warning",
+        if (this.options.datatypeFilter.enabled) {
+            this.options.warningModule.showWarning(
+                "Warning",
                 "Datatype properties are filtered out in the visualization!",
-                "Element not created!", 1, false);
-            return;
+                "Element not created!",
+                1,
+                undefined,
+            )
+            return
         }
 
-
-        var aNode, prototype;
-
+        let aNode
         // create a default datatype Node >> HERE LITERAL;
-        var defaultDatatypeName = d3.select("#defaultDatatype").node().title;
+        const defaultDatatypeName = d3.select("#defaultDatatype").node().title
         if (defaultDatatypeName === "rdfs:Literal") {
-            prototype = NodePrototypeMap.get("rdfs:literal");
-            aNode = new prototype(graph);
-            aNode.label("Literal");
-            aNode.iri("http://www.w3.org/2000/01/rdf-schema#Literal");
-            aNode.baseIri("http://www.w3.org/2000/01/rdf-schema#");
+            const prototype = nodeClassMap.get("rdfs:literal")
+            aNode = new prototype(this)
+            aNode.label = "Literal"
+            aNode.iri = "http://www.w3.org/2000/01/rdf-schema#Literal"
+            aNode.baseIri = "http://www.w3.org/2000/01/rdf-schema#"
         } else {
-            prototype = NodePrototypeMap.get("rdfs:datatype");
-            aNode = new prototype(graph);
-            var identifier = "";
+            const prototype = nodeClassMap.get("rdfs:datatype")
+            aNode = new prototype(this)
             if (defaultDatatypeName === "undefined") {
-                identifier = "undefined";
-
-                aNode.label(identifier);
+                const identifier = "undefined"
+                aNode.label = identifier
                 // TODO : HANDLER FOR UNDEFINED DATATYPES!!<<<>>>>>>>>>>>..
-                aNode.iri("http://www.undefinedDatatype.org/#" + identifier);
-                aNode.baseIri("http://www.undefinedDatatype.org/#");
-                aNode.dType(defaultDatatypeName);
+                aNode.iri = "http://www.undefinedDatatype.org/#" + identifier
+                aNode.baseIri = "http://www.undefinedDatatype.org/#"
+                aNode.dType = defaultDatatypeName
             } else {
-                identifier = defaultDatatypeName.split(":")[1];
-                aNode.label(identifier);
-                aNode.dType(defaultDatatypeName);
-                aNode.iri("http://www.w3.org/2001/XMLSchema#" + identifier);
-                aNode.baseIri("http://www.w3.org/2001/XMLSchema#");
+                const identifier = defaultDatatypeName.split(":")[1]
+                aNode.label = identifier
+                aNode.dType = defaultDatatypeName
+                aNode.iri = "http://www.w3.org/2001/XMLSchema#" + identifier
+                aNode.baseIri = "http://www.w3.org/2001/XMLSchema#"
             }
         }
 
-
-        var nX = node.x - node.actualRadius() - 100;
-        var nY = node.y + node.actualRadius() + 100;
-
-        aNode.x = nX;
-        aNode.y = nY;
-        aNode.px = aNode.x;
-        aNode.py = aNode.y;
-        aNode.id("NodeId" + eN++);
-        // add this property to the nodes;
-        unfilteredData.nodes.push(aNode);
-        if (classNodes.indexOf(aNode) === -1)
-            classNodes.push(aNode);
-
+        const nX = node.x - node.actualRadius() - 100
+        const nY = node.y + node.actualRadius() + 100
+        aNode.x = nX
+        aNode.y = nY
+        aNode.px = aNode.x
+        aNode.py = aNode.y
+        aNode.id = "NodeId" + this.eN++
 
         // add also the datatype Property to it
-        var propPrototype = PropertyPrototypeMap.get("owl:datatypeproperty");
-        var aProp = new propPrototype(graph);
-        aProp.id("datatypeProperty" + eP++);
+        const propPrototype = propertyClassMap.get("owl:datatypeproperty")
+        const aProp = new propPrototype(this)
+        aProp.id = "datatypeProperty" + this.eP++
 
         // create the connection
-        aProp.domain(node);
-        aProp.range(aNode);
-        aProp.label("newDatatypeProperty");
-
+        aProp.domain = node
+        aProp.range = aNode
+        aProp.label = "newDatatypeProperty"
 
         // TODO: change its base IRI to proper value
-        var ontoIri = d3.select("#iriEditor").node().value;
-        aProp.baseIri(ontoIri);
-        aProp.iri(ontoIri + aProp.id());
-        // add this to the data;
-        unfilteredData.properties.push(aProp);
-        if (properties.indexOf(aProp) === -1)
-            properties.push(aProp);
-        graph.fastUpdate();
-        generateDictionary(unfilteredData);
-        graph.getUpdateDictionary();
+        const ontoIri = d3.select("#iriEditor").node().value
+        aProp.baseIri = ontoIri
+        aProp.iri = ontoIri + aProp.id
 
-        nodeFreezer = setTimeout(function () {
-            if (node && node.frozen() === true && node.pinned() === false && graph.paused() === false) {
-                node.frozen(graph.paused());
-                node.locked(graph.paused());
+        this.#addNewNodeElement(aNode)
+        this.#addNewPropertyElement(aProp)
+        this.#generateDictionary(this.unfilteredData)
+        this.fastUpdate()
+
+        const _this = this
+        this.nodeFreezer = setTimeout(function () {
+            if (node && node.frozen && !node.pinned && !_this._paused) {
+                node.frozen = _this._paused
+                node.locked = _this._paused
             }
-        }, 1000);
-        options.focuserModule().handle(undefined);
+        }, 1000)
+        this.options.focuserModule.handle(undefined)
         if (node) {
-            node.frozen(true);
-            node.locked(true);
+            node.frozen = true
+            node.locked = true
         }
-    };
+    }
 
-    graph.removeNodesViaResponse = function (nodesToRemove, propsToRemove) {
-        var i, remId;
-        // splice them;
-        for (i = 0; i < propsToRemove.length; i++) {
-            remId = unfilteredData.properties.indexOf(propsToRemove[i]);
-            if (remId !== -1)
-                unfilteredData.properties.splice(remId, 1);
-            remId = properties.indexOf(propsToRemove[i]);
-            if (remId !== -1)
-                properties.splice(remId, 1);
-            propsToRemove[i] = null;
-        }
-        for (i = 0; i < nodesToRemove.length; i++) {
-            remId = unfilteredData.nodes.indexOf(nodesToRemove[i]);
-            if (remId !== -1) {
-                unfilteredData.nodes.splice(remId, 1);
+    /**
+     * @param {BaseNode[]} nodesToRemove
+     * @param {BaseProperty[]} propsToRemove
+     */
+    removeNodesViaResponse(nodesToRemove, propsToRemove) {
+        for (let i = 0; i < propsToRemove.length; i++) {
+            this.propertyMap.delete(propsToRemove[i].id)
+            let id = this.unfilteredData.properties.indexOf(propsToRemove[i])
+            if (id !== -1) {
+                this.unfilteredData.properties.splice(id, 1)
             }
-            remId = classNodes.indexOf(nodesToRemove[i]);
-            if (remId !== -1)
-                classNodes.splice(remId, 1);
-            nodesToRemove[i] = null;
+            id = this.properties.indexOf(propsToRemove[i])
+            if (id !== -1) {
+                this.properties.splice(id, 1)
+            }
+            propsToRemove[i] = null
         }
-        graph.fastUpdate();
-        generateDictionary(unfilteredData);
-        graph.getUpdateDictionary();
-        options.focuserModule().handle(undefined);
-        nodesToRemove = null;
-        propsToRemove = null;
+        for (let i = 0; i < nodesToRemove.length; i++) {
+            let id = this.unfilteredData.nodes.indexOf(nodesToRemove[i])
+            if (id !== -1) {
+                this.unfilteredData.nodes.splice(id, 1)
+            }
+            id = this.classNodes.indexOf(nodesToRemove[i])
+            if (id !== -1) {
+                this.classNodes.splice(id, 1)
+            }
+            nodesToRemove[i] = null
+        }
+        this.#generateDictionary(this.unfilteredData)
+        this.fastUpdate()
+        this.options.focuserModule.handle(undefined)
+        nodesToRemove = null
+        propsToRemove = null
+    }
 
-    };
+    /**
+     * @param {BaseNode} node
+     */
+    removeNodeViaEditor(node) {
+        const propsToRemove = []
+        const nodesToRemove = []
+        let datatypes = 0
 
-    graph.removeNodeViaEditor = function (node) {
-        var propsToRemove = [];
-        var nodesToRemove = [];
-        var datatypes = 0;
-
-        var remId;
-
-        nodesToRemove.push(node);
-        for (var i = 0; i < unfilteredData.properties.length; i++) {
-            if (unfilteredData.properties[i].domain() === node || unfilteredData.properties[i].range() === node) {
-                propsToRemove.push(unfilteredData.properties[i]);
-                if (unfilteredData.properties[i].type().toLocaleLowerCase() === "owl:datatypeproperty" &&
-                    unfilteredData.properties[i].range() !== node) {
-                    nodesToRemove.push(unfilteredData.properties[i].range());
-                    datatypes++;
+        nodesToRemove.push(node)
+        for (let i = 0; i < this.unfilteredData.properties.length; i++) {
+            if (
+                this.unfilteredData.properties[i].domain === node ||
+                this.unfilteredData.properties[i].range === node
+            ) {
+                propsToRemove.push(this.unfilteredData.properties[i])
+                if (
+                    this.unfilteredData.properties[
+                        i
+                    ].type.toLocaleLowerCase() === "owl:datatypeproperty" &&
+                    this.unfilteredData.properties[i].range !== node
+                ) {
+                    nodesToRemove.push(this.unfilteredData.properties[i].range)
+                    datatypes++
                 }
             }
         }
-        var removedItems = propsToRemove.length + nodesToRemove.length;
-        if (removedItems > 2) {
-            var text = "You are about to delete 1 class and " + propsToRemove.length + " properties";
+        if (propsToRemove.length + nodesToRemove.length > 2) {
+            let text =
+                "You are about to delete 1 class and " +
+                propsToRemove.length +
+                " properties"
             if (datatypes !== 0) {
-                text = "You are about to delete 1 class, " + datatypes + " datatypes  and " + propsToRemove.length + " properties";
+                text =
+                    "You are about to delete 1 class, " +
+                    datatypes +
+                    " datatypes  and " +
+                    propsToRemove.length +
+                    " properties"
             }
-
-
-            graph.options().warningModule().responseWarning(
+            this.options.warningModule.responseWarning(
                 "Removing elements",
                 text,
-                "Awaiting response!", graph.removeNodesViaResponse, [nodesToRemove, propsToRemove], false);
-
-
-            //
-            // if (confirm("Remove :\n"+propsToRemove.length + " properties\n"+nodesToRemove.length+" classes? ")===false){
-            //     return;
-            // }else{
-            //     // todo : store for undo delete button ;
-            // }
+                "Awaiting response!",
+                (nodesToRemove, propsToRemove) => {
+                    this.removeNodesViaResponse(nodesToRemove, propsToRemove)
+                },
+                [nodesToRemove, propsToRemove],
+            )
         } else {
-            // splice them;
-            for (i = 0; i < propsToRemove.length; i++) {
-                remId = unfilteredData.properties.indexOf(propsToRemove[i]);
-                if (remId !== -1)
-                    unfilteredData.properties.splice(remId, 1);
-                remId = properties.indexOf(propsToRemove[i]);
-                if (remId !== -1)
-                    properties.splice(remId, 1);
-                propsToRemove[i] = null;
-            }
-            for (i = 0; i < nodesToRemove.length; i++) {
-                remId = unfilteredData.nodes.indexOf(nodesToRemove[i]);
-                if (remId !== -1)
-                    unfilteredData.nodes.splice(remId, 1);
-                remId = classNodes.indexOf(nodesToRemove[i]);
-                if (remId !== -1)
-                    classNodes.splice(remId, 1);
-                nodesToRemove[i] = null;
-            }
-            graph.fastUpdate();
-            generateDictionary(unfilteredData);
-            graph.getUpdateDictionary();
-            options.focuserModule().handle(undefined);
-            nodesToRemove = null;
-            propsToRemove = null;
+            this.removeNodesViaResponse(nodesToRemove, propsToRemove)
         }
-    };
+    }
 
-    graph.removePropertyViaEditor = function (property) {
-        property.domain().removePropertyElement(property);
-        property.range().removePropertyElement(property);
-        var remId;
+    /**
+     * @param {BaseProperty} property
+     */
+    removePropertyViaEditor(property) {
+        property.domain.removePropertyElement(property)
+        property.range.removePropertyElement(property)
 
-        if (property.type().toLocaleLowerCase() === "owl:datatypeproperty") {
-            var datatype = property.range();
-            remId = unfilteredData.nodes.indexOf(property.range());
-            if (remId !== -1)
-                unfilteredData.nodes.splice(remId, 1);
-            remId = classNodes.indexOf(property.range());
-            if (remId !== -1)
-                classNodes.splice(remId, 1);
-            datatype = null;
+        let nodesToRemove = []
+        let propsToRemove = [property]
+
+        if (property.type.toLocaleLowerCase() === "owl:datatypeproperty") {
+            nodesToRemove.push(property.range)
         }
-        remId = unfilteredData.properties.indexOf(property);
-        if (remId !== -1)
-            unfilteredData.properties.splice(remId, 1);
-        remId = properties.indexOf(property);
-        if (remId !== -1)
-            properties.splice(remId, 1);
-        if (property.inverse()) {
-            // so we have inverse
-            property.inverse().inverse(0);
-
+        if (property.inverse) {
+            property.inverse.inverse = undefined
         }
+        this.removeNodesViaResponse(nodesToRemove, propsToRemove)
+        this.hoveredPropertyElement = undefined
+    }
 
+    executeColorExternalsModule() {
+        this.options.colorExternalsModule.filter(
+            this.unfilteredData.nodes,
+            this.unfilteredData.properties,
+        )
+    }
 
-        hoveredPropertyElement = undefined;
-        graph.fastUpdate();
-        generateDictionary(unfilteredData);
-        graph.getUpdateDictionary();
-        options.focuserModule().handle(undefined);
-        property = null;
-    };
-
-    graph.executeColorExternalsModule = function () {
-        options.colorExternalsModule().filter(unfilteredData.nodes, unfilteredData.properties);
-    };
-
-    graph.executeCompactNotationModule = function () {
-        if (unfilteredData) {
-            options.compactNotationModule().filter(unfilteredData.nodes, unfilteredData.properties);
+    executeCompactNotationModule() {
+        if (this.unfilteredData) {
+            this.options.compactNotationModule.filter(
+                this.unfilteredData.nodes,
+                this.unfilteredData.properties,
+            )
         }
+    }
 
-    };
-    graph.executeEmptyLiteralFilter = function () {
-
-        if (unfilteredData && unfilteredData.nodes.length > 1) {
-            options.literalFilter().filter(unfilteredData.nodes, unfilteredData.properties);
-            unfilteredData.nodes = options.literalFilter().filteredNodes();
-            unfilteredData.properties = options.literalFilter().filteredProperties();
+    executeEmptyLiteralFilter() {
+        if (this.unfilteredData && this.unfilteredData.nodes.length > 1) {
+            this.options.emptyLiteralFilter.filter(
+                this.unfilteredData.nodes,
+                this.unfilteredData.properties,
+            )
+            this.unfilteredData.nodes =
+                this.options.emptyLiteralFilter.filteredNodes
+            this.unfilteredData.properties =
+                this.options.emptyLiteralFilter.filteredProperties
         }
+    }
 
-    };
-
-
-    /** --------------------------------------------------------- **/
-    /** -- animation functions for the nodes --                   **/
-    /** --------------------------------------------------------- **/
-
-    graph.animateDynamicLabelWidth = function () {
-        var wantedWidth = options.dynamicLabelWidth();
-        var i;
-        for (i = 0; i < classNodes.length; i++) {
-            var nodeElement = classNodes[i];
-            if (elementTools.isDatatype(nodeElement)) {
-                nodeElement.animateDynamicLabelWidth(wantedWidth);
-            }
-        }
-        for (i = 0; i < properties.length; i++) {
-            properties[i].animateDynamicLabelWidth(wantedWidth);
-        }
-    };
-
-
-    /** --------------------------------------------------------- **/
-    /** -- Touch behaviour functions --                   **/
-    /** --------------------------------------------------------- **/
-
-    graph.setTouchDevice = function (val) {
-        touchDevice = val;
-    };
-
-    graph.isTouchDevice = function () {
-        return touchDevice;
-    };
-
-    graph.modified_dblClickFunction = function () {
-
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
+    //** --------------------------------------------------------- **/
+    //** -- Touch behaviour functions --                   **/
+    //** --------------------------------------------------------- **/
+    modified_dblClickFunction() {
+        d3.event.stopPropagation()
+        d3.event.preventDefault()
         // get position where we want to add the node;
-        var grPos = getClickedScreenCoords(d3.event.clientX, d3.event.clientY, graph.translation(), graph.scaleFactor());
-        createNewNodeAtPosition(grPos);
-    };
-
-    function doubletap() {
-        var touch_time = d3.event.timeStamp;
-        var numTouchers = 1;
-        if (d3.event && d3.event.touches && d3.event.touches.length)
-            numTouchers = d3.event.touches.length;
-
-        if (touch_time - last_touch_time < 300 && numTouchers === 1) {
-            d3.event.stopPropagation();
-            if (editMode === true) {
-                //graph.modified_dblClickFunction();
-                d3.event.preventDefault();
-                d3.event.stopPropagation();
-                last_touch_time = touch_time;
-                return true;
-            }
-        }
-        last_touch_time = touch_time;
-        return false;
+        const grPos = this.#getClickedScreenCoords(
+            d3.event.clientX,
+            d3.event.clientY,
+            this.getTranslation(),
+            this.getScaleFactor(),
+        )
+        this.#createNewNodeAtPosition(grPos)
     }
 
-
-    function touchzoomed() {
-        forceNotZooming = true;
-
-
-        var touch_time = d3.event.timeStamp;
-        if (touch_time - last_touch_time < 300 && d3.event.touches.length === 1) {
-            d3.event.stopPropagation();
-
-            if (editMode === true) {
-                //graph.modified_dblClickFunction();
-                d3.event.preventDefault();
-                d3.event.stopPropagation();
-                zoom.translate(graphTranslation);
-                zoom.scale(zoomFactor);
-                graph.modified_dblTouchFunction();
-            }
-            else {
-                forceNotZooming = false;
-                if (originalD3_touchZoomFunction)
-                    originalD3_touchZoomFunction();
-            }
-            return;
+    #doubletap() {
+        const touch_time = d3.event.timeStamp
+        let numTouchers = 1
+        if (d3.event && d3.event.touches && d3.event.touches.length) {
+            numTouchers = d3.event.touches.length
         }
-        forceNotZooming = false;
-        last_touch_time = touch_time;
+        if (touch_time - this.last_touch_time < 300 && numTouchers === 1) {
+            d3.event.stopPropagation()
+            if (this.isEditorMode) {
+                //graph.modified_dblClickFunction();
+                d3.event.preventDefault()
+                d3.event.stopPropagation()
+                this.last_touch_time = touch_time
+                return true
+            }
+        }
+        this.last_touch_time = touch_time
+        return false
+    }
+
+    #touchzoomed() {
+        this.forceNotZooming = true
+        const touch_time = d3.event.timeStamp
+        if (
+            touch_time - this.last_touch_time < 300 &&
+            d3.event.touches.length === 1
+        ) {
+            d3.event.stopPropagation()
+            if (this.isEditorMode) {
+                //graph.modified_dblClickFunction();
+                d3.event.preventDefault()
+                d3.event.stopPropagation()
+                this.zoom.translate(this.graphTranslation)
+                this.zoom.scale(this.zoomFactor)
+                this.modified_dblTouchFunction()
+            } else {
+                this.forceNotZooming = false
+                if (this.originalD3_touchZoomFunction)
+                    this.originalD3_touchZoomFunction() // REVIEW: Might be context issues when calling
+            }
+            return
+        }
+        this.forceNotZooming = false
+        this.last_touch_time = touch_time
         // TODO: WORK AROUND TO CHECK FOR ORIGINAL FUNCTION
-        if (originalD3_touchZoomFunction)
-            originalD3_touchZoomFunction();
+        if (this.originalD3_touchZoomFunction)
+            this.originalD3_touchZoomFunction() // REVIEW: Might be context issues when calling
     }
 
-    graph.modified_dblTouchFunction = function (d) {
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
-        var xy;
-        if (editMode === true) {
-            xy = d3.touches(d3.selectAll(".vowlGraph").node());
+    modified_dblTouchFunction() {
+        d3.event.stopPropagation()
+        d3.event.preventDefault()
+        if (this.isEditorMode) {
+            const xy = d3.touches(d3.selectAll(".vowlGraph").node())
+            const grPos = this.#getClickedScreenCoords(
+                xy[0][0],
+                xy[0][1],
+                this.getTranslation(),
+                this.getScaleFactor(),
+            )
+            this.#createNewNodeAtPosition(grPos)
         }
-        var grPos = getClickedScreenCoords(xy[0][0], xy[0][1], graph.translation(), graph.scaleFactor());
-        createNewNodeAtPosition(grPos);
-    };
+    }
 
-    /** --------------------------------------------------------- **/
-    /** -- Hover and Selection functions, adding edit elements --  **/
-    /** --------------------------------------------------------- **/
+    //** --------------------------------------------------------- **/
+    //** -- Hover and Selection functions, adding edit elements -- **/
+    //** --------------------------------------------------------- **/
 
-    graph.ignoreOtherHoverEvents = function (val) {
-        if (!arguments.length) {
-            return ignoreOtherHoverEvents;
+    /**
+     * @param {boolean} touchBehaviour
+     */
+    #delayedHiddingHoverElements(touchBehaviour = false) {
+        if (touchBehaviour) {
+            return
         }
-        else ignoreOtherHoverEvents = val;
-    };
-
-    function delayedHiddingHoverElements(tbh) {
-        if (tbh === true) return;
-        if (hoveredNodeElement) {
-            if (hoveredNodeElement.editingTextElement === true) return;
-            delayedHider = setTimeout(function () {
-                deleteGroupElement.classed("hidden", true);
-                addDataPropertyGroupElement.classed("hidden", true);
-                classDragger.hideDragger(true);
-                if (hoveredNodeElement && hoveredNodeElement.pinned() === false && graph.paused() === false && hoveredNodeElement.editingTextElement === false) {
-                    hoveredNodeElement.frozen(false);
-                    hoveredNodeElement.locked(false);
+        if (this.hoveredNodeElement) {
+            if (this.hoveredNodeElement.editingTextElement) {
+                return
+            }
+            this.delayedHider = setTimeout(() => {
+                this.deleteGroupElement.classed("hidden", true)
+                this.addDataPropertyGroupElement.classed("hidden", true)
+                this.classDragger.hideDragger(true)
+                if (
+                    this.hoveredNodeElement &&
+                    !this.hoveredNodeElement.pinned &&
+                    !this._paused &&
+                    !this.hoveredNodeElement.editingTextElement
+                ) {
+                    this.hoveredNodeElement.frozen = false
+                    this.hoveredNodeElement.locked = false
                 }
-            }, 1000);
+            }, 1000)
         }
-        if (hoveredPropertyElement) {
-            if (hoveredPropertyElement.editingTextElement === true) return;
-            delayedHider = setTimeout(function () {
-                deleteGroupElement.classed("hidden", true);
-                addDataPropertyGroupElement.classed("hidden", true);
-                classDragger.hideDragger(true);
-                rangeDragger.hideDragger(true);
-                domainDragger.hideDragger(true);
-                shadowClone.hideClone(true);
-                if (hoveredPropertyElement && hoveredPropertyElement.focused() === true && graph.options().drawPropertyDraggerOnHover() === true) {
-                    hoveredPropertyElement.labelObject().increasedLoopAngle = false;
+        if (this.hoveredPropertyElement) {
+            if (this.hoveredPropertyElement.editingTextElement) {
+                return
+            }
+            this.delayedHider = setTimeout(() => {
+                this.deleteGroupElement.classed("hidden", true)
+                this.addDataPropertyGroupElement.classed("hidden", true)
+                this.classDragger.hideDragger(true)
+                this.rangeDragger.hideDragger(true)
+                this.domainDragger.hideDragger(true)
+                this.shadowClone.hideClone(true)
+                if (
+                    this.hoveredPropertyElement &&
+                    this.hoveredPropertyElement.focused &&
+                    this.options.drawPropertyDraggerOnHover
+                ) {
+                    this.hoveredPropertyElement.labelObject.increasedLoopAngle = false
                     // lazy update
-                    recalculatePositions();
+                    this.#recalculatePositions()
                 }
-
-                if (hoveredPropertyElement && hoveredPropertyElement.pinned() === false && graph.paused() === false && hoveredPropertyElement.editingTextElement === false) {
-                    hoveredPropertyElement.frozen(false);
-                    hoveredPropertyElement.locked(false);
+                if (
+                    this.hoveredPropertyElement &&
+                    !this.hoveredPropertyElement.pinned &&
+                    !this._paused &&
+                    !this.hoveredPropertyElement.editingTextElement
+                ) {
+                    this.hoveredPropertyElement.frozen = false
+                    this.hoveredPropertyElement.locked = false
                 }
-            }, 1000);
+            }, 1000)
         }
-
     }
-
 
     // TODO : experimental code for updating dynamic label with and its hover element
-    graph.hideHoverPropertyElementsForAnimation = function () {
-        deleteGroupElement.classed("hidden", true);
-    };
-    graph.showHoverElementsAfterAnimation = function (property, inversed) {
-        setDeleteHoverElementPositionProperty(property, inversed);
-        deleteGroupElement.classed("hidden", false);
-
-    };
-
-    function editElementHoverOnHidden() {
-        classDragger.nodeElement.classed("classDraggerNodeHovered", true);
-        classDragger.nodeElement.classed("classDraggerNode", false);
-        editElementHoverOn();
+    hideHoverPropertyElementsForAnimation() {
+        this.deleteGroupElement.classed("hidden", true)
     }
 
-    function editElementHoverOutHidden() {
-        classDragger.nodeElement.classed("classDraggerNodeHovered", false);
-        classDragger.nodeElement.classed("classDraggerNode", true);
-        editElementHoverOut();
+    killDelayedTimer() {
+        clearTimeout(this.delayedHider)
+        clearTimeout(this.nodeFreezer)
     }
 
-    function editElementHoverOn(touch) {
-        if (touch === true) return;
-        clearTimeout(delayedHider); // ignore touch behaviour
-
+    /**
+     * @param {BaseProperty} property
+     */
+    showHoverElementsAfterAnimation(property) {
+        this.#setDeleteHoverElementPositionProperty(property)
+        this.deleteGroupElement.classed("hidden", false)
     }
 
-    graph.killDelayedTimer = function () {
-        clearTimeout(delayedHider);
-        clearTimeout(nodeFreezer);
-    };
+    #editElementHoverOnHidden() {
+        this.classDragger.nodeElement.classed("classDraggerNodeHovered", true)
+        this.classDragger.nodeElement.classed("classDraggerNode", false)
+        this.#editElementHoverOn()
+    }
 
+    #editElementHoverOutHidden() {
+        this.classDragger.nodeElement.classed("classDraggerNodeHovered", false)
+        this.classDragger.nodeElement.classed("classDraggerNode", true)
+        this.#editElementHoverOut()
+    }
 
-    function editElementHoverOut(tbh) {
-        if (hoveredNodeElement) {
-            if (graph.ignoreOtherHoverEvents() === true || tbh === true || hoveredNodeElement.editingTextElement === true) return;
-            delayedHider = setTimeout(function () {
-                if (graph.isADraggerActive() === true) return;
-                deleteGroupElement.classed("hidden", true);
-                addDataPropertyGroupElement.classed("hidden", true);
-                classDragger.hideDragger(true);
-                if (hoveredNodeElement && hoveredNodeElement.pinned() === false && graph.paused() === false) {
-                    hoveredNodeElement.frozen(false);
-                    hoveredNodeElement.locked(false);
-                }
-
-            }, 1000);
+    /**
+     * @param {boolean} touch
+     */
+    #editElementHoverOn(touch = false) {
+        if (touch) {
+            return
         }
-        if (hoveredPropertyElement) {
-            if (graph.ignoreOtherHoverEvents() === true || tbh === true || hoveredPropertyElement.editingTextElement === true) return;
-            delayedHider = setTimeout(function () {
-                if (graph.isADraggerActive() === true) return;
-                deleteGroupElement.classed("hidden", true);
-                addDataPropertyGroupElement.classed("hidden", true);
-                classDragger.hideDragger(true);
-                if (hoveredPropertyElement && hoveredPropertyElement.pinned() === false && graph.paused() === false) {
-                    hoveredPropertyElement.frozen(false);
-                    hoveredPropertyElement.locked(false);
-                }
+        clearTimeout(this.delayedHider) // ignore touch behaviour
+    }
 
-            }, 1000);
+    /**
+     * @param {boolean} touchBehaviour
+     */
+    #editElementHoverOut(touchBehaviour = false) {
+        if (this.hoveredNodeElement) {
+            if (
+                this.ignoreOtherHoverEvents ||
+                touchBehaviour ||
+                this.hoveredNodeElement.editingTextElement
+            ) {
+                return
+            }
+            this.delayedHider = setTimeout(() => {
+                if (this.isADraggerActive()) {
+                    return
+                }
+                this.deleteGroupElement.classed("hidden", true)
+                this.addDataPropertyGroupElement.classed("hidden", true)
+                this.classDragger.hideDragger(true)
+                if (
+                    this.hoveredNodeElement &&
+                    !this.hoveredNodeElement.pinned &&
+                    !this._paused
+                ) {
+                    this.hoveredNodeElement.frozen = false
+                    this.hoveredNodeElement.locked = false
+                }
+            }, 1000)
+        }
+        if (this.hoveredPropertyElement) {
+            if (
+                this.ignoreOtherHoverEvents ||
+                touchBehaviour ||
+                this.hoveredPropertyElement.editingTextElement
+            ) {
+                return
+            }
+            this.delayedHider = setTimeout(() => {
+                if (this.isADraggerActive()) {
+                    return
+                }
+                this.deleteGroupElement.classed("hidden", true)
+                this.addDataPropertyGroupElement.classed("hidden", true)
+                this.classDragger.hideDragger(true)
+                if (
+                    this.hoveredPropertyElement &&
+                    !this.hoveredPropertyElement.pinned &&
+                    !this._paused
+                ) {
+                    this.hoveredPropertyElement.frozen = false
+                    this.hoveredPropertyElement.locked = false
+                }
+            }, 1000)
         }
     }
 
-    graph.activateHoverElementsForProperties = function (val, property, inversed, touchBehaviour) {
-        if (editMode === false) return; // nothing to do;
+    /**
+     * @param {boolean} val
+     * @param {BaseProperty} property
+     * @param {boolean} inversed
+     * @param {boolean} touchBehaviour
+     */
+    activateHoverElementsForProperties(
+        val,
+        property,
+        inversed,
+        touchBehaviour,
+    ) {
+        if (!this.isEditorMode) {
+            return // nothing to do;
+        }
+        if (touchBehaviour === undefined) {
+            touchBehaviour = false
+        }
 
-        if (touchBehaviour === undefined)
-            touchBehaviour = false;
-
-        if (val === true) {
-            clearTimeout(delayedHider);
-            if (hoveredPropertyElement) {
-                if (hoveredPropertyElement.domain() === hoveredPropertyElement.range()) {
-                    hoveredPropertyElement.labelObject().increasedLoopAngle = false;
-                    recalculatePositions();
+        if (val) {
+            clearTimeout(this.delayedHider)
+            if (this.hoveredPropertyElement) {
+                if (
+                    this.hoveredPropertyElement.domain ===
+                    this.hoveredPropertyElement.range
+                ) {
+                    this.hoveredPropertyElement.labelObject.increasedLoopAngle = false
+                    this.#recalculatePositions()
                 }
             }
 
-            hoveredPropertyElement = property;
-            if (graph.options().drawPropertyDraggerOnHover() === true) {
-
-
-                if (property.type() !== "owl:DatatypeProperty") {
-                    if (property.domain() === property.range()) {
-                        property.labelObject().increasedLoopAngle = true;
-                        recalculatePositions();
+            this.hoveredPropertyElement = property
+            if (this.options.drawPropertyDraggerOnHover) {
+                if (property.type !== "owl:DatatypeProperty") {
+                    if (property.domain === property.range) {
+                        property.labelObject.increasedLoopAngle = true
+                        this.#recalculatePositions()
                     }
-                    shadowClone.setParentProperty(property, inversed);
-                    rangeDragger.setParentProperty(property, inversed);
-                    rangeDragger.hideDragger(false);
-                    rangeDragger.addMouseEvents();
-                    domainDragger.setParentProperty(property, inversed);
-                    domainDragger.hideDragger(false);
-                    domainDragger.addMouseEvents();
-
-
-                } else if (property.type() === "owl:DatatypeProperty") {
-                    shadowClone.setParentProperty(property, inversed);
-                    rangeDragger.setParentProperty(property, inversed);
-                    rangeDragger.hideDragger(true);
-                    rangeDragger.addMouseEvents();
-                    domainDragger.setParentProperty(property, inversed);
-                    domainDragger.hideDragger(false);
-                    domainDragger.addMouseEvents();
+                    this.shadowClone.setParentProperty(property, inversed)
+                    this.rangeDragger.setParentProperty(property, inversed)
+                    this.rangeDragger.hideDragger(false)
+                    this.rangeDragger.addMouseEvents()
+                    this.domainDragger.setParentProperty(property, inversed)
+                    this.domainDragger.hideDragger(false)
+                    this.domainDragger.addMouseEvents()
+                } else if (property.type === "owl:DatatypeProperty") {
+                    this.shadowClone.setParentProperty(property, inversed)
+                    this.rangeDragger.setParentProperty(property, inversed)
+                    this.rangeDragger.hideDragger(true)
+                    this.rangeDragger.addMouseEvents()
+                    this.domainDragger.setParentProperty(property, inversed)
+                    this.domainDragger.hideDragger(false)
+                    this.domainDragger.addMouseEvents()
                 }
-            }
-            else { // hide when we dont want that option
-                if (graph.options().drawPropertyDraggerOnHover() === true) {
-                    rangeDragger.hideDragger(true);
-                    domainDragger.hideDragger(true);
-                    shadowClone.hideClone(true);
-                    if (property.domain() === property.range()) {
-                        property.labelObject().increasedLoopAngle = false;
-                        recalculatePositions();
+            } else {
+                // hide when we dont want that option
+                if (this.options.drawPropertyDraggerOnHover) {
+                    this.rangeDragger.hideDragger(true)
+                    this.domainDragger.hideDragger(true)
+                    this.shadowClone.hideClone(true)
+                    if (property.domain === property.range) {
+                        property.labelObject.increasedLoopAngle = false
+                        this.#recalculatePositions()
                     }
                 }
             }
 
-            if (hoveredNodeElement) {
-                if (hoveredNodeElement && hoveredNodeElement.pinned() === false && graph.paused() === false) {
-                    hoveredNodeElement.frozen(false);
-                    hoveredNodeElement.locked(false);
+            if (this.hoveredNodeElement) {
+                if (
+                    this.hoveredNodeElement &&
+                    !this.hoveredNodeElement.pinned &&
+                    !this._paused
+                ) {
+                    this.hoveredNodeElement.frozen = false
+                    this.hoveredNodeElement.locked = false
                 }
             }
-            hoveredNodeElement = undefined;
-            deleteGroupElement.classed("hidden", false);
-            setDeleteHoverElementPositionProperty(property, inversed);
-            deleteGroupElement.selectAll("*").on("click", function () {
-                if (touchBehaviour && property.focused() === false) {
-                    graph.options().focuserModule().handle(property);
-                    return;
+            this.hoveredNodeElement = undefined
+            this.deleteGroupElement.classed("hidden", false)
+            this.#setDeleteHoverElementPositionProperty(property)
+            this.deleteGroupElement.selectAll("*").on("click", () => {
+                if (touchBehaviour && !property.focused) {
+                    this.options.focuserModule.handle(property)
+                    return
                 }
-                graph.removePropertyViaEditor(property);
-                d3.event.stopPropagation();
-            });
-            classDragger.hideDragger(true);
-            addDataPropertyGroupElement.classed("hidden", true);
+                this.removePropertyViaEditor(property)
+                d3.event.stopPropagation()
+            })
+            this.classDragger.hideDragger(true)
+            this.addDataPropertyGroupElement.classed("hidden", true)
         } else {
-            delayedHiddingHoverElements();
-        }
-    };
-
-    graph.updateDraggerElements = function () {
-
-        // set opacity style for all elements
-
-        rangeDragger.draggerObject.classed("superOpacityElement", !graph.options().showDraggerObject());
-        domainDragger.draggerObject.classed("superOpacityElement", !graph.options().showDraggerObject());
-        classDragger.draggerObject.classed("superOpacityElement", !graph.options().showDraggerObject());
-
-        nodeContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !graph.options().showDraggerObject());
-        labelContainer.selectAll(".superHiddenElement").classed("superOpacityElement", !graph.options().showDraggerObject());
-
-        deleteGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !graph.options().showDraggerObject());
-        addDataPropertyGroupElement.selectAll(".superHiddenElement").classed("superOpacityElement", !graph.options().showDraggerObject());
-
-
-    };
-
-    function setAddDataPropertyHoverElementPosition(node) {
-        var delX, delY = 0;
-        if (node.renderType() === "round") {
-            var scale = 0.5 * Math.sqrt(2.0);
-            var oX = scale * node.actualRadius();
-            var oY = scale * node.actualRadius();
-            delX = node.x - oX;
-            delY = node.y + oY;
-            addDataPropertyGroupElement.attr("transform", "translate(" + delX + "," + delY + ")");
+            this.#delayedHiddingHoverElements()
         }
     }
 
-    function setDeleteHoverElementPosition(node) {
-        var delX, delY = 0;
-        if (node.renderType() === "round") {
-            var scale = 0.5 * Math.sqrt(2.0);
-            var oX = scale * node.actualRadius();
-            var oY = scale * node.actualRadius();
-            delX = node.x + oX;
-            delY = node.y - oY;
-        } else {
-            delX = node.x + 0.5 * node.width() + 6;
-            delY = node.y - 0.5 * node.height() - 6;
-        }
-        deleteGroupElement.attr("transform", "translate(" + delX + "," + delY + ")");
+    /**
+     * Set opacity style for all elements
+     */
+    updateDraggerElements() {
+        this.rangeDragger.draggerObject.classed(
+            "superOpacityElement",
+            !this.options.showDraggerObject,
+        )
+        this.domainDragger.draggerObject.classed(
+            "superOpacityElement",
+            !this.options.showDraggerObject,
+        )
+        this.classDragger.draggerObject.classed(
+            "superOpacityElement",
+            !this.options.showDraggerObject,
+        )
+        this.nodeContainer
+            .selectAll(".superHiddenElement")
+            .classed("superOpacityElement", !this.options.showDraggerObject)
+        this.labelContainer
+            .selectAll(".superHiddenElement")
+            .classed("superOpacityElement", !this.options.showDraggerObject)
+        this.deleteGroupElement
+            .selectAll(".superHiddenElement")
+            .classed("superOpacityElement", !this.options.showDraggerObject)
+        this.addDataPropertyGroupElement
+            .selectAll(".superHiddenElement")
+            .classed("superOpacityElement", !this.options.showDraggerObject)
     }
 
-    function setDeleteHoverElementPositionProperty(property, inversed) {
-        if (property && property.labelElement()) {
-            var pos = [property.labelObject().x, property.labelObject().y];
-            var widthElement = parseFloat(property.getShapeElement().attr("width"));
-            var heightElement = parseFloat(property.getShapeElement().attr("height"));
-            var delX = pos[0] + 0.5 * widthElement + 6;
-            var delY = pos[1] - 0.5 * heightElement - 6;
+    /**
+     * @param {BaseNode} node
+     */
+    #setAddDataPropertyHoverElementPosition(node) {
+        if (node.renderType === "round") {
+            const scale = 0.5 * Math.sqrt(2.0)
+            const oX = scale * node.actualRadius()
+            const oY = scale * node.actualRadius()
+            const delX = node.x - oX
+            const delY = node.y + oY
+            this.addDataPropertyGroupElement.attr(
+                "transform",
+                "translate(" + delX + "," + delY + ")",
+            )
+        }
+    }
+
+    /**
+     * @param {BaseNode} node
+     */
+    #setDeleteHoverElementPosition(node) {
+        let delX, delY
+        if (node.renderType === "round") {
+            const scale = 0.5 * Math.sqrt(2.0)
+            const oX = scale * node.actualRadius()
+            const oY = scale * node.actualRadius()
+            delX = node.x + oX
+            delY = node.y - oY
+        } else {
+            delX = node.x + 0.5 * node.labelWidth + 6
+            delY = node.y - 0.5 * node.height - 6
+        }
+        this.deleteGroupElement.attr(
+            "transform",
+            "translate(" + delX + "," + delY + ")",
+        )
+    }
+
+    /**
+     * @param {BaseProperty} property
+     */
+    #setDeleteHoverElementPositionProperty(property) {
+        if (property && property.labelElement) {
+            const pos = [property.labelObject.x, property.labelObject.y]
+            const widthElement = parseFloat(property.shapeElement.attr("width"))
+            const heightElement = parseFloat(
+                property.shapeElement.attr("height"),
+            )
+            const delX = pos[0] + 0.5 * widthElement + 6
+            let delY = pos[1] - 0.5 * heightElement - 6
             // this is the lower element
-            if (property.labelElement().attr("transform") === "translate(0,15)")
-                delY += 15;
+            if (property.labelElement.attr("transform") === "translate(0,15)") {
+                delY += 15
+            }
             // this is upper element
-            if (property.labelElement().attr("transform") === "translate(0,-15)")
-                delY -= 15;
-            deleteGroupElement.attr("transform", "translate(" + delX + "," + delY + ")");
+            if (
+                property.labelElement.attr("transform") === "translate(0,-15)"
+            ) {
+                delY -= 15
+            }
+            this.deleteGroupElement.attr(
+                "transform",
+                "translate(" + delX + "," + delY + ")",
+            )
         } else {
-            deleteGroupElement.classed("hidden", true);// hide when there is no property
+            this.deleteGroupElement.classed("hidden", true) // hide when there is no property
         }
-
-
     }
 
-    graph.activateHoverElements = function (val, node, touchBehaviour) {
-        if (editMode === false) {
-            return; // nothing to do;
+    /**
+     * @param {boolean} val
+     * @param {BaseNode} node
+     * @param {boolean} touchBehaviour
+     */
+    activateHoverElements(val, node, touchBehaviour) {
+        if (!this.isEditorMode) {
+            return // nothing to do;
         }
-        if (touchBehaviour === undefined) touchBehaviour = false;
-        if (val === true) {
-            if (graph.options().drawPropertyDraggerOnHover() === true) {
-                rangeDragger.hideDragger(true);
-                domainDragger.hideDragger(true);
-                shadowClone.hideClone(true);
+        if (touchBehaviour === undefined) {
+            touchBehaviour = false
+        }
+        if (val) {
+            if (this.options.drawPropertyDraggerOnHover) {
+                this.rangeDragger.hideDragger(true)
+                this.domainDragger.hideDragger(true)
+                this.shadowClone.hideClone(true)
             }
             // make them visible
-            clearTimeout(delayedHider);
-            clearTimeout(nodeFreezer);
-            if (hoveredNodeElement && node.pinned() === false && graph.paused() === false) {
-                hoveredNodeElement.frozen(false);
-                hoveredNodeElement.locked(false);
+            clearTimeout(this.delayedHider)
+            clearTimeout(this.nodeFreezer)
+            if (this.hoveredNodeElement && !node.pinned && !this._paused) {
+                this.hoveredNodeElement.frozen = false
+                this.hoveredNodeElement.locked = false
             }
-            hoveredNodeElement = node;
-            if (node && node.frozen() === false && node.pinned() === false) {
-                node.frozen(true);
-                node.locked(false);
+            this.hoveredNodeElement = node
+            if (node && !node.frozen && !node.pinned) {
+                node.frozen = true
+                node.locked = false
             }
-            if (hoveredPropertyElement && hoveredPropertyElement.focused() === false) {
-                hoveredPropertyElement.labelObject().increasedLoopAngle = false;
-                recalculatePositions();
+            if (
+                this.hoveredPropertyElement &&
+                !this.hoveredPropertyElement.focused
+            ) {
+                this.hoveredPropertyElement.labelObject.increasedLoopAngle = false
+                this.#recalculatePositions()
                 // update the loopAngles;
-
             }
-            hoveredPropertyElement = undefined;
-            deleteGroupElement.classed("hidden", false);
-            setDeleteHoverElementPosition(node);
+            this.hoveredPropertyElement = undefined
+            this.deleteGroupElement.classed("hidden", false)
+            this.#setDeleteHoverElementPosition(node)
 
-
-            deleteGroupElement.selectAll("*").on("click", function () {
-                if (touchBehaviour && node.focused() === false) {
-                    graph.options().focuserModule().handle(node);
-                    return;
-                }
-                graph.removeNodeViaEditor(node);
-                d3.event.stopPropagation();
-            })
-                .on("mouseover", function () {
-                    editElementHoverOn(node, touchBehaviour);
+            this.deleteGroupElement
+                .selectAll("*")
+                .on("click", () => {
+                    if (touchBehaviour && !node.focused) {
+                        this.options.focuserModule.handle(node)
+                        return
+                    }
+                    this.removeNodeViaEditor(node)
+                    d3.event.stopPropagation()
                 })
-                .on("mouseout", function () {
-                    editElementHoverOut(node, touchBehaviour);
-                });
+                .on("mouseover", () => {
+                    this.#editElementHoverOn(touchBehaviour)
+                })
+                .on("mouseout", () => {
+                    this.#editElementHoverOut(touchBehaviour)
+                })
 
-            addDataPropertyGroupElement.classed("hidden", true);
-            classDragger.nodeElement.on("mouseover", editElementHoverOn)
-                .on("mouseout", editElementHoverOut);
-            classDragger.draggerObject.on("mouseover", editElementHoverOnHidden)
-                .on("mouseout", editElementHoverOutHidden);
+            this.addDataPropertyGroupElement.classed("hidden", true)
+            this.classDragger.nodeElement
+                .on("mouseover", () => {
+                    this.#editElementHoverOn()
+                })
+                .on("mouseout", () => {
+                    this.#editElementHoverOut()
+                })
+            this.classDragger.draggerObject
+                .on("mouseover", () => {
+                    this.#editElementHoverOnHidden()
+                })
+                .on("mouseout", () => {
+                    this.#editElementHoverOutHidden()
+                })
 
             // add the dragger element;
-            if (node.renderType() === "round") {
-                classDragger.svgRoot(draggerLayer);
-                classDragger.setParentNode(node);
-                classDragger.hideDragger(false);
-                addDataPropertyGroupElement.classed("hidden", false);
-                setAddDataPropertyHoverElementPosition(node);
-                addDataPropertyGroupElement.selectAll("*").on("click", function () {
-                    if (touchBehaviour && node.focused() === false) {
-                        graph.options().focuserModule().handle(node);
-                        return;
-                    }
-                    graph.createDataTypeProperty(node);
-                    d3.event.stopPropagation();
-                })
-                    .on("mouseover", function () {
-                        editElementHoverOn(node, touchBehaviour);
+            if (node.renderType === "round") {
+                this.classDragger.svgRoot = this.draggerLayer
+                this.classDragger.setParentNode(node)
+                this.classDragger.hideDragger(false)
+                this.addDataPropertyGroupElement.classed("hidden", false)
+                this.#setAddDataPropertyHoverElementPosition(node)
+                this.addDataPropertyGroupElement
+                    .selectAll("*")
+                    .on("click", () => {
+                        if (touchBehaviour && !node.focused) {
+                            this.options.focuserModule.handle(node)
+                            return
+                        }
+                        this.createDataTypeProperty(node)
+                        d3.event.stopPropagation()
                     })
-                    .on("mouseout", function () {
-                        editElementHoverOut(node, touchBehaviour);
-                    });
+                    .on("mouseover", () => {
+                        this.#editElementHoverOn(touchBehaviour)
+                    })
+                    .on("mouseout", () => {
+                        this.#editElementHoverOut(touchBehaviour)
+                    })
             } else {
-                classDragger.hideDragger(true);
-
+                this.classDragger.hideDragger(true)
             }
-
         } else {
-            delayedHiddingHoverElements(node, touchBehaviour);
-
+            this.#delayedHiddingHoverElements(touchBehaviour)
         }
-    };
-
-    function logNodeLinks(nodes) {
-        let linksOnNodes = new Set();
-        nodes.forEach((node) => {
-            let nodeLinks = node.links();
-            nodeLinks.forEach(function (link) {
-                linksOnNodes.add(link);
-            });
-        });
-        console.log(linksOnNodes);
-        return linksOnNodes;
     }
-
-
-    return graph;
-};
+}

@@ -7,37 +7,32 @@ html {
     -ms-content-zooming: none;
 }
 
-
-
 #loading-progress {
     width: 50%;
     margin: 10px 0;
 }
 
-#drag_dropOverlay{
+#drag_dropOverlay {
     width: 100%;
-    height:100%;
-    position:absolute;
-    top:0;
+    height: 100%;
+    position: absolute;
+    top: 0;
     opacity: 0.5;
     background-color: #3071a9;
     pointer-events: none;
-
 }
 
-#dragDropContainer{
+#dragDropContainer {
     width: 100%;
-    height:100%;
-    position:absolute;
-    top:0;
+    height: 100%;
+    position: absolute;
+    top: 0;
     pointer-events: none;
 }
-#drag_icon_group{
-
-
+#drag_icon_group {
 }
 
-#drag_msg{
+#drag_msg {
     width: 50%;
     background-color: #fefefe;
     height: 50%;
@@ -56,7 +51,6 @@ html {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 
 #layoutLoadingProgressBarContainer {
     height: 50px;
@@ -98,22 +92,21 @@ html {
     cursor: pointer;
 }
 
-#directUploadBtn, #close_directUploadBtn {
+#directUploadBtn,
+#close_directUploadBtn {
     border: 1px solid #34495e;
     width: 100%;
     margin-top: 5px;
-    cursor: pointer
+    cursor: pointer;
 }
 
 #di_controls {
-
 }
 
 #di_controls > ul {
     list-style: none;
     margin: 0;
     padding: 5px 0 0 5px;
-
 }
 
 #progressBarContext {
@@ -123,7 +116,6 @@ html {
     border: solid 1px black;
 
     margin: auto;
-
 }
 
 #progressBarValue {
@@ -147,7 +139,6 @@ html {
 }
 
 .debugOption {
-
 }
 
 .dbEntrySelected {
@@ -159,7 +150,10 @@ html {
     cursor: pointer;
 }
 
-.dbEntry:hover, .dbEntry:focus .groupEntry:hover, .groupEntry:focus {
+.dbEntry:hover,
+.dbEntry:focus,
+.groupEntry:hover, 
+.groupEntry:focus {
     background-color: #bdc3c7;
 }
 
@@ -194,7 +188,8 @@ html {
     margin: 0;
 }
 
-img, iframe {
+img,
+iframe {
     border: none;
 }
 
@@ -594,7 +589,6 @@ a:hover {
     100% {
         width: 78%;
     }
-
 }
 
 /*Collapse Animation*/
@@ -641,7 +635,7 @@ body {
     background: rgb(24, 32, 42);
     height: 100%;
     font-size: 14px;
-    font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+    font-family: "Open Sans", Helvetica, Arial, sans-serif;
     line-height: 1;
     margin: 0;
     overflow: hidden;
@@ -697,52 +691,53 @@ main {
 }
 
 #logo h2 span {
-    color: #34495E;
+    color: #34495e;
     /*font-size: min(2vmin, 24px);*/
     font-size: 16px;
 }
 
 @media screen and (max-device-height: 800px) {
     #logo h2 {
-        font-size: calc(8px + 1.0vmin);
+        font-size: calc(8px + 1vmin);
     }
 
     #logo h2 span {
-        font-size: calc(3px + 1.0vmin);
+        font-size: calc(3px + 1vmin);
     }
 }
 
 @media screen and (max-height: 800px) {
     #logo h2 {
-        font-size: calc(8px + 1.0vmin);
+        font-size: calc(8px + 1vmin);
     }
 
     #logo h2 span {
-        font-size: calc(3px + 1.0vmin);
+        font-size: calc(3px + 1vmin);
     }
 }
 
 @media screen and (max-device-width: 1200px) {
     #logo h2 {
-        font-size: calc(8px + 1.0vmin);
+        font-size: calc(8px + 1vmin);
     }
 
     #logo h2 span {
-        font-size: calc(3px + 1.0vmin);
+        font-size: calc(3px + 1vmin);
     }
 }
 
 @media screen and (max-width: 1200px) {
     #logo h2 {
-        font-size: calc(8px + 1.0vmin);
+        font-size: calc(8px + 1vmin);
     }
 
     #logo h2 span {
-        font-size: calc(3px + 1.0vmin);
+        font-size: calc(3px + 1vmin);
     }
 }
 
-.checkboxContainer input, .checkboxContainer label {
+.checkboxContainer input,
+.checkboxContainer label {
     vertical-align: middle;
 }
 
@@ -783,13 +778,13 @@ main {
 }
 
 /*TRACK*/
-.slideOption input[type=range]::-webkit-slider-runnable-track {
+.slideOption input[type="range"]::-webkit-slider-runnable-track {
     -webkit-appearance: none;
     background-color: #3071a9;
     height: 3px;
 }
 
-.slideOption input[type=range]::-moz-range-track {
+.slideOption input[type="range"]::-moz-range-track {
     -webkit-appearance: none;
     background-color: #3071a9;
     height: 3px;
@@ -876,13 +871,13 @@ main {
 }
 
 /*TRACK*/
-.slideOption input[type=range]:disabled::-webkit-slider-runnable-track {
+.slideOption input[type="range"]:disabled::-webkit-slider-runnable-track {
     -webkit-appearance: none;
     background-color: #373737;
     height: 3px;
 }
 
-.slideOption input[type=range]:disabled::-moz-range-track {
+.slideOption input[type="range"]:disabled::-moz-range-track {
     -webkit-appearance: none;
     background-color: #373737;
     height: 3px;
@@ -948,7 +943,7 @@ main {
     overflow-y: auto;
     overflow-x: hidden;
     position: fixed;
-    border-left: 1px solid #34495E;
+    border-left: 1px solid #34495e;
 }
 
 #detailsArea h1 {
@@ -1032,7 +1027,8 @@ main {
     padding: 0 10px;
 }
 
-#selection-details #classEquivUri span, #selection-details #disjointNodes span {
+#selection-details #classEquivUri span,
+#selection-details #disjointNodes span {
     padding: 0;
 }
 
@@ -1056,17 +1052,17 @@ main {
 .accordion-trigger {
     background: #24323e;
     cursor: pointer;
-    padding: .5em;
+    padding: 0.5em;
 }
 
 .accordion-trigger.accordion-trigger-active:before {
     padding-right: 4px;
-    content: "\25BC"
+    content: "\25BC";
 }
 
 .accordion-trigger:not(.accordion-trigger-active):before {
     padding-right: 4px;
-    content: "\25BA"
+    content: "\25BA";
 }
 
 .accordion-container.scrollable {
@@ -1080,7 +1076,7 @@ main {
 
 #language {
     background: transparent;
-    border: 1px solid #34495E;
+    border: 1px solid #34495e;
     color: #ecf0f1;
 }
 
@@ -1101,7 +1097,7 @@ main {
     box-sizing: border-box;
     height: 20px;
     width: 74%;
-    border: 1px solid #34495E;
+    border: 1px solid #34495e;
 }
 
 .converter-form button {
@@ -1110,12 +1106,12 @@ main {
     height: 20px;
     padding: 0;
     width: 25%;
-    border: 1px solid #34495E;
+    border: 1px solid #34495e;
     background-color: #ecf0f1;
 }
 
 #file-converter-label {
-    border: 1px solid #34495E;
+    border: 1px solid #34495e;
     box-sizing: border-box;
     cursor: pointer;
     height: 20px;
@@ -1144,7 +1140,7 @@ main {
     box-sizing: border-box;
     height: 20px;
     width: 31%;
-    border: 1px solid #34495E;
+    border: 1px solid #34495e;
 }
 
 #sidebarExpandButton {
@@ -1169,8 +1165,8 @@ main {
     height: 20px;
     /*width: 69%;*/
     float: right;
-    border: 1px solid #34495E;
-    background-color: #34495E;
+    border: 1px solid #34495e;
+    background-color: #34495e;
     color: white;
     /*border-bottom: 1px solid #d90;*/
     text-align: left;
@@ -1365,8 +1361,8 @@ main {
 .prefixIRIElements {
     display: inline-block;
     padding: 3px;
-    border-bottom: 1px solid #34495E;
-    width: 100%
+    border-bottom: 1px solid #34495e;
+    width: 100%;
 }
 
 .prefixInput {
@@ -1462,7 +1458,7 @@ main {
 #loading-info > div {
     display: inline-block;
     color: #ffffff;
-    background-color: #18202A;
+    background-color: #18202a;
     border-bottom-left-radius: 2px;
     border-bottom-right-radius: 2px;
 }
@@ -1491,7 +1487,6 @@ main {
 #loadingIndicator_closeButton:hover {
     color: #ff972d;
     cursor: pointer;
-
 }
 
 #loadingIndicator_closeButton {
@@ -1541,7 +1536,6 @@ main {
     height: 120px;
     min-height: 40px;
     background-color: #3c3c3c;
-
 }
 
 #error-description-button {
@@ -1558,7 +1552,7 @@ main {
 }
 
 #error-description-container pre {
-    background-color: #34495E;
+    background-color: #34495e;
     padding: 2px;
     margin: 0;
     white-space: pre-wrap;
@@ -1610,8 +1604,10 @@ main {
     padding: 0;
     border: 0;
     color: #555;
-    background-color: #ECEEEF;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), inset 0 0 3px rgba(0, 0, 0, 0.1);
+    background-color: #eceeef;
+    box-shadow:
+        0 1px 4px rgba(0, 0, 0, 0.2),
+        inset 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
 .color-mode-switch:focus {
@@ -1619,9 +1615,11 @@ main {
 }
 
 .color-mode-switch.active {
-    color: #FFF;
-    background-color: #32CD32;
-    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.2), inset 0 0 3px rgba(0, 0, 0, 0.1);
+    color: #fff;
+    background-color: #32cd32;
+    box-shadow:
+        inset 0 1px 4px rgba(0, 0, 0, 0.2),
+        inset 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
 /* adding button pulse animation*/
@@ -1685,8 +1683,6 @@ main {
     -moz-animation-timing-function: linear;
     -o-animation-timing-function: linear;
     animation-timing-function: linear;
-
-
 }
 
 /*swipe bar definition*/
@@ -1696,7 +1692,6 @@ main {
     max-width: 200px;
     width: 200px;
     position: absolute;
-
 }
 
 #m_modes {
@@ -1721,7 +1716,6 @@ main {
     max-width: 160px;
     width: 160px;
     position: absolute;
-
 }
 
 #exportedUrl {
@@ -1819,7 +1813,6 @@ main {
     background: #f4f4f4;
     cursor: auto;
     border: solid 1px darkgray;
-
 }
 
 .reloadCachedOntologyIcon:hover {
@@ -1829,7 +1822,7 @@ main {
 
 .disabledReloadElement {
     cursor: auto;
-    background: #F4F4F4;
+    background: #f4f4f4;
     pointer-events: auto;
     border: solid 1px darkgray;
     color: #bbbbbb;
@@ -1837,14 +1830,14 @@ main {
 
 .disabledReloadElement:hover {
     cursor: auto;
-    background: #EEEEEE;
+    background: #eeeeee;
     pointer-events: auto;
 }
 
 #menuElementContainer > li > input {
     color: #000;
     /*padding : 0 0.3em 0 1.5em;*/
-    padding: 0.1em .3em 0.1em 1.5em;
+    padding: 0.1em 0.3em 0.1em 1.5em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1854,10 +1847,9 @@ main {
 /*Hovered behavior for the menu entries*/
 #menuElementContainer > li > a:hover {
     box-sizing: border-box;
-    background: #1B252E;
+    background: #1b252e;
     /*background : #d90;*/
     color: #bdc3c7;
-
 }
 
 #empty:hover {
@@ -1979,7 +1971,9 @@ main {
     content: ">";
 }
 
-#centerGraphButton, #zoomInButton, #zoomOutButton {
+#centerGraphButton,
+#zoomInButton,
+#zoomOutButton {
     border: 1px solid #000000;
     text-align: center;
     margin: -1px 0 0 0;
@@ -2145,11 +2139,11 @@ a#pause-button:not(.paused)::before {
 }
 
 #emptyLiHover {
-    background-color: #FFFFFF;
+    background-color: #ffffff;
 }
 
 #emptyLiHover:hover {
-    background-color: #FFFFFF;
+    background-color: #ffffff;
 }
 
 .toggleOption li:hover {
@@ -2164,7 +2158,8 @@ a#pause-button:not(.paused)::before {
     background-color: #ffffff;
 }
 
-.toolTipMenu li a:only-child, .option {
+.toolTipMenu li a:only-child,
+.option {
     display: block;
     float: none;
     padding: 8px 5px;
@@ -2172,7 +2167,7 @@ a#pause-button:not(.paused)::before {
 
 .customLocate {
     padding: 0;
-    background-color: #32CD32;
+    background-color: #32cd32;
 }
 
 a#locateSearchResult {
@@ -2312,7 +2307,6 @@ a#locateSearchResult {
 
 #locateSearchResult:focus {
     outline: none;
-
 }
 
 a#locateSearchResult.highlighted:hover {
@@ -2355,10 +2349,9 @@ a#locateSearchResult {
     display: inline-block;
     color: #ffffff;
     font-size: 0.8em;
-    background-color: #18202A;
+    background-color: #18202a;
     padding: 5px 5px;
     border-radius: 5px;
-
 }
 
 #WarningErrorMessagesContainer {
@@ -2404,18 +2397,16 @@ a#locateSearchResult {
     display: inline-block;
     color: #ffffff;
     font-size: 0.8em;
-    background-color: #18202A;
+    background-color: #18202a;
     padding: 5px 5px;
     border-radius: 10px;
     border: solid 1px #ecf0f1;
     width: 70%;
-
 }
 
 #WarningErrorMessagesContent > ul {
     -webkit-padding-start: 20px;
     padding: 0 16px;
-
 }
 
 #WarningErrorMessagesContent > ul > li {
@@ -2429,9 +2420,8 @@ a#locateSearchResult {
 .textLineEditWithLabel {
     display: inline-block;
     width: 100%;
-    border-bottom: 1px solid #34495E;
+    border-bottom: 1px solid #34495e;
     padding: 2px 0;
-
 }
 
 .converter-form-Editor label {
@@ -2440,13 +2430,13 @@ a#locateSearchResult {
 }
 
 .descriptionTextClass {
-    background-color: #34495E;
+    background-color: #34495e;
     color: white;
 }
 
 .prefixIRIElements input {
-    border: 1px solid #34495E;
-    background-color: #34495E;
+    border: 1px solid #34495e;
+    background-color: #34495e;
     color: white;
 }
 
@@ -2461,8 +2451,8 @@ a#locateSearchResult {
     /*height: 18px;*/
     /*width: 69%;*/
     float: right;
-    border: 1px solid #34495E;
-    background-color: #34495E;
+    border: 1px solid #34495e;
+    background-color: #34495e;
     color: white;
     /*border-bottom: 1px solid #d90;*/
     /*text-align: center;*/
@@ -2471,7 +2461,7 @@ a#locateSearchResult {
 
 .converter-form-Editor input:disabled {
     background-color: #545350;
-    border: 1px solid #34495E;
+    border: 1px solid #34495e;
     color: #939798;
 }
 

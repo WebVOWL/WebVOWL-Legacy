@@ -1,64 +1,70 @@
-var _ = require("lodash/array");
-var elementTools = require("../util/elementTools")();
+import _ from "lodash/array"
+import BaseElement from "../elements/BaseElement"
+import BaseProperty from "../elements/properties/BaseProperty"
+import ElementTools from "../util/elementTools"
 
-module.exports = function (){
-  var pap = {},
-    enabled = false,
-    pinnedElements = [];
-  
-  pap.addPinnedElement = function ( element ){
-    // check if element is already in list
-    var indexInArray = pinnedElements.indexOf(element);
-    if ( indexInArray === -1 ) {
-      pinnedElements.push(element);
+export default class PickAndPin {
+    constructor() {
+        this.enabled = false
+        /**
+         * @type {BaseElement[]}
+         */
+        this.pinnedElements = []
     }
-  };
-  
-  pap.handle = function ( selection, forced ){
-    if ( !enabled ) {
-      return;
+
+    /**
+     * @param {BaseElement} element
+     */
+    addPinnedElement(element) {
+        // check if element is already in list
+        if (this.pinnedElements.indexOf(element) === -1) {
+            this.pinnedElements.push(element)
+        }
     }
-    
-    if ( !forced ) {
-      if ( wasNotDragged() ) {
-        return;
-      }
+
+    /**
+     * @param {d3.Selection<any,any,null,undefined>} selection
+     * @param {boolean} forced
+     */
+    handle(selection, forced) {
+        if (!this.enabled) {
+            return
+        }
+
+        if (!forced) {
+            if (!d3.event.defaultPrevented) {
+                // was not dragged
+                return
+            }
+        }
+        if (ElementTools.isProperty(selection)) {
+            if (selection.inverse && selection.inverse.pinned) {
+                return
+            } else if (this.#hasNoParallelProperties(selection)) {
+                return
+            }
+        }
+
+        if (!selection.pinned) {
+            selection.drawPin()
+            this.addPinnedElement(selection)
+        }
     }
-    if ( elementTools.isProperty(selection) ) {
-      if ( selection.inverse() && selection.inverse().pinned() ) {
-        return;
-      } else if ( hasNoParallelProperties(selection) ) {
-        return;
-      }
+
+    /**
+     * @param {BaseProperty} property
+     */
+    #hasNoParallelProperties(property) {
+        return (
+            (_.intersection = property.domain.links),
+            property.range.links.length === 1
+        )
     }
-    
-    if ( !selection.pinned() ) {
-      selection.drawPin();
-      pap.addPinnedElement(selection);
+
+    reset() {
+        for (const element of this.pinnedElements) {
+            element.removePin()
+        }
+        this.pinnedElements = []
     }
-  };
-  
-  function wasNotDragged(){
-    return !d3.event.defaultPrevented;
-  }
-  
-  function hasNoParallelProperties( property ){
-    return _.intersection(property.domain().links(), property.range().links()).length === 1;
-  }
-  
-  pap.enabled = function ( p ){
-    if ( !arguments.length ) return enabled;
-    enabled = p;
-    return pap;
-  };
-  
-  pap.reset = function (){
-    pinnedElements.forEach(function ( element ){
-      element.removePin();
-    });
-    // Clear the array of stored nodes
-    pinnedElements.length = 0;
-  };
-  
-  return pap;
-};
+}

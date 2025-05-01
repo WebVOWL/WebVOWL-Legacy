@@ -1,288 +1,336 @@
-/**
- * Contains the logic for connecting the filters with the website.
- *
- * @param graph required for calling a refresh after a filter change
- * @returns {{}}
- */
-module.exports = function ( graph ){
-  
-  var filterMenu = {},
-    checkboxData = [],
-    menuElement = d3.select("#m_filter"),
-    menuControl = d3.select("#c_filter a"),
-    nodeDegreeContainer = d3.select("#nodeDegreeFilteringOption"),
-    graphDegreeLevel,
-    defaultDegreeValue = 0,
-    degreeSlider;
-  
-  filterMenu.setDefaultDegreeValue = function ( val ){
-    defaultDegreeValue = val;
-  };
-  filterMenu.getDefaultDegreeValue = function (){
-    return defaultDegreeValue;
-  };
-  
-  filterMenu.getGraphObject = function (){
-    return graph;
-  };
-  /** some getter function  **/
-  filterMenu.getCheckBoxContainer = function (){
-    return checkboxData;
-  };
-  
-  filterMenu.getDegreeSliderValue = function (){
-    return degreeSlider.property("value");
-  };
-  /**
-   * Connects the website with graph filters.
-   * @param datatypeFilter filter for all datatypes
-   * @param objectPropertyFilter filter for all object properties
-   * @param subclassFilter filter for all subclasses
-   * @param disjointFilter filter for all disjoint with properties
-   * @param setOperatorFilter filter for all set operators with properties
-   * @param nodeDegreeFilter filters nodes by their degree
-   */
-  filterMenu.setup = function ( datatypeFilter, objectPropertyFilter, subclassFilter, disjointFilter, setOperatorFilter, nodeDegreeFilter ){
-    // TODO: is this here really necessarry? << new menu visualization style?
-    menuControl.on("mouseover", function (){
-      var searchMenu = graph.options().searchMenu();
-      searchMenu.hideSearchEntries();
-    });
-    menuControl.on("mouseleave", function (){
-      filterMenu.highlightForDegreeSlider(false);
-    });
-    
-    addFilterItem(datatypeFilter, "datatype", "Datatype properties", "#datatypeFilteringOption");
-    addFilterItem(objectPropertyFilter, "objectProperty", "Object properties", "#objectPropertyFilteringOption");
-    addFilterItem(subclassFilter, "subclass", "Solitary subclasses", "#subclassFilteringOption");
-    addFilterItem(disjointFilter, "disjoint", "Class disjointness", "#disjointFilteringOption");
-    addFilterItem(setOperatorFilter, "setoperator", "Set operators", "#setOperatorFilteringOption");
-    
-    addNodeDegreeFilter(nodeDegreeFilter, nodeDegreeContainer);
-    addAnimationFinishedListener();
-  };
-  
-  
-  function addFilterItem( filter, identifier, pluralNameOfFilteredItems, selector ){
-    var filterContainer,
-      filterCheckbox;
-    
-    filterContainer = d3.select(selector)
-      .append("div")
-      .classed("checkboxContainer", true);
-    
-    filterCheckbox = filterContainer.append("input")
-      .classed("filterCheckbox", true)
-      .attr("id", identifier + "FilterCheckbox")
-      .attr("type", "checkbox")
-      .property("checked", filter.enabled());
-    
-    // Store for easier resetting
-    checkboxData.push({ checkbox: filterCheckbox, defaultState: filter.enabled() });
-    
-    filterCheckbox.on("click", function ( silent ){
-      // There might be no parameters passed because of a manual
-      // invocation when resetting the filters
-      var isEnabled = filterCheckbox.property("checked");
-      filter.enabled(isEnabled);
-      if ( silent !== true ) {
-        // updating graph when silent is false or the parameter is not given.
-        graph.update();
-      }
-    });
-    
-    filterContainer.append("label")
-      .attr("for", identifier + "FilterCheckbox")
-      .text(pluralNameOfFilteredItems);
-  }
-  
-  function addNodeDegreeFilter( nodeDegreeFilter, container ){
-    nodeDegreeFilter.setMaxDegreeSetter(function ( maxDegree ){
-      degreeSlider.attr("max", maxDegree);
-      setSliderValue(degreeSlider, Math.min(maxDegree, degreeSlider.property("value")));
-    });
-    
-    nodeDegreeFilter.setDegreeGetter(function (){
-      return degreeSlider.property("value");
-    });
-    
-    nodeDegreeFilter.setDegreeSetter(function ( value ){
-      setSliderValue(degreeSlider, value);
-    });
-    
-    var sliderContainer,
-      sliderValueLabel;
-    
-    sliderContainer = container.append("div")
-      .classed("distanceSliderContainer", true);
-    
-    degreeSlider = sliderContainer.append("input")
-      .attr("id", "nodeDegreeDistanceSlider")
-      .attr("type", "range")
-      .attr("min", 0)
-      .attr("step", 1);
-    
-    sliderContainer.append("label")
-      .classed("description", true)
-      .attr("for", "nodeDegreeDistanceSlider")
-      .text("Degree of collapsing");
-    
-    sliderValueLabel = sliderContainer.append("label")
-      .classed("value", true)
-      .attr("for", "nodeDegreeDistanceSlider")
-      .text(0);
-    
-    
-    degreeSlider.on("change", function ( silent ){
-      if ( silent !== true ) {
-        graph.update();
-        graphDegreeLevel = degreeSlider.property("value");
-      }
-    });
-    
-    
-    degreeSlider.on("input", function (){
-      var degree = degreeSlider.property("value");
-      sliderValueLabel.text(degree);
-    });
-    
-    
-    // adding wheel events
-    degreeSlider.on("wheel", handleWheelEvent);
-    degreeSlider.on("focusout", function (){
-      if ( degreeSlider.property("value") !== graphDegreeLevel ) {
-        graph.update();
-      }
-    });
-  }
-  
-  function handleWheelEvent(){
-    var wheelEvent = d3.event;
-    
-    var offset;
-    if ( wheelEvent.deltaY < 0 ) offset = 1;
-    if ( wheelEvent.deltaY > 0 ) offset = -1;
-    var maxDeg = parseInt(degreeSlider.attr("max"));
-    var oldVal = parseInt(degreeSlider.property("value"));
-    var newSliderValue = oldVal + offset;
-    if ( oldVal !== newSliderValue && (newSliderValue >= 0 && newSliderValue <= maxDeg) ) {
-      // only update when they are different [reducing redundant updates]
-      // set the new value and emit an update signal
-      degreeSlider.property("value", newSliderValue);
-      degreeSlider.on("input")();// <<-- sets the text value
-      graph.update();
+import Graph from "../../../webvowl/js/graph"
+import AbstractFilter from "../../../webvowl/js/modules/filters/abstractFilter"
+import DataTypeFilter from "../../../webvowl/js/modules/filters/datatypeFilter"
+import DisjointFilter from "../../../webvowl/js/modules/filters/disjointFilter"
+import NodeDegreeFilter from "../../../webvowl/js/modules/filters/nodeDegreeFilter"
+import ObjectPropertyFilter from "../../../webvowl/js/modules/filters/objectPropertyFilter"
+import SetOperatorFilter from "../../../webvowl/js/modules/filters/setOperatorFilter"
+import SubclassFilter from "../../../webvowl/js/modules/filters/subclassFilter"
+
+export default class FilterMenu {
+    /**
+     * Contains the logic for connecting the filters with the website.
+     * @param {Graph} graph required for calling a refresh after a filter change
+     */
+    constructor(graph) {
+        this.graph = graph
+        /**
+         * @type {any[]}
+         */
+        this.checkboxData = []
+        this.menuElement = d3.select("#m_filter")
+        this.menuControl = d3.select("#c_filter a")
+        this.nodeDegreeContainer = d3.select("#nodeDegreeFilteringOption")
+        this.graphDegreeLevel = undefined
+        this.defaultDegreeValue = 0
+        this.degreeSlider = undefined
     }
-    d3.event.preventDefault();
-  }
-  
-  function setSliderValue( slider, value ){
-    slider.property("value", value).on("input")();
-  }
-  
-  /**
-   * Resets the filters (and also filtered elements) to their default.
-   */
-  filterMenu.reset = function (){
-    checkboxData.forEach(function ( checkboxData ){
-      var checkbox = checkboxData.checkbox,
-        enabledByDefault = checkboxData.defaultState,
-        isChecked = checkbox.property("checked");
-      
-      if ( isChecked !== enabledByDefault ) {
-        checkbox.property("checked", enabledByDefault);
-        // Call onclick event handlers programmatically
-        checkbox.on("click")();
-      }
-    });
-    
-    // setSliderValue(degreeSlider, 0);
-    degreeSlider.on("change")();
-  };
-  
-  function addAnimationFinishedListener(){
-    menuControl.node().addEventListener("animationend", function (){
-      menuControl.classed("buttonPulse", false);
-      menuControl.classed("filterMenuButtonHighlight", true);
-      
-    });
-  }
-  
-  filterMenu.killButtonAnimation = function (){
-    menuControl.classed("buttonPulse", false);
-    menuControl.classed("filterMenuButtonHighlight", false);
-  };
-  
-  
-  filterMenu.highlightForDegreeSlider = function ( enable ){
-    if ( !arguments.length ) {
-      enable = true;
+
+    getCheckBoxContainer() {
+        return this.checkboxData
     }
-    menuControl.classed("highlighted", enable);
-    nodeDegreeContainer.classed("highlighted", enable);
-    // pulse button handling
-    if ( menuControl.classed("buttonPulse") === true && enable === true ) {
-      menuControl.classed("buttonPulse", false);
-      var timer = setTimeout(function (){
-        menuControl.classed("buttonPulse", enable);
-        clearTimeout(timer);
-        // after the time is done, remove the pulse but stay highlighted
-      }, 100);
-    } else {
-      menuControl.classed("buttonPulse", enable);
-      menuControl.classed("filterMenuButtonHighlight", enable);
+
+    getDegreeSliderValue() {
+        return this.degreeSlider.property("value")
     }
-  };
-  
-  
-  /** importer functions **/
-  // setting manually the values of the filter
-  // no update of the gui settings, these are updated in updateSettings
-  filterMenu.setCheckBoxValue = function ( id, checked ){
-    for ( var i = 0; i < checkboxData.length; i++ ) {
-      var cbdId = checkboxData[i].checkbox.attr("id");
-      if ( cbdId === id ) {
-        checkboxData[i].checkbox.property("checked", checked);
-        break;
-      }
+
+    /**
+     * Connects the website with graph filters.
+     * @param {DataTypeFilter} datatypeFilter filter for all datatypes
+     * @param {ObjectPropertyFilter} objectPropertyFilter filter for all object properties
+     * @param {SubclassFilter} subclassFilter filter for all subclasses
+     * @param {DisjointFilter} disjointFilter filter for all disjoint with properties
+     * @param {SetOperatorFilter} setOperatorFilter filter for all set operators with properties
+     * @param {NodeDegreeFilter} nodeDegreeFilter filters nodes by their degree
+     */
+    setup(
+        datatypeFilter,
+        objectPropertyFilter,
+        subclassFilter,
+        disjointFilter,
+        setOperatorFilter,
+        nodeDegreeFilter,
+    ) {
+        this.menuControl.on("mouseover", () => {
+            const searchMenu = this.graph.options.searchMenu
+            searchMenu.hideSearchEntries()
+        })
+        this.menuControl.on("mouseleave", () => {
+            this.highlightForDegreeSlider(false)
+        })
+        this.addFilterItem(
+            datatypeFilter,
+            "datatype",
+            "Datatype properties",
+            "#datatypeFilteringOption",
+        )
+        this.addFilterItem(
+            objectPropertyFilter,
+            "objectProperty",
+            "Object properties",
+            "#objectPropertyFilteringOption",
+        )
+        this.addFilterItem(
+            subclassFilter,
+            "subclass",
+            "Solitary subclasses",
+            "#subclassFilteringOption",
+        )
+        this.addFilterItem(
+            disjointFilter,
+            "disjoint",
+            "Class disjointness",
+            "#disjointFilteringOption",
+        )
+        this.addFilterItem(
+            setOperatorFilter,
+            "setoperator",
+            "Set operators",
+            "#setOperatorFilteringOption",
+        )
+        this.addNodeDegreeFilter(nodeDegreeFilter, this.nodeDegreeContainer)
+        this.addAnimationFinishedListener()
     }
-  };
-  
-  filterMenu.getCheckBoxValue = function ( id ){
-    for ( var i = 0; i < checkboxData.length; i++ ) {
-      var cbdId = checkboxData[i].checkbox.attr("id");
-      if ( cbdId === id ) {
-        return checkboxData[i].checkbox.property("checked");
-        
-      }
+
+    /**
+     * @param {AbstractFilter} filter
+     * @param {string} identifier
+     * @param {string} pluralNameOfFilteredItems
+     * @param {string} selector
+     */
+    addFilterItem(filter, identifier, pluralNameOfFilteredItems, selector) {
+        const filterContainer = d3
+            .select(selector)
+            .append("div")
+            .classed("checkboxContainer", true)
+        const filterCheckbox = filterContainer
+            .append("input")
+            .classed("filterCheckbox", true)
+            .attr("id", identifier + "FilterCheckbox")
+            .attr("type", "checkbox")
+            .property("checked", filter.enabled)
+
+        // Store for easier resetting
+        this.checkboxData.push({
+            checkbox: filterCheckbox,
+            defaultState: filter.enabled,
+        })
+
+        filterCheckbox.on("click", (silent) => {
+            // There might be no parameters passed because of a manual
+            // invocation when resetting the filters
+            filter.enabled = filterCheckbox.property("checked")
+            if (!silent) {
+                // updating graph when silent is false or the parameter is not given.
+                this.graph.update()
+            }
+        })
+        filterContainer
+            .append("label")
+            .attr("for", identifier + "FilterCheckbox")
+            .text(pluralNameOfFilteredItems)
     }
-  };
-  // set the value of the slider
-  filterMenu.setDegreeSliderValue = function ( val ){
-    degreeSlider.property("value", val);
-  };
-  
-  filterMenu.getDegreeSliderValue = function (){
-    return degreeSlider.property("value");
-  };
-  
-  // update the gui without invoking graph update (calling silent onclick function)
-  filterMenu.updateSettings = function (){
-    var silent = true;
-    var sliderValue = degreeSlider.property("value");
-    if ( sliderValue > 0 ) {
-      filterMenu.highlightForDegreeSlider(true);
-    } else {
-      filterMenu.highlightForDegreeSlider(false);
+
+    /**
+     * @param {NodeDegreeFilter} nodeDegreeFilter
+     * @param {d3.Selection<any, any, HTMLElement, any>} container
+     */
+    addNodeDegreeFilter(nodeDegreeFilter, container) {
+        const _this = this
+        nodeDegreeFilter.maxDegreeSetter = function (maxDegree) {
+            _this.degreeSlider.attr("max", maxDegree)
+            _this.setSliderValue(
+                _this.degreeSlider,
+                Math.min(maxDegree, _this.degreeSlider.property("value")),
+            )
+        }
+        nodeDegreeFilter.degreeGetter = function () {
+            return _this.degreeSlider.property("value")
+        }
+        nodeDegreeFilter.degreeSetter = function (value) {
+            _this.setSliderValue(_this.degreeSlider, value)
+        }
+        const sliderContainer = container
+            .append("div")
+            .classed("distanceSliderContainer", true)
+        this.degreeSlider = sliderContainer
+            .append("input")
+            .attr("id", "nodeDegreeDistanceSlider")
+            .attr("type", "range")
+            .attr("min", 0)
+            .attr("step", 1)
+        sliderContainer
+            .append("label")
+            .classed("description", true)
+            .attr("for", "nodeDegreeDistanceSlider")
+            .text("Degree of collapsing")
+        const sliderValueLabel = sliderContainer
+            .append("label")
+            .classed("value", true)
+            .attr("for", "nodeDegreeDistanceSlider")
+            .text(0)
+        this.degreeSlider.on(
+            "change",
+            function (/** @type {boolean} */ silent) {
+                if (silent !== true) {
+                    _this.graph.update()
+                    _this.graphDegreeLevel =
+                        _this.degreeSlider.property("value")
+                }
+            },
+        )
+        this.degreeSlider.on("input", function () {
+            const degree = _this.degreeSlider.property("value")
+            sliderValueLabel.text(degree)
+        })
+        // adding wheel events
+        this.degreeSlider.on("wheel", this.handleWheelEvent)
+        this.degreeSlider.on("focusout", function () {
+            if (
+                _this.degreeSlider.property("value") !== _this.graphDegreeLevel
+            ) {
+                _this.graph.update()
+            }
+        })
     }
-    checkboxData.forEach(function ( checkboxData ){
-      var checkbox = checkboxData.checkbox;
-      checkbox.on("click")(silent);
-    });
-    
-    degreeSlider.on("input")();
-    degreeSlider.on("change")();
-    
-  };
-  
-  return filterMenu;
-};
+
+    handleWheelEvent() {
+        const wheelEvent = d3.event
+        let offset
+        if (wheelEvent.deltaY < 0) {
+            offset = 1
+        } else if (wheelEvent.deltaY > 0) {
+            offset = -1
+        }
+        const maxDeg = parseInt(this.degreeSlider.attr("max"))
+        const oldVal = parseInt(this.degreeSlider.property("value"))
+        const newSliderValue = oldVal + offset
+        if (
+            oldVal !== newSliderValue &&
+            newSliderValue >= 0 &&
+            newSliderValue <= maxDeg
+        ) {
+            // only update when they are different [reducing redundant updates]
+            // set the new value and emit an update signal
+            this.degreeSlider.property("value", newSliderValue)
+            this.degreeSlider.on("input")() // <<-- sets the text value
+            this.graph.update()
+        }
+        d3.event.preventDefault()
+    }
+
+    /**
+     * @param {d3.Selection<any, any, HTMLElement, any>} slider
+     * @param {number} value
+     */
+    setSliderValue(slider, value) {
+        slider.property("value", value).on("input")()
+    }
+
+    /**
+     * Resets the filters (and also filtered elements) to their default.
+     */
+    reset() {
+        this.checkboxData.forEach(function (checkboxData) {
+            const checkbox = checkboxData.checkbox,
+                enabledByDefault = checkboxData.defaultState,
+                isChecked = checkbox.property("checked")
+
+            if (isChecked !== enabledByDefault) {
+                checkbox.property("checked", enabledByDefault)
+                // Call onclick event handlers programmatically
+                checkbox.on("click")()
+            }
+        })
+        // setSliderValue(degreeSlider, 0);
+        this.degreeSlider.on("change")()
+    }
+
+    addAnimationFinishedListener() {
+        this.menuControl.node().addEventListener("animationend", () => {
+            this.menuControl.classed("buttonPulse", false)
+            this.menuControl.classed("filterMenuButtonHighlight", true)
+        })
+    }
+
+    killButtonAnimation() {
+        this.menuControl.classed("buttonPulse", false)
+        this.menuControl.classed("filterMenuButtonHighlight", false)
+    }
+
+    /**
+     * @param {boolean} enable
+     */
+    highlightForDegreeSlider(enable = true) {
+        this.menuControl.classed("highlighted", enable)
+        this.nodeDegreeContainer.classed("highlighted", enable)
+        // pulse button handling
+        if (this.menuControl.classed("buttonPulse") && enable) {
+            this.menuControl.classed("buttonPulse", false)
+            const timer = setTimeout(() => {
+                this.menuControl.classed("buttonPulse", enable)
+                clearTimeout(timer)
+                // after the time is done, remove the pulse but stay highlighted
+            }, 100)
+        } else {
+            this.menuControl.classed("buttonPulse", enable)
+            this.menuControl.classed("filterMenuButtonHighlight", enable)
+        }
+    }
+
+    /**
+     * setting manually the values of the filter
+     * no update of the gui settings, these are updated in updateSettings
+     * importer functions *
+     * @param {string} id
+     * @param {boolean} checked
+     */
+    setCheckBoxValue(id, checked) {
+        for (let i = 0; i < this.checkboxData.length; i++) {
+            const cbdId = this.checkboxData[i].checkbox.attr("id")
+            if (cbdId === id) {
+                this.checkboxData[i].checkbox.property("checked", checked)
+                break
+            }
+        }
+    }
+
+    /**
+     * @param {string} id
+     */
+    getCheckBoxValue(id) {
+        for (let i = 0; i < this.checkboxData.length; i++) {
+            const cbdId = this.checkboxData[i].checkbox.attr("id")
+            if (cbdId === id) {
+                return this.checkboxData[i].checkbox.property("checked")
+            }
+        }
+    }
+
+    /**
+     * set the value of the slider
+     * @param {number} val
+     */
+    setDegreeSliderValue(val) {
+        this.degreeSlider.property("value", val)
+    }
+
+    /**
+     * update the gui without invoking graph update (calling silent onclick function)
+     */
+    updateSettings() {
+        const silent = true
+        const sliderValue = this.degreeSlider.property("value")
+        if (sliderValue > 0) {
+            this.highlightForDegreeSlider(true)
+        } else {
+            this.highlightForDegreeSlider(false)
+        }
+        this.checkboxData.forEach(function (checkboxData) {
+            const checkbox = checkboxData.checkbox
+            checkbox.on("click")(silent)
+        })
+        this.degreeSlider.on("input")()
+        this.degreeSlider.on("change")()
+    }
+}

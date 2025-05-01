@@ -1,21 +1,16 @@
-var DatatypeNode = require("../DatatypeNode");
+import Graph from "../../../graph"
+import DatatypeNode from "../DatatypeNode"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    DatatypeNode.apply(this, arguments);
-    var dTypeString = "undefined";
-    this.attributes(["datatype"])
-      .type("rdfs:Datatype")
-      .styleClass("datatype");
-    this.dType = function ( val ){
-      if ( !arguments.length ) return dTypeString;
-      dTypeString = val;
-      
-    };
-  };
-  o.prototype = Object.create(DatatypeNode.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class RdfsDataType extends DatatypeNode {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+
+        this.dType = "undefined"
+        this.attributes = ["datatype"]
+        this.type = "rdfs:Datatype"
+        this.styleClass = "datatype"
+    }
+}

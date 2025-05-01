@@ -1,18 +1,17 @@
-var BaseProperty = require("../BaseProperty");
+import Graph from "../../../graph"
+import BaseProperty from "../BaseProperty"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    BaseProperty.apply(this, arguments);
-    
-    this.labelVisible(false)
-      .linkType("dashed")
-      .markerType("white")
-      .styleClass("setoperatorproperty")
-      .type("setOperatorProperty");
-  };
-  o.prototype = Object.create(BaseProperty.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class SetOperatorProperty extends BaseProperty {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+
+        this.labelVisible = false
+        this.linkType = "dashed"
+        this.markerType = "white"
+        this.styleClass = "setoperatorproperty"
+        this.type = "setOperatorProperty"
+    }
+}

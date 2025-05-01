@@ -1,15 +1,14 @@
-var RoundNode = require("../RoundNode");
+import Graph from "../../../graph"
+import RoundNode from "../RoundNode"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    RoundNode.apply(this, arguments);
-    
-    this.attributes(["external"])
-      .type("ExternalClass");
-  };
-  o.prototype = Object.create(RoundNode.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class ExternalClass extends RoundNode {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+
+        this.attributes = ["external"]
+        this.type = "ExternalClass"
+    }
+}

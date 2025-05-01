@@ -1,16 +1,15 @@
-var BaseProperty = require("../BaseProperty");
+import Graph from "../../../graph"
+import BaseProperty from "../BaseProperty"
 
-module.exports = (function (){
-  
-  var o = function ( graph ){
-    BaseProperty.apply(this, arguments);
-    
-    this.attributes(["symmetric"])
-      .styleClass("symmetricproperty")
-      .type("owl:SymmetricProperty");
-  };
-  o.prototype = Object.create(BaseProperty.prototype);
-  o.prototype.constructor = o;
-  
-  return o;
-}());
+export default class OwlSymmetricProperty extends BaseProperty {
+    /**
+     * @param {Graph} graph
+     */
+    constructor(graph) {
+        super(graph)
+
+        this.attributes = ["symmetric"]
+        this.styleClass = "symmetricproperty"
+        this.type = "owl:SymmetricProperty"
+    }
+}
