@@ -27,10 +27,9 @@ export default class DirectInputModule {
     handleDirectUpload() {
         const text = this.textArea.node().value
         try {
-            // FIXME
-            const isValid = this.graph.options.loadingModule.directInput(text)
+            this.graph.options.loadingModule.directInput(text)
             // close if successful
-            if (isValid) {
+            if (this.graph.options.loadingModule.loadingWasSuccessFul) {
                 this.setDirectInputMode(false)
             }
         } catch (e) {
