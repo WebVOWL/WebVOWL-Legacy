@@ -294,7 +294,7 @@ export default class OntologyLoading {
                 "Retrieving ontology from JSON URL " + filename,
             )
             this.#requestServerTimeStampForJSON_URL(
-                this.ontologyMenu.callbackLoad_JSON_FromURL,
+                this.ontologyMenu.callbackLoad_JSON_FromURL.bind(this.ontologyMenu),
                 ["read?json=" + filename, filename],
             )
         }
@@ -392,7 +392,7 @@ export default class OntologyLoading {
                 "Retrieving ontology from IRI: " + filename,
             )
             this.#requestServerTimeStampForIRI_Converte(
-                this.ontologyMenu.callbackLoad_Ontology_FromIRI,
+                this.ontologyMenu.callbackLoad_Ontology_FromIRI.bind(this.ontologyMenu),
                 ["convert?iri=" + encoded, filename],
             )
         }
@@ -420,7 +420,7 @@ export default class OntologyLoading {
             // 1) check if we can get a timeStamp;
             const parameterArray = [file, fileName]
             this.#requestServerTimeStamp(
-                this.ontologyMenu.callbackLoadFromOntology,
+                this.ontologyMenu.callbackLoadFromOntology.bind(this.ontologyMenu),
                 parameterArray,
             )
         }
@@ -475,7 +475,7 @@ export default class OntologyLoading {
                 // 1) check if we can get a timeStamp;
                 const parameterArray = [selectedFile, filename]
                 this.#requestServerTimeStamp(
-                    this.ontologyMenu.callbackLoadFromOntology,
+                    this.ontologyMenu.callbackLoadFromOntology.bind(this.ontologyMenu),
                     parameterArray,
                 )
             }
