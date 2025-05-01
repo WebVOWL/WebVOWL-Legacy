@@ -22,7 +22,6 @@ export default class Statistics extends AbstractFilter {
         this.totalIndividualCount = 0
     }
 
-    // REVIEW: This does not filter anything. Check if this method can be combined in a class elsewhere
     /**
      * @param {BaseNode[]} classesAndDatatypes
      * @param {BaseProperty[]} properties

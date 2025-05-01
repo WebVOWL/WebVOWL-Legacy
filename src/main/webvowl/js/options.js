@@ -263,18 +263,20 @@ export default class Options {
         this.compactNotationModule = new CompactNotationSwitch(this.graph)
         this.nodeScalingModule = new NodeScalingSwitch(this.graph)
         this.statistics = new Statistics()
+
+        // NOTE: The order of the filters must be EXACTLY as below. Otherwise, stuff WILL break!
         this.filterModules = [
             this.emptyLiteralFilter, // Must be the first element
             this.statistics, // Must to be the first element before filtering
-            this.datatypeFilter,
-            this.subclassFilter,
-            this.setOperatorFilter,
-            this.disjointPropertyFilter,
-            this.objectPropertyFilter,
-            this.colorExternalsModule,
-            this.compactNotationModule,
-            this.nodeScalingModule,
             this.nodeDegreeFilter,
+            this.datatypeFilter,
+            this.objectPropertyFilter,
+            this.subclassFilter,
+            this.disjointPropertyFilter,
+            this.setOperatorFilter,
+            this.nodeScalingModule,
+            this.compactNotationModule,
+            this.colorExternalsModule,
         ]
 
         // Misc

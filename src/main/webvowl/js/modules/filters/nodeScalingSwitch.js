@@ -12,7 +12,6 @@ export default class NodeScalingSwitch extends AbstractFilter {
         this.graph = graph
     }
 
-    // REVIEW: This does not filter anything. Check if this method can be combined in a class elsewhere
     /**
      * If enabled, the scaling of nodes according to individuals will be enabled.
      * @param {BaseNode[]} untouchedNodes

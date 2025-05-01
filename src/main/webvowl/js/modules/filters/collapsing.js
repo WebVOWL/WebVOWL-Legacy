@@ -8,7 +8,6 @@ export default class Collapsing extends AbstractFilter {
         super(false)
     }
 
-    // REVIEW: This does not filter anything. Check if this method can be combined in a class elsewhere
     /**
      * Assigns a "collapsible" boolean to all elements
      * @note This mutates the input!

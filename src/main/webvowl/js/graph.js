@@ -1550,13 +1550,14 @@ export default class Graph {
 
     /**
      * Updates the graphs displayed data and style.
-     * @note `data` will be mutated by this function, thus it should be cloned beforehand.
+     * @note `data` will be mutated by this function.
      * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} data
      */
     update(data = this.currentData, init = false) {
         if (!this.options.loadingModule.loadingWasSuccessFul) {
             return
         }
+        // FIXME: Ensure we only use filters on the rendered data, not the whole graph
         this.keepDetailsCollapsedOnLoading = false
         this.#refreshGraphData(data, init)
         this.#updateNodeMap()
@@ -1976,17 +1977,13 @@ export default class Graph {
 
     /**
      * Applies the data of the graph options object and parses it. The graph is not redrawn.
-     * @note `preprocessedData` will be mutated by this function, thus it should be cloned beforehand.
-     * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} preprocessedData An object containing nodes and properties.
+     * @note `data` will be mutated by this function.
+     * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} data
      */
-    #refreshGraphData(preprocessedData, init = false) {
+    #refreshGraphData(data, init = false) {
         // Filter the data
         for (const module of this.options.filterModules) {
-            preprocessedData = this.#filterFunction(
-                module,
-                preprocessedData,
-                init,
-            )
+            data = this.#filterFunction(module, data, init)
         }
 
         if (init) {
@@ -1994,8 +1991,8 @@ export default class Graph {
         }
 
         this.options.focuserModule.handle(undefined, true)
-        this.classNodes = preprocessedData.nodes
-        this.properties = preprocessedData.properties
+        this.classNodes = data.nodes
+        this.properties = data.properties
         this.links = LinkCreator.createLinks(this.properties)
         this.labelNodes = this.#computeLabelNodes(this.links)
         this.#storeLinksOnNodes(this.classNodes, this.links)
@@ -2177,7 +2174,6 @@ export default class Graph {
      */
     #setPositionOfOldLabelsOnNewLabels(oldLabelNodes, labelNodes) {
         for (const labelNode of labelNodes) {
-            // FIXME: Very expensive!
             for (let i = 0; i < oldLabelNodes.length; i++) {
                 const oldNode = oldLabelNodes[i]
                 if (oldNode.equals(labelNode)) {
