@@ -270,35 +270,150 @@ export default class SearchMenu {
             // TODO: Figure out how to show nodes in nodeIDs
             // Showing all of them (as is done below) causes nodeString to be repeated nodeIDs.length times
             // (as all nodeIDs nodes are pointing to nodeString by definition)
-            for (const nodeID of nodeIDs) {
-                //add results to the dropdown menu
-                let testEntry = document.createElement("li")
-                testEntry.title = nodeString
-                testEntry.setAttribute("elementID", nodeID)
-                testEntry.onclick = this.handleClick(nodeString, nodeIDs)
-                testEntry.setAttribute("class", "dbEntry")
+            if (nodeIDs.length > 1) {   
 
-                let croppedText = this.cropText(nodeString)
-                let searchEntryNode = d3.select(testEntry)
-                if (nodeMap.has(nodeID)) {
-                    searchEntryNode.style("color", "#979797")
-                    testEntry.onclick = () => {
-                        try {
-                            this.graph.loadSearchData(nodeID)
-                            this.requestDictionaryUpdate()
-                            this.handleClick(nodeString, nodeIDs)()
-                        } catch (error) {
-                            console.error(error)
-                        }
+                let testEntry = document.createElement('li');
+                
+                let renderedNodes = [];
+                for (let nodeID of nodeIDs) if (nodeMap[nodeID] != undefined) renderedNodes.push(nodeID);
+
+                
+                let groupEntry = document.createElement('a');
+                groupEntry.setAttribute('class', "groupEntry");
+                groupEntry.title = `${nodeString} (${renderedNodes.length}/${nodeIDs.length})`;
+                
+                groupEntry.onclick = handleClick(nodeString, nodeIDs);
+
+                if (renderedNodes.length == 0) groupEntry.style.color = "rgb(151, 151, 151)";
+                testEntry.appendChild(groupEntry);
+                
+                testEntry.setAttribute('elementID', nodeIDs);
+                //testEntry.onclick = handleClick(nodeString, nodeIDs, testEntry);
+                //testEntry.setAttribute('class', "dbEntry");
+                let croppedText = cropText(nodeString + ' (' + renderedNodes.length + '/' + nodeIDs.length + ')');
+                let searchEntryNode = d3.select(groupEntry);
+                searchEntryNode.node().innerHTML = croppedText;
+
+                let subEntryList = document.createElement('ul');
+                subEntryList.setAttribute('class', "subEntryList");
+
+                testEntry.appendChild(subEntryList);
+                m_search.node().appendChild(testEntry);
+
+                testEntry.addEventListener("mouseenter", (e) => {
+                    let tEntry = e.target;
+                    let subEntryList = tEntry.querySelector(".subEntryList");
+                    subEntryList.style.display = "block";
+                    subEntryList.style.marginLeft = tEntry.offsetWidth + "px";
+
+                    let node = tEntry.nextSibling;
+                    let nextSiblings = 0;
+                    while (node) { 
+                        if (node.getAttribute('class', "dnEntry")) nextSiblings++;
+                        node = node.nextSibling;
                     }
-                    d3.select(testEntry).style("cursor", "default")
+                    subEntryList.style.marginBottom = (tEntry.offsetHeight + 0.8) * nextSiblings + 'px';
+                });
+
+                testEntry.addEventListener("mouseleave", (e) => {
+                    let tEntry = e.target;
+                    let subEntryList = tEntry.querySelector(".subEntryList");
+                    subEntryList.style.display = "none";
+                });
+                
+                generateGroupedEntries(nodeString, nodeIDs, subEntryList, nodeMap);
+
+            }
+            else {
+                for (const nodeID of nodeIDs) {
+                    //add results to the dropdown menu
+                    let testEntry = document.createElement('li');
+                    testEntry.title = nodeString;
+                    testEntry.setAttribute('elementID', nodeID);
+                    testEntry.onclick = handleClick(nodeString, nodeIDs);
+                    testEntry.setAttribute('class', "dbEntry");
+
+                    let croppedText = cropText(nodeString);
+                    let searchEntryNode = d3.select(testEntry);
+                    if (nodeMap[nodeID] === undefined) {
+                        searchEntryNode.style("color", "#979797");
+                        //testEntry.onclick = renderUnrendered(nodeString, nodeIDs)
+                        testEntry.onclick = function () {
+                            try {
+                                graph.loadSearchData([nodeID]);
+                                searchMenu.requestDictionaryUpdate();
+                                handleClick(nodeString, nodeIDs);
+                            } catch (error) {
+                                console.error(error);
+                            }
+                        };
+                        d3.select(testEntry).style("cursor", "default");
+                    }
+                    searchEntryNode.node().innerHTML = croppedText;
+                    m_search.node().appendChild(testEntry);
                 }
-                searchEntryNode.node().innerHTML = croppedText
-                this.m_search.node().appendChild(testEntry)
             }
         }
     }
 
+    generateGroupedEntries(nodeString, nodeIDs, parent, nodeMap) {
+        let existsUnrendered = false;
+        let firstShown = false;
+        for (const nodeID of nodeIDs) {
+            let subEntry = document.createElement('li');
+            subEntry.title = nodeString + ' id: ' + nodeID;
+            subEntry.setAttribute('elementID', nodeID);
+            subEntry.setAttribute('class', "subEntry");
+            subEntry.innerHTML = nodeString + ' (' + nodeID + ')';
+
+            if (firstShown == false) {
+                firstShown = true;
+                subEntry.style.borderStyle = "none";
+            }
+            if (nodeMap[nodeID] == undefined) {
+                subEntry.style.color = "rgb(151, 151, 151)";
+            }
+            
+            parent.appendChild(subEntry);
+            subEntry.onclick = handleClick(nodeString, new Set([nodeID]));
+
+            if (nodeMap[nodeID] === undefined) {
+                existsUnrendered = true;
+                subEntry.onclick = function () {
+                    try {
+                        graph.loadSearchData([nodeID]);
+                        searchMenu.requestDictionaryUpdate();
+                        handleClick(nodeString, new Set([nodeID]));
+                    } catch (error) {
+                        console.error(error);
+                    }
+                };
+                d3.select(subEntry).style("cursor", "default");
+            }
+            
+        }
+
+        let showAllEntry = document.createElement('li');
+        //make this entry pretty
+        showAllEntry.title = "show all"
+        showAllEntry.setAttribute('class', "subEntry");
+        showAllEntry.innerHTML = "Show All"
+        //showAllEntry.setAttribute('class', "showAllButton");
+        parent.appendChild(showAllEntry);
+        showAllEntry.onclick = handleClick(nodeString, nodeIDs);
+
+        if (existsUnrendered === true) {
+            showAllEntry.onclick = function () {
+                try {
+                    graph.loadSearchData(Array.from(nodeIDs.values()));
+                    searchMenu.requestDictionaryUpdate();
+                    handleClick(nodeString, nodeIDs);
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+        }
+    }
     userInput() {
         this.c_locate.classed("highlighted", false)
         this.c_locate.node().title = "Nothing to locate"

@@ -2007,16 +2007,22 @@ export default class Graph {
      * @param {string} rootNodeID
      */
     loadSearchData(rootNodeID) {
-        let nodes = [this.nodeMap.get(rootNodeID)]
-        if (nodes[0] === undefined) {
-            let prop = this.propertyMap.get(rootNodeID)
-            if (prop !== undefined) {
-                nodes = [prop.domain, prop.range]
+        let rootNodes = [];
+        for(nodeID of rootNodeID) {
+            let tempNode = this.nodeMap.get(nodeID);
+            if (tempNode === undefined) {
+                // this is not a node - maybe a link?
+                let prop = this.propertyMap.get(nodeID);
+                if (prop !== undefined) {
+                    rootNodes.push(prop.domain())
+                    rootNodes.push(prop.range())
+                } else {
+                    console.log(`Failed to find a node or property with id ${rootNodeID}`);
+                }
             } else {
-                console.log(
-                    `Failed to find a node or property with id ${rootNodeID}`,
-                )
+                rootNodes.push(tempNode);
             }
+            
         }
         let selectedNodes = this.#breadthFirstSearchDepth(nodes, 2)
         let selectedProperties = []

@@ -135,6 +135,7 @@ html {
     font-size: 14px;
     border: none;
     cursor: pointer;
+    overflow: hidden;
 }
 
 .debugOption {
@@ -150,7 +151,9 @@ html {
 }
 
 .dbEntry:hover,
-.dbEntry:focus {
+.dbEntry:focus,
+.groupEntry:hover, 
+.groupEntry:focus {
     background-color: #bdc3c7;
 }
 
@@ -1734,7 +1737,7 @@ main {
 #m_search {
     max-width: 250px;
     white-space: nowrap;
-    overflow: hidden;
+    overflow: visible;
     text-overflow: ellipsis;
 }
 
@@ -2464,4 +2467,58 @@ a#locateSearchResult {
 
 .disabledLabelForSlider {
     color: #808080;
+}
+
+
+/* ----------------------------------------
+ Miscellaneous CSS from the new development
+   ---------------------------------------- */
+
+.subEntry {
+    display: none;
+    background-color: #ffffff;
+    color: #2980b9;
+    padding: 10px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    overflow: hidden;
+
+    border-top-color: rgb(189, 195, 199);
+    border-top-style: solid;
+    border-top-width: 0.8px;
+}
+
+.subEntryList {
+    display: block;
+    position: absolute;
+    padding: 0;
+    bottom: 0;
+    left: 0;
+
+    -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-bottom: none;
+    border-top: none;
+    border-radius: 4px 4px 0 0;
+    bottom: 100;
+    display: none;
+}
+
+.groupEntry:hover {
+    background-color: #e1e1e1;
+}
+
+.groupEntry {
+    background-color: #ffffff;
+    color: #2980b9;
+    padding: 10px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    overflow: hidden;
+    display: block;
 }

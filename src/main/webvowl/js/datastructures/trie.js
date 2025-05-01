@@ -112,6 +112,6 @@ export default class Trie {
                 stack.push(node.children[child])
             }
         }
-        return output.reverse()
+        return output;
     }
 }
