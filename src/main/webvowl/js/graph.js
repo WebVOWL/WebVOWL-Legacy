@@ -2168,7 +2168,6 @@ export default class Graph {
      */
     #setPositionOfOldLabelsOnNewLabels(oldLabelNodes, labelNodes) {
         for (const labelNode of labelNodes) {
-            // FIXME: Very expensive!
             for (let i = 0; i < oldLabelNodes.length; i++) {
                 const oldNode = oldLabelNodes[i]
                 if (oldNode.equals(labelNode)) {

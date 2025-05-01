@@ -31,7 +31,7 @@ export default class RdfsSubClassOf extends BaseProperty {
 
     // Disallow overwriting the label
     set label(p) {
-        // console.warn("Attempting to override disjoint label") // REVIEW: Check if this getter/setter pair are necessary
+        // console.warn("Attempting to override disjoint label")
         return
     }
 }

@@ -72,7 +72,6 @@ export default class RectangularNode extends RectangularElementToolsMixin(
         this.labelWidth = width
     }
 
-    // For compatibility reasons // TODO resolve
     actualRadius() {
         return this.smallestRadius
     }
