@@ -1,4 +1,6 @@
+import d3 from "d3"
 import Trie from "../../../webvowl/js/datastructures/trie"
+import BaseNode from "../../../webvowl/js/elements/nodes/BaseNode"
 import Graph from "../../../webvowl/js/graph"
 import PrefixTools from "../../../webvowl/js/util/prefixTools"
 
@@ -123,19 +125,7 @@ export default class SearchMenu {
                 htmlCollection[selectedEntry].onclick()
                 this.hideSearchEntries()
             } else if (numEntries === 0) {
-                let inputText = this.getSearchString()
-                // check if input text ends or begins with with space
-                // remove first spaces
-                let clearedText = inputText.replace(/%20/g, " ")
-                while (clearedText.startsWith(" ")) {
-                    clearedText = clearedText.substr(1, clearedText.length)
-                }
-                // remove ending spaces
-                while (clearedText.endsWith(" ")) {
-                    clearedText = clearedText.substr(0, clearedText.length - 1)
-                }
-                const iri = clearedText.replace(/ /g, "%20")
-
+                const iri = this.getSearchString()
                 const valid = PrefixTools.validURL(iri)
                 // validate url:
                 if (valid) {
@@ -256,164 +246,192 @@ export default class SearchMenu {
     createDropDownElements() {
         const searchString = this.getSearchString()
         const searchMatches = this.trie.find(searchString)
+        const forceNodeMap = this.graph.forceNodeMap
+        const nodeMap = this.graph.nodeMap
 
-        // add the results to the entry menu
+        // Add the results to the entry menu
         //******************************************
         let numEntries = searchMatches.length
-        if (numEntries > this.maxEntries) numEntries = this.maxEntries
+        if (numEntries > this.maxEntries) {
+            numEntries = this.maxEntries
+        }
 
         for (let i = 0; i < numEntries; i++) {
             const nodeString = searchMatches[i][0]
             const nodeIDs = searchMatches[i][1]
-            const nodeMap = this.graph.nodeMap
 
-            // TODO: Figure out how to show nodes in nodeIDs
-            // Showing all of them (as is done below) causes nodeString to be repeated nodeIDs.length times
-            // (as all nodeIDs nodes are pointing to nodeString by definition)
-            if (nodeIDs.length > 1) {   
+            if (nodeIDs.length > 1) {
+                const testEntry = document.createElement("li")
 
-                let testEntry = document.createElement('li');
-                
-                let renderedNodes = [];
-                for (let nodeID of nodeIDs) if (nodeMap[nodeID] != undefined) renderedNodes.push(nodeID);
+                let renderedNodes = []
+                for (const nodeID of nodeIDs) {
+                    if (nodeMap.has(nodeID)) {
+                        renderedNodes.push(nodeID)
+                    }
+                }
 
-                
-                let groupEntry = document.createElement('a');
-                groupEntry.setAttribute('class', "groupEntry");
-                groupEntry.title = `${nodeString} (${renderedNodes.length}/${nodeIDs.length})`;
-                
-                groupEntry.onclick = handleClick(nodeString, nodeIDs);
+                const groupEntry = document.createElement("a")
+                groupEntry.setAttribute("class", "groupEntry")
+                groupEntry.title = `${nodeString} (${renderedNodes.length}/${nodeIDs.length})`
+                groupEntry.onclick = this.handleClick(nodeString, nodeIDs).bind(
+                    this,
+                )
 
-                if (renderedNodes.length == 0) groupEntry.style.color = "rgb(151, 151, 151)";
-                testEntry.appendChild(groupEntry);
-                
-                testEntry.setAttribute('elementID', nodeIDs);
+                if (renderedNodes.length == 0) {
+                    groupEntry.style.color = "rgb(151, 151, 151)"
+                }
+
+                testEntry.appendChild(groupEntry)
+                testEntry.setAttribute("elementID", nodeIDs)
+
                 //testEntry.onclick = handleClick(nodeString, nodeIDs, testEntry);
                 //testEntry.setAttribute('class', "dbEntry");
-                let croppedText = cropText(nodeString + ' (' + renderedNodes.length + '/' + nodeIDs.length + ')');
-                let searchEntryNode = d3.select(groupEntry);
-                searchEntryNode.node().innerHTML = croppedText;
 
-                let subEntryList = document.createElement('ul');
-                subEntryList.setAttribute('class', "subEntryList");
+                const croppedText = this.cropText(
+                    nodeString +
+                        " (" +
+                        renderedNodes.length +
+                        "/" +
+                        nodeIDs.length +
+                        ")",
+                )
+                const searchEntryNode = d3.select(groupEntry)
+                searchEntryNode.node().innerHTML = croppedText
 
-                testEntry.appendChild(subEntryList);
-                m_search.node().appendChild(testEntry);
+                const subEntryList = document.createElement("ul")
+                subEntryList.setAttribute("class", "subEntryList")
+
+                testEntry.appendChild(subEntryList)
+                this.m_search.node().appendChild(testEntry)
 
                 testEntry.addEventListener("mouseenter", (e) => {
-                    let tEntry = e.target;
-                    let subEntryList = tEntry.querySelector(".subEntryList");
-                    subEntryList.style.display = "block";
-                    subEntryList.style.marginLeft = tEntry.offsetWidth + "px";
+                    let tEntry = e.target
+                    let subEntryList = tEntry.querySelector(".subEntryList")
+                    subEntryList.style.display = "block"
+                    subEntryList.style.marginLeft = tEntry.offsetWidth + "px"
 
-                    let node = tEntry.nextSibling;
-                    let nextSiblings = 0;
-                    while (node) { 
-                        if (node.getAttribute('class', "dnEntry")) nextSiblings++;
-                        node = node.nextSibling;
+                    let node = tEntry.nextSibling
+                    let nextSiblings = 0
+                    while (node) {
+                        if (node.getAttribute("class", "dnEntry")) {
+                            nextSiblings++
+                        }
+                        node = node.nextSibling
                     }
-                    subEntryList.style.marginBottom = (tEntry.offsetHeight + 0.8) * nextSiblings + 'px';
-                });
-
+                    subEntryList.style.marginBottom =
+                        (tEntry.offsetHeight + 0.8) * nextSiblings + "px"
+                })
                 testEntry.addEventListener("mouseleave", (e) => {
-                    let tEntry = e.target;
-                    let subEntryList = tEntry.querySelector(".subEntryList");
-                    subEntryList.style.display = "none";
-                });
-                
-                generateGroupedEntries(nodeString, nodeIDs, subEntryList, nodeMap);
-
-            }
-            else {
+                    let tEntry = e.target
+                    let subEntryList = tEntry.querySelector(".subEntryList")
+                    subEntryList.style.display = "none"
+                })
+                this.generateGroupedEntries(
+                    nodeString,
+                    nodeIDs,
+                    subEntryList,
+                    nodeMap,
+                )
+            } else {
                 for (const nodeID of nodeIDs) {
-                    //add results to the dropdown menu
-                    let testEntry = document.createElement('li');
-                    testEntry.title = nodeString;
-                    testEntry.setAttribute('elementID', nodeID);
-                    testEntry.onclick = handleClick(nodeString, nodeIDs);
-                    testEntry.setAttribute('class', "dbEntry");
+                    // Add results to the dropdown menu
+                    let testEntry = document.createElement("li")
+                    testEntry.title = nodeString
+                    testEntry.setAttribute("elementID", nodeID)
+                    testEntry.onclick = this.handleClick(
+                        nodeString,
+                        nodeIDs,
+                    ).bind(this)
+                    testEntry.setAttribute("class", "dbEntry")
 
-                    let croppedText = cropText(nodeString);
-                    let searchEntryNode = d3.select(testEntry);
-                    if (nodeMap[nodeID] === undefined) {
-                        searchEntryNode.style("color", "#979797");
+                    let croppedText = this.cropText(nodeString)
+                    let searchEntryNode = d3.select(testEntry)
+                    if (nodeMap.has(nodeID)) {
+                        searchEntryNode.style("color", "#979797")
                         //testEntry.onclick = renderUnrendered(nodeString, nodeIDs)
-                        testEntry.onclick = function () {
+                        testEntry.onclick = () => {
                             try {
-                                graph.loadSearchData([nodeID]);
-                                searchMenu.requestDictionaryUpdate();
-                                handleClick(nodeString, nodeIDs);
+                                this.graph.loadSearchData([nodeID])
+                                this.requestDictionaryUpdate()
+                                this.handleClick(nodeString, nodeIDs)
                             } catch (error) {
-                                console.error(error);
+                                console.error(error)
                             }
-                        };
-                        d3.select(testEntry).style("cursor", "default");
+                        }
+                        d3.select(testEntry).style("cursor", "default")
                     }
-                    searchEntryNode.node().innerHTML = croppedText;
-                    m_search.node().appendChild(testEntry);
+                    searchEntryNode.node().innerHTML = croppedText
+                    this.m_search.node().appendChild(testEntry)
                 }
             }
         }
     }
 
+    /**
+     * @param {string} nodeString
+     * @param {Set<string>} nodeIDs
+     * @param {HTMLUListElement} parent
+     * @param {Map<string, BaseNode>} nodeMap
+     */
     generateGroupedEntries(nodeString, nodeIDs, parent, nodeMap) {
-        let existsUnrendered = false;
-        let firstShown = false;
+        let existsUnrendered = false
+        let firstShown = false
         for (const nodeID of nodeIDs) {
-            let subEntry = document.createElement('li');
-            subEntry.title = nodeString + ' id: ' + nodeID;
-            subEntry.setAttribute('elementID', nodeID);
-            subEntry.setAttribute('class', "subEntry");
-            subEntry.innerHTML = nodeString + ' (' + nodeID + ')';
+            let subEntry = document.createElement("li")
+            subEntry.title = nodeString + " id: " + nodeID
+            subEntry.setAttribute("elementID", nodeID)
+            subEntry.setAttribute("class", "subEntry")
+            subEntry.innerHTML = nodeString + " (" + nodeID + ")"
 
-            if (firstShown == false) {
-                firstShown = true;
-                subEntry.style.borderStyle = "none";
+            if (!firstShown) {
+                firstShown = true
+                subEntry.style.borderStyle = "none"
             }
-            if (nodeMap[nodeID] == undefined) {
-                subEntry.style.color = "rgb(151, 151, 151)";
-            }
-            
-            parent.appendChild(subEntry);
-            subEntry.onclick = handleClick(nodeString, new Set([nodeID]));
 
-            if (nodeMap[nodeID] === undefined) {
-                existsUnrendered = true;
-                subEntry.onclick = function () {
+            parent.appendChild(subEntry)
+            subEntry.onclick = this.handleClick(
+                nodeString,
+                new Set([nodeID]),
+            ).bind(this)
+
+            if (nodeMap.has(nodeID)) {
+                existsUnrendered = true
+                subEntry.style.color = "rgb(151, 151, 151)"
+                subEntry.onclick = () => {
                     try {
-                        graph.loadSearchData([nodeID]);
-                        searchMenu.requestDictionaryUpdate();
-                        handleClick(nodeString, new Set([nodeID]));
+                        this.graph.loadSearchData([nodeID])
+                        this.requestDictionaryUpdate()
+                        this.handleClick(nodeString, new Set([nodeID]))
                     } catch (error) {
-                        console.error(error);
+                        console.error(error)
                     }
-                };
-                d3.select(subEntry).style("cursor", "default");
+                }
+                d3.select(subEntry).style("cursor", "default")
             }
-            
         }
 
-        let showAllEntry = document.createElement('li');
+        let showAllEntry = document.createElement("li")
         //make this entry pretty
         showAllEntry.title = "show all"
-        showAllEntry.setAttribute('class', "subEntry");
+        showAllEntry.setAttribute("class", "subEntry")
         showAllEntry.innerHTML = "Show All"
         //showAllEntry.setAttribute('class', "showAllButton");
-        parent.appendChild(showAllEntry);
-        showAllEntry.onclick = handleClick(nodeString, nodeIDs);
+        parent.appendChild(showAllEntry)
+        showAllEntry.onclick = this.handleClick(nodeString, nodeIDs).bind(this)
 
         if (existsUnrendered === true) {
-            showAllEntry.onclick = function () {
+            showAllEntry.onclick = () => {
                 try {
-                    graph.loadSearchData(Array.from(nodeIDs.values()));
-                    searchMenu.requestDictionaryUpdate();
-                    handleClick(nodeString, nodeIDs);
+                    this.graph.loadSearchData(Array.from(nodeIDs.values()))
+                    this.requestDictionaryUpdate()
+                    this.handleClick(nodeString, nodeIDs)
                 } catch (error) {
-                    console.error(error);
+                    console.error(error)
                 }
-            };
+            }
         }
     }
+
     userInput() {
         this.c_locate.classed("highlighted", false)
         this.c_locate.node().title = "Nothing to locate"

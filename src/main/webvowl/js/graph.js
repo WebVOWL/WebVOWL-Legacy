@@ -1976,7 +1976,7 @@ export default class Graph {
 
     /**
      * Applies the data of the graph options object and parses it. The graph is not redrawn.
-     * @note `preprocessedData` will be mutated by this function, thus it should be cloned beforehand.
+     * @note `preprocessedData` will be mutated by this function.
      * @param {{ nodes: BaseNode[]; properties: BaseProperty[]; }} preprocessedData An object containing nodes and properties.
      */
     #refreshGraphData(preprocessedData, init = false) {
@@ -2003,29 +2003,32 @@ export default class Graph {
     }
 
     /**
-     * Create a subgraph with `rootNodeID` as root.
-     * @param {string} rootNodeID
+     * Create a subgraph with `rootNodeIDs` as root.
+     * @param {string[]} rootNodeIDs
      */
-    loadSearchData(rootNodeID) {
-        let rootNodes = [];
-        for(nodeID of rootNodeID) {
-            let tempNode = this.nodeMap.get(nodeID);
-            if (tempNode === undefined) {
-                // this is not a node - maybe a link?
-                let prop = this.propertyMap.get(nodeID);
-                if (prop !== undefined) {
-                    rootNodes.push(prop.domain())
-                    rootNodes.push(prop.range())
-                } else {
-                    console.log(`Failed to find a node or property with id ${rootNodeID}`);
-                }
+    loadSearchData(rootNodeIDs) {
+        let rootNodes = []
+        for (const nodeID of rootNodeIDs) {
+            const node = this.nodeMap.get(nodeID)
+            if (node) {
+                rootNodes.push(node)
             } else {
-                rootNodes.push(tempNode);
+                // This is not a node - maybe a link?
+                const prop = this.propertyMap.get(nodeID)
+                if (prop) {
+                    rootNodes.push(prop.domain)
+                    rootNodes.push(prop.range)
+                } else {
+                    console.log(
+                        `Failed to find a node or property with id '${rootNodeIDs}'`,
+                    )
+                }
             }
-            
         }
-        let selectedNodes = this.#breadthFirstSearchDepth(nodes, 2)
+
+        let selectedNodes = this.#breadthFirstSearchDepth(rootNodes, 2)
         let selectedProperties = []
+
         for (const property of this.unfilteredData.properties) {
             if (
                 selectedNodes.get(property.domain.id) &&
@@ -2045,7 +2048,7 @@ export default class Graph {
         )
         this.update(this.currentData)
         this.resetSearchHighlight()
-        this.highLightNodes([rootNodeID])
+        this.highLightNodes(rootNodeIDs)
     }
 
     /**
