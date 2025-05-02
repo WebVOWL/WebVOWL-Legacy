@@ -1,11 +1,17 @@
+import Deque from "collections/deque"
+
 class TrieNode {
     /**
      * @param {string} key
      */
     constructor(key) {
-        // The "key" value will be the character in sequence
+        // this.key is a character in the whole word.
         this.key = key
-        // The "data" value is the data associated with the whole word. Thus only present (not null) if this.end == true
+        /**
+         * Tthe data associated with the whole word.
+         * Only present (not null) if this.end == true.
+         * @type {Set<any> | null}
+         */
         this.data = null
         /**
          * @type {TrieNode | null}
@@ -15,9 +21,10 @@ class TrieNode {
          * @type {Map<string,TrieNode>}
          */
         this.children = new Map()
-        // Check to see if the node is at the end
+        // Check to see if the node is at the end of a whole word.
         this.end = false
     }
+
     getWord() {
         let output = []
         let node = this
@@ -27,57 +34,67 @@ class TrieNode {
         }
         return output.reverse().join("")
     }
+
+    /**
+     * Remove this node from the trie.
+     */
+    delete() {
+        if (this.children.size === 0) {
+            // Remove reference to this from parent's children.
+            this.parent.children.delete(this.key)
+        }
+        this.end = false
+        delete this.data
+        this.data = null
+    }
 }
 
 export default class Trie {
     /**
      * A basic Trie of word/data pairs.
-     * It allows O(k) worst-case additions and O(dk) worst-case searches,
-     * where k is the word size and d is size of the alphabet
+     * It allows O(k) worst-case additions and O(k + |V_T|) worst-case searches,
+     * where:
+     *  - k is the word size.
+     *  - |V_T| is the size of the remaining subtree after traversing k trie nodes.
      */
     constructor() {
         this.base = new TrieNode(null)
     }
 
     /**
-     * Add a word and its associated data
-     * @param {string} word
-     * @param {*} data
+     * Add a word and its associated data.
+     * @param {string} word The word to add.
+     * @param {any} data The data to associate with `word`.
+     * @param {boolean} override If `word` already exists, override existing data in the trie with `data`.
      */
     add(word, data, override = false) {
         let node = this.base
-        const points = Array.from(word)
-        for (const i in points) {
-            const point = points[i]
-            let child = node.children.get(point)
+        for (const char of word) {
+            let child = node.children.get(char)
             if (!child) {
-                child = new TrieNode(point)
+                child = new TrieNode(char)
                 child.parent = node
-                node.children.set(point, child)
+                node.children.set(char, child)
             }
             node = child
-            if (i == word.length - 1) {
-                node.end = true
-                if (!override && node.data instanceof Set) {
-                    node.data.add(data)
-                } else {
-                    node.data = new Set([data])
-                }
-            }
+        }
+        node.end = true
+        if (!override && node.data instanceof Set) {
+            node.data.add(data)
+        } else {
+            node.data = new Set([data])
         }
     }
 
     /**
-     * Test word membership in the trie
+     * Test word membership in the trie.
      * @param {string} word
-     * @returns {boolean} Whether the word is in the trie
+     * @returns {boolean} Whether `word` is in the trie.
      */
     contains(word) {
         let node = this.base
-        const points = Array.from(word)
-        for (const i in points) {
-            const point = points[i]
-            node = node.children.get(point)
+        for (const char of word) {
+            node = node.children.get(char)
             if (!node) {
                 return false
             }
@@ -86,11 +103,11 @@ export default class Trie {
     }
 
     /**
-     * Find word/data pairs that contains `prefix`
+     * Find word/data pairs that contains `prefix`.
      * @param {string} prefix
      * @param {number} [limit] Stop search after at most `limit` words.
      * @returns {any[][]} Array of arrays where a[i][0] is a word and a[i][1] is the word's data.
-     * Ordered by word relevance such that more relevant words have a lower index i
+     * Ordered by word relevance such that more relevant words have a lower index i.
      */
     find(prefix, limit) {
         let node = this.base
@@ -98,29 +115,49 @@ export default class Trie {
          * @type {any[][]}
          */
         let output = []
-        const points = Array.from(prefix)
-        for (const i in points) {
-            const point = points[i]
-            node = node.children.get(point)
+        for (const char of prefix) {
+            node = node.children.get(char)
             if (!node) {
                 return output
             }
         }
-        const stack = [node]
+        const stack = new Deque([node])
         while (stack.length) {
             node = stack.shift()
-            // base case, if node is at a word, push to output
+            // Base case: If node is at a word, push to output.
             if (node.end) {
                 if (limit !== undefined && output.length >= limit) {
                     break
                 }
                 output.push([node.getWord(), node.data])
             }
-            // iterate through each children
+            // Traverse all children
             for (const child of node.children.values()) {
                 stack.push(child)
             }
         }
         return output
+    }
+
+    /**
+     * Removes `item` from the trie.
+     * @param {string} word The word to search for.
+     * @param {any} [item] Remove `item` from `word`'s data container.
+     * If undefined, `word` is completely removed from the trie
+     */
+    remove(word, item = undefined) {
+        let node = this.base
+        for (const char of word) {
+            node = node.children.get(char)
+        }
+        if (node.end) {
+            // If we have `item` and deleting would create a node with empty data,
+            // delete the node instead.
+            if (item !== undefined && node.data.size > 1) {
+                node.data.delete(item)
+            } else {
+                node.delete()
+            }
+        }
     }
 }
