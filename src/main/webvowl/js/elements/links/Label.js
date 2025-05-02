@@ -9,11 +9,38 @@ export default class Label {
      * @param {PlainLink} link the link this label belongs to
      */
     constructor(property, link) {
-        this.frozen = property.frozen
-        this.locked = property.locked
-        this.pinned = property.pinned
+        this._frozen = property.frozen
+        this._locked = property.locked
+        this._pinned = property.pinned
         this.link = link
         this.property = property
+    }
+
+    get frozen() {
+        return this._frozen
+    }
+
+    get locked() {
+        return this._locked
+    }
+
+    get pinned() {
+        return this._pinned
+    }
+
+    set frozen(v) {
+        this._frozen = v;
+        this.property.frozen = v;
+    }
+
+    set locked(v) {
+        this._locked = v;
+        this.property.locked = v;
+    }
+
+    set pinned(v) {
+        this._pinned = v;
+        this.property.pinned = v;
     }
 
     get fixed() {
