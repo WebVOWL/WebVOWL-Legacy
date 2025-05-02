@@ -3,15 +3,19 @@ class TrieNode {
      * @param {string} key
      */
     constructor(key) {
-        // the "key" value will be the character in sequence
+        // The "key" value will be the character in sequence
         this.key = key
-        // the "data" value is the data associated with the whole word. Thus only present (not null) if this.end == true
+        // The "data" value is the data associated with the whole word. Thus only present (not null) if this.end == true
         this.data = null
-        // we keep a reference to parent
+        /**
+         * @type {TrieNode | null}
+         */
         this.parent = null
-        // we have a map of children
-        this.children = {}
-        // check to see if the node is at the end
+        /**
+         * @type {Map<string,TrieNode>}
+         */
+        this.children = new Map()
+        // Check to see if the node is at the end
         this.end = false
     }
     getWord() {
@@ -45,11 +49,13 @@ export default class Trie {
         const points = Array.from(word)
         for (const i in points) {
             const point = points[i]
-            if (!node.children[point]) {
-                node.children[point] = new TrieNode(point)
-                node.children[point].parent = node
+            let child = node.children.get(point)
+            if (!child) {
+                child = new TrieNode(point)
+                child.parent = node
+                node.children.set(point, child)
             }
-            node = node.children[point]
+            node = child
             if (i == word.length - 1) {
                 node.end = true
                 if (!override && node.data instanceof Set) {
@@ -71,9 +77,8 @@ export default class Trie {
         const points = Array.from(word)
         for (const i in points) {
             const point = points[i]
-            if (node.children[point]) {
-                node = node.children[point]
-            } else {
+            node = node.children.get(point)
+            if (!node) {
                 return false
             }
         }
@@ -83,20 +88,21 @@ export default class Trie {
     /**
      * Find word/data pairs that contains `prefix`
      * @param {string} prefix
-     * @returns {any[][]} Array of arrays where a[i][0] is a word and a[i][1] is the word's data
+     * @param {number} [limit] Stop search after at most `limit` words.
+     * @returns {any[][]} Array of arrays where a[i][0] is a word and a[i][1] is the word's data.
      * Ordered by word relevance such that more relevant words have a lower index i
      */
-    find(prefix) {
+    find(prefix, limit) {
         let node = this.base
+        /**
+         * @type {any[][]}
+         */
         let output = []
         const points = Array.from(prefix)
         for (const i in points) {
             const point = points[i]
-            // make sure prefix actually has words
-            if (node.children[point]) {
-                node = node.children[point]
-            } else {
-                // there's none. just return it.
+            node = node.children.get(point)
+            if (!node) {
                 return output
             }
         }
@@ -105,13 +111,16 @@ export default class Trie {
             node = stack.shift()
             // base case, if node is at a word, push to output
             if (node.end) {
+                if (limit !== undefined && output.length >= limit) {
+                    break
+                }
                 output.push([node.getWord(), node.data])
             }
-            // iterate through each children, call recursive findAllWords
-            for (const child in node.children) {
-                stack.push(node.children[child])
+            // iterate through each children
+            for (const child of node.children.values()) {
+                stack.push(child)
             }
         }
-        return output;
+        return output
     }
 }
