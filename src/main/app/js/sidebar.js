@@ -175,11 +175,16 @@ export default class SideBar {
                     Constants.LANG_UNDEFINED,
                 )
             ) {
-                this.#trySelectDefaultLanguage(
-                    languageSelection,
-                    languages,
-                    Constants.LANG_IRIBASED,
-                )
+                if (
+                    !this.#trySelectDefaultLanguage(
+                        languageSelection,
+                        languages,
+                        Constants.LANG_IRIBASED,
+                    )
+                ) {
+                    // Failed to set language, but we must generate the dictionary
+                    this.graph.generateDictionary()
+                }
             }
         }
     }
