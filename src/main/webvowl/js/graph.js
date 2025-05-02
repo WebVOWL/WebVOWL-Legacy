@@ -1,4 +1,7 @@
 import Deque from "collections/deque"
+import d3 from "d3"
+import SearchMenu from "../../app/js/menu/searchMenu"
+import Trie from "./datastructures/trie"
 import AbstractDomainRangeDragger from "./draggers/abstractDomainRangeDragger"
 import AbstractDragger from "./draggers/abstractDragger"
 import ClassDragger from "./draggers/classDragger"
@@ -99,6 +102,11 @@ export default class Graph {
          * @type {{ nodes: BaseNode[]; properties: BaseProperty[]; }}
          */
         this.currentData = { nodes: [], properties: [] }
+        /**
+         * Trie for search
+         * @type {Trie | undefined}
+         */
+        this.trie = undefined
 
         // Graph behaviour
         this.force = undefined
@@ -191,11 +199,6 @@ export default class Graph {
         return this.parser.propertyMap
     }
 
-    // search functionality
-    get dictionary() {
-        return this.parser.dictionary
-    }
-
     get paused() {
         return this._paused
     }
@@ -218,8 +221,8 @@ export default class Graph {
             this._language = newLanguage || "default"
             this.#redrawContent()
             this.#recalculatePositions()
-            this.options.searchMenu.requestDictionaryUpdate()
             this.resetSearchHighlight()
+            this.generateDictionary()
         }
     }
 
@@ -247,6 +250,13 @@ export default class Graph {
      * @param {number} zoom
      */
     setSliderZoom(zoom) {
+        if (!this.graphContainer) {
+            console.warn(
+                `Cannot setSliderZoom when graphContainer is ${this.graphContainer}`,
+            )
+            return
+        }
+
         const cx = 0.5 * this.options.width
         const cy = 0.5 * this.options.height
         const cp = this.#getWorldPosFromScreen(
@@ -710,6 +720,13 @@ export default class Graph {
     }
 
     #recalculatePositions() {
+        if (!this.nodeElements) {
+            console.warn(
+                `Cannot recalculatePositions when nodeElements is ${this.nodeElements}`,
+            )
+            return
+        }
+
         const _this = this
         // add switch for edit mode to make this faster;
         if (!this.isEditorMode) {
@@ -1717,41 +1734,39 @@ export default class Graph {
         }
     }
 
-    /**
-     * @param {{ nodes: any; properties: any; }} data
-     */
-    #generateDictionary(data) {
-        const originalDictionary = []
-        const nodes = data.nodes
-        for (let i = 0; i < nodes.length; i++) {
-            // check if node has a label
-            if (nodes[i].labelForCurrentLanguage() !== undefined)
-                originalDictionary.push(nodes[i])
-        }
-        const props = data.properties
-        for (let i = 0; i < props.length; i++) {
-            if (props[i].labelForCurrentLanguage() !== undefined)
-                originalDictionary.push(props[i])
-        }
-        this.parser.dictionary = originalDictionary
+    generateDictionary() {
+        this.trie = new Trie()
 
-        const literalFilter = this.options.emptyLiteralFilter
-        const idsToRemove = literalFilter.removedNodes
-        const originalDict = this.parser.dictionary
-        const newDict = []
-
-        // go through the dictionary and remove the ids;
-        for (let i = 0; i < originalDict.length; i++) {
-            let dictElement = originalDict[i]
-            let dictElementId = dictElement.property
-                ? dictElement.property.id
-                : dictElement.id
-            if (!idsToRemove.has(dictElementId)) {
-                newDict.push(dictElement)
+        /**
+         * @param {BaseElement} item
+         */
+        const addItem = (item) => {
+            const label = item.labelForCurrentLanguage()
+            if (label) {
+                this.trie.add(label.toLowerCase(), item.id)
+            }
+            // Add all equivalents
+            if (item.equivalents && item.equivalents.length > 0) {
+                const eqsLabels = item
+                    .equivalentsString()
+                    .toLowerCase()
+                    .split(", ")
+                for (const label of eqsLabels) {
+                    this.trie.add(label, item.id)
+                }
             }
         }
-        // tell the parser that the dictionary is updated
-        this.parser.dictionary = newDict
+
+        const invalidNodes = this.options.emptyLiteralFilter.removedNodes
+        for (const node of this.unfilteredData.nodes) {
+            if (invalidNodes.has(node.id)) {
+                continue
+            }
+            addItem(node)
+        }
+        for (const property of this.unfilteredData.properties) {
+            addItem(property)
+        }
     }
 
     updateProgressBarMode() {
@@ -1785,11 +1800,6 @@ export default class Graph {
         this.force.nodes([])
         this.force.links([])
         this.visiblePulseNodeIDs.clear()
-
-        // reset the locate button and previously selected locations and other variables
-        d3.select("#locateSearchResult").classed("highlighted", false)
-        d3.select("#locateSearchResult").node().title = "Nothing to locate"
-
         this.clearGraphData()
 
         this.showFilterWarning = false
@@ -1799,6 +1809,10 @@ export default class Graph {
             nodes: this.parser.nodes,
             properties: this.parser.properties,
         }
+
+        // Clear the previous search entries
+        this.options.searchMenu = new SearchMenu(this)
+        this.options.searchMenu.setup()
 
         // fixing class and property id counter for the editor
         this.eN = this.unfilteredData.nodes.length + 1
@@ -1943,7 +1957,6 @@ export default class Graph {
         if (this.parser.settingsImportGraphZoomAndTranslation) {
             this.centerGraphViewOnLoad = false
         }
-        this.options.searchMenu.requestDictionaryUpdate()
         this.options.editSidebar.updateGeneralOntologyInfo()
         this.options.editSidebar.updatePrefixUi()
         this.options.editSidebar.updateElementWidth()
@@ -1985,11 +1998,6 @@ export default class Graph {
         for (const module of this.options.filterModules) {
             data = this.#filterFunction(module, data, init)
         }
-
-        if (init) {
-            this.#generateDictionary(this.unfilteredData)
-        }
-
         this.options.focuserModule.handle(undefined, true)
         this.classNodes = data.nodes
         this.properties = data.properties
@@ -2005,7 +2013,10 @@ export default class Graph {
      */
     loadSearchData(rootNodeIDs) {
         let rootNodes = []
+        let allRendered = true
         for (const nodeID of rootNodeIDs) {
+            allRendered =
+                allRendered && this.forceNodeMap.get(nodeID) !== undefined
             const node = this.nodeMap.get(nodeID)
             if (node) {
                 rootNodes.push(node)
@@ -2023,27 +2034,30 @@ export default class Graph {
             }
         }
 
-        let selectedNodes = this.#breadthFirstSearchDepth(rootNodes, 2)
-        let selectedProperties = []
+        // Skip expensive graph generation if all nodes are currently rendered
+        if (!allRendered) {
+            let selectedNodes = this.#breadthFirstSearchDepth(rootNodes, 2)
+            let selectedProperties = []
 
-        for (const property of this.unfilteredData.properties) {
-            if (
-                selectedNodes.get(property.domain.id) &&
-                selectedNodes.get(property.range.id)
-            ) {
-                selectedProperties.push(property)
+            for (const property of this.unfilteredData.properties) {
+                if (
+                    selectedNodes.get(property.domain.id) &&
+                    selectedNodes.get(property.range.id)
+                ) {
+                    selectedProperties.push(property)
+                }
             }
+            this.currentData = {
+                nodes: Array.from(selectedNodes.values()),
+                properties: selectedProperties,
+            }
+            this.#filterFunction(
+                this.options.nodeDegreeFilter,
+                this.currentData,
+                true,
+            )
+            this.update(this.currentData)
         }
-        this.currentData = {
-            nodes: Array.from(selectedNodes.values()),
-            properties: selectedProperties,
-        }
-        this.#filterFunction(
-            this.options.nodeDegreeFilter,
-            this.currentData,
-            true,
-        )
-        this.update(this.currentData)
         this.resetSearchHighlight()
         this.highLightNodes(rootNodeIDs)
     }
@@ -3005,6 +3019,13 @@ export default class Graph {
      * @param {boolean} [dynamic]
      */
     forceRelocationEvent(dynamic) {
+        if (!this.graphContainer) {
+            console.warn(
+                `Cannot forceRelocationEvent when graphContainer is ${this.graphContainer}`,
+            )
+            return
+        }
+
         // we need to kill the halo to determine the bounding box;
         const halos = this.hideHalos()
         const bbox = this.graphContainer.node().getBoundingClientRect()
@@ -3205,7 +3226,13 @@ export default class Graph {
             this.classNodes.push(aNode)
         }
 
-        this.#generateDictionary(this.unfilteredData)
+        // Update trie
+        this.trie.remove(
+            element.labelForCurrentLanguage().toLowerCase(),
+            element.id,
+        )
+        this.trie.add(aNode.labelForCurrentLanguage().toLowerCase(), aNode.id)
+
         this.fastUpdate()
 
         this.options.focuserModule.handle(aNode)
@@ -3470,7 +3497,10 @@ export default class Graph {
         aNode.iri = aNode.baseIri + aNode.id
 
         this.#addNewNodeElement(aNode)
-        this.#generateDictionary(this.unfilteredData)
+
+        // Update trie
+        this.trie.add(aNode.labelForCurrentLanguage().toLowerCase(), aNode.id)
+
         this.fastUpdate()
         this.options.focuserModule.handle(aNode, true)
         aNode.frozen = this._paused
@@ -3901,7 +3931,10 @@ export default class Graph {
         range.addProperty(aProp)
 
         this.#addNewPropertyElement(aProp)
-        this.#generateDictionary(this.unfilteredData)
+
+        // Update trie
+        this.trie.add(aProp.labelForCurrentLanguage().toLowerCase(), aProp.id)
+
         this.fastUpdate()
 
         aProp.labelObject.x = pX
@@ -3998,7 +4031,7 @@ export default class Graph {
 
         this.#addNewNodeElement(aNode)
         this.#addNewPropertyElement(aProp)
-        this.#generateDictionary(this.unfilteredData)
+        this.generateDictionary()
         this.fastUpdate()
 
         const _this = this
@@ -4021,29 +4054,38 @@ export default class Graph {
      */
     removeNodesViaResponse(nodesToRemove, propsToRemove) {
         for (let i = 0; i < propsToRemove.length; i++) {
-            this.propertyMap.delete(propsToRemove[i].id)
-            let id = this.unfilteredData.properties.indexOf(propsToRemove[i])
+            const property = propsToRemove[i]
+            this.propertyMap.delete(property.id)
+            let id = this.unfilteredData.properties.indexOf(property)
             if (id !== -1) {
                 this.unfilteredData.properties.splice(id, 1)
             }
-            id = this.properties.indexOf(propsToRemove[i])
+            id = this.properties.indexOf(property)
             if (id !== -1) {
                 this.properties.splice(id, 1)
             }
+            this.trie.remove(
+                property.labelForCurrentLanguage().toLowerCase(),
+                property.id,
+            )
             propsToRemove[i] = null
         }
         for (let i = 0; i < nodesToRemove.length; i++) {
-            let id = this.unfilteredData.nodes.indexOf(nodesToRemove[i])
+            const node = nodesToRemove[i]
+            let id = this.unfilteredData.nodes.indexOf(node)
             if (id !== -1) {
                 this.unfilteredData.nodes.splice(id, 1)
             }
-            id = this.classNodes.indexOf(nodesToRemove[i])
+            id = this.classNodes.indexOf(node)
             if (id !== -1) {
                 this.classNodes.splice(id, 1)
             }
+            this.trie.remove(
+                node.labelForCurrentLanguage().toLowerCase(),
+                node.id,
+            )
             nodesToRemove[i] = null
         }
-        this.#generateDictionary(this.unfilteredData)
         this.fastUpdate()
         this.options.focuserModule.handle(undefined)
         nodesToRemove = null

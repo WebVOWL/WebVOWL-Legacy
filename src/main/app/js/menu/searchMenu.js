@@ -1,5 +1,4 @@
 import d3 from "d3"
-import Trie from "../../../webvowl/js/datastructures/trie"
 import BaseNode from "../../../webvowl/js/elements/nodes/BaseNode"
 import Graph from "../../../webvowl/js/graph"
 import PrefixTools from "../../../webvowl/js/util/prefixTools"
@@ -7,54 +6,20 @@ import PrefixTools from "../../../webvowl/js/util/prefixTools"
 export default class SearchMenu {
     /**
      * Contains the search "engine"
-     * @param {Graph} graph the associated webvowl graph
+     * @param {Graph} graph
      */
     constructor(graph) {
         this.graph = graph
-
-        /**
-         * @type {Trie | undefined}
-         */
-        this.trie = undefined
-        this.searchLineEdit = undefined
-        this.maxEntries = 6
-        this.dictionaryUpdateRequired = true
+        this.maxEntries = 8
         this.viewStatusOfSearchEntries = false
 
+        this.searchLineEdit = d3.select("#search-input-text")
         this.c_locate = d3.select("#locateSearchResult")
         this.c_search = d3.select("#c_search")
         this.m_search = d3.select("#m_search") // << dropdown container;
     }
 
-    requestDictionaryUpdate() {
-        this.dictionaryUpdateRequired = true
-        this.clearSearchEntries()
-    }
-
-    updateSearchDictionary() {
-        this.dictionaryUpdateRequired = false
-        this.trie = new Trie()
-        let dict = this.graph.dictionary
-
-        for (let i = 0; i < dict.length; i++) {
-            let item = dict[i]
-            this.trie.add(item.labelForCurrentLanguage().toLowerCase(), item.id)
-
-            // add all equivalents to the search space;
-            if (item.equivalents && item.equivalents.length > 0) {
-                let eqsLabels = item
-                    .equivalentsString()
-                    .toLowerCase()
-                    .split(", ")
-                for (let e = 0; e < eqsLabels.length; e++) {
-                    this.trie.add(eqsLabels[e], item.id)
-                }
-            }
-        }
-    }
-
     setup() {
-        this.searchLineEdit = d3.select("#search-input-text")
         this.searchLineEdit.on("input", () => {
             this.userInput()
         })
@@ -104,10 +69,6 @@ export default class SearchMenu {
     }
 
     userNavigation() {
-        if (this.dictionaryUpdateRequired) {
-            this.updateSearchDictionary()
-        }
-
         const htmlCollection = this.m_search.node().children
         const numEntries = htmlCollection.length
         let move = 0
@@ -245,7 +206,10 @@ export default class SearchMenu {
 
     createDropDownElements() {
         const searchString = this.getSearchString()
-        const searchMatches = this.trie.find(searchString, this.maxEntries)
+        const searchMatches = this.graph.trie.find(
+            searchString,
+            this.maxEntries,
+        )
         const forceNodeMap = this.graph.forceNodeMap
         const nodeMap = this.graph.nodeMap
 
@@ -253,21 +217,24 @@ export default class SearchMenu {
         //******************************************
         for (let i = 0; i < searchMatches.length; i++) {
             const nodeString = searchMatches[i][0]
+            /**
+             * @type {Set<string>}
+             */
             const nodeIDs = searchMatches[i][1]
 
-            if (nodeIDs.length > 1) {
+            if (nodeIDs.size > 1) {
                 const testEntry = document.createElement("li")
 
                 let renderedNodes = []
                 for (const nodeID of nodeIDs) {
-                    if (nodeMap.has(nodeID)) {
+                    if (forceNodeMap.has(nodeID)) {
                         renderedNodes.push(nodeID)
                     }
                 }
 
                 const groupEntry = document.createElement("a")
                 groupEntry.setAttribute("class", "groupEntry")
-                groupEntry.title = `${nodeString} (${renderedNodes.length}/${nodeIDs.length})`
+                groupEntry.title = `${nodeString} (${renderedNodes.length}/${nodeIDs.size})`
                 groupEntry.onclick = this.handleClick(nodeString, nodeIDs).bind(
                     this,
                 )
@@ -277,7 +244,7 @@ export default class SearchMenu {
                 }
 
                 testEntry.appendChild(groupEntry)
-                testEntry.setAttribute("elementID", nodeIDs)
+                // testEntry.setAttribute("elementID", nodeIDs)
 
                 //testEntry.onclick = handleClick(nodeString, nodeIDs, testEntry);
                 //testEntry.setAttribute('class', "dbEntry");
@@ -287,7 +254,7 @@ export default class SearchMenu {
                         " (" +
                         renderedNodes.length +
                         "/" +
-                        nodeIDs.length +
+                        nodeIDs.size +
                         ")",
                 )
                 const searchEntryNode = d3.select(groupEntry)
@@ -328,36 +295,37 @@ export default class SearchMenu {
                     nodeMap,
                 )
             } else {
-                for (const nodeID of nodeIDs) {
-                    // Add results to the dropdown menu
-                    let testEntry = document.createElement("li")
-                    testEntry.title = nodeString
-                    testEntry.setAttribute("elementID", nodeID)
-                    testEntry.onclick = this.handleClick(
-                        nodeString,
-                        nodeIDs,
-                    ).bind(this)
-                    testEntry.setAttribute("class", "dbEntry")
+                // Add results to the dropdown menu
+                const nodeID = nodeIDs.values().next().value
+                let testEntry = document.createElement("li")
+                testEntry.title = nodeString
+                testEntry.setAttribute("elementID", nodeID)
+                testEntry.onclick = this.handleClick(nodeString, nodeIDs).bind(
+                    this,
+                )
+                testEntry.setAttribute("class", "dbEntry")
 
-                    let croppedText = this.cropText(nodeString)
-                    let searchEntryNode = d3.select(testEntry)
-                    if (nodeMap.has(nodeID)) {
-                        searchEntryNode.style("color", "#979797")
-                        //testEntry.onclick = renderUnrendered(nodeString, nodeIDs)
-                        testEntry.onclick = () => {
-                            try {
-                                this.graph.loadSearchData([nodeID])
-                                this.requestDictionaryUpdate()
-                                this.handleClick(nodeString, nodeIDs)
-                            } catch (error) {
-                                console.error(error)
-                            }
-                        }
-                        d3.select(testEntry).style("cursor", "default")
-                    }
-                    searchEntryNode.node().innerHTML = croppedText
-                    this.m_search.node().appendChild(testEntry)
+                let croppedText = this.cropText(nodeString)
+                let searchEntryNode = d3.select(testEntry)
+
+                if (forceNodeMap.has(nodeID)) {
+                    // Is rendered
+                    searchEntryNode.style("color", "#979797")
+                } else {
+                    // Is not rendered
+                    searchEntryNode.style("color", "rgb(151, 151, 151)")
                 }
+                testEntry.onclick = () => {
+                    try {
+                        this.graph.loadSearchData([nodeID])
+                        this.handleClick(nodeString, nodeIDs)
+                    } catch (error) {
+                        console.error(error)
+                    }
+                }
+                d3.select(testEntry).style("cursor", "default")
+                searchEntryNode.node().innerHTML = croppedText
+                this.m_search.node().appendChild(testEntry)
             }
         }
     }
@@ -395,7 +363,6 @@ export default class SearchMenu {
                 subEntry.onclick = () => {
                     try {
                         this.graph.loadSearchData([nodeID])
-                        this.requestDictionaryUpdate()
                         this.handleClick(nodeString, new Set([nodeID]))
                     } catch (error) {
                         console.error(error)
@@ -418,7 +385,6 @@ export default class SearchMenu {
             showAllEntry.onclick = () => {
                 try {
                     this.graph.loadSearchData(Array.from(nodeIDs.values()))
-                    this.requestDictionaryUpdate()
                     this.handleClick(nodeString, nodeIDs)
                 } catch (error) {
                     console.error(error)
@@ -430,10 +396,6 @@ export default class SearchMenu {
     userInput() {
         this.c_locate.classed("highlighted", false)
         this.c_locate.node().title = "Nothing to locate"
-
-        if (this.dictionaryUpdateRequired) {
-            this.updateSearchDictionary()
-        }
         this.graph.resetSearchHighlight()
         this.clearSearchEntries()
         if (this.getSearchString().length !== 0) {
