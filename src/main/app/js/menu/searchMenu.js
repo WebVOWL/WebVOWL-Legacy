@@ -245,18 +245,13 @@ export default class SearchMenu {
 
     createDropDownElements() {
         const searchString = this.getSearchString()
-        const searchMatches = this.trie.find(searchString)
+        const searchMatches = this.trie.find(searchString, this.maxEntries)
         const forceNodeMap = this.graph.forceNodeMap
         const nodeMap = this.graph.nodeMap
 
         // Add the results to the entry menu
         //******************************************
-        let numEntries = searchMatches.length
-        if (numEntries > this.maxEntries) {
-            numEntries = this.maxEntries
-        }
-
-        for (let i = 0; i < numEntries; i++) {
+        for (let i = 0; i < searchMatches.length; i++) {
             const nodeString = searchMatches[i][0]
             const nodeIDs = searchMatches[i][1]
 
