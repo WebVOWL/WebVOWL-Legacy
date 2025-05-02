@@ -25,7 +25,7 @@ export default class Label {
     }
 
     get pinned() {
-        return this._locked
+        return this._pinned
     }
 
     set frozen(v) {
