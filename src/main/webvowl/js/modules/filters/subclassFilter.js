@@ -35,15 +35,10 @@ export default class SubclassFilter extends AbstractFilter {
      */
     #hideSubclassesWithoutOwnProperties(nodes, properties) {
         /**
-         * A mapping of properties' domain IDs to properties
+         * A mapping of properties' domain or range IDs to properties
          * @type {Map<string,BaseProperty[]>}
          */
-        let domainIDs = new Map()
-        /**
-         * A mapping of properties' range IDs to properties
-         * @type {Map<string,BaseProperty[]>}
-         */
-        let rangeIDs = new Map()
+        let propertyMap = new Map()
         /**
          * @type {BaseProperty[]}
          */
@@ -56,29 +51,23 @@ export default class SubclassFilter extends AbstractFilter {
             if (ElementTools.isRdfsSubClassOf(property)) {
                 subclasses.push(property.domain)
             }
-            if (property.domain) {
-                const prop = domainIDs.get(property.domain.id)
-                if (prop) {
-                    prop.push(property)
-                } else {
-                    domainIDs.set(property.domain.id, [property])
-                }
+            let domain = property.domain;
+            let range = property.range;
+        
+            if (domain) {
+                if (!propertyMap.has(domain.id)) propertyMap.set(domain.id, []);
+                propertyMap.get(domain.id).push(property);
             }
-            if (property.range) {
-                const prop = domainIDs.get(property.range.id)
-                if (prop) {
-                    prop.push(property)
-                } else {
-                    rangeIDs.set(property.range.id, [property])
-                }
+            if (range && range !== domain) {
+                if (!propertyMap.has(range.id)) propertyMap.set(range.id, []);
+                propertyMap.get(range.id).push(property);
             }
         }
 
         for (const subclass of subclasses) {
             connectedProperties = this.#findRelevantConnectedProperties(
                 subclass,
-                domainIDs,
-                rangeIDs,
+                propertyMap
             )
 
             // Only remove the node and its properties if they're all subclassOf properties
@@ -107,14 +96,12 @@ export default class SubclassFilter extends AbstractFilter {
      * Looks recursively for connected properties. Because just subclasses are relevant,
      * we just look recursively for their properties.
      * @param {BaseNode} node
-     * @param {Map<string,BaseProperty[]>} domainIDs A mapping of properties' domain IDs to properties
-     * @param {Map<string,BaseProperty[]>} rangeIDs A mapping of properties' range IDs to properties
+     * @param {Map<String,BaseProperty[]>} propertyMap
      * @param {Set<string>} visitedNodeIDs A set of visited node IDs which is used on recursive invocation
      */
     #findRelevantConnectedProperties(
         node,
-        domainIDs,
-        rangeIDs,
+        propertyMap,
         visitedNodeIDs = new Set(),
     ) {
         /**
@@ -122,16 +109,7 @@ export default class SubclassFilter extends AbstractFilter {
          */
         let connectedProperties = []
 
-        // Try domain
-        let properties = domainIDs.get(node.id)
-        if (!properties) {
-            // Try range
-            properties = rangeIDs.get(node.id)
-            if (!properties) {
-                // Nothing found
-                return connectedProperties
-            }
-        }
+        let properties = propertyMap.get(node.id) || [];
 
         for (const property of properties) {
             connectedProperties.push(property)
@@ -149,8 +127,7 @@ export default class SubclassFilter extends AbstractFilter {
                     const nestedConnectedProperties =
                         this.#findRelevantConnectedProperties(
                             domain,
-                            domainIDs,
-                            rangeIDs,
+                            propertyMap,
                             visitedNodeIDs,
                         )
                     connectedProperties = connectedProperties.concat(
