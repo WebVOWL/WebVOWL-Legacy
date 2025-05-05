@@ -1,5 +1,4 @@
 import d3 from "d3"
-import BaseNode from "../../../webvowl/js/elements/nodes/BaseNode"
 import Graph from "../../../webvowl/js/graph"
 import PrefixTools from "../../../webvowl/js/util/prefixTools"
 
@@ -235,9 +234,13 @@ export default class SearchMenu {
                 const groupEntry = document.createElement("a")
                 groupEntry.setAttribute("class", "groupEntry")
                 groupEntry.title = `${nodeString} (${renderedNodes.length}/${nodeIDs.size})`
-                groupEntry.onclick = this.handleClick(nodeString, nodeIDs).bind(
-                    this,
-                )
+                groupEntry.onclick = () => {
+                    try {
+                        this.handleClick(nodeString, nodeIDs)
+                    } catch (error) {
+                        console.error(error)
+                    }
+                }
 
                 if (renderedNodes.length == 0) {
                     groupEntry.style.color = "rgb(151, 151, 151)"
@@ -292,7 +295,7 @@ export default class SearchMenu {
                     nodeString,
                     nodeIDs,
                     subEntryList,
-                    nodeMap,
+                    forceNodeMap,
                 )
             } else {
                 // Add results to the dropdown menu
@@ -300,29 +303,31 @@ export default class SearchMenu {
                 let testEntry = document.createElement("li")
                 testEntry.title = nodeString
                 testEntry.setAttribute("elementID", nodeID)
-                testEntry.onclick = this.handleClick(nodeString, nodeIDs).bind(
-                    this,
-                )
-                testEntry.setAttribute("class", "dbEntry")
-
-                let croppedText = this.cropText(nodeString)
-                let searchEntryNode = d3.select(testEntry)
-
-                if (forceNodeMap.has(nodeID)) {
-                    // Is rendered
-                    searchEntryNode.style("color", "#979797")
-                } else {
-                    // Is not rendered
-                    searchEntryNode.style("color", "rgb(151, 151, 151)")
-                }
                 testEntry.onclick = () => {
                     try {
-                        this.graph.loadSearchData([nodeID])
                         this.handleClick(nodeString, nodeIDs)
                     } catch (error) {
                         console.error(error)
                     }
                 }
+                testEntry.setAttribute("class", "dbEntry")
+
+                let croppedText = this.cropText(nodeString)
+                let searchEntryNode = d3.select(testEntry)
+
+                if (!forceNodeMap.has(nodeID)) {
+                    // Is not rendered
+                    searchEntryNode.style("color", "rgb(151, 151, 151)")
+                    testEntry.onclick = () => {
+                        try {
+                            this.graph.loadSearchData([nodeID])
+                            this.handleClick(nodeString, nodeIDs)
+                        } catch (error) {
+                            console.error(error)
+                        }
+                    }
+                }
+                
                 d3.select(testEntry).style("cursor", "default")
                 searchEntryNode.node().innerHTML = croppedText
                 this.m_search.node().appendChild(testEntry)
@@ -334,7 +339,7 @@ export default class SearchMenu {
      * @param {string} nodeString
      * @param {Set<string>} nodeIDs
      * @param {HTMLUListElement} parent
-     * @param {Map<string, BaseNode>} nodeMap
+     * @param {Map<string, Number>} nodeMap
      */
     generateGroupedEntries(nodeString, nodeIDs, parent, nodeMap) {
         let existsUnrendered = false
@@ -352,12 +357,15 @@ export default class SearchMenu {
             }
 
             parent.appendChild(subEntry)
-            subEntry.onclick = this.handleClick(
-                nodeString,
-                new Set([nodeID]),
-            ).bind(this)
+            subEntry.onclick = () => {
+                try {
+                    this.handleClick(nodeString, new Set([nodeID]))
+                } catch (error) {
+                    console.error(error)
+                }
+            }
 
-            if (nodeMap.has(nodeID)) {
+            if (!nodeMap.has(nodeID)) {
                 existsUnrendered = true
                 subEntry.style.color = "rgb(151, 151, 151)"
                 subEntry.onclick = () => {
@@ -379,8 +387,13 @@ export default class SearchMenu {
         showAllEntry.innerHTML = "Show All"
         //showAllEntry.setAttribute('class', "showAllButton");
         parent.appendChild(showAllEntry)
-        showAllEntry.onclick = this.handleClick(nodeString, nodeIDs).bind(this)
-
+        showAllEntry.onclick = () => {
+            try {
+                this.handleClick(nodeString, nodeIDs)
+            } catch (error) {
+                console.error(error)
+            }
+        }
         if (existsUnrendered === true) {
             showAllEntry.onclick = () => {
                 try {
@@ -410,18 +423,16 @@ export default class SearchMenu {
      * @param {Set<string>} nodeIDs All node IDs that map to `nodeString`
      */
     handleClick(nodeString, nodeIDs) {
-        return () => {
-            const inputText = this.getSearchString()
-            this.searchLineEdit.node().value = nodeString
-            this.graph.resetSearchHighlight()
-            this.graph.highLightNodes(Array.from(nodeIDs.values()))
-            this.c_locate.node().title = "Locate search term"
-            if (nodeString !== inputText) {
-                this.clearSearchEntries()
-                this.createDropDownElements()
-            }
-            this.hideSearchEntries()
+        const inputText = this.getSearchString()
+        this.searchLineEdit.node().value = nodeString
+        this.graph.resetSearchHighlight()
+        this.graph.highLightNodes(Array.from(nodeIDs.values()))
+        this.c_locate.node().title = "Locate search term"
+        if (nodeString !== inputText) {
+            this.clearSearchEntries()
+            this.createDropDownElements()
         }
+        this.hideSearchEntries()
     }
 
     clearText() {
