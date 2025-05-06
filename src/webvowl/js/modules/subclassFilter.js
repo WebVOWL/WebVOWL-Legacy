@@ -35,7 +35,8 @@ module.exports = function (){
       subclass,
       property,
       i, // index,
-      l; // length
+      l, // length
+      propertyMap = new Map();
     
     
     for ( i = 0, l = properties.length; i < l; i++ ) {
@@ -43,11 +44,23 @@ module.exports = function (){
       if ( elementTools.isRdfsSubClassOf(property) ) {
         subclasses.push(property.domain());
       }
+
+      let domain = property.domain();
+      let range = property.range();
+  
+      if (domain) {
+          if (!propertyMap.has(domain.id())) propertyMap.set(domain.id(), []);
+          propertyMap.get(domain.id()).push(property);
+      }
+      if (range && range !== domain) {
+          if (!propertyMap.has(range.id())) propertyMap.set(range.id(), []);
+          propertyMap.get(range.id()).push(property);
+      }
     }
     
     for ( i = 0, l = subclasses.length; i < l; i++ ) {
       subclass = subclasses[i];
-      connectedProperties = findRelevantConnectedProperties(subclass, properties);
+      connectedProperties = findRelevantConnectedProperties(subclass, propertyMap);
       
       // Only remove the node and its properties, if they're all subclassOf properties
       if ( areOnlySubclassProperties(connectedProperties) &&
@@ -67,44 +80,42 @@ module.exports = function (){
    * we just look recursively for their properties.
    *
    * @param node
-   * @param allProperties
+   * @param propertyMap
    * @param visitedNodes a visited nodes which is used on recursive invocation
    * @returns {Array}
    */
-  function findRelevantConnectedProperties( node, allProperties, visitedNodes ){
+  function findRelevantConnectedProperties( node, propertyMap, visitedNodes ){
     var connectedProperties = [],
       property,
       i,
       l;
+
+      let properties = propertyMap.get(node.id()) || [];
     
-    for ( i = 0, l = allProperties.length; i < l; i++ ) {
-      property = allProperties[i];
-      if ( property.domain() === node ||
-        property.range() === node ) {
+    for ( i = 0, l = properties.length; i < l; i++ ) {
+      property = properties[i];
         
-        connectedProperties.push(property);
+      connectedProperties.push(property);
+      
+      
+      /* Special case: SuperClass <-(1) Subclass <-(2) Subclass ->(3) e.g. Datatype
+        * We need to find the last property recursively. Otherwise, we would remove the subClassOf
+        * property (1) because we didn't see the datatype property (3).
+        */
+      
+      // Look only for subclass properties, because these are the relevant properties
+      if ( elementTools.isRdfsSubClassOf(property) ) {
+        var domain = property.domain();
+        visitedNodes = visitedNodes || require("../util/set")();
         
-        
-        /* Special case: SuperClass <-(1) Subclass <-(2) Subclass ->(3) e.g. Datatype
-         * We need to find the last property recursively. Otherwise, we would remove the subClassOf
-         * property (1) because we didn't see the datatype property (3).
-         */
-        
-        // Look only for subclass properties, because these are the relevant properties
-        if ( elementTools.isRdfsSubClassOf(property) ) {
-          var domain = property.domain();
-          visitedNodes = visitedNodes || require("../util/set")();
-          
-          // If we have the range, there might be a nested property on the domain
-          if ( node === property.range() && !visitedNodes.has(domain) ) {
-            visitedNodes.add(domain);
-            var nestedConnectedProperties = findRelevantConnectedProperties(domain, allProperties, visitedNodes);
-            connectedProperties = connectedProperties.concat(nestedConnectedProperties);
-          }
+        // If we have the range, there might be a nested property on the domain
+        if ( node === property.range() && !visitedNodes.has(domain) ) {
+          visitedNodes.add(domain);
+          var nestedConnectedProperties = findRelevantConnectedProperties(domain, propertyMap, visitedNodes);
+          connectedProperties = connectedProperties.concat(nestedConnectedProperties);
         }
       }
     }
-    
     return connectedProperties;
   }
   
