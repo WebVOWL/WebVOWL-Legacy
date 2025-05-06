@@ -247,11 +247,6 @@ export default class SearchMenu {
                 }
 
                 testEntry.appendChild(groupEntry)
-                // testEntry.setAttribute("elementID", nodeIDs)
-
-                //testEntry.onclick = handleClick(nodeString, nodeIDs, testEntry);
-                //testEntry.setAttribute('class', "dbEntry");
-
                 const croppedText = this.cropText(
                     nodeString +
                         " (" +
@@ -385,7 +380,6 @@ export default class SearchMenu {
         showAllEntry.title = "show all"
         showAllEntry.setAttribute("class", "subEntry")
         showAllEntry.innerHTML = "Show All"
-        //showAllEntry.setAttribute('class', "showAllButton");
         parent.appendChild(showAllEntry)
         showAllEntry.onclick = () => {
             try {
