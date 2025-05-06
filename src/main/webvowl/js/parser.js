@@ -1,3 +1,4 @@
+import d3 from "d3"
 import BaseElement from "./elements/BaseElement"
 import BaseNode from "./elements/nodes/BaseNode"
 import OwlThing from "./elements/nodes/implementations/OwlThing"
@@ -34,7 +35,6 @@ export default class Parser {
          * @type {Map<string,BaseProperty>}
          */
         this.propertyMap = new Map()
-        this.dictionary = []
 
         this.settingsData = undefined
         this.settingsImported = false

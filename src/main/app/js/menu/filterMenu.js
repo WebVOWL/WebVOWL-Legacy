@@ -176,6 +176,7 @@ export default class FilterMenu {
                     _this.graph.update()
                     _this.graphDegreeLevel =
                         _this.degreeSlider.property("value")
+                    _this.graph.options.searchMenu.userInput()
                 }
             },
         )
