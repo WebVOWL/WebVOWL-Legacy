@@ -1727,20 +1727,32 @@ module.exports = function ( graphContainerSelector ){
   /** --------------------------------------------------------- **/
   /** -- force-layout related functions                      -- **/
   /** --------------------------------------------------------- **/
-  function storeLinksOnNodes( nodes, links ){
-    for ( var i = 0, nodesLength = nodes.length; i < nodesLength; i++ ) {
+  function storeLinksOnNodes(nodes, links) {
+    for (var i = 0, nodesLength = nodes.length; i < nodesLength; i++) {
       var node = nodes[i],
         connectedLinks = [];
-      
-      // look for properties where this node is the domain or range
-      for ( var j = 0, linksLength = links.length; j < linksLength; j++ ) {
-        var link = links[j];
-        
-        if ( link.domain() === node || link.range() === node ) {
-          connectedLinks.push(link);
-        }
-      }
       node.links(connectedLinks);
+    }
+    // look for properties where this node is the domain or range
+    for (var i = 0, linksLength = links.length; i < linksLength; i++) {
+      var link = links[i];
+      var domainobj = link.domain();
+      var existingDomainLinks = domainobj.links();
+      if (existingDomainLinks === undefined) {
+        existingDomainLinks = [link];
+      } else {
+        existingDomainLinks.push(link);
+      }
+      link.domain().links(existingDomainLinks);
+
+      var rangeobj = link.range();
+      var existingRangeLinks = rangeobj.links();
+      if (existingRangeLinks === undefined) {
+        existingRangeLinks = [link];
+      } else {
+        existingRangeLinks.push(link);
+      }
+      link.range().links(existingRangeLinks);
     }
   }
   
