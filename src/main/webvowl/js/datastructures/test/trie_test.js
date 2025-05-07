@@ -9,10 +9,8 @@ function traverseTrie(trie) {
     while (stack.length) {
         for (const node of stack.shift().children.values()) {
             stack.push(node)
-            if (node.end) {
-                output.push(
-                    node.getWord() + ` [${Array.from(node.data.values())}]`,
-                )
+            if (node.end !== undefined) {
+                output.push(node.end + ` [${Array.from(node.data.values())}]`)
             }
         }
     }

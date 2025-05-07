@@ -21,18 +21,12 @@ class TrieNode {
          * @type {Map<string,TrieNode>}
          */
         this.children = new Map()
-        // Check to see if the node is at the end of a whole word.
-        this.end = false
-    }
-
-    getWord() {
-        let output = []
-        let node = this
-        while (node !== null) {
-            output.push(node.key)
-            node = node.parent
-        }
-        return output.reverse().join("")
+        /**
+         * Check to see if the node is at the end of a whole word.
+         * We abuse this variable slightly by also storing the word here if we're at the end or undefined otherwise.
+         * @type {string | undefined}
+         */
+        this.end = undefined
     }
 
     /**
@@ -43,7 +37,7 @@ class TrieNode {
             // Remove reference to this from parent's children.
             this.parent.children.delete(this.key)
         }
-        this.end = false
+        this.end = undefined
         delete this.data
         this.data = null
     }
@@ -78,7 +72,7 @@ export default class Trie {
             }
             node = child
         }
-        node.end = true
+        node.end = word
         if (!override && node.data instanceof Set) {
             node.data.add(data)
         } else {
@@ -99,7 +93,7 @@ export default class Trie {
                 return false
             }
         }
-        return node.end
+        return node.end !== undefined
     }
 
     /**
@@ -125,11 +119,11 @@ export default class Trie {
         while (stack.length) {
             node = stack.shift()
             // Base case: If node is at a word, push to output.
-            if (node.end) {
+            if (node.end !== undefined) {
                 if (limit !== undefined && output.length >= limit) {
                     break
                 }
-                output.push([node.getWord(), node.data])
+                output.push([node.end, node.data])
             }
             // Traverse all children
             for (const child of node.children.values()) {
@@ -150,7 +144,7 @@ export default class Trie {
         for (const char of word) {
             node = node.children.get(char)
         }
-        if (node.end) {
+        if (node.end !== undefined) {
             // If we have `item` and deleting would create a node with empty data,
             // delete the node instead.
             if (item !== undefined && node.data.size > 1) {
