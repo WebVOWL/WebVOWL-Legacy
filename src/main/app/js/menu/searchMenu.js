@@ -210,7 +210,6 @@ export default class SearchMenu {
             this.maxEntries,
         )
         const forceNodeMap = this.graph.forceNodeMap
-        const nodeMap = this.graph.nodeMap
 
         // Add the results to the entry menu
         //******************************************
@@ -242,7 +241,7 @@ export default class SearchMenu {
                     }
                 }
 
-                if (renderedNodes.length == 0) {
+                if (renderedNodes.length === 0) {
                     groupEntry.style.color = "rgb(151, 151, 151)"
                 }
 
@@ -322,7 +321,6 @@ export default class SearchMenu {
                         }
                     }
                 }
-                
                 d3.select(testEntry).style("cursor", "default")
                 searchEntryNode.node().innerHTML = croppedText
                 this.m_search.node().appendChild(testEntry)
@@ -334,9 +332,9 @@ export default class SearchMenu {
      * @param {string} nodeString
      * @param {Set<string>} nodeIDs
      * @param {HTMLUListElement} parent
-     * @param {Map<string, Number>} nodeMap
+     * @param {Map<string, Number>} forceNodeMap
      */
-    generateGroupedEntries(nodeString, nodeIDs, parent, nodeMap) {
+    generateGroupedEntries(nodeString, nodeIDs, parent, forceNodeMap) {
         let existsUnrendered = false
         let firstShown = false
         for (const nodeID of nodeIDs) {
@@ -360,7 +358,7 @@ export default class SearchMenu {
                 }
             }
 
-            if (!nodeMap.has(nodeID)) {
+            if (!forceNodeMap.has(nodeID)) {
                 existsUnrendered = true
                 subEntry.style.color = "rgb(151, 151, 151)"
                 subEntry.onclick = () => {
