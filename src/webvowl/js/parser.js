@@ -13,12 +13,12 @@ module.exports = function ( graph ){
   var parser = {},
     nodes,
     properties,
-    classMap,
+    classMap = new Map(),
     settingsData,
     settingsImported = false,
     settingsImportGraphZoomAndTranslation = false,
     dictionary = [],
-    propertyMap;
+    propertyMap = new Map;
   
   parser.getDictionary = function (){
     return dictionary;
@@ -137,16 +137,26 @@ module.exports = function ( graph ){
     dictionary = [];
     if ( ontologyData.settings ) settingsData = ontologyData.settings;
     else settingsData = undefined;
+  
+    const combinedClassesAndDatatypes = combineClassesOrProperties(
+        [ontologyData.class, ontologyData.datatype],
+        [ontologyData.classAttribute, ontologyData.datatypeAttribute],
+        ontologyData.namespace,
+        nodePrototypeMap,
+        combineClasses
+    )
     
-    var classes = combineClasses(ontologyData.class, ontologyData.classAttribute),
-      datatypes = combineClasses(ontologyData.datatype, ontologyData.datatypeAttribute),
-      combinedClassesAndDatatypes = classes.concat(datatypes),
-      unparsedProperties = ontologyData.property || [],
-      combinedProperties;
+    var unparsedProperties = ontologyData.property || [];
     
     // Inject properties for unions, intersections, ...
     addSetOperatorProperties(combinedClassesAndDatatypes, unparsedProperties);
-    combinedProperties = combineProperties(unparsedProperties, ontologyData.propertyAttribute);
+    const combinedProperties = combineClassesOrProperties(
+        [unparsedProperties],
+        [ontologyData.propertyAttribute],
+        ontologyData.namespace,
+        propertyPrototypeMap,
+        combineProperties
+    );
     classMap = mapElements(combinedClassesAndDatatypes);
     propertyMap = mapElements(combinedProperties);
     mergeRangesOfEquivalentProperties(combinedProperties, combinedClassesAndDatatypes);
@@ -171,160 +181,306 @@ module.exports = function ( graph ){
   parser.properties = function (){
     return properties;
   };
-  
-  /**
-   * Combines the passed objects with its attributes and prototypes. This also applies
-   * attributes defined in the base of the prototype.
-   */
-  function combineClasses( baseObjects, attributes ){
-    var combinations = [];
-    var prototypeMap = createLowerCasePrototypeMap(nodePrototypeMap);
-    
-    if ( baseObjects ) {
-      baseObjects.forEach(function ( element ){
-        var matchingAttribute;
-        
-        if ( attributes ) {
-          // Look for an attribute with the same id and merge them
-          for ( var i = 0; i < attributes.length; i++ ) {
-            var attribute = attributes[i];
-            if ( element.id === attribute.id ) {
-              matchingAttribute = attribute;
-              break;
-            }
+
+  function combineClassesOrProperties(
+        baseObjects,
+        attributes,
+        namespaces,
+        prototypeMap,
+        callable
+    ) {
+
+      prototypeMap = createLowerCasePrototypeMap(prototypeMap)
+      if (baseObjects.length !== attributes.length) {
+          throw new Error(
+              `Cannot combine arrays of different size. BaseObject has size ${baseObjects.length} and objectAttribute has size ${attributes.length}`
+          )
+      }
+
+      let combined = []
+
+      for (let i = 0; i < baseObjects.length; i++) {
+          let objectMap = new Map()
+          if (attributes[i]) {
+              for (const attribute of attributes[i]) {
+                  objectMap.set(attribute.id, attribute)
+              }
           }
-          addAdditionalAttributes(element, matchingAttribute);
+          if (baseObjects[i]) {
+              for (const element of baseObjects[i]) {
+                  if (attributes[i]) {
+                      // Look for an attribute with the same id and merge them
+                      const matchingAttribute = objectMap.get(element.id)
+                      addAdditionalAttributes(
+                          element,
+                          matchingAttribute
+                      ) // REVIEW: Ensure correctess of this call
+                  }
+
+                  // Then look for a prototype to add its properties
+                  let Prototype = prototypeMap.get(element.type.toLowerCase())
+                  if (Prototype) {
+                      // Should be unnecessary, as attributes defined in the Prototype should be present in the ontology data
+                      // addAdditionalAttributes(element, Prototype);
+
+                      // Create an instance of a node or property (according to `element`'s type)
+                      let object = callable(element, Prototype)
+
+                      // Class element pin
+                      if (element.pinned === true) {
+                          object.pinned = true
+                          graph.options.pickAndPinModule.addPinnedElement(
+                              object
+                          )
+                      }
+
+                      // Combine attributes
+                      if (element.attributes) {
+                          object.attributes(element.attributes.concat(
+                            object.attributes
+                        ))
+                      }
+
+                      // Convert types to IRIs
+                      if (typeof element.iri === "string") {
+                          element.iri = replaceNamespace(
+                              element.iri,
+                              namespaces
+                          )
+                      }
+                      combined.push(object)
+                  } else {
+                      console.error("Unknown element type: " + element.type)
+                  }
+              }
+          }
+      }
+      return combined
+  }
+
+function combineClasses(element, Prototype) {
+    let node = new Prototype(graph)
+    node.annotations(element.annotations)
+    node.baseIri(element.baseIri)
+    node.comment(element.comment)
+    node.complement(element.complement)
+    node.disjointUnion(element.disjointUnion)
+    node.description(element.description)
+    node.equivalents(element.equivalent)
+    node.id(element.id)
+    node.intersection(element.intersection)
+    node.label(element.label)
+    // node.type=element.type; Ignore, because we predefined it
+    node.union(element.union)
+    node.iri(element.iri)
+    if (element.pos) {
+        node.x = element.pos[0]
+        node.y = element.pos[1]
+        node.px = node.x
+        node.py = node.y
+    }
+
+    // Create node objects for all individuals
+    if (
+        element.individuals instanceof Array &&
+        element.individuals.length > 0
+    ) {
+        if (!(node.individuals instanceof Array)) {
+            node.individuals([])
         }
+        for (const individual of element.individuals) {
+            let individualNode = new Prototype(graph)
+            individualNode.label(individual.labels)
+            individualNode.iri(individual.iri)
+            node.individuals().push(individualNode)
+        }
+    }
+    classMap[node.id] = node
+    return node
+}
+
+function combineProperties(element, Prototype) {
+  let property = new Prototype(graph)
+  property.annotations(element.annotations)
+  property.baseIri(element.baseIri)
+  property.cardinality(element.cardinality)
+  property.comment(element.comment)
+  property.domain(element.domain)
+  property.description(element.description)
+  property.equivalents(element.equivalent)
+  property.id(element.id)
+  property.inverse(element.inverse)
+  property.label(element.label)
+  property.minCardinality(element.minCardinality)
+  property.maxCardinality(element.maxCardinality)
+  property.range(element.range)
+  property.subproperties(element.subproperty)
+  property.superproperties(element.superproperty)
+  // property.type=element.type; Ignore, because we predefined it
+  property.iri(element.iri)
+  if (element.pos) {
+      property.x = element.pos[0]
+      property.y = element.pos[1]
+      property.px = element.pos[0]
+      property.py = element.pos[1]
+  }
+  propertyMap[property.id] = property
+  return property
+}
+  
+  // /**
+  //  * Combines the passed objects with its attributes and prototypes. This also applies
+  //  * attributes defined in the base of the prototype.
+  //  */
+  // function combineClasses( baseObjects, attributes ){
+  //   var combinations = [];
+  //   var prototypeMap = createLowerCasePrototypeMap(nodePrototypeMap);
+    
+  //   if ( baseObjects ) {
+  //     baseObjects.forEach(function ( element ){
+  //       var matchingAttribute;
         
-        // Then look for a prototype to add its properties
-        var Prototype = prototypeMap.get(element.type.toLowerCase());
+  //       if ( attributes ) {
+  //         // Look for an attribute with the same id and merge them
+  //         for ( var i = 0; i < attributes.length; i++ ) {
+  //           var attribute = attributes[i];
+  //           if ( element.id === attribute.id ) {
+  //             matchingAttribute = attribute;
+  //             break;
+  //           }
+  //         }
+  //         addAdditionalAttributes(element, matchingAttribute);
+  //       }
         
-        if ( Prototype ) {
-          addAdditionalAttributes(element, Prototype); // TODO might be unnecessary
+  //       // Then look for a prototype to add its properties
+  //       var Prototype = prototypeMap.get(element.type.toLowerCase());
+        
+  //       if ( Prototype ) {
+  //         addAdditionalAttributes(element, Prototype); // TODO might be unnecessary
           
-          var node = new Prototype(graph);
-          node.annotations(element.annotations)
-            .baseIri(element.baseIri)
-            .comment(element.comment)
-            .complement(element.complement)
-            .disjointUnion(element.disjointUnion)
-            .description(element.description)
-            .equivalents(element.equivalent)
-            .id(element.id)
-            .intersection(element.intersection)
-            .label(element.label)
-            // .type(element.type) Ignore, because we predefined it
-            .union(element.union)
-            .iri(element.iri);
-          if ( element.pos ) {
-            node.x = element.pos[0];
-            node.y = element.pos[1];
-            node.px = node.x;
-            node.py = node.y;
-          }
-          //class element pin
-          var elementPinned = element.pinned;
-          if ( elementPinned === true ) {
-            node.pinned(true);
-            graph.options().pickAndPinModule().addPinnedElement(node);
-          }
-          // Create node objects for all individuals
-          if ( element.individuals ) {
-            element.individuals.forEach(function ( individual ){
-              var individualNode = new Prototype(graph);
-              individualNode.label(individual.labels)
-                .iri(individual.iri);
+  //         var node = new Prototype(graph);
+  //         node.annotations(element.annotations)
+  //           .baseIri(element.baseIri)
+  //           .comment(element.comment)
+  //           .complement(element.complement)
+  //           .disjointUnion(element.disjointUnion)
+  //           .description(element.description)
+  //           .equivalents(element.equivalent)
+  //           .id(element.id)
+  //           .intersection(element.intersection)
+  //           .label(element.label)
+  //           // .type(element.type) Ignore, because we predefined it
+  //           .union(element.union)
+  //           .iri(element.iri);
+  //         if ( element.pos ) {
+  //           node.x = element.pos[0];
+  //           node.y = element.pos[1];
+  //           node.px = node.x;
+  //           node.py = node.y;
+  //         }
+  //         //class element pin
+  //         var elementPinned = element.pinned;
+  //         if ( elementPinned === true ) {
+  //           node.pinned(true);
+  //           graph.options().pickAndPinModule().addPinnedElement(node);
+  //         }
+  //         // Create node objects for all individuals
+  //         if ( element.individuals ) {
+  //           element.individuals.forEach(function ( individual ){
+  //             var individualNode = new Prototype(graph);
+  //             individualNode.label(individual.labels)
+  //               .iri(individual.iri);
               
-              node.individuals().push(individualNode);
-            });
-          }
+  //             node.individuals().push(individualNode);
+  //           });
+  //         }
           
-          if ( element.attributes ) {
-            var deduplicatedAttributes = d3.set(element.attributes.concat(node.attributes()));
-            node.attributes(deduplicatedAttributes.values());
-          }
-          combinations.push(node);
-        } else {
-          console.error("Unknown element type: " + element.type);
-        }
-      });
-    }
+  //         if ( element.attributes ) {
+  //           var deduplicatedAttributes = d3.set(element.attributes.concat(node.attributes()));
+  //           node.attributes(deduplicatedAttributes.values());
+  //         }
+  //         combinations.push(node);
+  //       } else {
+  //         console.error("Unknown element type: " + element.type);
+  //       }
+  //     });
+  //   }
     
-    return combinations;
-  }
+  //   return combinations;
+  // }
   
-  function combineProperties( baseObjects, attributes ){
-    var combinations = [];
-    var prototypeMap = createLowerCasePrototypeMap(propertyPrototypeMap);
+  // function combineProperties( baseObjects, attributes ){
+  //   var combinations = [];
+  //   var prototypeMap = createLowerCasePrototypeMap(propertyPrototypeMap);
     
-    if ( baseObjects ) {
-      baseObjects.forEach(function ( element ){
-        var matchingAttribute;
+  //   if ( baseObjects ) {
+  //     baseObjects.forEach(function ( element ){
+  //       var matchingAttribute;
         
-        if ( attributes ) {
-          // Look for an attribute with the same id and merge them
-          for ( var i = 0; i < attributes.length; i++ ) {
-            var attribute = attributes[i];
-            if ( element.id === attribute.id ) {
-              matchingAttribute = attribute;
-              break;
-            }
-          }
-          addAdditionalAttributes(element, matchingAttribute);
-        }
+  //       if ( attributes ) {
+  //         // Look for an attribute with the same id and merge them
+  //         for ( var i = 0; i < attributes.length; i++ ) {
+  //           var attribute = attributes[i];
+  //           if ( element.id === attribute.id ) {
+  //             matchingAttribute = attribute;
+  //             break;
+  //           }
+  //         }
+  //         addAdditionalAttributes(element, matchingAttribute);
+  //       }
         
-        // Then look for a prototype to add its properties
-        var Prototype = prototypeMap.get(element.type.toLowerCase());
+  //       // Then look for a prototype to add its properties
+  //       var Prototype = prototypeMap.get(element.type.toLowerCase());
         
-        if ( Prototype ) {
-          // Create the matching object and set the properties
-          var property = new Prototype(graph);
-          property.annotations(element.annotations)
-            .baseIri(element.baseIri)
-            .cardinality(element.cardinality)
-            .comment(element.comment)
-            .domain(element.domain)
-            .description(element.description)
-            .equivalents(element.equivalent)
-            .id(element.id)
-            .inverse(element.inverse)
-            .label(element.label)
-            .minCardinality(element.minCardinality)
-            .maxCardinality(element.maxCardinality)
-            .range(element.range)
-            .subproperties(element.subproperty)
-            .superproperties(element.superproperty)
-            // .type(element.type) Ignore, because we predefined it
-            .iri(element.iri);
+  //       if ( Prototype ) {
+  //         // Create the matching object and set the properties
+  //         var property = new Prototype(graph);
+  //         property.annotations(element.annotations)
+  //           .baseIri(element.baseIri)
+  //           .cardinality(element.cardinality)
+  //           .comment(element.comment)
+  //           .domain(element.domain)
+  //           .description(element.description)
+  //           .equivalents(element.equivalent)
+  //           .id(element.id)
+  //           .inverse(element.inverse)
+  //           .label(element.label)
+  //           .minCardinality(element.minCardinality)
+  //           .maxCardinality(element.maxCardinality)
+  //           .range(element.range)
+  //           .subproperties(element.subproperty)
+  //           .superproperties(element.superproperty)
+  //           // .type(element.type) Ignore, because we predefined it
+  //           .iri(element.iri);
           
-          // adding property position
-          if ( element.pos ) {
-            property.x = element.pos[0];
-            property.y = element.pos[1];
-            property.px = element.pos[0];
-            property.py = element.pos[1];
-          }
-          var elementPinned = element.pinned;
-          if ( elementPinned === true ) {
-            property.pinned(true);
-            graph.options().pickAndPinModule().addPinnedElement(property);
-          }
+  //         // adding property position
+  //         if ( element.pos ) {
+  //           property.x = element.pos[0];
+  //           property.y = element.pos[1];
+  //           property.px = element.pos[0];
+  //           property.py = element.pos[1];
+  //         }
+  //         var elementPinned = element.pinned;
+  //         if ( elementPinned === true ) {
+  //           property.pinned(true);
+  //           graph.options().pickAndPinModule().addPinnedElement(property);
+  //         }
           
           
-          if ( element.attributes ) {
-            var deduplicatedAttributes = d3.set(element.attributes.concat(property.attributes()));
-            property.attributes(deduplicatedAttributes.values());
-          }
-          combinations.push(property);
-        } else {
-          console.error("Unknown element type: " + element.type);
-        }
+  //         if ( element.attributes ) {
+  //           var deduplicatedAttributes = d3.set(element.attributes.concat(property.attributes()));
+  //           property.attributes(deduplicatedAttributes.values());
+  //         }
+  //         combinations.push(property);
+  //       } else {
+  //         console.error("Unknown element type: " + element.type);
+  //       }
         
-      });
-    }
+  //     });
+  //   }
     
-    return combinations;
-  }
+  //   return combinations;
+  // }
   
   function createLowerCasePrototypeMap( prototypeMap ){
     return d3.map(prototypeMap.values(), function ( Prototype ){
