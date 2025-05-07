@@ -333,10 +333,62 @@ module.exports = function ( graph ){
   }
   
   function mergeRangesOfEquivalentProperties( properties, nodes ){
-    // pass clones of arrays into the merger to keep the current functionality of this module
-    var newNodes = equivalentPropertyMerger.merge(properties.slice(), nodes.slice(), propertyMap, classMap, graph);
     
-    // replace all the existing nodes and map the nodes again
+    // var newNodes = equivalentPropertyMerger.merge(properties.slice(), nodes.slice(), propertyMap, classMap, graph);
+    
+    // // replace all the existing nodes and map the nodes again
+    // nodes.length = 0;
+    // Array.prototype.push.apply(nodes, newNodes);
+    // classMap = mapElements(nodes);
+    let domainIDs = new Set()
+    let rangeIDs = new Set()
+    let nodeIdsToHide = new Set()
+    let processedPropertyIDs = new Set()
+    let mergeNodes = []
+
+    for (const property of properties) {
+        domainIDs.add(property.domain)
+        rangeIDs.add(property.range)
+    }
+
+    for (const property of properties) {
+        let propertyWithEquivalents = [property]
+        if (
+            !property.equivalents() ||
+            property.equivalents().length === 0 ||
+            processedPropertyIDs.has(property.id())
+        ) {
+            continue
+        } else {
+            // Add the equivalent property instances from their ID
+            for (const equivalentProperty of property.equivalents()) {
+                propertyWithEquivalents.push(
+                    propertyMap[equivalentProperty]
+                )
+            }
+            if (propertyWithEquivalents.length === 1) {
+                continue
+            }
+        }
+
+        const mergeNode = equivalentPropertyMerger.findMergeNode(propertyWithEquivalents, classMap)
+        if (mergeNode) {
+            mergeNodes.push(equivalentPropertyMerger.createDefaultMergeNode(property, graph))
+            for (const equivalentProperty of propertyWithEquivalents) {
+                const oldRangeId = equivalentProperty.range
+                equivalentProperty.range(mergeNode.id())
+                // isDomainOrRangeOfOtherProperty
+                if (
+                    !(domainIDs.has(oldRangeId) || rangeIDs.has(oldRangeId))
+                ) {
+                    nodeIdsToHide.add(oldRangeId)
+                }
+                processedPropertyIDs.add(equivalentProperty.id())
+            }
+        }
+    }
+    const newNodes = equivalentPropertyMerger.filterVisibleNodes(nodes.concat(mergeNodes), nodeIdsToHide);
+
     nodes.length = 0;
     Array.prototype.push.apply(nodes, newNodes);
     classMap = mapElements(nodes);

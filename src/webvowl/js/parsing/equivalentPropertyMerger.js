@@ -27,10 +27,10 @@ equivalentPropertyMerger.merge = function ( properties, nodes, propertyMap, node
     
     var propertyWithEquivalents = equivalents.concat(property);
     
-    var mergeNode = findMergeNode(propertyWithEquivalents, nodeMap);
+    var mergeNode = equivalentPropertyMerger.findMergeNode(propertyWithEquivalents, nodeMap);
     if ( !mergeNode ) {
       if ( mergeNode !== undefined ) {
-        mergeNode = createDefaultMergeNode(property, graph);
+        mergeNode = equivalentPropertyMerger.createDefaultMergeNode(property, graph);
         mergeNodes.push(mergeNode);
       }
     }
@@ -42,7 +42,7 @@ equivalentPropertyMerger.merge = function ( properties, nodes, propertyMap, node
     }
   }
   
-  return filterVisibleNodes(nodes.concat(mergeNodes), totalNodeIdsToHide);
+  return equivalentPropertyMerger.filterVisibleNodes(nodes.concat(mergeNodes), totalNodeIdsToHide);
 };
 
 
@@ -52,7 +52,7 @@ function createIdToPropertyMapper( propertyMap ){
   };
 }
 
-function findMergeNode( propertyWithEquivalents, nodeMap ){
+equivalentPropertyMerger.findMergeNode = function( propertyWithEquivalents, nodeMap ){
   var typeMap = mapPropertiesRangesToType(propertyWithEquivalents, nodeMap);
   var typeSet = d3.set(typeMap.keys());
   
@@ -91,7 +91,7 @@ function mapPropertiesRangesToType( properties, nodeMap ){
   return typeMap;
 }
 
-function createDefaultMergeNode( property, graph ){
+equivalentPropertyMerger.createDefaultMergeNode = function( property, graph ){
   var range;
   
   if ( elementTools.isDatatypeProperty(property) ) {
@@ -134,7 +134,7 @@ function isDomainOrRangeOfOtherProperty( nodeId, properties ){
   return false;
 }
 
-function filterVisibleNodes( nodes, nodeIdsToHide ){
+equivalentPropertyMerger.filterVisibleNodes = function( nodes, nodeIdsToHide ){
   var filteredNodes = [];
   
   nodes.forEach(function ( node ){
