@@ -508,13 +508,15 @@ module.exports = function ( graph ){
         property.range(property.range().equivalentBase());
         propertyWasRerouted = true;
       }
-      // But there should not be two equal properties between the same domain and range
-      var equalProperty = getOtherEqualProperty(rawProperties, property);
       
-      if ( propertyWasRerouted && equalProperty ) {
-        property.visible(false);
+      if ( propertyWasRerouted) {
+        // But there should not be two equal properties between the same domain and range
+        var equalProperty = getOtherEqualProperty(rawProperties, property);
+        if(equalProperty) {
+          property.visible(false);
         
-        equalProperty.redundantProperties().push(property);
+          equalProperty.redundantProperties().push(property);
+        }
       }
       
       // Hide property if source or target node is hidden
