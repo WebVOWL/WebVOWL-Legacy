@@ -21,8 +21,8 @@ Comparisons were completed using the Firefox Profiler to measure the same operat
 | :-------------------------------- | :------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------- |
 | CountAndSetLayers                 | $O(n^2) \rightarrow O(n)$                                                  | FOAF: $1.5s/0.6s=2.5$<br>ENVO: $631.7s/594.9s=1.06$<br>YAGO: $\text{DNC}^*$             |
 | CountAndSetLoops                  | $O(n^2) \rightarrow O(n)$                                                  | FOAF: $1.5s/1.6s=0.94$<br>ENVO: $631.7s/407.2s=1.55$<br>YAGO: DNC                       |
-| StoreLinksOnNodes                 | $O(n \cdot m) \rightarrow O(n+m)$                                          | FOAF: $1.5s/2.0=0.75$<br>ENVO: $631.7s/564.0=1.12$<br>YAGO: DNC                         |
-| GetOtherEqualProperty             | $O(n^2) \rightarrow O(n^2)$<br>$\Omega(n^2) \rightarrow \Omega(n)^\dagger$ | FOAF: $1.5s/2.0s=0.75$<br>ENVO: $631.7s/494.5s=1.28$<br>YAGO: DNC                       |
+| GetOtherEqualProperty             | $O(n^2) \rightarrow O(n^2)$<br>$\Omega(n^2) \rightarrow \Omega(n)^\dagger$ | FOAF: $1.5s/2.0=0.75$<br>ENVO: $631.7s/564.0s=1.12$<br>YAGO: DNC                        |
+| StoreLinksOnNodes                 | $O(n \cdot m) \rightarrow O(n+m)$                                          | FOAF: $1.5s/2.0s=0.75$<br>ENVO: $631.7s/494.5s=1.28$<br>YAGO: DNC                       |
 | CombineClassesOrProperties        | $O(b \cdot a) \rightarrow O(b+a)$                                          | FOAF: $1.5s/2.4s=0.63$<br>ENVO: $631.7s/546.4s=1.16$<br>YAGO: DNC                       |
 | MergeRangesOfEquivalentProperties | $O(n^2 \cdot e) \rightarrow O(n \cdot e)$                                  | FOAF: $1.5s/0.9s=1.67$<br>ENVO: $631.7s/282.7s=2.23$<br>YAGO: DNC                       |
 | $\text{SubclassFilter}^\ddagger$  | $O(n(n+m)) \rightarrow O(n^2+m)$                                           | FOAF: $0.2s/0.2s=1$<br>ENVO: $63.8s/0.6s=106.33$<br>YAGO: $\text{DNC}/7.6s$             |
@@ -41,7 +41,7 @@ $~~~~~~~~$ $e=\text{the equivalents of each property including itself}$,
 $~~~~~~~~$ $k=\text{string array of node and edge names}$,  
 $~~~~~~~~$ $f=\text{string of a node or edge name}$,  
 $~~~~~~~~$ $t=\text{string of the search term}$,  
-$~~~~~~~~$ $\lvert{V_T}\rvert=\text{number of nodes in the trie}.$
+$~~~~~~~~$ $\lvert{V_T}\rvert=\text{nodes in the trie}$.
 
 ### Reduced memory usage
 
