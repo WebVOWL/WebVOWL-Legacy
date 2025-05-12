@@ -1,38 +1,59 @@
 # WebVOWL Legacy
 
 The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) in look and feel.  
-Behind the scenes, however, a lot has been done to reduce loading time as well as memory consumption.
+Behind the scenes, however, a lot has been done to reduce loading time and memory consumption.
 
 ## Changes from the original WebVOWL
 
+Performance is measured using a Windows 11 Home HP ENVY Laptop 13 with 8 GB of RAM and a Intel(R) Core(TM) i5-10210U CPU running Firefox v136.0.1 (64-bit) on the following inputs:
+
+| Shorthand |        Full name         |      Type       |          Size          | Version  |                              URL                              |
+| :-------: | :----------------------: | :-------------: | :--------------------: | :------: | :-----------------------------------------------------------: |
+|   FOAF    |    Friend of a Friend    |    Ontology     |     $n=70$, $m=50$     | 20140114 |     [Download](http://xmlns.com/foaf/spec/20140114.html)      |
+|   ENVO    | The Environment Ontology |    Ontology     |  $n=12387$, $m=7038$   | 5/2/2025 | [Download](https://bioportal.bioontology.org/ontologies/ENVO) |
+|   YAGO    |    YAGO, tiny version    | Knowledge Graph | $n=166425$, $m=132882$ |   4.5    |     [Download](https://yago-knowledge.org/data/yago4.5/)      |
+
+Comparisons were completed using the Firefox Profiler to measure the same operation, with and without the described improvement, and each measurement has been repeated 3 times and averaged. The speedup is then given by the time difference, $\frac{\text{original time}}{\text{new time}}$ $=$ speedup.
+
 ### Significant performance improvements
-NOTE: Additional improvement documentation pending
 
-> [!NOTE]
-> Profiling was done using:
->
-> - HP ENVY Laptop 13-aq1xxx (Windows 11 Home)
-> - Intel(R) Core(TM) i5-10210U
-> - 8 GB RAM
-> - The Firefox profiler running Firefox v136.0.1 (64-bit)
->
-> The ontology profiled is [ENVO](https://github.com/EnvironmentOntology/envo) (7k nodes, 12k edges)
-
-|      Improvement      |  Original Complexity   | Improved Complexity  | Load Time Improvement (original/new) |
-| :-------------------: | :--------------------: | :------------------: | :----------------------------------: |
-|   CountAndSetLayers   |        $O(n^2)$        |        $O(n)$        |           $803s/385s=2.09$           |
-|   CountAndSetLoops    |        $O(n^2)$        |        $O(n)$        |           $803s/271s=2.96$           |
-|   StoreLinksOnNodes   |     $O(n \cdot m)$     |       $O(n+m)$       |           $803s/474s=1.69$           |
-| getOtherEqualProperty | $O(n^2)$ $\Omega(n^2)$ | $O(n^2)$ $\Omega(n)$ |           $803s/355s=2.26$           |
-|    Combined fixes     |                        |                      |           $803s/6s=133.83$           |
+| Improvement                       | Time complexity<br>(original $\rightarrow$ new)                            | Load Time Improvement<br>(input: original/new)                                   |
+| :-------------------------------- | :------------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| CountAndSetLayers                 | $O(n^2) \rightarrow O(n)$                                                  | FOAF: $1.5s/0.6s=2.5$<br>ENVO: $631.7s/594.9s=1.06$<br>YAGO: $\text{DNC}^*$      |
+| CountAndSetLoops                  | $O(n^2) \rightarrow O(n)$                                                  | FOAF: $1.5s/1.6s=0.94$<br>ENVO: $631.7s/407.2s=1.55$<br>YAGO: DNC                |
+| StoreLinksOnNodes                 | $O(n \cdot m) \rightarrow O(n+m)$                                          | FOAF: $1.5s/2.0=0.75$<br>ENVO: $631.7s/564.0=1.12$<br>YAGO: DNC                  |
+| GetOtherEqualProperty             | $O(n^2) \rightarrow O(n^2)$<br>$\Omega(n^2) \rightarrow \Omega(n)^\dagger$ | FOAF: $1.5s/2.0s=0.75$<br>ENVO: $631.7s/494.5s=1.28$<br>YAGO: DNC                |
+| CombineClassesOrProperties        | $O(b \cdot a) \rightarrow O(b+a)$                                          | FOAF: $1.5s/2.4s=0.63$<br>ENVO: $631.7s/546.4s=1.16$<br>YAGO: DNC                |
+| MergeRangesOfEquivalentProperties | $O(n^2 \cdot e) \rightarrow O(n \cdot e)$                                  | FOAF: $1.5s/0.9s=1.67$<br>ENVO: $631.7s/282.7s=2.23$<br>YAGO: DNC                |
+| $\text{SubclassFilter}^\ddagger$  | $O(n(n+m)) \rightarrow O(n^2+m)$                                           | FOAF: $0.2s/0.2s=1$<br>ENVO: $63.8s/0.6s=106.33$<br>YAGO: DNC/$7.6s$             |
+| $\text{Search}^\ddagger$          | $O(k \cdot t(f-t+1)) \rightarrow O(\lvert{V_T}\rvert)$                     | FOAF: $7.33ms/5.66ms=1.3$<br>ENVO: $51.33ms/23.66ms=2.17$<br>YAGO: DNC/$88.67ms$ |
+| All changes                       |                                                                            | FOAF: $1.5s/0.23s=6.52$<br>ENVO: $631.7s/1.23s=513.58$<br>YAGO: DNC/$18.7s$      |
 
 where:  
+$~~~~~~~~$ $^*$ DNC (Did Not Complete) used when the loading time exceeded 20 minutes.  
+$~~~~~~~~$ $^\dagger$ Best-/average-case improvement.  
+$~~~~~~~~$ $^\ddagger$ Result is feature runtime, not overall loading time.  
 $~~~~~~~~$ $n=\text{edges}$,  
-$~~~~~~~~$ $m=\text{nodes}$
+$~~~~~~~~$ $m=\text{nodes}$,  
+$~~~~~~~~$ $b=\text{baseObjects}$,  
+$~~~~~~~~$ $a=\text{attributes}$,  
+$~~~~~~~~$ $e=\text{the equivalents of each property including itself}$,  
+$~~~~~~~~$ $k=\text{string array of node and edge names}$,  
+$~~~~~~~~$ $f=\text{string of a node or edge name}$,  
+$~~~~~~~~$ $t=\text{string of the search term}$,  
+$~~~~~~~~$ $\lvert{V_T}\rvert=\text{number of nodes in the trie}.$
+
+### Reduced memory usage
+
+| Input | Peak memory usage<br>(original/all changes) | Reduced by |
+| :---: | :-----------------------------------------: | :--------: |
+| FOAF  |                22.8MB/15.1MB                |   $34\%$   |
+| ENVO  |               524MB/227.33MB                |   $57\%$   |
+| YAGO  |                 DNC/3.95GB                  |            |
 
 ## Run Using Docker
 
-Pull image: `docker pull ghcr.io/webvowl/webvowl-legacy:v1.2.8`
+Pull image: `docker pull ghcr.io/webvowl/webvowl-legacy:v1.3.8`
 
 Or use the [docker compose file](/docker-compose.yml) with command `docker-compose up -d`
 
