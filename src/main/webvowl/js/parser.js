@@ -842,10 +842,16 @@ export default class Parser {
                 continue
             } else {
                 // Add the equivalent property instances from their ID
-                for (const equivalentProperty of property.equivalents) {
-                    propertyWithEquivalents.push(
-                        this.propertyMap.get(equivalentProperty),
-                    )
+                for (const equivalentPropertyID of property.equivalents) {
+                    const equivalentProperty =
+                        this.propertyMap.get(equivalentPropertyID)
+                    if (equivalentProperty === undefined) {
+                        console.warn(
+                            `Property '${property.id}' is missing an equivalent property for ID '${equivalentPropertyID}'. Received '${equivalentProperty}'`,
+                        )
+                        continue
+                    }
+                    propertyWithEquivalents.push(equivalentProperty)
                 }
                 if (propertyWithEquivalents.length === 1) {
                     continue
