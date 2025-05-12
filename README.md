@@ -17,17 +17,17 @@ Comparisons were completed using the Firefox Profiler to measure the same operat
 
 ### Significant performance improvements
 
-| Improvement                       | Time complexity<br>(original $\rightarrow$ new)                            | Load Time Improvement<br>(input: original/new)                                   |
-| :-------------------------------- | :------------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
-| CountAndSetLayers                 | $O(n^2) \rightarrow O(n)$                                                  | FOAF: $1.5s/0.6s=2.5$<br>ENVO: $631.7s/594.9s=1.06$<br>YAGO: $\text{DNC}^*$      |
-| CountAndSetLoops                  | $O(n^2) \rightarrow O(n)$                                                  | FOAF: $1.5s/1.6s=0.94$<br>ENVO: $631.7s/407.2s=1.55$<br>YAGO: DNC                |
-| StoreLinksOnNodes                 | $O(n \cdot m) \rightarrow O(n+m)$                                          | FOAF: $1.5s/2.0=0.75$<br>ENVO: $631.7s/564.0=1.12$<br>YAGO: DNC                  |
-| GetOtherEqualProperty             | $O(n^2) \rightarrow O(n^2)$<br>$\Omega(n^2) \rightarrow \Omega(n)^\dagger$ | FOAF: $1.5s/2.0s=0.75$<br>ENVO: $631.7s/494.5s=1.28$<br>YAGO: DNC                |
-| CombineClassesOrProperties        | $O(b \cdot a) \rightarrow O(b+a)$                                          | FOAF: $1.5s/2.4s=0.63$<br>ENVO: $631.7s/546.4s=1.16$<br>YAGO: DNC                |
-| MergeRangesOfEquivalentProperties | $O(n^2 \cdot e) \rightarrow O(n \cdot e)$                                  | FOAF: $1.5s/0.9s=1.67$<br>ENVO: $631.7s/282.7s=2.23$<br>YAGO: DNC                |
-| $\text{SubclassFilter}^\ddagger$  | $O(n(n+m)) \rightarrow O(n^2+m)$                                           | FOAF: $0.2s/0.2s=1$<br>ENVO: $63.8s/0.6s=106.33$<br>YAGO: DNC/$7.6s$             |
-| $\text{Search}^\ddagger$          | $O(k \cdot t(f-t+1)) \rightarrow O(\lvert{V_T}\rvert)$                     | FOAF: $7.33ms/5.66ms=1.3$<br>ENVO: $51.33ms/23.66ms=2.17$<br>YAGO: DNC/$88.67ms$ |
-| All changes                       |                                                                            | FOAF: $1.5s/0.23s=6.52$<br>ENVO: $631.7s/1.23s=513.58$<br>YAGO: DNC/$18.7s$      |
+| Improvement                       | Time complexity<br>(original $\rightarrow$ new)                            | Load Time Improvement<br>(input: original/new)                                          |
+| :-------------------------------- | :------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------- |
+| CountAndSetLayers                 | $O(n^2) \rightarrow O(n)$                                                  | FOAF: $1.5s/0.6s=2.5$<br>ENVO: $631.7s/594.9s=1.06$<br>YAGO: $\text{DNC}^*$             |
+| CountAndSetLoops                  | $O(n^2) \rightarrow O(n)$                                                  | FOAF: $1.5s/1.6s=0.94$<br>ENVO: $631.7s/407.2s=1.55$<br>YAGO: DNC                       |
+| StoreLinksOnNodes                 | $O(n \cdot m) \rightarrow O(n+m)$                                          | FOAF: $1.5s/2.0=0.75$<br>ENVO: $631.7s/564.0=1.12$<br>YAGO: DNC                         |
+| GetOtherEqualProperty             | $O(n^2) \rightarrow O(n^2)$<br>$\Omega(n^2) \rightarrow \Omega(n)^\dagger$ | FOAF: $1.5s/2.0s=0.75$<br>ENVO: $631.7s/494.5s=1.28$<br>YAGO: DNC                       |
+| CombineClassesOrProperties        | $O(b \cdot a) \rightarrow O(b+a)$                                          | FOAF: $1.5s/2.4s=0.63$<br>ENVO: $631.7s/546.4s=1.16$<br>YAGO: DNC                       |
+| MergeRangesOfEquivalentProperties | $O(n^2 \cdot e) \rightarrow O(n \cdot e)$                                  | FOAF: $1.5s/0.9s=1.67$<br>ENVO: $631.7s/282.7s=2.23$<br>YAGO: DNC                       |
+| $\text{SubclassFilter}^\ddagger$  | $O(n(n+m)) \rightarrow O(n^2+m)$                                           | FOAF: $0.2s/0.2s=1$<br>ENVO: $63.8s/0.6s=106.33$<br>YAGO: $\text{DNC}/7.6s$             |
+| $\text{Search}^\ddagger$          | $O(k \cdot t(f-t+1)) \rightarrow O(\lvert{V_T}\rvert)$                     | FOAF: $7.33ms/5.66ms=1.3$<br>ENVO: $51.33ms/23.66ms=2.17$<br>YAGO: $\text{DNC}/88.67ms$ |
+| All changes                       |                                                                            | FOAF: $1.5s/0.23s=6.52$<br>ENVO: $631.7s/1.23s=513.58$<br>YAGO: $\text{DNC}/18.7s$      |
 
 where:  
 $~~~~~~~~$ $^*$ DNC (Did Not Complete) used when the loading time exceeded 20 minutes.  
@@ -47,8 +47,8 @@ $~~~~~~~~$ $\lvert{V_T}\rvert=\text{number of nodes in the trie}.$
 
 | Input | Peak memory usage<br>(original/all changes) | Reduced by |
 | :---: | :-----------------------------------------: | :--------: |
-| FOAF  |                22.8MB/15.1MB                |   $34\%$   |
-| ENVO  |               524MB/227.33MB                |   $57\%$   |
+| FOAF  |                22.8MB/15.1MB                |  $34\\%$   |
+| ENVO  |               524MB/227.33MB                |  $57\\%$   |
 | YAGO  |                 DNC/3.95GB                  |            |
 
 ## Run Using Docker
