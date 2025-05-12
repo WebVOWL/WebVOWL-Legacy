@@ -847,7 +847,7 @@ export default class Parser {
                         this.propertyMap.get(equivalentPropertyID)
                     if (equivalentProperty === undefined) {
                         console.warn(
-                            `Property '${property.id}' is missing an equivalent property for ID '${equivalentPropertyID}'. Received '${equivalentProperty}'`,
+                            `Property '${property.id}' is missing an equivalent property for ID '${equivalentPropertyID}'`,
                         )
                         continue
                     }
