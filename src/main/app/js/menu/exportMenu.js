@@ -639,7 +639,7 @@ export default class ExportMenu {
 
                     if (equal.individuals && equal.individuals.length > 0) {
                         const e_classIndividualElements = []
-                        const e_nIndividuals = equals[i].individuals
+                        const e_nIndividuals = equal.individuals
                         for (let k = 0; k < e_nIndividuals.length; k++) {
                             const e_indObj = {}
                             e_indObj.iri = e_nIndividuals[k].iri
