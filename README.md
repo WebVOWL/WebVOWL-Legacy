@@ -13,6 +13,10 @@ Performance is measured using a Windows 11 Home HP ENVY Laptop 13 with 8 GB of R
 |   ENVO    | The Environment Ontology |    Ontology     |  $n=12387$,<br>$m=7038$   | 5/2/2025 | [Download](https://bioportal.bioontology.org/ontologies/ENVO) |
 |   YAGO    |    YAGO, tiny version    | Knowledge Graph | $n=166425$,<br>$m=132882$ |   4.5    |     [Download](https://yago-knowledge.org/data/yago4.5/)      |
 
+where:  
+$~~~~~~~~$ $n=\text{edges}$,  
+$~~~~~~~~$ $m=\text{nodes}$
+
 Comparisons were completed using the Firefox Profiler to measure the same operation, with and without the described improvement, and each measurement has been repeated 3 times and averaged. The speedup is then given by the time difference, $\frac{\text{original time}}{\text{new time}}$ $=$ speedup.
 
 ### Significant performance improvements
