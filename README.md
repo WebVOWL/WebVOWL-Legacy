@@ -7,11 +7,11 @@ Behind the scenes, however, a lot has been done to reduce loading time and memor
 
 Performance is measured using a Windows 11 Home HP ENVY Laptop 13 with 8 GB of RAM and a Intel(R) Core(TM) i5-10210U CPU running Firefox v136.0.1 (64-bit) on the following inputs:
 
-| Shorthand |        Full name         |      Type       |          Size          | Version  |                              URL                              |
-| :-------: | :----------------------: | :-------------: | :--------------------: | :------: | :-----------------------------------------------------------: |
-|   FOAF    |    Friend of a Friend    |    Ontology     |     $n=70$, $m=50$     | 20140114 |     [Download](http://xmlns.com/foaf/spec/20140114.html)      |
-|   ENVO    | The Environment Ontology |    Ontology     |  $n=12387$, $m=7038$   | 5/2/2025 | [Download](https://bioportal.bioontology.org/ontologies/ENVO) |
-|   YAGO    |    YAGO, tiny version    | Knowledge Graph | $n=166425$, $m=132882$ |   4.5    |     [Download](https://yago-knowledge.org/data/yago4.5/)      |
+| Shorthand |        Full name         |      Type       |           Size            | Version  |                              URL                              |
+| :-------: | :----------------------: | :-------------: | :-----------------------: | :------: | :-----------------------------------------------------------: |
+|   FOAF    |    Friend of a Friend    |    Ontology     |     $n=70$,<br>$m=50$     | 20140114 |     [Download](http://xmlns.com/foaf/spec/20140114.html)      |
+|   ENVO    | The Environment Ontology |    Ontology     |  $n=12387$,<br>$m=7038$   | 5/2/2025 | [Download](https://bioportal.bioontology.org/ontologies/ENVO) |
+|   YAGO    |    YAGO, tiny version    | Knowledge Graph | $n=166425$,<br>$m=132882$ |   4.5    |     [Download](https://yago-knowledge.org/data/yago4.5/)      |
 
 Comparisons were completed using the Firefox Profiler to measure the same operation, with and without the described improvement, and each measurement has been repeated 3 times and averaged. The speedup is then given by the time difference, $\frac{\text{original time}}{\text{new time}}$ $=$ speedup.
 
