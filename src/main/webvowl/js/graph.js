@@ -222,8 +222,8 @@ export default class Graph {
             this.#redrawContent()
             this.#recalculatePositions()
             this.resetSearchHighlight()
-            this.generateDictionary()
         }
+        this.generateDictionary()
     }
 
     updateZoomSliderValueFromOutside() {
@@ -1574,7 +1574,6 @@ export default class Graph {
         if (!this.options.loadingModule.loadingWasSuccessFul) {
             return
         }
-        // FIXME: Ensure we only use filters on the rendered data, not the whole graph
         this.keepDetailsCollapsedOnLoading = false
         this.#refreshGraphData(data, init)
         this.#updateNodeMap()
