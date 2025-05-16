@@ -244,6 +244,7 @@ export default class SearchMenu {
                 if (renderedNodes.length === 0) {
                     groupEntry.style.color = "rgb(151, 151, 151)"
                 }
+                groupEntry.style.cursor = "default"
 
                 testEntry.appendChild(groupEntry)
                 const croppedText = this.cropText(
@@ -316,12 +317,14 @@ export default class SearchMenu {
                         try {
                             this.graph.loadSearchData([nodeID])
                             this.handleClick(nodeString, nodeIDs)
+                            // Update search GUI with what is rendered in the subgraph
+                            this.clearSearchEntries()
+                            this.createDropDownElements()
                         } catch (error) {
                             console.error(error)
                         }
                     }
                 }
-                d3.select(testEntry).style("cursor", "default")
                 searchEntryNode.node().innerHTML = croppedText
                 this.m_search.node().appendChild(testEntry)
             }
@@ -365,11 +368,13 @@ export default class SearchMenu {
                     try {
                         this.graph.loadSearchData([nodeID])
                         this.handleClick(nodeString, new Set([nodeID]))
+                        // Update search GUI with what is rendered in the subgraph
+                        this.clearSearchEntries()
+                        this.createDropDownElements()
                     } catch (error) {
                         console.error(error)
                     }
                 }
-                d3.select(subEntry).style("cursor", "default")
             }
         }
 
