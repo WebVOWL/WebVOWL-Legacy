@@ -2057,8 +2057,6 @@ export default class Graph {
             )
             this.update(this.currentData)
         }
-        this.resetSearchHighlight()
-        this.highLightNodes(rootNodeIDs)
     }
 
     /**
