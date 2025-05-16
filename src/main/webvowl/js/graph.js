@@ -2092,7 +2092,7 @@ export default class Graph {
         let frontier = new Deque(rootNodes)
 
         // For every depth
-        for (let i = 0; i < depth; i++) {
+        for (let i = 0; i <= depth; i++) {
             // Keep static reference to the length
             let length = frontier.length
 
