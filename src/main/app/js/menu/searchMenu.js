@@ -67,6 +67,11 @@ export default class SearchMenu {
         this.viewStatusOfSearchEntries = true
     }
 
+    updateSearchEntries() {
+        this.clearSearchEntries()
+        this.createDropDownElements()
+    }
+
     userNavigation() {
         const htmlCollection = this.m_search.node().children
         const numEntries = htmlCollection.length
@@ -318,8 +323,7 @@ export default class SearchMenu {
                             this.graph.loadSearchData([nodeID])
                             this.handleClick(nodeString, nodeIDs)
                             // Update search GUI with what is rendered in the subgraph
-                            this.clearSearchEntries()
-                            this.createDropDownElements()
+                            this.updateSearchEntries()
                         } catch (error) {
                             console.error(error)
                         }
@@ -370,8 +374,7 @@ export default class SearchMenu {
                         this.graph.loadSearchData([nodeID])
                         this.handleClick(nodeString, new Set([nodeID]))
                         // Update search GUI with what is rendered in the subgraph
-                        this.clearSearchEntries()
-                        this.createDropDownElements()
+                        this.updateSearchEntries()
                     } catch (error) {
                         console.error(error)
                     }
@@ -427,8 +430,7 @@ export default class SearchMenu {
         this.graph.highLightNodes(Array.from(nodeIDs.values()))
         this.c_locate.node().title = "Locate search term"
         if (nodeString !== inputText) {
-            this.clearSearchEntries()
-            this.createDropDownElements()
+            this.updateSearchEntries()
         }
         this.hideSearchEntries()
     }

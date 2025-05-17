@@ -123,6 +123,7 @@ export default class FilterMenu {
             if (!silent) {
                 // updating graph when silent is false or the parameter is not given.
                 this.graph.update()
+                this.graph.options.searchMenu.updateSearchEntries()
             }
         })
         filterContainer
@@ -176,7 +177,7 @@ export default class FilterMenu {
                     _this.graph.update()
                     _this.graphDegreeLevel =
                         _this.degreeSlider.property("value")
-                    _this.graph.options.searchMenu.userInput()
+                    _this.graph.options.searchMenu.updateSearchEntries()
                 }
             },
         )
