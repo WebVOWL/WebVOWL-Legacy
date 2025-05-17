@@ -342,10 +342,11 @@ export default class SearchMenu {
         let firstShown = false
         for (const nodeID of nodeIDs) {
             let subEntry = document.createElement("li")
-            subEntry.title = nodeString + " id: " + nodeID
+            const subEntryString = nodeString + " (" + nodeID + ")"
+            subEntry.title = subEntryString
             subEntry.setAttribute("elementID", nodeID)
             subEntry.setAttribute("class", "subEntry")
-            subEntry.innerHTML = nodeString + " (" + nodeID + ")"
+            subEntry.innerHTML = subEntryString
 
             if (!firstShown) {
                 firstShown = true
