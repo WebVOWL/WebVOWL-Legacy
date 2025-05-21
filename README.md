@@ -57,7 +57,7 @@ $~~~~~~~~$ $\tau=\lvert w_s\rvert+\sum_{i=1}^{\lvert W_g\rvert} \lvert w_i\rvert
 
 ## Run Using Docker
 
-Pull image: `docker pull ghcr.io/webvowl/webvowl-legacy:v1.3.8`
+Pull image: `docker pull ghcr.io/webvowl/webvowl-legacy:latest`
 
 Or use the [docker compose file](/docker-compose.yml) with command `docker-compose up -d`
 
