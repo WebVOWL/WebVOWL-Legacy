@@ -8,8 +8,8 @@ name: Docker
 on:
     release:
         types: [published]
-    tags:
-        - "v*"
+        tags:
+            - "v*"
     pull_request:
         branches: ["main"]
 
