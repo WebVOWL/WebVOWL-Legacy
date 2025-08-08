@@ -55,6 +55,12 @@ $~~~~~~~~$ $\tau=\lvert w_s\rvert+\sum_{i=1}^{\lvert W_g\rvert} \lvert w_i\rvert
 | ENVO  |               524MB/227.33MB                |  $57\\%$   |
 | YAGO  |                 DNC/3.95GB                  |            |
 
+### Extended Search Functionality
+
+We present an extended search functionality. It allows the user to search for any element in the graph and if the searched element is not currently rendered on screen, a subgraph is created such that the searched element and its nearby connected elements are shown, replacing the previously rendered graph. Using the _Reset_ button, the user is then able to return to the big picture view of the graph.
+
+The new search feature is backed by a custom trie of word/data pairs designed to scale well with large ontologies.
+
 ## Run Using Docker
 
 Pull image: `docker pull ghcr.io/webvowl/webvowl-legacy:latest`
