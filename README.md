@@ -3,6 +3,10 @@
 The legacy branch mirrors the [original WebVOWL](https://github.com/VisualDataWeb/WebVOWL) in look and feel.  
 Behind the scenes, however, a lot has been done to reduce loading time and memory consumption.
 
+## Papers
+- Our paper describing the changes up to v1.2.8 is published in the book [ESWC 2025 Satelite Events](https://link.springer.com/chapter/10.1007/978-3-031-99554-5_5).
+- The full paper describing the changes up to v1.3.8 is available [here](/paper/P6.pdf).
+
 ## Changes from the original WebVOWL
 
 Performance is measured using a Windows 11 Home HP ENVY Laptop 13 with 8 GB of RAM and a Intel(R) Core(TM) i5-10210U CPU running Firefox v136.0.1 (64-bit) on the following inputs:
